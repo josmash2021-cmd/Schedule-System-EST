@@ -84,7 +84,7 @@
             display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between;
             margin-bottom: 24px; opacity: 0; animation: fadeInUp 0.5s var(--ease-out) forwards;
         }
-        .brand { display: flex; align-items: center; gap: 14px; }
+        .brand { display: flex; align-items: center; gap: 14px; text-decoration: none; color: inherit; }
         .brand img { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; background: #ffffff; padding: 4px; transition: transform var(--dur-fast); }
         .brand img:hover { transform: scale(1.05); }
         .brand h1 { font-size: 20px; font-weight: 800; }
@@ -180,7 +180,7 @@
 <body>
     <div class="login-wrapper" id="loginView">
         <div class="login-card">
-            <img src="logo.jpg" alt="ElectronicST" class="logo">
+            <a href="/"><img src="logo.jpg" alt="ElectronicST" class="logo"></a>
             <h1>ElectronicST</h1>
             <p>Panel de administración de citas</p>
             <input type="password" id="tokenInput" placeholder="Contraseña de administrador" autocomplete="current-password">
@@ -191,13 +191,13 @@
 
     <div class="container hidden" id="panelView">
         <div class="topbar">
-            <div class="brand">
+            <a href="/" class="brand">
                 <img src="logo.jpg" alt="ElectronicST">
                 <div>
                     <h1>ElectronicST</h1>
                     <p>Panel de citas</p>
                 </div>
-            </div>
+            </a>
             <button class="btn btn-danger" id="logoutBtn">Cerrar sesión</button>
         </div>
 
