@@ -11,7 +11,7 @@ const OWNER_PHONE = process.env.OWNER_PHONE;
 
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
-const TWILIO_WHATSAPP_FROM = process.env.TWILIO_WHATSAPP_FROM;
+const TWILIO_SMS_FROM = process.env.TWILIO_SMS_FROM;
 
 module.exports = {
   PORT,
@@ -23,5 +23,5 @@ module.exports = {
   OWNER_PHONE,
   TWILIO_ACCOUNT_SID,
   TWILIO_AUTH_TOKEN,
-  TWILIO_WHATSAPP_FROM,
+  TWILIO_SMS_FROM,
 };
