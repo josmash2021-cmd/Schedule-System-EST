@@ -236,16 +236,21 @@
         function getToken() { return sessionStorage.getItem(TOKEN_KEY); }
         function showLogin(msg) {
             panelView.classList.add('hidden'); panelView.classList.remove('visible');
-            loginView.classList.remove('hidden'); loginError.textContent = msg || '';
+            loginView.classList.remove('hidden'); loginView.style.opacity = ''; loginView.style.transition = '';
+            loginError.textContent = msg || '';
             if (msg) { loginError.classList.remove('shake'); void loginError.offsetWidth; loginError.classList.add('shake'); }
-            tokenInput.focus();
+            if (!loginView.classList.contains('hidden')) tokenInput.focus();
         }
         function showPanel() {
-            loginView.style.opacity = '0'; loginView.style.transition = 'opacity 0.3s ease';
-            setTimeout(() => {
-                loginView.classList.add('hidden'); loginView.style.opacity = '';
+            if (!loginView.classList.contains('hidden')) {
+                loginView.style.opacity = '0'; loginView.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => {
+                    loginView.classList.add('hidden'); loginView.style.opacity = ''; loginView.style.transition = '';
+                    panelView.classList.remove('hidden'); requestAnimationFrame(() => panelView.classList.add('visible'));
+                }, 300);
+            } else {
                 panelView.classList.remove('hidden'); requestAnimationFrame(() => panelView.classList.add('visible'));
-            }, 300);
+            }
         }
         function escapeHtml(str) { return String(str ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
         function formatHora(hhmm) {
@@ -369,6 +374,11 @@
         document.getElementById('allBtn').addEventListener('click', () => { currentFilter = null; filterDate.value = ''; loadAppointments(); });
         document.getElementById('refreshBtn').addEventListener('click', loadAppointments);
         document.getElementById('logoutBtn').addEventListener('click', () => { sessionStorage.removeItem(TOKEN_KEY); showLogin(''); });
+
+        window.addEventListener('error', (e) => {
+            console.error('Global error:', e.error);
+            if (panelStatus) panelStatus.innerHTML = `<span style="color:var(--error)">Error inesperado: ${escapeHtml(e.message)}</span>`;
+        });
 
         if (getToken()) { showPanel(); loadAppointments(); } else { showLogin(''); }
     </script>
