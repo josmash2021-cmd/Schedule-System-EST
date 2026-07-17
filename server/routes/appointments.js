@@ -2,12 +2,13 @@ const express = require('express');
 const { pool } = require('../db');
 const { validateCreate } = require('../validation');
 const { validateDate, validateHora, requireAuth } = require('../utils');
+const { sendOwnerWhatsAppNotification } = require('../notifications');
 
 const router = express.Router();
 
 // Crear cita (público)
 router.post('/', async (req, res) => {
-  const { errors, nombre, telefono, servicio, fecha, hora } = validateCreate(req.body);
+  const { errors, nombre, telefono, correo, servicio, fecha, hora } = validateCreate(req.body);
   if (errors.length) {
     return res.status(400).json({ error: errors.join(' ') });
   }
@@ -20,18 +21,23 @@ router.post('/', async (req, res) => {
 
   try {
     const result = await pool.query(
-      `INSERT INTO appointments (nombre, telefono, servicio, fecha, hora, estado)
-       VALUES ($1, $2, $3, $4, $5, 'pendiente')
+      `INSERT INTO appointments (nombre, telefono, correo, servicio, fecha, hora, estado)
+       VALUES ($1, $2, $3, $4, $5, $6, 'pendiente')
        ON CONFLICT (fecha, hora) DO NOTHING
        RETURNING *`,
-      [nombre, telefono, servicio, fecha, hora]
+      [nombre, telefono, correo || null, servicio, fecha, hora]
     );
 
     if (result.rows.length === 0) {
       return res.status(409).json({ error: 'Este horario ya está ocupado. Elige otro.' });
     }
 
-    res.status(201).json({ ok: true, cita: result.rows[0] });
+    const cita = result.rows[0];
+
+    // Notificación al dueño por WhatsApp (no bloqueante)
+    sendOwnerWhatsAppNotification({ nombre, telefono, correo, servicio, fecha, hora }).catch(() => {});
+
+    res.status(201).json({ ok: true, cita });
   } catch (err) {
     console.error('Error POST /api/appointments:', err);
     res.status(500).json({ error: 'Error al guardar la cita.' });
