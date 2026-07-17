@@ -275,32 +275,34 @@
         </header>
 
         <main class="card">
-            <div class="steps">
-                <span class="step active" id="step1"><span class="num">1</span> Fecha</span>
-                <span class="step" id="step2"><span class="num">2</span> Hora</span>
-                <span class="step" id="step3"><span class="num">3</span> Datos</span>
-            </div>
-
-            <div class="booking-grid">
-                <div>
-                    <div class="panel-title">Selecciona una fecha</div>
-                    <div class="cal-header">
-                        <button type="button" id="prevMonth" aria-label="Mes anterior">‹</button>
-                        <span id="monthLabel"></span>
-                        <button type="button" id="nextMonth" aria-label="Mes siguiente">›</button>
-                    </div>
-                    <div class="cal-grid" id="calendarGrid"></div>
+            <div id="bookingSection">
+                <div class="steps">
+                    <span class="step active" id="step1"><span class="num">1</span> Fecha</span>
+                    <span class="step" id="step2"><span class="num">2</span> Hora</span>
+                    <span class="step" id="step3"><span class="num">3</span> Datos</span>
                 </div>
 
-                <div>
-                    <div class="panel-title" id="slotsTitle">Horarios disponibles</div>
-                    <div id="slotsGrid">
-                        <p class="slots-empty">Elige una fecha para ver los horarios.</p>
+                <div class="booking-grid">
+                    <div>
+                        <div class="panel-title">Selecciona una fecha</div>
+                        <div class="cal-header">
+                            <button type="button" id="prevMonth" aria-label="Mes anterior">‹</button>
+                            <span id="monthLabel"></span>
+                            <button type="button" id="nextMonth" aria-label="Mes siguiente">›</button>
+                        </div>
+                        <div class="cal-grid" id="calendarGrid"></div>
+                    </div>
+
+                    <div>
+                        <div class="panel-title" id="slotsTitle">Horarios disponibles</div>
+                        <div id="slotsGrid">
+                            <p class="slots-empty">Elige una fecha para ver los horarios.</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <hr class="section-divider">
+                <hr class="section-divider">
+            </div>
 
             <div class="form-section hidden" id="formSection">
                 <h3>Completa tus datos</h3>
@@ -420,6 +422,7 @@
             calendarGrid: document.getElementById('calendarGrid'),
             slotsTitle: document.getElementById('slotsTitle'),
             slotsGrid: document.getElementById('slotsGrid'),
+            bookingSection: document.getElementById('bookingSection'),
             formSection: document.getElementById('formSection'),
             successSection: document.getElementById('successSection'),
             serviceForm: document.getElementById('serviceForm'),
@@ -608,7 +611,9 @@
         });
 
         function showSuccess(d) {
-            els.formSection.classList.add('hidden'); els.successSection.classList.remove('hidden');
+            els.bookingSection.classList.add('hidden');
+            els.formSection.classList.add('hidden');
+            els.successSection.classList.remove('hidden');
             animateElement(els.successSection, 'animate-scale-in');
             els.successSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             els.successDetail.innerHTML = `
@@ -625,6 +630,7 @@
 
         function resetAll() {
             selectedDate = null; selectedTime = null; els.serviceForm.reset(); selectService('');
+            els.bookingSection.classList.remove('hidden');
             els.formSection.classList.add('hidden'); els.successSection.classList.add('hidden');
             els.slotsTitle.textContent = 'Horarios disponibles';
             els.slotsGrid.innerHTML = '<p class="slots-empty">Elige una fecha para ver los horarios.</p>';
