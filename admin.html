@@ -15,9 +15,9 @@
             --text: #0f172a;
             --text-muted: #64748b;
             --border: #e2e8f0;
-            --accent: #f59e0b;
-            --accent-dark: #d97706;
-            --accent-light: #fff7ed;
+            --accent: #111827;
+            --accent-dark: #000000;
+            --accent-light: #f3f4f6;
             --ok: #22c55e;
             --error: #ef4444;
             --info: #3b82f6;
@@ -39,6 +39,9 @@
         .animate-fade-in-up { animation: fadeInUp var(--dur-base) var(--ease-out) forwards; opacity: 0; }
         .animate-scale-in { animation: scaleIn var(--dur-base) var(--ease-out) forwards; opacity: 0; }
 
+        html, body {
+            overflow-x: hidden;
+        }
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px;
@@ -70,7 +73,7 @@
             border-radius: 12px; background: var(--bg); color: var(--text); font-size: 15px;
             transition: border-color var(--dur-fast), box-shadow var(--dur-fast), transform var(--dur-fast);
         }
-        .login-card input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1); transform: translateY(-1px); }
+        .login-card input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08); transform: translateY(-1px); }
         .login-error { color: var(--error); font-size: 13px; margin-top: 10px; min-height: 18px; }
         .login-error.shake { animation: shake 0.3s ease; }
 
@@ -95,7 +98,7 @@
         }
         .btn:hover { transform: translateY(-2px); }
         .btn:active { transform: translateY(0) scale(0.97); }
-        .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25); }
+        .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15); }
         .btn-primary:hover { background: var(--accent-dark); }
         .btn-secondary { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
         .btn-secondary:hover { color: var(--accent-dark); border-color: var(--accent); background: var(--accent-light); }
@@ -116,7 +119,7 @@
             background: var(--bg); color: var(--text); font-size: 14px;
             transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
         }
-        .toolbar input[type="date"]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1); }
+        .toolbar input[type="date"]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08); }
 
         .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
         .stat-card {
@@ -124,7 +127,7 @@
             opacity: 0; animation: fadeInUp 0.5s var(--ease-out) forwards;
             transition: transform var(--dur-fast), box-shadow var(--dur-fast), border-color var(--dur-fast);
         }
-        .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: #fed7aa; }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: #e5e7eb; }
         .stat-card .value { font-size: 26px; font-weight: 800; color: var(--accent-dark); transition: transform var(--dur-fast); }
         .stat-card:hover .value { transform: scale(1.05); }
         .stat-card .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-top: 4px; }
@@ -137,7 +140,7 @@
             opacity: 0; animation: fadeInUp 0.5s var(--ease-out) forwards;
             transition: transform var(--dur-fast), box-shadow var(--dur-fast), border-color var(--dur-fast);
         }
-        .appt-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: #fed7aa; }
+        .appt-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: #e5e7eb; }
         .appt-card.cancelada { opacity: 0.55; }
         .appt-time {
             text-align: center; min-width: 72px; background: var(--bg); border: 1px solid var(--border);
@@ -164,7 +167,7 @@
 
         .panel-status { text-align: center; font-size: 14px; min-height: 20px; margin-bottom: 14px; color: var(--error); transition: opacity var(--dur-fast); }
         .spinner {
-            width: 16px; height: 16px; border: 2px solid rgba(245, 158, 11, 0.25); border-top-color: var(--accent);
+            width: 16px; height: 16px; border: 2px solid rgba(0, 0, 0, 0.15); border-top-color: var(--accent);
             border-radius: 50%; animation: spin 0.8s linear infinite;
         }
 

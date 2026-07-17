@@ -14,9 +14,9 @@
             --text: #0f172a;
             --text-muted: #64748b;
             --border: #e2e8f0;
-            --accent: #f59e0b;
-            --accent-dark: #d97706;
-            --accent-light: #fff7ed;
+            --accent: #111827;
+            --accent-dark: #000000;
+            --accent-light: #f3f4f6;
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
             --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -36,6 +36,9 @@
             50% { transform: translateY(-8px); }
         }
 
+        html, body {
+            overflow-x: hidden;
+        }
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             background: var(--bg);
@@ -69,11 +72,11 @@
             transition: all 0.2s var(--ease-out);
         }
         .btn-primary {
-            background: var(--accent); color: #fff; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+            background: var(--accent); color: #fff; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
         }
         .btn-primary:hover {
             background: var(--accent-dark); transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
         }
 
         .hero {
@@ -84,7 +87,7 @@
             display: inline-flex; align-items: center; gap: 8px;
             background: var(--accent-light); color: var(--accent-dark);
             padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 600;
-            margin-bottom: 24px; border: 1px solid #fed7aa;
+            margin-bottom: 24px; border: 1px solid #e5e7eb;
         }
         .hero h1 {
             font-size: clamp(36px, 6vw, 56px); font-weight: 800; line-height: 1.1;
