@@ -255,10 +255,20 @@
         }
 
         async function apiFetch(url, options = {}) {
-            const res = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}`, ...(options.headers || {}) } });
+            let res;
+            try {
+                res = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}`, ...(options.headers || {}) } });
+            } catch (networkErr) {
+                throw new Error('No se pudo conectar con el servidor. Verifica tu conexión.');
+            }
             if (res.status === 401) { sessionStorage.removeItem(TOKEN_KEY); showLogin('Contraseña incorrecta o sesión expirada.'); throw new Error('No autorizado'); }
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Error de servidor');
+            let data;
+            try {
+                data = await res.json();
+            } catch (parseErr) {
+                throw new Error(`Respuesta inválida del servidor (${res.status}).`);
+            }
+            if (!res.ok) throw new Error(data.error || `Error del servidor (${res.status}).`);
             return data;
         }
 
@@ -321,11 +331,14 @@
             try {
                 const url = currentFilter ? `${API.list}?date=${currentFilter}` : API.list;
                 const data = await apiFetch(url);
-                panelStatus.textContent = '';
+                panelStatus.innerHTML = '';
                 renderStats(data.citas);
                 renderAppointments(data.citas);
             } catch (err) {
-                if (err.message !== 'No autorizado') { panelStatus.textContent = err.message; }
+                if (err.message !== 'No autorizado') {
+                    panelStatus.innerHTML = `<span style="color:var(--error)">❌ ${err.message}</span> <button type="button" class="btn btn-secondary" id="retryLoad" style="margin-left:8px;padding:6px 12px;font-size:12px;">Reintentar</button>`;
+                    document.getElementById('retryLoad')?.addEventListener('click', loadAppointments);
+                }
             }
         }
 
