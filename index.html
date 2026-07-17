@@ -137,6 +137,24 @@
         .feature h3 { font-size: 17px; margin-bottom: 8px; }
         .feature p { color: var(--text-muted); font-size: 14px; line-height: 1.6; }
 
+        .final-cta {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 20px; padding: 48px 32px; text-align: center;
+            margin: 40px 0; box-shadow: var(--shadow-lg);
+            opacity: 0; animation: fadeInUp 0.7s var(--ease-out) forwards;
+        }
+        .final-cta h2 { font-size: clamp(24px, 4vw, 32px); font-weight: 800; margin-bottom: 12px; }
+        .final-cta p { color: var(--text-muted); max-width: 480px; margin: 0 auto 28px; font-size: 16px; }
+        .final-cta .buttons { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+        .final-cta .btn { min-width: 180px; }
+        .btn-secondary {
+            background: var(--bg); color: var(--text); border: 1px solid var(--border);
+        }
+        .btn-secondary:hover {
+            background: var(--accent-light); border-color: var(--accent); color: var(--accent-dark);
+            transform: translateY(-2px);
+        }
+
         footer {
             text-align: center; padding: 40px 0; color: var(--text-muted); font-size: 14px;
             border-top: 1px solid var(--border); margin-top: 40px;
@@ -150,7 +168,7 @@
     <header>
         <div class="container">
             <nav class="nav">
-                <a href="index.html" class="brand">
+                <a href="/" class="brand">
                     <img src="logo.jpg" alt="ElectronicST">
                     <span>ElectronicST</span>
                 </a>
@@ -164,7 +182,7 @@
                 <div class="hero-badge">⚡ Servicio técnico especializado</div>
                 <h1>Reserva tu cita <span>en minutos</span></h1>
                 <p>Olvida las filas y las llamadas. Agenda tu servicio técnico de electrónica de forma rápida, clara y profesional.</p>
-                <a href="solicitud-servicio.html" class="btn btn-primary">
+                <a href="/solicitud-servicio" class="btn btn-primary">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                     Reservar cita ahora
                 </a>
@@ -195,13 +213,22 @@
                 <p>Recibe la confirmación de tu cita al instante y sin complicaciones.</p>
             </div>
         </section>
+
+        <section class="container final-cta">
+            <h2>¿Ya eres cliente o administrador?</h2>
+            <p>Accede al panel para gestionar citas o regístrate para agendar tu servicio técnico.</p>
+            <div class="buttons">
+                <a href="/admin" class="btn btn-secondary">Iniciar sesión</a>
+                <a href="/solicitud-servicio" class="btn btn-primary">Registrarte</a>
+            </div>
+        </section>
     </main>
 
     <footer>
         <div class="container">
             <div class="footer-links">
-                <a href="terminos.html">Términos y condiciones</a>
-                <a href="politicas.html">Políticas de privacidad</a>
+                <a href="/terminos">Términos y condiciones</a>
+                <a href="/politicas">Políticas de privacidad</a>
             </div>
             <p>3659 Lorna Rd Suite 157, Hoover, AL 35216</p>
         </div>
