@@ -18,10 +18,9 @@ router.get('/', async (req, res) => {
     );
     const booked = new Set(result.rows.map(r => r.hora));
     const allSlots = generateSlots();
-    const slots = allSlots.map(hora => ({
-      hora,
-      disponible: !booked.has(hora),
-    }));
+    const slots = allSlots
+      .filter(hora => !booked.has(hora))
+      .map(hora => ({ hora, disponible: true }));
 
     res.json({ abierto: true, date, slots });
   } catch (err) {

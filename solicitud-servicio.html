@@ -131,15 +131,22 @@
         .cal-cell.available:hover {
             border-color: var(--accent); background: var(--accent-light); transform: translateY(-2px);
         }
-        .cal-cell.selected {
-            background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 700;
-            transform: scale(1.06); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        .cal-cell.selected,
+        .cal-cell.selected.available,
+        .cal-cell.selected.available:hover {
+            background: var(--accent) !important;
+            color: #fff !important;
+            border-color: var(--accent) !important;
+            font-weight: 700;
+            transform: scale(1.06);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         .cal-cell.disabled { color: #cbd5e1; cursor: not-allowed; }
         .cal-cell.today { box-shadow: inset 0 0 0 2px var(--accent); }
 
         .slots-empty { color: var(--text-muted); font-size: 14px; text-align: center; padding: 40px 10px; }
-        .slots-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        .slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        @media (max-width: 640px) { .slots-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 360px) { .slots-grid { grid-template-columns: 1fr; } }
         .slot-btn {
             background: var(--surface); border: 1px solid var(--border); color: var(--text);
