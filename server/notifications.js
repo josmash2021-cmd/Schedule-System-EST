@@ -1,36 +1,44 @@
-const { CALLMEBOT_API_KEY, OWNER_PHONE } = require('./config');
+const twilio = require('twilio');
+const {
+  TWILIO_ACCOUNT_SID,
+  TWILIO_AUTH_TOKEN,
+  TWILIO_WHATSAPP_FROM,
+  OWNER_PHONE,
+} = require('./config');
 
 const STORE_ADDRESS = '3659 Lorna Rd Suite 157, Hoover, AL 35216';
 const STORE_PHONE = '(205) 573-7840';
 
-function formatUSPhone(phone) {
+const twilioClient = TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN
+  ? twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+  : null;
+
+function toWhatsAppNumber(phone) {
   const digits = String(phone || '').replace(/\D/g, '');
-  if (digits.length === 10) return `1${digits}`;
-  if (digits.length === 11 && digits.startsWith('1')) return digits;
-  return digits;
+  if (digits.length === 10) return `whatsapp:+1${digits}`;
+  if (digits.length === 11 && digits.startsWith('1')) return `whatsapp:+${digits}`;
+  if (digits.length > 0) return `whatsapp:+${digits}`;
+  return null;
 }
 
-async function sendCallMeBot(phone, text) {
-  if (!CALLMEBOT_API_KEY) {
-    console.log('CallMeBot API key not configured. Skipping WhatsApp message.');
+async function sendWhatsApp(to, body) {
+  if (!twilioClient || !TWILIO_WHATSAPP_FROM) {
+    console.log('Twilio not configured. Skipping WhatsApp message.');
     return;
   }
-  const to = formatUSPhone(phone);
-  if (!to || to.length < 11) {
-    console.log('Invalid phone number for WhatsApp:', phone);
+  const toNumber = toWhatsAppNumber(to);
+  if (!toNumber) {
+    console.log('Invalid phone number for WhatsApp:', to);
     return;
   }
-
-  const url = `https://api.callmebot.com/whatsapp.php?phone=${to}&text=${encodeURIComponent(text)}&apikey=${CALLMEBOT_API_KEY}`;
 
   try {
-    const res = await fetch(url);
-    const body = await res.text();
-    if (!res.ok) {
-      console.error('CallMeBot error:', res.status, body);
-    } else {
-      console.log('WhatsApp message sent to', to, ':', body);
-    }
+    const message = await twilioClient.messages.create({
+      from: TWILIO_WHATSAPP_FROM,
+      to: toNumber,
+      body,
+    });
+    console.log('WhatsApp message sent. SID:', message.sid);
   } catch (err) {
     console.error('Failed to send WhatsApp message:', err.message);
   }
@@ -52,7 +60,7 @@ async function sendOwnerWhatsAppNotification(cita) {
     `📍 ElectronicST - ${STORE_ADDRESS}`,
   ].join('\n');
 
-  await sendCallMeBot(OWNER_PHONE, text);
+  await sendWhatsApp(OWNER_PHONE, text);
 }
 
 async function sendClientWhatsAppConfirmation(cita) {
@@ -77,7 +85,7 @@ async function sendClientWhatsAppConfirmation(cita) {
     'Gracias por preferirnos.',
   ].join('\n');
 
-  await sendCallMeBot(cita.telefono, text);
+  await sendWhatsApp(cita.telefono, text);
 }
 
 function formatHora(hhmm) {
