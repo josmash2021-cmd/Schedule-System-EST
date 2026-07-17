@@ -217,6 +217,7 @@
 
     <script>
         const API = {
+            login: '/api/auth/login',
             list: '/api/appointments',
             update: '/api/appointments',
             deleteAll: '/api/appointments',
@@ -363,12 +364,54 @@
             changeEstado(btn.dataset.fecha, btn.dataset.hora, btn.dataset.action);
         });
 
-        document.getElementById('loginBtn').addEventListener('click', () => {
-            const token = tokenInput.value.trim(); if (!token) return;
-            sessionStorage.setItem(TOKEN_KEY, token); tokenInput.value = ''; loginError.textContent = '';
-            showPanel(); loadAppointments();
-        });
-        tokenInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
+        const loginBtn = document.getElementById('loginBtn');
+
+        async function doLogin() {
+            const password = tokenInput.value.trim();
+            if (!password) return;
+
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<div class="spinner" style="border-top-color:#fff"></div> Verificando…';
+            loginError.textContent = '';
+
+            try {
+                const res = await fetch(API.login, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password }),
+                });
+                let data;
+                try { data = await res.json(); } catch { data = {}; }
+
+                if (!res.ok) {
+                    tokenInput.value = '';
+                    tokenInput.focus();
+                    let msg = data.error || 'Error al iniciar sesión.';
+                    if (res.status === 429) {
+                        msg = '⚠️ ' + msg;
+                    } else if (data.remainingAttempts !== undefined) {
+                        msg += ` Te quedan ${data.remainingAttempts} intento${data.remainingAttempts === 1 ? '' : 's'}.`;
+                    }
+                    loginError.textContent = msg;
+                    loginError.classList.remove('shake'); void loginError.offsetWidth; loginError.classList.add('shake');
+                    return;
+                }
+
+                sessionStorage.setItem(TOKEN_KEY, data.token);
+                tokenInput.value = '';
+                showPanel();
+                loadAppointments();
+            } catch (err) {
+                loginError.textContent = 'No se pudo conectar con el servidor. Verifica tu conexión.';
+                loginError.classList.remove('shake'); void loginError.offsetWidth; loginError.classList.add('shake');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Entrar al panel';
+            }
+        }
+
+        loginBtn.addEventListener('click', doLogin);
+        tokenInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
         document.getElementById('filterBtn').addEventListener('click', () => {
             if (!filterDate.value) { panelStatus.textContent = 'Elige una fecha primero.'; return; }
             currentFilter = filterDate.value; loadAppointments();

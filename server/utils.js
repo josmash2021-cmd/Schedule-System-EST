@@ -1,4 +1,5 @@
-const { ADMIN_PASSWORD } = require('./config');
+const jwt = require('jsonwebtoken');
+const { JWT_SECRET } = require('./config');
 
 const OPEN_HOUR = 10;
 const CLOSE_HOUR = 15;
@@ -45,10 +46,19 @@ function validateHora(hora) {
 function requireAuth(req, res, next) {
   const auth = req.headers.authorization || '';
   const token = auth.replace(/^Bearer\s+/i, '').trim();
-  if (token !== ADMIN_PASSWORD) {
+  if (!token) {
     return res.status(401).json({ error: 'No autorizado' });
   }
-  next();
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    if (payload.role !== 'admin') {
+      throw new Error('Rol inválido');
+    }
+    req.user = payload;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: 'No autorizado' });
+  }
 }
 
 module.exports = {

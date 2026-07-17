@@ -4,6 +4,7 @@ const { PORT, CORS_ORIGIN } = require('./config');
 const { initDb } = require('./db');
 const slotsRouter = require('./routes/slots');
 const appointmentsRouter = require('./routes/appointments');
+const authRouter = require('./routes/auth');
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/slots', slotsRouter);
 app.use('/api/appointments', appointmentsRouter);
+app.use('/api/auth', authRouter);
 
 app.use((err, _req, res, _next) => {
   console.error('Unhandled error:', err);
