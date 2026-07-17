@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://TU_BACKEND_RAILWAY_URL/api/:path*" }
+  ]
+}

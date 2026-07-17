@@ -1,0 +1,10 @@
+{
+  "name": "electronic-service-tech",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Static site ready'",
+    "dev:server": "cd server && npm run dev"
+  },
+  "dependencies": {}
+}

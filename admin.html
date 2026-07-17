@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>Panel de Citas - Electronic Service Technology</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --accent: #f59e0b;
+            --accent-dark: #d97706;
+            --accent-light: #fff7ed;
+            --ok: #22c55e;
+            --error: #ef4444;
+            --info: #3b82f6;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            --dur-fast: 0.15s;
+            --dur-base: 0.3s;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        .animate-fade-in { animation: fadeIn var(--dur-base) var(--ease-out) forwards; opacity: 0; }
+        .animate-fade-in-up { animation: fadeInUp var(--dur-base) var(--ease-out) forwards; opacity: 0; }
+        .animate-scale-in { animation: scaleIn var(--dur-base) var(--ease-out) forwards; opacity: 0; }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px;
+        }
+        .hidden { display: none !important; }
+
+        .login-wrapper {
+            min-height: 90vh; display: flex; align-items: center; justify-content: center;
+            opacity: 0; animation: fadeIn 0.5s var(--ease-out) forwards;
+        }
+        .login-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+            padding: 40px; width: 100%; max-width: 380px; text-align: center; box-shadow: var(--shadow-lg);
+            opacity: 0; animation: scaleIn 0.6s var(--ease-out) 0.15s forwards;
+            transition: transform var(--dur-base), box-shadow var(--dur-base);
+        }
+        .login-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
+        .login-card .logo {
+            width: 80px; height: 80px; border-radius: 16px; object-fit: cover;
+            border: 3px solid var(--accent-light); margin-bottom: 18px;
+            transition: transform var(--dur-fast);
+        }
+        .login-card .logo:hover { transform: scale(1.05); }
+        .login-card h1 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+        .login-card h1 span { color: var(--accent-dark); }
+        .login-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+        .login-card input {
+            width: 100%; padding: 14px; margin-bottom: 16px; border: 1px solid var(--border);
+            border-radius: 12px; background: var(--bg); color: var(--text); font-size: 15px;
+            transition: border-color var(--dur-fast), box-shadow var(--dur-fast), transform var(--dur-fast);
+        }
+        .login-card input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1); transform: translateY(-1px); }
+        .login-error { color: var(--error); font-size: 13px; margin-top: 10px; min-height: 18px; }
+        .login-error.shake { animation: shake 0.3s ease; }
+
+        .container { max-width: 1000px; margin: 0 auto; opacity: 0; }
+        .container.visible { animation: fadeIn 0.5s var(--ease-out) forwards; }
+
+        .topbar {
+            display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between;
+            margin-bottom: 24px; opacity: 0; animation: fadeInUp 0.5s var(--ease-out) forwards;
+        }
+        .brand { display: flex; align-items: center; gap: 14px; }
+        .brand img { width: 52px; height: 52px; border-radius: 12px; border: 2px solid var(--accent-light); transition: transform var(--dur-fast); }
+        .brand img:hover { transform: scale(1.05); }
+        .brand h1 { font-size: 20px; font-weight: 800; }
+        .brand h1 span { color: var(--accent-dark); }
+        .brand p { color: var(--text-muted); font-size: 13px; }
+
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 10px 18px; border-radius: 10px; border: none; font-weight: 600; font-size: 13px;
+            cursor: pointer; transition: all var(--dur-fast) var(--ease-out);
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn:active { transform: translateY(0) scale(0.97); }
+        .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25); }
+        .btn-primary:hover { background: var(--accent-dark); }
+        .btn-secondary { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+        .btn-secondary:hover { color: var(--accent-dark); border-color: var(--accent); background: var(--accent-light); }
+        .btn-danger { background: #fef2f2; color: var(--error); border: 1px solid #fecaca; }
+        .btn-danger:hover { background: #fee2e2; }
+        .btn-success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+        .btn-success:hover { background: #dcfce7; }
+        .btn-info { background: #eff6ff; color: var(--info); border: 1px solid #bfdbfe; }
+        .btn-info:hover { background: #dbeafe; }
+
+        .toolbar {
+            display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 20px;
+            background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px;
+            opacity: 0; animation: fadeInUp 0.5s var(--ease-out) 0.1s forwards;
+        }
+        .toolbar input[type="date"] {
+            padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px;
+            background: var(--bg); color: var(--text); font-size: 14px;
+            transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+        }
+        .toolbar input[type="date"]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1); }
+
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
+        .stat-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px;
+            opacity: 0; animation: fadeInUp 0.5s var(--ease-out) forwards;
+            transition: transform var(--dur-fast), box-shadow var(--dur-fast), border-color var(--dur-fast);
+        }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: #fed7aa; }
+        .stat-card .value { font-size: 26px; font-weight: 800; color: var(--accent-dark); transition: transform var(--dur-fast); }
+        .stat-card:hover .value { transform: scale(1.05); }
+        .stat-card .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-top: 4px; }
+
+        .empty { text-align: center; color: var(--text-muted); padding: 50px 0; opacity: 0; animation: fadeIn 0.5s var(--ease-out) forwards; }
+        .appointment-list { display: flex; flex-direction: column; gap: 12px; }
+        .appt-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px;
+            display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center;
+            opacity: 0; animation: fadeInUp 0.5s var(--ease-out) forwards;
+            transition: transform var(--dur-fast), box-shadow var(--dur-fast), border-color var(--dur-fast);
+        }
+        .appt-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: #fed7aa; }
+        .appt-card.cancelada { opacity: 0.55; }
+        .appt-time {
+            text-align: center; min-width: 72px; background: var(--bg); border: 1px solid var(--border);
+            border-radius: 12px; padding: 10px; transition: transform var(--dur-fast), border-color var(--dur-fast);
+        }
+        .appt-card:hover .appt-time { transform: scale(1.04); border-color: var(--accent); }
+        .appt-time .day { font-size: 22px; font-weight: 800; color: var(--accent-dark); }
+        .appt-time .month { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+        .appt-time .hour { font-size: 12px; color: var(--text); margin-top: 4px; font-weight: 500; }
+        .appt-body { min-width: 0; }
+        .appt-body .name { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+        .appt-body .meta { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+        .appt-body .meta a { color: var(--accent-dark); text-decoration: none; font-weight: 500; }
+        .appt-body .meta a:hover { text-decoration: underline; }
+        .appt-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+        .badge {
+            display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;
+            text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.03em;
+        }
+        .badge.pendiente { background: var(--accent-light); color: var(--accent-dark); }
+        .badge.confirmada { background: #f0fdf4; color: #16a34a; }
+        .badge.atendida { background: #eff6ff; color: var(--info); }
+        .badge.cancelada { background: #fef2f2; color: var(--error); }
+
+        .panel-status { text-align: center; font-size: 14px; min-height: 20px; margin-bottom: 14px; color: var(--error); transition: opacity var(--dur-fast); }
+        .spinner {
+            width: 16px; height: 16px; border: 2px solid rgba(245, 158, 11, 0.25); border-top-color: var(--accent);
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+
+        @media (max-width: 640px) {
+            .appt-card { grid-template-columns: 1fr; }
+            .appt-actions { justify-content: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrapper" id="loginView">
+        <div class="login-card">
+            <img src="logo.jpg" alt="Electronic Service Technology" class="logo">
+            <h1><span>Electronic</span> Service Technology</h1>
+            <p>Panel de administración de citas</p>
+            <input type="password" id="tokenInput" placeholder="Contraseña de administrador" autocomplete="current-password">
+            <button class="btn btn-primary" id="loginBtn" style="width:100%">Entrar al panel</button>
+            <div class="login-error" id="loginError"></div>
+        </div>
+    </div>
+
+    <div class="container hidden" id="panelView">
+        <div class="topbar">
+            <div class="brand">
+                <img src="logo.jpg" alt="Electronic Service Technology">
+                <div>
+                    <h1><span>Electronic</span> Service Technology</h1>
+                    <p>Panel de citas</p>
+                </div>
+            </div>
+            <button class="btn btn-danger" id="logoutBtn">Cerrar sesión</button>
+        </div>
+
+        <div class="toolbar">
+            <input type="date" id="filterDate">
+            <button class="btn btn-primary" id="filterBtn">Ver día</button>
+            <button class="btn btn-secondary" id="allBtn">Ver todas</button>
+            <button class="btn btn-secondary" id="refreshBtn">↻ Actualizar</button>
+        </div>
+
+        <div class="panel-status" id="panelStatus"></div>
+
+        <div class="stats" id="stats"></div>
+        <div class="appointment-list" id="appointments"></div>
+    </div>
+
+    <script>
+        const API = {
+            list: '/api/appointments',
+            update: '/api/appointments',
+        };
+        const TOKEN_KEY = 'est_admin_token';
+        const monthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+        const loginView = document.getElementById('loginView');
+        const panelView = document.getElementById('panelView');
+        const tokenInput = document.getElementById('tokenInput');
+        const loginError = document.getElementById('loginError');
+        const panelStatus = document.getElementById('panelStatus');
+        const statsEl = document.getElementById('stats');
+        const listEl = document.getElementById('appointments');
+        const filterDate = document.getElementById('filterDate');
+
+        let currentFilter = null;
+
+        function getToken() { return sessionStorage.getItem(TOKEN_KEY); }
+        function showLogin(msg) {
+            panelView.classList.add('hidden'); panelView.classList.remove('visible');
+            loginView.classList.remove('hidden'); loginError.textContent = msg || '';
+            if (msg) { loginError.classList.remove('shake'); void loginError.offsetWidth; loginError.classList.add('shake'); }
+            tokenInput.focus();
+        }
+        function showPanel() {
+            loginView.style.opacity = '0'; loginView.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => {
+                loginView.classList.add('hidden'); loginView.style.opacity = '';
+                panelView.classList.remove('hidden'); requestAnimationFrame(() => panelView.classList.add('visible'));
+            }, 300);
+        }
+        function escapeHtml(str) { return String(str ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+        function formatHora(hhmm) {
+            let [h, m] = hhmm.split(':').map(Number);
+            const ampm = h >= 12 ? 'p.m.' : 'a.m.'; h = h % 12 || 12;
+            return `${h}:${String(m).padStart(2,'0')} ${ampm}`;
+        }
+
+        async function apiFetch(url, options = {}) {
+            const res = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}`, ...(options.headers || {}) } });
+            if (res.status === 401) { sessionStorage.removeItem(TOKEN_KEY); showLogin('Contraseña incorrecta o sesión expirada.'); throw new Error('No autorizado'); }
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Error de servidor');
+            return data;
+        }
+
+        function renderStats(citas) {
+            const counts = { total: citas.length, pendiente: 0, confirmada: 0, atendida: 0, cancelada: 0 };
+            citas.forEach(c => { if (counts[c.estado] !== undefined) counts[c.estado]++; });
+            const items = [
+                { k: 'total', label: 'Total citas' },
+                { k: 'pendiente', label: 'Pendientes' },
+                { k: 'confirmada', label: 'Confirmadas' },
+                { k: 'atendida', label: 'Atendidas' },
+                { k: 'cancelada', label: 'Canceladas' },
+            ];
+            statsEl.innerHTML = items.map((i, idx) =>
+                `<div class="stat-card" style="animation-delay:${0.1 + idx * 0.05}s"><div class="value">${counts[i.k]}</div><div class="label">${i.label}</div></div>`
+            ).join('');
+        }
+
+        function actionButtons(cita) {
+            const { fecha, hora, estado } = cita; const btns = [];
+            if (estado === 'pendiente') {
+                btns.push(`<button class="btn btn-success" data-action="confirmada" data-fecha="${fecha}" data-hora="${hora}">Confirmar</button>`);
+                btns.push(`<button class="btn btn-danger" data-action="cancelada" data-fecha="${fecha}" data-hora="${hora}">Cancelar</button>`);
+            } else if (estado === 'confirmada') {
+                btns.push(`<button class="btn btn-info" data-action="atendida" data-fecha="${fecha}" data-hora="${hora}">Atendida</button>`);
+                btns.push(`<button class="btn btn-danger" data-action="cancelada" data-fecha="${fecha}" data-hora="${hora}">Cancelar</button>`);
+            } else if (estado === 'cancelada') {
+                btns.push(`<button class="btn btn-secondary" data-action="pendiente" data-fecha="${fecha}" data-hora="${hora}">Reabrir</button>`);
+            }
+            return btns.join('');
+        }
+
+        function renderAppointments(citas) {
+            if (citas.length === 0) { listEl.innerHTML = '<p class="empty">No hay citas para mostrar.</p>'; return; }
+            listEl.innerHTML = citas.map((c, i) => {
+                const [y, m, d] = c.fecha.split('-').map(Number);
+                const metaParts = [];
+                if (c.telefono) metaParts.push(`📞 <a href="tel:${escapeHtml(c.telefono)}">${escapeHtml(c.telefono)}</a>`);
+                if (c.correo) metaParts.push(`✉️ <a href="mailto:${escapeHtml(c.correo)}">${escapeHtml(c.correo)}</a>`);
+                if (c.direccion) metaParts.push(`📍 ${escapeHtml(c.direccion)}`);
+                return `
+                <div class="appt-card ${c.estado === 'cancelada' ? 'cancelada' : ''}" style="animation-delay:${0.15 + i * 0.06}s">
+                    <div class="appt-time">
+                        <div class="day">${d}</div>
+                        <div class="month">${monthNames[m-1]} ${y}</div>
+                        <div class="hour">${formatHora(c.hora)}</div>
+                    </div>
+                    <div class="appt-body">
+                        <span class="badge ${escapeHtml(c.estado)}">${escapeHtml(c.estado)}</span>
+                        <div class="name">${escapeHtml(c.nombre)} — ${escapeHtml(c.servicio)}</div>
+                        <div class="meta">${metaParts.join(' · ') || ''}</div>
+                    </div>
+                    <div class="appt-actions">${actionButtons(c)}</div>
+                </div>
+            `}).join('');
+        }
+
+        async function loadAppointments() {
+            panelStatus.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;gap:8px;color:var(--text-muted)"><div class="spinner"></div> Cargando citas…</div>';
+            try {
+                const url = currentFilter ? `${API.list}?date=${currentFilter}` : API.list;
+                const data = await apiFetch(url);
+                panelStatus.textContent = '';
+                renderStats(data.citas);
+                renderAppointments(data.citas);
+            } catch (err) {
+                if (err.message !== 'No autorizado') { panelStatus.textContent = err.message; }
+            }
+        }
+
+        async function changeEstado(fecha, hora, estado) {
+            try {
+                await apiFetch(API.update, { method: 'PATCH', body: JSON.stringify({ fecha, hora, estado }) });
+                await loadAppointments();
+            } catch (err) { panelStatus.textContent = err.message; }
+        }
+
+        listEl.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-action]');
+            if (!btn) return;
+            if (btn.dataset.action === 'cancelada' && !confirm('¿Cancelar esta cita?')) return;
+            changeEstado(btn.dataset.fecha, btn.dataset.hora, btn.dataset.action);
+        });
+
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            const token = tokenInput.value.trim(); if (!token) return;
+            sessionStorage.setItem(TOKEN_KEY, token); tokenInput.value = ''; loginError.textContent = '';
+            showPanel(); loadAppointments();
+        });
+        tokenInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
+        document.getElementById('filterBtn').addEventListener('click', () => {
+            if (!filterDate.value) { panelStatus.textContent = 'Elige una fecha primero.'; return; }
+            currentFilter = filterDate.value; loadAppointments();
+        });
+        document.getElementById('allBtn').addEventListener('click', () => { currentFilter = null; filterDate.value = ''; loadAppointments(); });
+        document.getElementById('refreshBtn').addEventListener('click', loadAppointments);
+        document.getElementById('logoutBtn').addEventListener('click', () => { sessionStorage.removeItem(TOKEN_KEY); showLogin(''); });
+
+        if (getToken()) { showPanel(); loadAppointments(); } else { showLogin(''); }
+    </script>
+</body>
+</html>

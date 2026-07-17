@@ -1,0 +1,9 @@
+[build]
+  command = "echo Static site ready"
+  publish = "."
+
+[functions]
+  directory = "netlify/functions"
+
+[build.processing]
+  ignore_html_forms = false
