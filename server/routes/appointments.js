@@ -66,6 +66,17 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
+// Eliminar todas las citas (admin)
+router.delete('/', requireAuth, async (_req, res) => {
+  try {
+    await pool.query('DELETE FROM appointments');
+    res.json({ ok: true, message: 'Todas las citas han sido eliminadas.' });
+  } catch (err) {
+    console.error('Error DELETE /api/appointments:', err);
+    res.status(500).json({ error: 'Error al eliminar citas.' });
+  }
+});
+
 // Actualizar estado (admin)
 router.patch('/', requireAuth, async (req, res) => {
   const { fecha, hora, estado } = req.body;

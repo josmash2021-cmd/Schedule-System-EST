@@ -206,6 +206,7 @@
             <button class="btn btn-primary" id="filterBtn">Ver día</button>
             <button class="btn btn-secondary" id="allBtn">Ver todas</button>
             <button class="btn btn-secondary" id="refreshBtn">↻ Actualizar</button>
+            <button class="btn btn-danger" id="deleteAllBtn">🗑️ Eliminar todas</button>
         </div>
 
         <div class="panel-status" id="panelStatus"></div>
@@ -218,6 +219,7 @@
         const API = {
             list: '/api/appointments',
             update: '/api/appointments',
+            deleteAll: '/api/appointments',
         };
         const TOKEN_KEY = 'est_admin_token';
         const monthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -374,6 +376,19 @@
         document.getElementById('allBtn').addEventListener('click', () => { currentFilter = null; filterDate.value = ''; loadAppointments(); });
         document.getElementById('refreshBtn').addEventListener('click', loadAppointments);
         document.getElementById('logoutBtn').addEventListener('click', () => { sessionStorage.removeItem(TOKEN_KEY); showLogin(''); });
+
+        async function deleteAllAppointments() {
+            if (!confirm('¿Eliminar TODAS las citas? Esta acción no se puede deshacer.')) return;
+            try {
+                await apiFetch(API.deleteAll, { method: 'DELETE' });
+                panelStatus.textContent = 'Todas las citas han sido eliminadas.';
+                currentFilter = null; filterDate.value = '';
+                await loadAppointments();
+            } catch (err) {
+                if (err.message !== 'No autorizado') panelStatus.textContent = err.message;
+            }
+        }
+        document.getElementById('deleteAllBtn').addEventListener('click', deleteAllAppointments);
 
         window.addEventListener('error', (e) => {
             console.error('Global error:', e.error);
