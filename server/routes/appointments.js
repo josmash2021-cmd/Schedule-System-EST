@@ -2,7 +2,7 @@ const express = require('express');
 const { pool } = require('../db');
 const { validateCreate } = require('../validation');
 const { validateDate, validateHora, requireAuth } = require('../utils');
-const { sendOwnerWhatsAppNotification } = require('../notifications');
+const { sendOwnerWhatsAppNotification, sendClientWhatsAppConfirmation } = require('../notifications');
 
 const router = express.Router();
 
@@ -34,8 +34,10 @@ router.post('/', async (req, res) => {
 
     const cita = result.rows[0];
 
-    // Notificación al dueño por WhatsApp (no bloqueante)
-    sendOwnerWhatsAppNotification({ nombre, telefono, correo, servicio, fecha, hora }).catch(() => {});
+    // Notificaciones por WhatsApp (no bloqueantes)
+    const notificationData = { nombre, telefono, correo, servicio, fecha, hora };
+    sendOwnerWhatsAppNotification(notificationData).catch(() => {});
+    sendClientWhatsAppConfirmation(notificationData).catch(() => {});
 
     res.status(201).json({ ok: true, cita });
   } catch (err) {
