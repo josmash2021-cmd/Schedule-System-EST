@@ -3,6 +3,6 @@
   "buildCommand": "echo 'Static site ready'",
   "outputDirectory": ".",
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://TU_BACKEND_RAILWAY_URL/api/:path*" }
+    { "source": "/api/:path*", "destination": "https://schedule-system-est-production.up.railway.app/api/:path*" }
   ]
 }
