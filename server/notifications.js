@@ -80,7 +80,8 @@ async function sendClientSMSConfirmation(cita) {
     '',
     'Un agente te contactara pronto para confirmar tu cita.',
     '',
-    'Gracias por preferirnos.',
+    'Responde STOP para cancelar mensajes. Responde HELP para ayuda.',
+    'Msg & data rates may apply.',
   ].join('\n');
 
   await sendSMS(cita.telefono, text);
