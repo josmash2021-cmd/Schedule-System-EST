@@ -4,12 +4,14 @@
 (function () {
     'use strict';
 
-    /* ---------- Nav: sombra al hacer scroll ---------- */
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* ---------- Nav: fondo al hacer scroll ---------- */
     var nav = document.querySelector('.nav');
     if (nav) {
-        var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
-        window.addEventListener('scroll', onScroll, { passive: true });
-        onScroll();
+        var onScrollNav = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+        window.addEventListener('scroll', onScrollNav, { passive: true });
+        onScrollNav();
     }
 
     /* ---------- Menú móvil ---------- */
@@ -31,7 +33,7 @@
     }
 
     /* ---------- Reveal al hacer scroll ---------- */
-    var revealEls = document.querySelectorAll('.reveal');
+    var revealEls = document.querySelectorAll('.reveal, .reveal-scale');
     if (revealEls.length && 'IntersectionObserver' in window) {
         var io = new IntersectionObserver(function (entries) {
             entries.forEach(function (entry) {
@@ -40,7 +42,7 @@
                     io.unobserve(entry.target);
                 }
             });
-        }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+        }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
         revealEls.forEach(function (el) { io.observe(el); });
     } else {
         revealEls.forEach(function (el) { el.classList.add('in'); });
@@ -52,6 +54,30 @@
             card.style.animationDelay = (i * 70) + 'ms';
         });
     });
+
+    /* ---------- Parallax + desvanecimiento del hero ---------- */
+    var parallaxEls = Array.prototype.slice.call(document.querySelectorAll('[data-parallax]'));
+    var heroContent = document.querySelector('.hero-content');
+    if (!reduceMotion && (parallaxEls.length || heroContent)) {
+        var ticking = false;
+        var update = function () {
+            ticking = false;
+            var y = window.scrollY;
+            parallaxEls.forEach(function (el) {
+                var speed = parseFloat(el.dataset.parallax) || 0.3;
+                el.style.transform = 'translate3d(0,' + (y * speed) + 'px,0)';
+            });
+            if (heroContent) {
+                var fade = Math.max(0, 1 - y / (window.innerHeight * 0.55));
+                heroContent.style.opacity = fade.toFixed(3);
+                heroContent.style.transform = 'translate3d(0,' + (y * 0.18) + 'px,0)';
+            }
+        };
+        window.addEventListener('scroll', function () {
+            if (!ticking) { ticking = true; requestAnimationFrame(update); }
+        }, { passive: true });
+        update();
+    }
 
     /* ---------- Filtros del catálogo ---------- */
     var filterWrap = document.querySelector('.filters');

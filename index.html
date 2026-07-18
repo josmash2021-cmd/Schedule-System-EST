@@ -23,7 +23,7 @@
             <div class="nav-links">
                 <a href="/" class="active">Inicio</a>
                 <a href="/productos">Productos</a>
-                <a href="/solicitud-servicio" class="btn btn-primary btn-sm nav-cta">Reservar cita</a>
+                <a href="/solicitud-servicio" class="btn btn-blue btn-sm nav-cta">Reservar cita</a>
             </div>
         </div>
     </nav>
@@ -31,173 +31,106 @@
     <main>
         <!-- ================= HERO ================= -->
         <section class="hero">
-            <div class="orb orb-1"></div>
-            <div class="orb orb-2"></div>
-            <div class="orb orb-3"></div>
-            <div class="container hero-inner">
-                <div>
-                    <span class="hero-badge h-in h-in-1">✦ Nuevos iPhone 16 Pro y MacBook con chip M3</span>
-                    <h1 class="h-in h-in-2">MacBook e iPhone.<br><span class="grad-text">Sin filas, sin complicaciones.</span></h1>
-                    <p class="lead h-in h-in-3">Descubre la nueva generación de MacBook Air, MacBook Pro e iPhone. Equipos originales con garantía, asesoría personalizada y el mejor servicio técnico de Hoover, Alabama.</p>
-                    <div class="hero-ctas h-in h-in-4">
-                        <a href="/productos" class="btn btn-light">Explorar productos</a>
-                        <a href="/solicitud-servicio" class="btn btn-ghost">Reservar una cita</a>
-                    </div>
-                    <div class="hero-meta h-in h-in-5">
-                        <div>
-                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            Equipos 100% originales
-                        </div>
-                        <div>
-                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            Garantía incluida
-                        </div>
-                        <div>
-                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            Asesoría en español
-                        </div>
-                    </div>
-                </div>
-
-                <div class="hero-visual">
-                    <div class="hero-stage float-slow">
-                        <div class="device-macbook">
-                            <div class="mb-lid"><div class="mb-screen" style="--screen:linear-gradient(135deg,#0a84ff,#5e5ce6 55%,#bf5af2)"></div></div>
-                            <div class="mb-base"></div>
-                        </div>
-                        <div class="device-iphone float-slower">
-                            <div class="ip-body"><div class="ip-screen" style="--screen:linear-gradient(160deg,#64d2ff,#0a84ff 55%,#5e5ce6)"></div></div>
-                        </div>
-                        <div class="chip-float chip-1">Chip Apple M3<small>Hasta 18 hrs de batería</small></div>
-                        <div class="chip-float chip-2">iPhone 16 Pro<small>Titanio · A18 Pro</small></div>
-                    </div>
+            <div class="hero-media" data-parallax="0.28">
+                <img src="assets/img/hero-macbook.jpg" alt="MacBook iluminado en la oscuridad" fetchpriority="high">
+            </div>
+            <div class="hero-content">
+                <span class="hero-eyebrow h-in h-in-1">ElectronicST · Hoover, Alabama</span>
+                <h1 class="h-in h-in-2">Lo mejor de Apple.<br>Aquí, en tus manos.</h1>
+                <p class="sub h-in h-in-3">MacBook Air, MacBook Pro y la nueva generación de iPhone. Equipos originales, con garantía y servicio técnico experto.</p>
+                <div class="hero-ctas h-in h-in-4">
+                    <a href="/productos" class="btn btn-blue">Explorar productos</a>
+                    <a href="/solicitud-servicio" class="btn btn-ghost">Reservar una cita</a>
                 </div>
             </div>
+            <div class="scroll-cue" aria-hidden="true"><span></span></div>
         </section>
 
-        <!-- ================= DESTACADOS ================= -->
-        <section class="section">
+        <!-- ================= MARQUEE ================= -->
+        <div class="marquee" aria-hidden="true">
+            <div class="marquee-track">
+                <span>MacBook Air</span><b>✦</b><span>MacBook Pro</span><b>✦</b><span>iPhone 16</span><b>✦</b><span>iPhone 16 Pro</span><b>✦</b><span>Chip M3</span><b>✦</b><span>Chip A18 Pro</span><b>✦</b><span>Garantía incluida</span><b>✦</b>
+                <span>MacBook Air</span><b>✦</b><span>MacBook Pro</span><b>✦</b><span>iPhone 16</span><b>✦</b><span>iPhone 16 Pro</span><b>✦</b><span>Chip M3</span><b>✦</b><span>Chip A18 Pro</span><b>✦</b><span>Garantía incluida</span><b>✦</b>
+            </div>
+        </div>
+
+        <!-- ================= CAPÍTULO: MACBOOK ================= -->
+        <section class="chapter">
             <div class="container">
-                <div class="section-head reveal">
-                    <span class="eyebrow">Destacados</span>
-                    <h2>Los favoritos de nuestros clientes</h2>
-                    <p>Los equipos más pedidos de la tienda, listos para llevártelos hoy.</p>
+                <span class="eyebrow reveal">MacBook</span>
+                <h2 class="reveal">Mente brillante.<br>Diseño imposible.</h2>
+                <p class="sub reveal">Con los chips M3, M3 Pro y M3 Max, la familia MacBook convierte cualquier idea en realidad. Hasta 18 horas de batería.</p>
+                <p class="price-line reveal">Desde $1,099</p>
+                <div class="cta-row reveal">
+                    <a href="/productos" class="btn btn-blue">Ver MacBook</a>
+                    <a class="link-arrow" href="/solicitud-servicio">Agenda tu visita
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                    </a>
                 </div>
-                <div class="grid-products">
-                    <article class="card-product">
-                        <div class="card-media">
-                            <span class="card-badge">Más vendida</span>
-                            <div class="device-macbook">
-                                <div class="mb-lid"><div class="mb-screen" style="--screen:linear-gradient(135deg,#56ccf2,#2f80ed)"></div></div>
-                                <div class="mb-base"></div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <h3>MacBook Air 13"</h3>
-                            <p class="card-tag">Ligera. Potente. Tuya.</p>
-                            <div class="specs">
-                                <span class="spec">Chip M3</span>
-                                <span class="spec">8 GB RAM</span>
-                                <span class="spec">256 GB SSD</span>
-                            </div>
-                            <div class="card-foot">
-                                <div class="price"><small>desde</small>$1,099</div>
-                                <a href="/solicitud-servicio" class="btn btn-primary btn-sm">Agendar visita</a>
-                            </div>
-                        </div>
-                    </article>
+            </div>
+            <div class="chapter-figure reveal-scale">
+                <div class="glow" style="--glow:#7b5cff"></div>
+                <img src="assets/img/macbook-pro.jpg" alt="MacBook Pro con el logo iluminado en tonos morados">
+            </div>
+        </section>
 
-                    <article class="card-product">
-                        <div class="card-media">
-                            <span class="card-badge new">Nuevo</span>
-                            <div class="device-iphone">
-                                <div class="ip-body"><div class="ip-screen" style="--screen:linear-gradient(160deg,#e8c07d,#9a6b3f)"></div></div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <h3>iPhone 16 Pro</h3>
-                            <p class="card-tag">Titanio. Cámara Pro. A18 Pro.</p>
-                            <div class="specs">
-                                <span class="spec">Chip A18 Pro</span>
-                                <span class="spec">256 GB</span>
-                                <span class="spec">Cámara 48 MP</span>
-                            </div>
-                            <div class="card-foot">
-                                <div class="price"><small>desde</small>$999</div>
-                                <a href="/solicitud-servicio" class="btn btn-primary btn-sm">Agendar visita</a>
-                            </div>
-                        </div>
-                    </article>
+        <!-- ================= CAPÍTULO: IPHONE ================= -->
+        <section class="chapter">
+            <div class="container">
+                <span class="eyebrow reveal">iPhone</span>
+                <h2 class="reveal">Titanio. Cámara Pro.<br>Pura potencia.</h2>
+                <p class="sub reveal">El iPhone 16 Pro con chip A18 Pro lleva la fotografía, los juegos y tu día a día a otro nivel.</p>
+                <p class="price-line reveal">Desde $799</p>
+                <div class="cta-row reveal">
+                    <a href="/productos" class="btn btn-blue">Ver iPhone</a>
+                    <a class="link-arrow" href="/solicitud-servicio">Agenda tu visita
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                    </a>
+                </div>
+            </div>
+            <div class="chapter-figure reveal-scale">
+                <div class="glow" style="--glow:#0e7a7a"></div>
+                <img src="assets/img/iphone-chapter.jpg" alt="iPhone junto a AirPods sobre fondo verde azulado">
+            </div>
+        </section>
 
-                    <article class="card-product">
-                        <div class="card-media">
-                            <div class="device-macbook">
-                                <div class="mb-lid"><div class="mb-screen" style="--screen:linear-gradient(135deg,#232526,#414345)"></div></div>
-                                <div class="mb-base"></div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <h3>MacBook Pro 14"</h3>
-                            <p class="card-tag">Para quienes lo exigen todo.</p>
-                            <div class="specs">
-                                <span class="spec">Chip M3 Pro</span>
-                                <span class="spec">18 GB RAM</span>
-                                <span class="spec">512 GB SSD</span>
-                            </div>
-                            <div class="card-foot">
-                                <div class="price"><small>desde</small>$1,999</div>
-                                <a href="/solicitud-servicio" class="btn btn-primary btn-sm">Agendar visita</a>
-                            </div>
-                        </div>
-                    </article>
+        <!-- ================= VALORES ================= -->
+        <section class="values container">
+            <div class="values-grid">
+                <div class="value reveal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    <h3>Equipos originales</h3>
+                    <p>Productos 100% originales, verificados antes de cada entrega.</p>
+                </div>
+                <div class="value reveal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    <h3>Garantía incluida</h3>
+                    <p>Compra con confianza: garantía real y soporte post-venta.</p>
+                </div>
+                <div class="value reveal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                    <h3>Servicio técnico experto</h3>
+                    <p>Reparación y mantenimiento especializado en dispositivos Apple.</p>
+                </div>
+                <div class="value reveal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                    <h3>Asesoría en español</h3>
+                    <p>Te ayudamos a elegir el equipo ideal, en tu idioma y sin presión.</p>
                 </div>
             </div>
         </section>
 
-        <!-- ================= CITAS / SERVICIO TÉCNICO ================= -->
+        <!-- ================= CITAS ================= -->
         <section class="cta-banner reveal">
             <div class="orb orb-1"></div>
             <div class="orb orb-2"></div>
             <div class="cta-banner-inner">
                 <span class="eyebrow">Servicio técnico</span>
-                <h2>¿Tu equipo necesita reparación o mantenimiento?</h2>
+                <h2>¿Tu equipo necesita reparación?</h2>
                 <p>Nuestro sistema de citas sigue disponible: agenda en línea en menos de 2 minutos y recibe confirmación inmediata.</p>
                 <div class="buttons">
                     <a href="/solicitud-servicio" class="btn btn-light">Reservar mi cita</a>
                     <a href="tel:+12055737840" class="btn btn-ghost">Llamar: (205) 573-7840</a>
-                </div>
-            </div>
-        </section>
-
-        <!-- ================= POR QUÉ NOSOTROS ================= -->
-        <section class="section">
-            <div class="container">
-                <div class="section-head reveal">
-                    <span class="eyebrow">Por qué ElectronicST</span>
-                    <h2>Compra con total confianza</h2>
-                    <p>Tecnología original, garantía real y un equipo que habla tu idioma.</p>
-                </div>
-                <div class="grid-features">
-                    <div class="feature reveal">
-                        <div class="feature-icon">✅</div>
-                        <h3>Equipos originales</h3>
-                        <p>Todos nuestros productos son 100% originales y verificados antes de la entrega.</p>
-                    </div>
-                    <div class="feature reveal">
-                        <div class="feature-icon">🛡️</div>
-                        <h3>Garantía incluida</h3>
-                        <p>Compra con confianza: cada equipo incluye garantía y soporte post-venta.</p>
-                    </div>
-                    <div class="feature reveal">
-                        <div class="feature-icon">🛠️</div>
-                        <h3>Servicio técnico experto</h3>
-                        <p>Reparación y mantenimiento especializado para tus dispositivos Apple.</p>
-                    </div>
-                    <div class="feature reveal">
-                        <div class="feature-icon">💬</div>
-                        <h3>Asesoría personalizada</h3>
-                        <p>Te ayudamos a elegir el equipo ideal para ti, en tu idioma y sin presión.</p>
-                    </div>
                 </div>
             </div>
         </section>
