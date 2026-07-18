@@ -19,34 +19,15 @@ body {
     background: var(--black); color: var(--text); line-height: 1.6;
     -webkit-font-smoothing: antialiased; overflow-x: hidden;
 }
-/* Fondo de seda: haces de luz blancos difuminados en las esquinas.
-   Fijos (no se mueven con el scroll) y con una deriva casi imperceptible. */
-body::before, body::after {
-    content: ""; position: fixed; z-index: -1; pointer-events: none;
-    width: 90vmax; height: 90vmax;
-    filter: blur(60px);
-}
+/* Fondo de seda: haces de luz monocromos generados como imagen propia
+   (assets/img/bg-silk.jpg; versión vertical bg-silk-m.jpg para móvil).
+   Fijo: no se mueve con el scroll. */
 body::before {
-    top: -55vmax; right: -45vmax;
-    background:
-        linear-gradient(118deg, transparent 28%, rgba(255, 255, 255, .30) 40%, rgba(255, 255, 255, .08) 47%, transparent 56%),
-        linear-gradient(118deg, transparent 46%, rgba(255, 255, 255, .18) 58%, transparent 69%),
-        linear-gradient(118deg, transparent 60%, rgba(255, 255, 255, .22) 71%, transparent 82%);
-    animation: silkA 26s ease-in-out infinite alternate;
+    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background: url("img/bg-silk.jpg") center / cover no-repeat;
 }
-body::after {
-    bottom: -58vmax; left: -48vmax;
-    background:
-        linear-gradient(118deg, transparent 34%, rgba(255, 255, 255, .20) 50%, transparent 66%);
-    animation: silkB 32s ease-in-out infinite alternate;
-}
-@keyframes silkA {
-    from { transform: translate3d(0, 0, 0); }
-    to { transform: translate3d(-3vmax, 2.5vmax, 0); }
-}
-@keyframes silkB {
-    from { transform: translate3d(0, 0, 0); }
-    to { transform: translate3d(2.5vmax, -2vmax, 0); }
+@media (max-width: 720px) {
+    body::before { background-image: url("img/bg-silk-m.jpg"); }
 }
 img { max-width: 100%; display: block; }
 a { -webkit-tap-highlight-color: transparent; }

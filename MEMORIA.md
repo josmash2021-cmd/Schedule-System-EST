@@ -105,9 +105,11 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   `.btn-blue` ahora es botón blanco con texto negro (idéntico a `.btn-light`),
   y todos los acentos (eyebrow, iconos, link-arrow, marquee, badge `.new`,
   glows de capítulos) usan blancos/grises. No reintroducir color sin pedirlo.
-  Fondo de seda (2026-07-18): `body::before/::after` fijos con haces de luz
-  blancos difuminados en las esquinas sup-derecha e inf-izquierda (gradientes
-  118deg + blur 60px + deriva `silkA`/`silkB`), z-index -1 detrás del contenido.
+  Fondo de seda (2026-07-18): imágenes propias generadas con
+  `tools/generar_fondo_seda.py` (PIL) — `assets/img/bg-silk.jpg` (1920×1200
+  escritorio) y `assets/img/bg-silk-m.jpg` (700×1400 móvil, se activa con
+  media query ≤720px). Servidas fijas vía `body::before` (z-index -1).
+  Para retocarlas: editar el script (beams/ángulo/núcleos) y re-ejecutarlo.
   Nav (2026-07-18): cápsula flotante sticky — `.nav` es wrapper con
   `pointer-events:none`; el fondo/blur va en `.nav-inner::before` (si se pone en
   `.nav-inner`, el menú móvil `fixed` dejaría de ser relativo al viewport).
