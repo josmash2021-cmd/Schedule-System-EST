@@ -83,14 +83,23 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   páginas (nav/footer 44px vía `site.css`, solicitud 72px, admin 52/88px,
   legales 44px); radius sutil solo en las páginas claras, donde el fondo negro
   del logo se ve como placa. No volver a poner `background`/`padding` al img.
-- `assets/site.js` (IIFE ES5): nav con fondo al scroll, burger móvil, reveals
-  por IntersectionObserver, delay escalonado de tarjetas, parallax/fade del hero,
-  filtros del catálogo. Respeta `prefers-reduced-motion`.
+- `assets/site.js` (IIFE ES5): nav (cápsula flotante con estado `.scrolled`,
+  píldora deslizante `.nav-pill` que sigue al hover y descansa en el activo,
+  menú móvil a pantalla completa con entrada escalonada vía `--d`, contacto
+  inyectado `.nav-meta`, cierre con ESC y scroll-lock del body), reveals por
+  IntersectionObserver, parallax/fade del hero, filtros del catálogo. Respeta
+  `prefers-reduced-motion`. OJO: todo vive en un mismo IIFE — no redeclarar
+  `pill`/`movePill` (son de los filtros); lo del nav usa prefijo `nav*`.
 - `assets/transitions.js`: se carga en TODAS las páginas. Fade de entrada/salida
   entre páginas internas, prefetch al hover, ripple en `.btn`,
   `@view-transition`, fix bfcache.
 - `assets/site.css`: sistema de diseño oscuro (tokens: `--black #000`,
   `--panel #0c0c0f`, `--blue #0071e3`, `--link #2997ff`, radio 999px en botones).
+  Nav (2026-07-18): cápsula flotante sticky — `.nav` es wrapper con
+  `pointer-events:none`; el fondo/blur va en `.nav-inner::before` (si se pone en
+  `.nav-inner`, el menú móvil `fixed` dejaría de ser relativo al viewport).
+  Capas: brand/burger z2 > `.nav-links` z1 > fondo cápsula z0. Hero usa
+  `calc(100svh - 70px)` porque la cápsula ocupa 70px en flujo.
 
 ### ⚠️ Dos sistemas de diseño coexisten
 - Oscuro cinematográfico: `index.html` + `productos.html` (vía `site.css`).

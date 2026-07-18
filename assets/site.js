@@ -14,21 +14,64 @@
         onScrollNav();
     }
 
-    /* ---------- Menú móvil ---------- */
+    /* ---------- Navegación: píldora deslizante + menú móvil ---------- */
     var burger = document.querySelector('.burger');
     var links = document.querySelector('.nav-links');
     if (burger && links) {
-        burger.addEventListener('click', function () {
-            var open = links.classList.toggle('open');
+        /* Píldora que sigue al enlace bajo el cursor y descansa en el activo
+           (solo escritorio; en móvil la oculta el CSS) */
+        var navPill = document.createElement('span');
+        navPill.className = 'nav-pill';
+        navPill.setAttribute('aria-hidden', 'true');
+        links.appendChild(navPill);
+
+        var navAnchors = Array.prototype.slice.call(links.querySelectorAll('a:not(.nav-cta)'));
+        var activeLink = links.querySelector('a.active') || navAnchors[0];
+        if (activeLink) activeLink.setAttribute('aria-current', 'page');
+
+        var moveNavPill = function (el, instant) {
+            if (!el) { navPill.style.opacity = '0'; return; }
+            if (instant) navPill.style.transition = 'none';
+            navPill.style.left = el.offsetLeft + 'px';
+            navPill.style.width = el.offsetWidth + 'px';
+            navPill.style.opacity = '1';
+            if (instant) { void navPill.offsetWidth; navPill.style.transition = ''; }
+        };
+        moveNavPill(activeLink, true);
+        window.addEventListener('load', function () { moveNavPill(activeLink, true); });
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(function () { moveNavPill(activeLink, true); });
+        }
+        navAnchors.forEach(function (a) {
+            a.addEventListener('mouseenter', function () { moveNavPill(a); });
+        });
+        links.addEventListener('mouseleave', function () { moveNavPill(activeLink); });
+
+        /* Contacto visible solo dentro del menú móvil */
+        var navMeta = document.createElement('div');
+        navMeta.className = 'nav-meta';
+        navMeta.innerHTML = '<a href="tel:+12055737840">(205) 573-7840</a><br>3659 Lorna Rd Suite 157, Hoover, AL 35216';
+        links.appendChild(navMeta);
+
+        /* Entrada escalonada de los enlaces al abrir el menú móvil */
+        Array.prototype.slice.call(links.querySelectorAll('a')).forEach(function (a, i) {
+            a.style.setProperty('--d', (80 + i * 70) + 'ms');
+        });
+
+        var setMenu = function (open) {
+            links.classList.toggle('open', open);
             burger.classList.toggle('open', open);
             burger.setAttribute('aria-expanded', open ? 'true' : 'false');
-        });
+            document.body.style.overflow = open ? 'hidden' : '';
+        };
+        burger.addEventListener('click', function () { setMenu(!links.classList.contains('open')); });
         links.addEventListener('click', function (e) {
-            if (e.target.closest('a')) {
-                links.classList.remove('open');
-                burger.classList.remove('open');
-                burger.setAttribute('aria-expanded', 'false');
-            }
+            if (e.target.closest('a')) setMenu(false);
+        });
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+        window.addEventListener('resize', function () {
+            if (window.innerWidth > 720) setMenu(false);
+            moveNavPill(activeLink, true);
         });
     }
 
