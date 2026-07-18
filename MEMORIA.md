@@ -105,6 +105,9 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   `.btn-blue` ahora es botón blanco con texto negro (idéntico a `.btn-light`),
   y todos los acentos (eyebrow, iconos, link-arrow, marquee, badge `.new`,
   glows de capítulos) usan blancos/grises. No reintroducir color sin pedirlo.
+  Fondo de seda (2026-07-18): `body::before/::after` fijos con haces de luz
+  blancos difuminados en las esquinas sup-derecha e inf-izquierda (gradientes
+  118deg + blur 60px + deriva `silkA`/`silkB`), z-index -1 detrás del contenido.
   Nav (2026-07-18): cápsula flotante sticky — `.nav` es wrapper con
   `pointer-events:none`; el fondo/blur va en `.nav-inner::before` (si se pone en
   `.nav-inner`, el menú móvil `fixed` dejaría de ser relativo al viewport).
