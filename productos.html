@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productos — ElectronicST</title>
+    <meta name="description" content="Catálogo de MacBook Air, MacBook Pro e iPhone en ElectronicST, Hoover, AL.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="container nav-inner">
+            <a href="/" class="brand">
+                <img src="logo.jpg" alt="ElectronicST">
+                <span>ElectronicST</span>
+            </a>
+            <button class="burger" aria-label="Abrir menú" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+            <div class="nav-links">
+                <a href="/">Inicio</a>
+                <a href="/productos" class="active">Productos</a>
+                <a href="/solicitud-servicio" class="btn btn-primary btn-sm nav-cta">Reservar cita</a>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <header class="page-hero container">
+            <span class="eyebrow">Catálogo</span>
+            <h1>Nuestros <span class="grad-text">productos</span></h1>
+            <p>MacBook Air, MacBook Pro y la línea completa de iPhone. Agenda tu visita y te lo preparamos.</p>
+        </header>
+
+        <div class="filters" role="tablist" aria-label="Filtrar productos">
+            <span class="filter-pill" aria-hidden="true"></span>
+            <button class="filter-btn active" data-filter="all" role="tab">Todos</button>
+            <button class="filter-btn" data-filter="air" role="tab">MacBook Air</button>
+            <button class="filter-btn" data-filter="pro" role="tab">MacBook Pro</button>
+            <button class="filter-btn" data-filter="iphone" role="tab">iPhone</button>
+        </div>
+
+        <section class="container grid-products" style="padding-bottom:96px;">
+            <!-- ============ MacBook Air ============ -->
+            <article class="card-product" data-cat="air">
+                <div class="card-media">
+                    <span class="card-badge">Más vendida</span>
+                    <div class="device-macbook">
+                        <div class="mb-lid"><div class="mb-screen" style="--screen:linear-gradient(135deg,#56ccf2,#2f80ed)"></div></div>
+                        <div class="mb-base"></div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h3>MacBook Air 13"</h3>
+                    <p class="card-tag">La portátil perfecta para el día a día.</p>
+                    <div class="specs">
+                        <span class="spec">Chip M3</span>
+                        <span class="spec">8 GB RAM</span>
+                        <span class="spec">256 GB SSD</span>
+                    </div>
+                    <div class="card-foot">
+                        <div class="price"><small>desde</small>$1,099</div>
+                        <a href="/solicitud-servicio" class="btn btn-primary btn-sm">Agendar visita</a>
+                    </div>
+                </div>
+            </article>
+
+            <article class="card-product" data-cat="air">
+                <div class="card-media">
+                    <div class="device-macbook">
+                        <div class="mb-lid"><div class="mb-screen" style="--screen:linear-gradient(135deg,#89f7fe,#66a6ff)"></div></div>
+                        <div class="mb-base"></div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h3>MacBook Air 15"</h3>
+                    <p class="card-tag">Más pantalla, misma ligereza.</p>
+                    <div class="specs">
+                        <span class="spec">Chip M3</span>
+                        <span class="spec">8 GB RAM</span>
+                        <span class="spec">256 GB SSD</span>
+                    </div>
+                    <div class="card-foot">
+                        <div class="price"><small>desde</small>$1,299</div>
+                        <a href="/solicitud-servicio" class="btn btn-primary btn-sm">Agendar visita</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- ============ MacBook Pro ============ -->
+            <article class="card-product" data-cat="pro">
+                <div class="card-media">
+                    <span class="card-badge new">Nuevo</span>
+                    <div class="device-macbook">
+                        <div class="mb-lid"><div class="mb-screen" style="--screen:linear-gradient(135deg,#232526,#414345)"></div></div>
+                        <div class="mb-base"></div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h3>MacBook Pro 14"</h3>
+                    <p class="card-tag">Potencia profesional en tus manos.</p>
+                    <div class="specs">
+                        <span class="spec">Chip M3 Pro</span>
+                        <span class="spec">18 GB RAM</span>
+                        <span class="spec">512 GB SSD</span>
+                    </div>
+                    <div class="card-foot">
+                        <div class="price"><small>desde</small>$1,999</div>
+                        <a href="/solicitud-servicio" class="btn btn-primary btn-sm">Agendar visita</a>
+                    </div>
+                </div>
+            </article>
+
+            <article class="card-product" data-cat="pro">
+                <div class="card-media">
+                    <div class="device-macbook">
+                        <div class="mb-lid"><div class="mb-screen" style="--screen:linear-gradient(135deg,#bdc3c7,#2c3e50)"></div></div>
+                        <div class="mb-base"></div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h3>MacBook Pro 16"</h3>
+                    <p class="card-tag">La bestia para creativos exigentes.</p>
+                    <div class="specs">
+                        <span class="spec">Chip M3 Max</span>
+                        <span class="spec">36 GB RAM</span>
+                        <span class="spec">1 TB SSD</span>
+                    </div>
+                    <div class="card-foot">
+                        <div class="price"><small>desde</small>$2,999</div>
+                        <a href="/solicitud-servicio" class="btn btn-primary btn-sm">Agendar visita</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- ============ iPhone ============ -->
+            <article class="card-product" data-cat="iphone">
+                <div class="card-media">
+                    <div class="device-iphone">
+                        <div class="ip-body"><div class="ip-screen" style="--screen:linear-gradient(160deg,#667eea,#764ba2)"></div></div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h3>iPhone 16</h3>
+                    <p class="card-tag">El iPhone para todos.</p>
+                    <div class="specs">
+                        <span class="spec">Chip A18</span>
+                        <span class="spec">128 GB</span>
+                        <span class="spec">Cámara 48 MP</span>
+                    </div>
+                    <div class="card-foot">
+                        <div class="price"><small>desde</small>$799</div>
+                        <a href="/solicitud-servicio" class="btn btn-primary btn-sm">Agendar visita</a>
+                    </div>
+                </div>
+            </article>
+
+            <article class="card-product" data-cat="iphone">
+                <div class="card-media">
+                    <div class="device-iphone">
+                        <div class="ip-body"><div class="ip-screen" style="--screen:linear-gradient(160deg,#f093fb,#f5576c)"></div></div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h3>iPhone 16 Plus</h3>
+                    <p class="card-tag">Pantalla grande, batería enorme.</p>
+                    <div class="specs">
+                        <span class="spec">Chip A18</span>
+                        <span class="spec">128 GB</span>
+                        <span class="spec">Pantalla 6.7"</span>
+                    </div>
+                    <div class="card-foot">
+                        <div class="price"><small>desde</small>$899</div>
+                        <a href="/solicitud-servicio" class="btn btn-primary btn-sm">Agendar visita</a>
+                    </div>
+                </div>
+            </article>
+
+            <article class="card-product" data-cat="iphone">
+                <div class="card-media">
+                    <span class="card-badge new">Nuevo</span>
+                    <div class="device-iphone">
+                        <div class="ip-body"><div class="ip-screen" style="--screen:linear-gradient(160deg,#e8c07d,#9a6b3f)"></div></div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h3>iPhone 16 Pro</h3>
+                    <p class="card-tag">Titanio. Cámara Pro. A18 Pro.</p>
+                    <div class="specs">
+                        <span class="spec">Chip A18 Pro</span>
+                        <span class="spec">256 GB</span>
+                        <span class="spec">Cámara 48 MP</span>
+                    </div>
+                    <div class="card-foot">
+                        <div class="price"><small>desde</small>$999</div>
+                        <a href="/solicitud-servicio" class="btn btn-primary btn-sm">Agendar visita</a>
+                    </div>
+                </div>
+            </article>
+
+            <article class="card-product" data-cat="iphone">
+                <div class="card-media">
+                    <div class="device-iphone">
+                        <div class="ip-body"><div class="ip-screen" style="--screen:linear-gradient(160deg,#4b4b4b,#0b0b0b)"></div></div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h3>iPhone 16 Pro Max</h3>
+                    <p class="card-tag">El iPhone definitivo.</p>
+                    <div class="specs">
+                        <span class="spec">Chip A18 Pro</span>
+                        <span class="spec">256 GB</span>
+                        <span class="spec">Zoom óptico 5x</span>
+                    </div>
+                    <div class="card-foot">
+                        <div class="price"><small>desde</small>$1,199</div>
+                        <a href="/solicitud-servicio" class="btn btn-primary btn-sm">Agendar visita</a>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <!-- ============ CITAS / SERVICIO ============ -->
+        <section class="cta-banner reveal">
+            <div class="orb orb-1"></div>
+            <div class="orb orb-2"></div>
+            <div class="cta-banner-inner">
+                <span class="eyebrow">¿No encuentras lo que buscas?</span>
+                <h2>Agenda una cita y te conseguimos el equipo ideal</h2>
+                <p>También ofrecemos reparación y mantenimiento especializado. Reserva en línea en menos de 2 minutos.</p>
+                <div class="buttons">
+                    <a href="/solicitud-servicio" class="btn btn-light">Reservar mi cita</a>
+                    <a href="tel:+12055737840" class="btn btn-ghost">Llamar: (205) 573-7840</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <a href="/" class="brand">
+                        <img src="logo.jpg" alt="ElectronicST">
+                        <span>ElectronicST</span>
+                    </a>
+                    <p>Tu tienda de confianza para MacBook, iPhone y servicio técnico especializado en Hoover, Alabama.</p>
+                </div>
+                <div class="footer-links">
+                    <a href="/productos">Productos</a>
+                    <a href="/solicitud-servicio">Reservar cita</a>
+                    <a href="/terminos">Términos y condiciones</a>
+                    <a href="/politicas">Políticas de privacidad</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© ElectronicST. Todos los derechos reservados.</span>
+                <span>3659 Lorna Rd Suite 157, Hoover, AL 35216 · (205) 573-7840</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/transitions.js" defer></script>
+    <script src="assets/site.js" defer></script>
+</body>
+</html>
