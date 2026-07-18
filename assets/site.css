@@ -19,15 +19,11 @@ body {
     background: var(--black); color: var(--text); line-height: 1.6;
     -webkit-font-smoothing: antialiased; overflow-x: hidden;
 }
-/* Fondo de seda: haces de luz monocromos generados como imagen propia
-   (assets/img/bg-silk.jpg; versión vertical bg-silk-m.jpg para móvil).
-   Fijo: no se mueve con el scroll. */
+/* Fondo de seda monocromo: imagen descargada del sitio de Resend
+   (assets/img/background-auth.webp). Fijo: no se mueve con el scroll. */
 body::before {
     content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-    background: url("img/bg-silk.jpg") center / cover no-repeat;
-}
-@media (max-width: 720px) {
-    body::before { background-image: url("img/bg-silk-m.jpg"); }
+    background: url("img/background-auth.webp") center / cover no-repeat;
 }
 img { max-width: 100%; display: block; }
 a { -webkit-tap-highlight-color: transparent; }
