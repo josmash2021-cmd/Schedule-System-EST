@@ -9,9 +9,6 @@
     --muted: #86868b;
     --muted-2: #a1a1aa;
     --line: rgba(255, 255, 255, .12);
-    --blue: #0071e3;
-    --blue-h: #2f8ef7;
-    --link: #2997ff;
     --ease: cubic-bezier(.22, 1, .36, 1);
 }
 
@@ -40,10 +37,10 @@ a { -webkit-tap-highlight-color: transparent; }
 }
 .btn:hover { transform: translateY(-2px); }
 .btn:active { transform: translateY(0) scale(.96); }
-.btn:focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }
+.btn:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 
-.btn-blue { background: var(--blue); color: #fff; box-shadow: 0 8px 24px rgba(0, 113, 227, .35); }
-.btn-blue:hover { background: var(--blue-h); box-shadow: 0 12px 32px rgba(0, 113, 227, .5); }
+.btn-blue { background: #fff; color: #0a0a0c; box-shadow: 0 8px 24px rgba(255, 255, 255, .14); }
+.btn-blue:hover { background: #e8e8ed; box-shadow: 0 12px 32px rgba(255, 255, 255, .2); }
 
 .btn-light { background: #fff; color: #1d1d1f; }
 .btn-light:hover { background: #e8e8ed; }
@@ -56,7 +53,7 @@ a { -webkit-tap-highlight-color: transparent; }
 /* Brillo que recorre el botón */
 .btn-blue::after, .btn-light::after {
     content: ""; position: absolute; top: 0; left: -90%; width: 45%; height: 100%;
-    background: linear-gradient(105deg, transparent, rgba(255, 255, 255, .35), transparent);
+    background: linear-gradient(105deg, transparent, rgba(0, 0, 0, .08), transparent);
     transform: skewX(-20deg); transition: left .6s var(--ease); pointer-events: none;
 }
 .btn-blue:hover::after, .btn-light:hover::after { left: 140%; }
@@ -64,10 +61,10 @@ a { -webkit-tap-highlight-color: transparent; }
 /* Enlace con flecha estilo Apple */
 .link-arrow {
     display: inline-flex; align-items: center; gap: 6px;
-    color: var(--link); text-decoration: none; font-weight: 500; font-size: 15px;
+    color: #fff; text-decoration: none; font-weight: 500; font-size: 15px;
     transition: color .2s;
 }
-.link-arrow:hover { color: #6cb5ff; }
+.link-arrow:hover { color: #c7c7cc; }
 .link-arrow svg { transition: transform .3s var(--ease); }
 .link-arrow:hover svg { transform: translateX(4px); }
 
@@ -230,14 +227,14 @@ a { -webkit-tap-highlight-color: transparent; }
     font-size: 12.5px; font-weight: 600; letter-spacing: .22em;
     text-transform: uppercase; color: #6e6e73; white-space: nowrap;
 }
-.marquee-track b { color: var(--link); font-size: 11px; }
+.marquee-track b { color: rgba(255, 255, 255, .45); font-size: 11px; }
 @keyframes marquee { to { transform: translateX(-50%); } }
 
 /* ---------------- Capítulos de producto ---------------- */
 .chapter { padding: 120px 0 30px; text-align: center; overflow: hidden; }
 .eyebrow {
     display: inline-block; font-size: 13px; font-weight: 600; letter-spacing: .24em;
-    text-transform: uppercase; color: var(--link);
+    text-transform: uppercase; color: rgba(255, 255, 255, .55);
 }
 .chapter h2 {
     font-size: clamp(36px, 5.5vw, 64px); font-weight: 800;
@@ -252,7 +249,7 @@ a { -webkit-tap-highlight-color: transparent; }
 .chapter-figure .glow {
     position: absolute; inset: 12% -4% auto; height: 75%;
     border-radius: 50%; filter: blur(100px); opacity: .45;
-    background: var(--glow, #0071e3); z-index: 0; pointer-events: none;
+    background: var(--glow, #8e8e93); z-index: 0; pointer-events: none;
 }
 .chapter-figure img {
     position: relative; z-index: 1; width: 100%; border-radius: 26px;
@@ -262,7 +259,7 @@ a { -webkit-tap-highlight-color: transparent; }
 /* ---------------- Valores ---------------- */
 .values { padding: 110px 0; }
 .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 44px 32px; }
-.value svg { width: 26px; height: 26px; color: var(--link); margin-bottom: 16px; }
+.value svg { width: 26px; height: 26px; color: rgba(255, 255, 255, .85); margin-bottom: 16px; }
 .value h3 { font-size: 16.5px; font-weight: 700; margin-bottom: 8px; }
 .value p { color: var(--muted); font-size: 14px; }
 
@@ -270,15 +267,25 @@ a { -webkit-tap-highlight-color: transparent; }
 .cta-banner {
     position: relative; margin: 40px 14px 0; border-radius: 28px; overflow: hidden;
     border: 1px solid var(--line);
-    background:
-        radial-gradient(75% 120% at 88% 10%, rgba(0, 113, 227, .15) 0%, transparent 60%),
-        radial-gradient(55% 95% at 8% 95%, rgba(124, 92, 255, .10) 0%, transparent 62%),
-        linear-gradient(180deg, #0d0d13 0%, #08080b 100%);
+    background: linear-gradient(180deg, #0d0d12 0%, #08080a 100%);
 }
-/* Haz de luz en el borde superior */
+/* Luz blanca que deriva lentamente por el panel */
+.cta-banner::before {
+    content: ""; position: absolute; inset: -25%; pointer-events: none;
+    background:
+        radial-gradient(36% 50% at 32% 42%, rgba(255, 255, 255, .10) 0%, transparent 70%),
+        radial-gradient(28% 42% at 68% 62%, rgba(255, 255, 255, .07) 0%, transparent 70%);
+    animation: ctaLight 16s ease-in-out infinite alternate;
+}
+@keyframes ctaLight {
+    0% { transform: translate3d(-4%, -3%, 0) scale(1); }
+    100% { transform: translate3d(4%, 4%, 0) scale(1.12); }
+}
+/* Campo de puntos */
 .cta-banner::after {
-    content: ""; position: absolute; top: 0; left: 12%; right: 12%; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(41, 151, 255, .5), transparent);
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image: radial-gradient(circle, rgba(255, 255, 255, .14) 1px, transparent 1.6px);
+    background-size: 24px 24px;
 }
 .cta-grid {
     position: relative; z-index: 1;
@@ -292,7 +299,7 @@ a { -webkit-tap-highlight-color: transparent; }
 .cta-copy > p { color: var(--muted-2); font-size: 16px; max-width: 480px; margin-bottom: 30px; }
 .cta-points { display: flex; flex-wrap: wrap; gap: 12px 26px; list-style: none; }
 .cta-points li { display: flex; align-items: center; gap: 10px; color: var(--muted-2); font-size: 13.5px; font-weight: 500; }
-.cta-points svg { width: 18px; height: 18px; color: var(--link); flex-shrink: 0; }
+.cta-points svg { width: 18px; height: 18px; color: rgba(255, 255, 255, .85); flex-shrink: 0; }
 
 .cta-card {
     background: rgba(255, 255, 255, .05);
@@ -373,7 +380,7 @@ a { -webkit-tap-highlight-color: transparent; }
     color: #fff; font-size: 10.5px; font-weight: 700;
     letter-spacing: .06em; padding: 5px 11px; border-radius: 999px; text-transform: uppercase;
 }
-.card-badge.new { background: var(--blue); border-color: transparent; }
+.card-badge.new { background: #fff; border-color: transparent; color: #0a0a0c; }
 
 .card-body { padding: 22px; }
 .card-body h3 { font-size: 19px; font-weight: 700; letter-spacing: -.01em; }

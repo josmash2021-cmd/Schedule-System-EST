@@ -46,9 +46,10 @@
 Hero a pantalla completa con parallax (`data-parallax="0.28"`), entrada
 escalonada (`.h-in-1..4`), marquee infinito, 2 "capítulos" (MacBook desde
 $1,099 / iPhone desde $799) con glow de color, 4 valores, y panel de reserva
-final (`.cta-banner`): fondo aurora suave (blooms azul/violeta + haz superior),
-copy con 3 puntos con iconos, y `.cta-card` de vidrio con botones + QR de citas
-(`qr-cita.png`). Footer con datos de la tienda.
+final (`.cta-banner`): campo de puntos + luz blanca animada que deriva lenta
+(`@keyframes ctaLight` en `::before`, puntos en `::after`), copy con 3 puntos
+con iconos, y `.cta-card` de vidrio con botones + QR de citas (`qr-cita.png`).
+Footer con datos de la tienda.
 
 ### `productos.html` — catálogo (misma hoja oscura)
 8 productos hardcodeados con foto, specs y precio "desde":
@@ -99,7 +100,11 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   entre páginas internas, prefetch al hover, ripple en `.btn`,
   `@view-transition`, fix bfcache.
 - `assets/site.css`: sistema de diseño oscuro (tokens: `--black #000`,
-  `--panel #0c0c0f`, `--blue #0071e3`, `--link #2997ff`, radio 999px en botones).
+  `--panel #0c0c0f`, radio 999px en botones). Tema MONOCROMO blanco/negro desde
+  2026-07-18: se eliminaron los tokens azules (`--blue`, `--blue-h`, `--link`);
+  `.btn-blue` ahora es botón blanco con texto negro (idéntico a `.btn-light`),
+  y todos los acentos (eyebrow, iconos, link-arrow, marquee, badge `.new`,
+  glows de capítulos) usan blancos/grises. No reintroducir color sin pedirlo.
   Nav (2026-07-18): cápsula flotante sticky — `.nav` es wrapper con
   `pointer-events:none`; el fondo/blur va en `.nav-inner::before` (si se pone en
   `.nav-inner`, el menú móvil `fixed` dejaría de ser relativo al viewport).
