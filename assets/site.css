@@ -83,11 +83,10 @@ a { -webkit-tap-highlight-color: transparent; }
 .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 60px; gap: 16px; }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 700; font-size: 16px; }
 .brand img {
-    width: 34px; height: 34px; border-radius: 8px; object-fit: cover;
-    background: #fff; padding: 2px;
+    height: 44px; width: auto;
     transition: transform .35s var(--ease);
 }
-.brand:hover img { transform: rotate(-6deg) scale(1.06); }
+.brand:hover img { transform: scale(1.06); }
 .nav-links { display: flex; align-items: center; gap: 4px; }
 .nav-links a {
     text-decoration: none; color: var(--muted-2); font-weight: 500; font-size: 13.5px;
