@@ -34,16 +34,21 @@
   código legado/alternativo con divergencias de lógica (ver §6).**
 - Hay dos configs de hosting (`vercel.json` y `netlify.toml`) y dos `package.json`
   (raíz vacía; `server/` con express, pg, jsonwebtoken, twilio, cors, dotenv).
-- `qr-cita.png` existe en raíz y NO se referencia en ningún archivo de código
-  (probablemente material impreso que apunta a `/solicitud-servicio`).
+- `qr-cita.png` (raíz): QR de citas. Regenerado el 2026-07-18 para apuntar a
+  `https://electronic-service-tech.vercel.app/solicitud-servicio` (antes apuntaba
+  a la URL vieja de Netlify `dynamic-tartufo-b1810a.netlify.app`; ojo si hay
+  material impreso con el QR anterior). Se muestra en el panel CTA de
+  index/productos.
 
 ## 3. Mapa del frontend
 
 ### `index.html` — landing oscura estilo Apple (usa `assets/site.css`)
 Hero a pantalla completa con parallax (`data-parallax="0.28"`), entrada
 escalonada (`.h-in-1..4`), marquee infinito, 2 "capítulos" (MacBook desde
-$1,099 / iPhone desde $799) con glow de color, 4 valores, banner CTA final con
-orbes animados. Footer con datos de la tienda.
+$1,099 / iPhone desde $799) con glow de color, 4 valores, y panel de reserva
+final (`.cta-banner`): rejilla técnica + haz de luz superior, copy con live-dot
+y 3 puntos con iconos, y `.cta-card` de vidrio con botones + QR de citas
+(`qr-cita.png`). Footer con datos de la tienda.
 
 ### `productos.html` — catálogo (misma hoja oscura)
 8 productos hardcodeados con foto, specs y precio "desde":

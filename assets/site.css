@@ -266,22 +266,74 @@ a { -webkit-tap-highlight-color: transparent; }
 .value h3 { font-size: 16.5px; font-weight: 700; margin-bottom: 8px; }
 .value p { color: var(--muted); font-size: 14px; }
 
-/* ---------------- Banner de citas ---------------- */
+/* ---------------- Panel de reserva (CTA) ---------------- */
 .cta-banner {
     position: relative; margin: 40px 14px 0; border-radius: 28px; overflow: hidden;
     border: 1px solid var(--line);
-    background: radial-gradient(130% 160% at 50% -30%, #1b1b24 0%, #070709 62%);
+    background:
+        radial-gradient(90% 150% at 10% 0%, rgba(0, 113, 227, .17) 0%, transparent 55%),
+        linear-gradient(180deg, #0b0b10 0%, #070709 100%);
 }
-.cta-banner-inner { position: relative; z-index: 1; max-width: 660px; margin: 0 auto; padding: 90px 32px; text-align: center; }
-.cta-banner h2 { font-size: clamp(28px, 4.5vw, 44px); font-weight: 800; letter-spacing: -.03em; line-height: 1.1; margin-bottom: 14px; text-wrap: balance; }
-.cta-banner p { color: var(--muted-2); font-size: 16px; margin-bottom: 34px; }
-.cta-banner .buttons { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
-.orb { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; animation: orbFloat 12s ease-in-out infinite; }
-.orb-1 { width: 380px; height: 380px; background: #0071e3; opacity: .3; top: -160px; right: -100px; }
-.orb-2 { width: 300px; height: 300px; background: #a960ee; opacity: .22; bottom: -140px; left: -100px; animation-delay: -5s; }
-@keyframes orbFloat {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(30px, -24px) scale(1.08); }
+/* Rejilla técnica de fondo, visible solo hacia la esquina superior izquierda */
+.cta-banner::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, .05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .05) 1px, transparent 1px);
+    background-size: 44px 44px;
+    -webkit-mask-image: radial-gradient(130% 110% at 15% 0%, #000 25%, transparent 72%);
+    mask-image: radial-gradient(130% 110% at 15% 0%, #000 25%, transparent 72%);
+}
+/* Haz de luz en el borde superior */
+.cta-banner::after {
+    content: ""; position: absolute; top: 0; left: 8%; right: 8%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(41, 151, 255, .75), transparent);
+}
+.cta-grid {
+    position: relative; z-index: 1;
+    display: grid; grid-template-columns: 1.15fr .85fr; gap: 44px; align-items: center;
+    padding: 74px 60px;
+}
+.cta-copy h2 {
+    font-size: clamp(28px, 4.5vw, 46px); font-weight: 800; letter-spacing: -.03em;
+    line-height: 1.08; margin: 16px 0 14px; text-wrap: balance;
+}
+.cta-copy > p { color: var(--muted-2); font-size: 16px; max-width: 480px; margin-bottom: 30px; }
+.cta-live { display: inline-flex; align-items: center; gap: 9px; }
+.live-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #30d158; flex-shrink: 0;
+    animation: livePulse 2.2s ease-out infinite;
+}
+@keyframes livePulse {
+    0% { box-shadow: 0 0 0 0 rgba(48, 209, 88, .55); }
+    70% { box-shadow: 0 0 0 9px rgba(48, 209, 88, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(48, 209, 88, 0); }
+}
+.cta-points { display: flex; flex-wrap: wrap; gap: 12px 26px; list-style: none; }
+.cta-points li { display: flex; align-items: center; gap: 10px; color: var(--muted-2); font-size: 13.5px; font-weight: 500; }
+.cta-points svg { width: 18px; height: 18px; color: var(--link); flex-shrink: 0; }
+
+.cta-card {
+    background: rgba(255, 255, 255, .05);
+    border: 1px solid var(--line); border-radius: 22px;
+    padding: 24px; display: flex; flex-direction: column; gap: 12px;
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .4);
+}
+.cta-card .btn { width: 100%; }
+.cta-qr {
+    display: flex; align-items: center; gap: 14px;
+    margin-top: 8px; padding-top: 18px;
+    border-top: 1px dashed rgba(255, 255, 255, .16);
+}
+.cta-qr img { width: 84px; height: 84px; border-radius: 10px; border: 1px solid var(--line); }
+.cta-qr span { color: var(--muted); font-size: 12.5px; line-height: 1.6; }
+
+@media (max-width: 860px) {
+    .cta-grid { grid-template-columns: 1fr; gap: 36px; padding: 56px 26px; text-align: center; }
+    .cta-copy > p { margin-inline: auto; }
+    .cta-live, .cta-points { justify-content: center; }
+    .cta-qr { justify-content: center; text-align: left; }
 }
 
 /* ---------------- Catálogo (productos) ---------------- */
