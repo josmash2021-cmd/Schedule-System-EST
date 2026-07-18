@@ -46,8 +46,8 @@
 Hero a pantalla completa con parallax (`data-parallax="0.28"`), entrada
 escalonada (`.h-in-1..4`), marquee infinito, 2 "capítulos" (MacBook desde
 $1,099 / iPhone desde $799) con glow de color, 4 valores, y panel de reserva
-final (`.cta-banner`): rejilla técnica + haz de luz superior, copy con live-dot
-y 3 puntos con iconos, y `.cta-card` de vidrio con botones + QR de citas
+final (`.cta-banner`): fondo aurora suave (blooms azul/violeta + haz superior),
+copy con 3 puntos con iconos, y `.cta-card` de vidrio con botones + QR de citas
 (`qr-cita.png`). Footer con datos de la tienda.
 
 ### `productos.html` — catálogo (misma hoja oscura)
