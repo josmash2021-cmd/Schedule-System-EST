@@ -108,7 +108,8 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   Fondo de seda (2026-07-18): imagen real descargada del sitio de Resend,
   guardada como `assets/img/background-auth.webp`. Servida fija vía
   `body::before` (z-index -1) con `center / cover no-repeat`. Sustituye a
-  las imágenes generadas previamente (`bg-silk.jpg` / `bg-silk-m.jpg`).
+  las imágenes generadas previamente (`bg-silk.jpg` / `bg-silk-m.jpg`), que
+  fueron eliminadas junto con `tools/generar_fondo_seda.py`.
   Nav (2026-07-18): cápsula flotante sticky — `.nav` es wrapper con
   `pointer-events:none`; el fondo/blur va en `.nav-inner::before` (si se pone en
   `.nav-inner`, el menú móvil `fixed` dejaría de ser relativo al viewport).
