@@ -520,7 +520,8 @@
                 if (isAvailable) { cell.classList.add('available'); cell.style.animationDelay = `${(d % 7) * 0.03}s`; }
                 else cell.classList.add('disabled');
                 if (dateStr === todayStr) cell.classList.add('today');
-                if (dateStr === selectedDate) cell.classList.add('selected');
+                // Nunca marcar como selected un día que no esté disponible.
+                if (isAvailable && dateStr === selectedDate) cell.classList.add('selected');
                 if (isAvailable) cell.addEventListener('click', () => selectDate(dateStr));
                 els.calendarGrid.appendChild(cell);
             }
@@ -529,11 +530,20 @@
 
         function autoSelectFirstAvailable() {
             if (selectedDate) return;
-            const firstAvailable = els.calendarGrid.querySelector('.cal-cell.available');
+            const firstAvailable = els.calendarGrid.querySelector('.cal-cell.available:not(.disabled):not(.today)');
             if (firstAvailable) firstAvailable.click();
         }
 
         function selectDate(dateStr) {
+            // Seguridad adicional: nunca seleccionar fechas pasadas, domingos o el día actual.
+            const today = new Date(), todayStr = toISODate(today);
+            const date = new Date(dateStr + 'T00:00:00');
+            const isPast = dateStr <= todayStr, isSunday = date.getDay() === 0;
+            if (isPast || isSunday) {
+                selectedDate = null; selectedTime = null;
+                renderCalendar();
+                return;
+            }
             selectedDate = dateStr; selectedTime = null;
             renderCalendar(); setStep(2);
             els.slotsTitle.textContent = `Horarios para ${dateStr}`;
