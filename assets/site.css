@@ -367,11 +367,11 @@ a { -webkit-tap-highlight-color: transparent; }
     box-shadow: 0 24px 60px rgba(0, 0, 0, .4);
 }
 .cta-logo {
-    width: 320px; height: auto; margin: 0 auto 24px; display: block;
+    width: 320px; height: auto; margin: 0 auto 36px; display: block;
     filter: drop-shadow(0 4px 14px rgba(0, 0, 0, .45));
 }
 @media (max-width: 720px) {
-    .cta-logo { width: 190px; margin-bottom: 18px; }
+    .cta-logo { width: 190px; margin-bottom: 26px; }
 }
 .cta-card .btn { width: 100%; }
 .cta-qr {
