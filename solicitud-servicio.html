@@ -534,12 +534,15 @@
                 const date = new Date(year, month, d), dateStr = toISODate(date);
                 const cell = document.createElement('div'); cell.className = 'cal-cell'; cell.textContent = d;
                 const isPast = dateStr <= todayStr, isSunday = date.getDay() === 0, isAvailable = !isPast && !isSunday;
-                if (isAvailable) { cell.classList.add('available'); cell.style.animationDelay = `${(d % 7) * 0.03}s`; }
+                if (isAvailable) {
+                    cell.classList.add('available');
+                    cell.dataset.date = dateStr;
+                    cell.style.animationDelay = `${(d % 7) * 0.03}s`;
+                }
                 else cell.classList.add('disabled');
                 if (dateStr === todayStr) cell.classList.add('today');
                 // Nunca marcar como selected un día que no esté disponible.
                 if (isAvailable && dateStr === selectedDate) cell.classList.add('selected');
-                if (isAvailable) cell.addEventListener('click', () => selectDate(dateStr));
                 els.calendarGrid.appendChild(cell);
             }
             animateElement(els.calendarGrid, 'animate-fade-in');
@@ -689,6 +692,13 @@
         els.nextMonth.addEventListener('click', () => { currentMonth.setMonth(currentMonth.getMonth() + 1); renderCalendar(); autoSelectFirstAvailable(); });
         els.resetBtn.addEventListener('click', resetAll);
         els.newBookingBtn.addEventListener('click', resetAll);
+
+        // Delegación de eventos para el calendario: un solo listener en el grid
+        els.calendarGrid.addEventListener('click', (e) => {
+            const cell = e.target.closest('.cal-cell.available');
+            if (!cell || !cell.dataset.date) return;
+            selectDate(cell.dataset.date);
+        });
 
         renderCalendar();
         autoSelectFirstAvailable();
