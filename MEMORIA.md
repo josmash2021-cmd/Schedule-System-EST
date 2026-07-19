@@ -86,22 +86,23 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
 
 ### Assets JS
 - `assets/img/logo-cruise.png`: logo con fondo transparente (410×193 tras
-  recortar con `sharp.trim()`, letras EST blancas + icono dorado). Solo se usa
+  recortar con `sharp.trim()`, letras EST blancas + icono dorado). Se usa
   arriba del título "¿Tu equipo necesita reparación?" en `.cta-copy` de
   `index.html` a 320px de ancho en PC y 190px en móvil, centrado (clase
-  `.cta-logo`), con 48px de separación del título debajo (34px en móvil). El
-  nav y footer de las páginas oscuras (`index.html`, `productos.html`) usan
-  `logo.jpg` a 44px de alto en PC y 30px en móvil. El archivo `logo.jpg` sigue
-  en el repo para
-  las páginas claras que aún lo referencian (`solicitud-servicio.html`,
-  `admin.html`, `terminos.html`, `politicas.html`).
+  `.cta-logo`), con 48px de separación del título debajo (34px en móvil). También
+  se usa en el footer de las páginas oscuras (`index.html`, `productos.html`).
+  El nav de esas páginas sigue usando `logo.jpg` a 44px de alto en PC y 30px en
+  móvil. Enlaces `.map-link` abren Apple Maps en iOS/iPadOS y Google Maps en
+  el resto.
 - `assets/site.js` (IIFE ES5): nav (cápsula flotante con estado `.scrolled`,
   píldora deslizante `.nav-pill` que sigue al hover y descansa en el activo,
   menú móvil a pantalla completa con entrada escalonada vía `--d`, contacto
-  inyectado `.nav-meta`, cierre con ESC y scroll-lock del body), reveals por
-  IntersectionObserver, parallax/fade del hero, filtros del catálogo. Respeta
-  `prefers-reduced-motion`. OJO: todo vive en un mismo IIFE — no redeclarar
-  `pill`/`movePill` (son de los filtros); lo del nav usa prefijo `nav*`.
+  inyectado `.nav-meta` con teléfono y dirección como `.map-link`, cierre con
+  ESC y scroll-lock del body), reveals por IntersectionObserver, parallax/fade
+  del hero, filtros del catálogo, y listeners `.map-link` que abren Apple Maps
+  en iOS/iPadOS y Google Maps en otros. Respeta `prefers-reduced-motion`. OJO:
+  todo vive en un mismo IIFE — no redeclarar `pill`/`movePill` (son de los
+  filtros); lo del nav usa prefijo `nav*`.
 - `assets/transitions.js`: se carga en TODAS las páginas. Fade de entrada/salida
   entre páginas internas, prefetch al hover, ripple en `.btn`,
   `@view-transition`, fix bfcache.

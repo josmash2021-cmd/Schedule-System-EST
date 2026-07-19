@@ -50,7 +50,7 @@
         /* Contacto visible solo dentro del menú móvil */
         var navMeta = document.createElement('div');
         navMeta.className = 'nav-meta';
-        navMeta.innerHTML = '<a href="tel:+12055737840">(205) 573-7840</a><br>3659 Lorna Rd Suite 157, Hoover, AL 35216';
+        navMeta.innerHTML = '<a href="tel:+12055737840">(205) 573-7840</a><br><a href="#" class="map-link">3659 Lorna Rd Suite 157, Hoover, AL 35216</a>';
         links.appendChild(navMeta);
 
         /* Entrada escalonada de los enlaces al abrir el menú móvil */
@@ -167,4 +167,15 @@
             });
         });
     }
+
+    /* ---------- Enlaces de dirección: Apple Maps en iOS, Google Maps en el resto ---------- */
+    var STORE_ADDRESS = '3659 Lorna Rd Suite 157, Hoover, AL 35216';
+    document.addEventListener('click', function (e) {
+        var link = e.target.closest('.map-link');
+        if (!link) return;
+        e.preventDefault();
+        var query = encodeURIComponent(STORE_ADDRESS);
+        var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        window.open(isIOS ? 'http://maps.apple.com/?q=' + query : 'https://maps.google.com/?q=' + query, '_blank', 'noopener');
+    });
 })();

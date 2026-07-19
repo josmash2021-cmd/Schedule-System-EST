@@ -459,6 +459,11 @@ footer { margin-top: 110px; border-top: 1px solid var(--line); background: trans
     padding: 18px 0 30px; border-top: 1px solid var(--line);
     color: var(--muted); font-size: 13px;
 }
+.footer-bottom a { color: var(--muted); text-decoration: none; transition: color .2s; }
+.footer-bottom a:hover { color: #fff; }
+
+.map-link { color: inherit; text-decoration: none; }
+.map-link:hover { color: #fff; }
 
 /* ---------------- Responsive ---------------- */
 @media (max-width: 720px) {
