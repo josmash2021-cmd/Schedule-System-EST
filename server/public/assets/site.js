@@ -6,6 +6,28 @@
 
     var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    /* ---------- Bloqueo de zoom y copia de imágenes ---------- */
+    // Prevenir zoom con teclado (Ctrl + +/-)
+    document.addEventListener('keydown', function (e) {
+        if (e.ctrlKey && ['+', '-', '=', '_'].includes(e.key)) e.preventDefault();
+    }, { passive: false });
+    // Prevenir zoom con rueda del mouse (Ctrl + scroll)
+    document.addEventListener('wheel', function (e) {
+        if (e.ctrlKey) e.preventDefault();
+    }, { passive: false });
+    // Prevenir gesto de pellizco en iOS
+    document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+    document.addEventListener('gesturechange', function (e) { e.preventDefault(); });
+    document.addEventListener('gestureend', function (e) { e.preventDefault(); });
+    // Prevenir menú contextual en imágenes (clic derecho)
+    document.addEventListener('contextmenu', function (e) {
+        if (e.target.tagName === 'IMG') e.preventDefault();
+    });
+    // Prevenir arrastre de imágenes
+    document.addEventListener('dragstart', function (e) {
+        if (e.target.tagName === 'IMG') e.preventDefault();
+    });
+
     /* ---------- Nav: fondo al hacer scroll ---------- */
     var nav = document.querySelector('.nav');
     if (nav) {
