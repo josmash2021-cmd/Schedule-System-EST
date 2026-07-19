@@ -129,8 +129,9 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   Overlay superior (2026-07-19): `body::after` con un degradado negro fijo
   de 280px de alto sobre el fondo de seda (`#000 0%, #000 30%, ...`), para
   oscurecer la zona que queda detrás del menú translúcido. Hero con negro
-  sólido en el top 15% y opacidad de la imagen a `.95`, para que la parte
-  superior se vea oscura pero la laptop se vea un poco más clara.
+  sólido solo en el top 8%, gradiente muy suave (`rgba(0,0,0,.42)` →
+  `.32`) e imagen de la laptop a opacidad `1`, para que la foto se note
+  mucho más.
   Sustituye a las imágenes generadas previamente (`bg-silk.jpg` /
   `bg-silk-m.jpg`), que fueron eliminadas junto con `tools/generar_fondo_seda.py`.
   Footer (2026-07-18): fondo semitransparente (`rgba(0,0,0,.25)`) con
