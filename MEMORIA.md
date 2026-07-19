@@ -88,9 +88,9 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   (940×788, letras EST blancas + icono dorado). Desde 2026-07-19 se usa en el
   nav y footer de las páginas oscuras (`index.html`, `productos.html`) a 92px
   de alto en PC (52px en móvil); el logo sobresale de la cápsula `.nav-inner`
-  que mantiene 60px de alto. También aparece dentro de `.cta-card` en
-  `index.html` a 170px de ancho (clase `.cta-logo`). El archivo `logo.jpg`
-  sigue en el repo para
+  que mantiene 60px de alto. También aparece arriba del título
+  "¿Tu equipo necesita reparación?" en `.cta-copy` de `index.html` a 150px
+  de ancho (clase `.cta-logo`). El archivo `logo.jpg` sigue en el repo para
   las páginas claras que aún lo referencian (`solicitud-servicio.html`,
   `admin.html`, `terminos.html`, `politicas.html`).
 - `assets/site.js` (IIFE ES5): nav (cápsula flotante con estado `.scrolled`,

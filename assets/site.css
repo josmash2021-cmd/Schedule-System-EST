@@ -367,9 +367,12 @@ a { -webkit-tap-highlight-color: transparent; }
     backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
     box-shadow: 0 24px 60px rgba(0, 0, 0, .4);
 }
-.cta-card .cta-logo {
-    width: 170px; height: auto; margin: 0 auto 6px;
+.cta-logo {
+    width: 150px; height: auto; margin: 0 0 14px;
     filter: drop-shadow(0 4px 14px rgba(0, 0, 0, .45));
+}
+@media (max-width: 860px) {
+    .cta-logo { margin: 0 auto 14px; }
 }
 .cta-card .btn { width: 100%; }
 .cta-qr {
