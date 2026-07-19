@@ -1,8 +1,8 @@
 # MEMORIA DEL PROYECTO — Schedule-System-EST (ElectronicST)
 
-> Auditoría creada el 2026-07-18. Memoria de trabajo NO genérica: describe lo que
-> existe HOY en el código, con ubicaciones exactas. Actualizarla cuando cambie
-> estructura, flujos o configuración.
+> Auditoría creada el 2026-07-18, actualizada el 2026-07-19. Memoria de trabajo
+> NO genérica: describe lo que existe HOY en el código, con ubicaciones exactas.
+> Actualizarla cuando cambie estructura, flujos o configuración.
 
 ---
 
@@ -62,16 +62,31 @@ iPhone 16 $799 · 16 Plus $899 · 16 Pro $999 · 16 Pro Max $1,199.
 Filtros Todos/Air/Pro/iPhone con píldora animada (`site.js`). Cada tarjeta lleva
 a `/solicitud-servicio`.
 
-### `solicitud-servicio.html` — reserva de cita (TEMA CLARO, CSS inline propio)
-Wizard de 3 pasos: (1) calendario mensual (máx. 3 meses adelante, domingos y
-pasados deshabilitados, todo client-side), (2) slots desde `GET /api/slots?date=`,
-(3) formulario: nombre*, teléfono* (autoformato `(205) 555-1234`), correo
-opcional, servicio* (tarjetas: Consulta / Mantenimiento / Reparacion — sin tilde
-en el valor), honeypot `bot-field`, 2 checkboxes obligatorios: términos y
-consentimiento SMS (texto TCPA: STOP/HELP, hasta 3 msg por cita).
-POST a `/api/appointments`. Pantalla de éxito con detalle y link a mapa
-(Apple Maps en iOS, Google Maps en el resto). Si el error contiene "ocupado",
-recarga los slots.
+### `solicitud-servicio.html` — reserva de cita (TEMA OSCURO, CSS inline propio)
+Wizard de 3 pasos: (1) calendario mensual, (2) slots, (3) formulario.
+
+- **Tema visual (2026-07-18/19):** fondo negro con la misma imagen de seda que
+  la home (`assets/img/background-auth.webp`) aplicada en `body::before` y
+  overlay oscuro fijo de 280px en `body::after` para la zona del header. Card
+  principal con glassmorphism (`backdrop-filter: blur(22px) saturate(1.5)`),
+  bordes sutiles y tipografía blanca.
+- **Calendario:** máx. 3 meses adelante, domingos deshabilitados, **día actual
+  bloqueado como no disponible** (`solicitud-servicio.html:519` compara
+  `dateStr <= todayStr`). Al cargar y al cambiar de mes se
+  **auto-selecciona el primer día disponible**
+  (`autoSelectFirstAvailable()` en `:532`).
+- **Horarios:** grid de **3 columnas iguales** (`slots-grid` en `:157`),
+  botones de alto fijo 54px para evitar tamaños desiguales. Slots 10:00 a.m. –
+  3:00 p.m. cada 30 min (viene del backend Express).
+- **Formulario:** nombre*, teléfono* (autoformato `(205) 555-1234`), correo
+  opcional, servicio* (tarjetas: Consulta / Mantenimiento / Reparacion — sin
+  tilde en el valor), honeypot `bot-field`, 2 checkboxes obligatorios: términos y
+  consentimiento SMS (texto TCPA: STOP/HELP, hasta 3 msg por cita).
+- **Footer completo** añadido el 2026-07-18 con logo, links legales y datos de
+  la tienda.
+- POST a `/api/appointments`. Pantalla de éxito con detalle y link a mapa
+  (Apple Maps en iOS, Google Maps en el resto). Si el error contiene "ocupado",
+  recarga los slots.
 
 ### `admin.html` — panel de citas (tema claro, `noindex`)
 Login por contraseña → `POST /api/auth/login` → JWT guardado en
@@ -126,6 +141,9 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   `body::before` (z-index -1) con `center / cover no-repeat`. En escritorio
   se muestra centrada; en móvil (≤720px) se desplaza a `85% 20%` para mostrar
   la zona iluminada de la seda y evitar que se vea solo el centro negro.
+  **Este mismo fondo se replica ahora en `solicitud-servicio.html`**
+  (`solicitud-servicio.html:60-67`), unificando la experiencia visual entre
+  la home y el flujo de citas.
   Overlay superior (2026-07-19): `body::after` con un degradado negro fijo
   de 280px de alto sobre el fondo de seda (`#000 0%, #000 30%, ...`), para
   oscurecer la zona que queda detrás del menú translúcido. Hero con negro
@@ -152,12 +170,17 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   → `.2` → `.5` → `#000`) que se extiende un 30% por encima del hero;
   imagen de la laptop a opacidad `.9`.
 
-### ⚠️ Dos sistemas de diseño coexisten
-- Oscuro cinematográfico: `index.html` + `productos.html` (vía `site-v3.css`).
-- Claro "slate": `solicitud-servicio.html`, `admin.html`, `terminos.html`,
-  `politicas.html` — cada uno con su propio `<style>` inline que duplica los
-  mismos tokens (`--bg #f8fafc`, `--accent #111827`, mismos keyframes…).
-  Cambiar algo del tema claro implica editar 4 archivos.
+### ⚠️ Sistemas de diseño coexisten
+- Oscuro cinematográfico: `index.html`, `productos.html` y ahora
+  `solicitud-servicio.html`.
+- Claro "slate": `admin.html`, `terminos.html`, `politicas.html` — cada uno con
+  su propio `<style>` inline que duplica los mismos tokens (`--bg #f8fafc`,
+  `--accent #111827`, mismos keyframes…). Cambiar algo del tema claro implica
+  editar 3 archivos.
+- `solicitud-servicio.html` sigue teniendo todo su CSS inline (no usa
+  `site-v3.css`), por lo que aunque visualmente coincide con la home, los
+  cambios de estilo deben mantenerse en dos lugares: `site-v3.css` y el
+  `<style>` de `solicitud-servicio.html`.
 
 ## 4. Backend Express (`server/`) — el vivo
 
@@ -266,10 +289,20 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
 13. Detalles menores: `@netlify/blobs` sin declarar; `slots.js` de Express
     siempre responde `abierto:true`; teléfono del SMS del dueño sin formato.
 
-## 9. Estado del repo
+## 9. Estado del repo y despliegue
 
-- Rama con historial de ~10 commits; los 2 más recientes son el rediseño oscuro
-  Apple-style (`eb04a69`, `a2dca36`). Working tree limpio al auditar.
+- Rama `master`, working tree limpio. Último commit local y en remoto:
+  `2b4b254` — *solicitud-servicio: fondo igual al home (background-auth.webp)*.
+- Los cambios más recientes ya están pusheados a GitHub, pero **aún no se han
+  desplegado en producción** porque se alcanzó el límite diario gratuito de
+  deploys de Vercel:
+  `api-deployments-free-per-day` (más de 100 deploys en 24h).
+- El deploy se reintentará con el token personal de Vercel del usuario cuando
+  se resetee el contador diario. El comando usado es:
+  `npx vercel --prod --token <TOKEN> --yes`.
+  El token NO está guardado en el repo; solo se usa en el comando de deploy.
+- URL de producción a verificar:
+  `https://electronic-service-tech.vercel.app/solicitud-servicio`.
 
 ## 10. Preguntas abiertas para el dueño del proyecto
 
