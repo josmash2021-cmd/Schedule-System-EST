@@ -91,9 +91,10 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   `index.html` a 320px de ancho en PC y 190px en móvil, centrado (clase
   `.cta-logo`), con 48px de separación del título debajo (34px en móvil). También
   se usa en el footer de las páginas oscuras (`index.html`, `productos.html`).
-  El nav de esas páginas sigue usando `logo.jpg` a 44px de alto en PC y 30px en
-  móvil. Enlaces `.map-link` abren Apple Maps en iOS/iPadOS y Google Maps en
-  el resto.
+  El nav de esas páginas usa `logo.jpg` a 44px de alto en PC y el nuevo
+  `logo-cruise.png` a 30px de alto en móvil (clases `.logo-desktop` /
+  `.logo-mobile`). Enlaces `.map-link` abren Apple Maps en iOS/iPadOS y Google
+  Maps en el resto.
 - `assets/site.js` (IIFE ES5): nav (cápsula flotante con estado `.scrolled`,
   píldora deslizante `.nav-pill` que sigue al hover y descansa en el activo,
   menú móvil a pantalla completa con entrada escalonada vía `--d`, contacto

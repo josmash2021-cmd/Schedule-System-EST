@@ -113,9 +113,13 @@ a { -webkit-tap-highlight-color: transparent; }
     height: 44px; width: auto;
     transition: transform .35s var(--ease);
 }
+.brand .logo-desktop { display: block; }
+.brand .logo-mobile { display: none; }
 .brand:hover img { transform: scale(1.06); }
 @media (max-width: 720px) {
     .brand img { height: 30px; }
+    .brand .logo-desktop { display: none; }
+    .brand .logo-mobile { display: block; }
 }
 .burger { position: relative; z-index: 2; }
 .nav-links { position: relative; z-index: 1; display: flex; align-items: center; gap: 4px; }
