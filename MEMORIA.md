@@ -79,6 +79,10 @@ Wizard de 3 pasos: (1) calendario mensual, (2) slots, (3) formulario.
   Además `selectDate()` valida nuevamente que la fecha no sea pasada o domingo
   antes de guardarla como seleccionada, y `renderCalendar()` solo aplica la
   clase `.selected` sobre celdas `.available`.
+- **Estilo del día actual (2026-07-19):** se reemplazó el borde blanco interior
+  (`box-shadow`) que lo hacía parecer seleccionado por un pequeño punto sutil
+  (`::after`), para que no compita visualmente con el día realmente
+  seleccionado.
 - **Horarios:** grid de **3 columnas iguales** (`slots-grid` en `:157`),
   botones de alto fijo 54px para evitar tamaños desiguales. Slots 10:00 a.m. –
   3:00 p.m. cada 30 min (viene del backend Express).
