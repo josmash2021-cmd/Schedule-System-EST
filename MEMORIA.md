@@ -137,13 +137,13 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   `gap: 5px` para que el texto quede pegado al logo. Hero usa
   `calc(100svh - 70px)` porque la cápsula ocupa 70px en flujo.
   Fondo de la cápsula oscurecido (2026-07-19): doble capa en
-  `.nav-inner::before` — un gradiente negro encima (`rgba(0,0,0,.55)` →
-  transparente) sobre el fondo oscuro de la cápsula (`rgba(6,6,8,.82)`), y
-  versión scrolled (`rgba(0,0,0,.35)` → transparente sobre `rgba(4,4,6,.94)`).
-  Esto añade un overlay sobre el fondo translúcido que se ve detrás del menú.
-  Hero ajustado a un gradiente más suave (`rgba(0,0,0,.88)` → `.75` → `.2`
-  → `.5` → `#000`) que se extiende un 30% por encima del hero; imagen de la
-  laptop a opacidad `.9`.
+  `.nav-inner::before` — un gradiente negro encima tipo overlay de hero
+  (`rgba(0,0,0,.78)` → `.45` → `.15`) sobre el fondo oscuro de la cápsula
+  (`rgba(6,6,8,.88)`), y versión scrolled (`rgba(0,0,0,.55)` → `.15` sobre
+  `rgba(4,4,6,.96)`). Así el header tiene un overlay oscuro similar al del
+  hero. Hero ajustado a un gradiente más suave (`rgba(0,0,0,.88)` → `.75`
+  → `.2` → `.5` → `#000`) que se extiende un 30% por encima del hero;
+  imagen de la laptop a opacidad `.9`.
 
 ### ⚠️ Dos sistemas de diseño coexisten
 - Oscuro cinematográfico: `index.html` + `productos.html` (vía `site.css`).
