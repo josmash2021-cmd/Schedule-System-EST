@@ -20,25 +20,26 @@
 
 ## 2. Stack y despliegue (¡ambigüedad importante!)
 
-- **Frontend:** HTML/CSS/JS estático, sin build (`build` = `echo`). Fuente Inter
-  (Google Fonts). Sin frameworks, sin bundler, sin tests, sin CI.
-- **Backend activo (producción):** Express + PostgreSQL (Railway), según
-  `vercel.json`: todo `/api/*` se reescribe a
-  `https://schedule-system-est-production.up.railway.app/api/:path*`.
-  El frontend siempre llama rutas relativas `/api/...`.
-- **Segundo backend paralelo:** `netlify/functions/` (Netlify Blobs como DB).
-  `netlify.toml` publica el estático y declara las functions, PERO no hay
-  redirects de `/api/*` hacia `/.netlify/functions/*`, así que en Netlify el
-  frontend no alcanzaría la API. Además no existe endpoint de login ahí.
-  → **Conclusión: Vercel + Railway es el stack vivo; `netlify/functions/` es
-  código legado/alternativo con divergencias de lógica (ver §6).**
-- Hay dos configs de hosting (`vercel.json` y `netlify.toml`) y dos `package.json`
-  (raíz vacía; `server/` con express, pg, jsonwebtoken, twilio, cors, dotenv).
-- `qr-cita.png` (raíz): QR de citas. Regenerado el 2026-07-18 para apuntar a
-  `https://electronic-service-tech.vercel.app/solicitud-servicio` (antes apuntaba
-  a la URL vieja de Netlify `dynamic-tartufo-b1810a.netlify.app`; ojo si hay
-  material impreso con el QR anterior). Se muestra en el panel CTA de
-  index/productos.
+- **Frontend:** HTML/CSS/JS estático, sin frameworks, sin bundler, sin tests,
+  sin CI. Fuente Inter (Google Fonts).
+- **Backend activo (producción):** Express + PostgreSQL (Railway). A partir del
+  2026-07-19 el mismo backend Express sirve también el frontend estático desde
+  `server/public/`, por lo que `schedule-system-est-production.up.railway.app`
+  es ahora la URL única del sitio completo. El frontend sigue llamando a rutas
+  relativas `/api/...`.
+- **`server/public/`:** copia del frontend (HTML, assets, QR, logo) generada por
+  `server/scripts/copy-frontend.js` y commiteada en el repo para que Railway la
+  incluya en el deploy. El build script detecta si los archivos fuente no están
+  disponibles (por ejemplo, en el contenedor de Railway) y conserva `public/`
+  sin destruirlo.
+- **Vercel/Netlify (legacy):** `vercel.json` y `netlify.toml` quedaron
+  obsoletos; `netlify/functions/` sigue siendo código alternativo no activo.
+  `qr-cita.png` apuntaba a la URL vieja de Vercel; ahora el sitio vive en
+  Railway y el QR debería regenerarse/apuntar a
+  `https://schedule-system-est-production.up.railway.app/solicitud-servicio` si
+  se usa material impreso.
+- Hay dos `package.json` (raíz vacía; `server/` con express, pg, jsonwebtoken,
+  twilio, cors, dotenv).
 
 ## 3. Mapa del frontend
 
@@ -301,18 +302,20 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
 
 ## 9. Estado del repo y despliegue
 
-- Rama `master`, working tree limpio. Último commit local y en remoto:
-  `2b4b254` — *solicitud-servicio: fondo igual al home (background-auth.webp)*.
-- Los cambios más recientes ya están pusheados a GitHub, pero **aún no se han
-  desplegado en producción** porque se alcanzó el límite diario gratuito de
-  deploys de Vercel:
-  `api-deployments-free-per-day` (más de 100 deploys en 24h).
-- El deploy se reintentará con el token personal de Vercel del usuario cuando
-  se resetee el contador diario. El comando usado es:
-  `npx vercel --prod --token <TOKEN> --yes`.
-  El token NO está guardado en el repo; solo se usa en el comando de deploy.
-- URL de producción a verificar:
-  `https://electronic-service-tech.vercel.app/solicitud-servicio`.
+- Rama `master`, working tree limpio.
+- **A partir del 2026-07-19 el sitio completo se sirve desde Railway.** El
+  backend Express en `schedule-system-est-production.up.railway.app` entrega
+  el frontend estático desde `server/public/` y las APIs desde `/api/*`.
+- Últimos commits relevantes:
+  - `90bbdc3` — build script defensivo para `server/public/`.
+  - `943a47d` — inclusión de `server/public/` en el repo para Railway.
+  - `ac248bb` — iconos SVG en tarjetas de servicio.
+  - `293686e` — fondo de citas ajustado en móvil.
+  - `0bd0eb4` — Express sirve frontend completo.
+- Vercel quedó bloqueado por límite diario (`api-deployments-free-per-day`) y
+  ya no es el canal de producción.
+- URL de producción:
+  `https://schedule-system-est-production.up.railway.app`.
 
 ## 10. Preguntas abiertas para el dueño del proyecto
 
