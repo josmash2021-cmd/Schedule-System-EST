@@ -42,10 +42,10 @@
 
 ## 3. Mapa del frontend
 
-### `index.html` — landing oscura estilo Apple (usa `assets/site.css`)
+### `index.html` — landing oscura estilo Apple (usa `assets/site-v2.css`)
 Hero a pantalla completa con parallax (`data-parallax="0.28"`), entrada
 escalonada (`.h-in-1..4`), sin indicador de scroll (`.scroll-cue` eliminado).
-Gradiente superior reforzado (`assets/site.css:194`) para oscurecer también
+Gradiente superior reforzado (`assets/site-v2.css:194`) para oscurecer también
 la zona justo debajo del menú (`rgba(0,0,0,.85)` → `.25` → `.55` → `#000`),
 marquee infinito, 2 "capítulos" (MacBook desde
 $1,099 / iPhone desde $799) con glow de color, 4 valores, y panel de reserva
@@ -110,7 +110,7 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
 - `assets/transitions.js`: se carga en TODAS las páginas. Fade de entrada/salida
   entre páginas internas, prefetch al hover, ripple en `.btn`,
   `@view-transition`, fix bfcache.
-- `assets/site.css`: sistema de diseño oscuro (tokens: `--black #000`,
+- `assets/site-v2.css`: sistema de diseño oscuro (tokens: `--black #000`,
   `--panel #0c0c0f`, radio 999px en botones). Tema MONOCROMO blanco/negro desde
   2026-07-18: se eliminaron los tokens azules (`--blue`, `--blue-h`, `--link`);
   `.btn-blue` ahora es botón blanco con texto negro puro `#000`,
@@ -152,7 +152,7 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   imagen de la laptop a opacidad `.9`.
 
 ### ⚠️ Dos sistemas de diseño coexisten
-- Oscuro cinematográfico: `index.html` + `productos.html` (vía `site.css`).
+- Oscuro cinematográfico: `index.html` + `productos.html` (vía `site-v2.css`).
 - Claro "slate": `solicitud-servicio.html`, `admin.html`, `terminos.html`,
   `politicas.html` — cada uno con su propio `<style>` inline que duplica los
   mismos tokens (`--bg #f8fafc`, `--accent #111827`, mismos keyframes…).
