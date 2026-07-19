@@ -94,7 +94,7 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   `.cta-logo`), con 48px de separación del título debajo (34px en móvil). También
   se usa en el footer de las páginas oscuras (`index.html`, `productos.html`).
   El nav de esas páginas usa el nuevo `logo-cruise.png` tanto en PC
-  (38px de alto, `.logo-desktop`) como en móvil (28px de alto,
+  (32px de alto, `.logo-desktop`) como en móvil (28px de alto,
   `.logo-mobile`). El archivo `logo.jpg` sigue usándose en `admin.html`,
   `solicitud-servicio.html`, `terminos.html` y `politicas.html`. Enlaces `.map-link` abren Apple Maps en iOS/iPadOS y Google
   Maps en el resto.
