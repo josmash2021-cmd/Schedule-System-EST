@@ -491,7 +491,6 @@ footer {
     .hero-content { padding: 90px 20px 80px; }
 }
 
-
 /* Accesibilidad: menos movimiento */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
