@@ -149,13 +149,14 @@
         .cal-cell.today { box-shadow: inset 0 0 0 2px var(--accent); }
 
         .slots-empty { color: var(--text-muted); font-size: 14px; text-align: center; padding: 40px 10px; }
-        .slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        @media (max-width: 640px) { .slots-grid { grid-template-columns: repeat(2, 1fr); } }
+        .slots-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+        @media (max-width: 640px) { .slots-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
         @media (max-width: 360px) { .slots-grid { grid-template-columns: 1fr; } }
         .slot-btn {
             background: var(--surface); border: 1px solid var(--border); color: var(--text);
             padding: 16px 8px; border-radius: 14px; cursor: pointer; font-weight: 600; font-size: 13px;
             height: 54px; width: 100%; text-align: center; white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis;
             box-shadow: var(--shadow);
             opacity: 0; animation: fadeInUp 0.35s var(--ease-out) forwards;
             transition: all var(--dur-fast) var(--ease-out);
