@@ -107,11 +107,11 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   glows de capítulos) usan blancos/grises. No reintroducir color sin pedirlo.
   Fondo de seda (2026-07-18): imagen real descargada del sitio de Resend,
   guardada como `assets/img/background-auth.webp`. Servida fija vía
-  `body::before` (z-index -1) con `center / cover no-repeat`. Misma imagen
-  y mismo comportamiento `cover` en escritorio y móvil para que el fondo se
-  vea igual que en PC. Sustituye a las imágenes generadas previamente
-  (`bg-silk.jpg` / `bg-silk-m.jpg`), que fueron eliminadas junto con
-  `tools/generar_fondo_seda.py`.
+  `body::before` (z-index -1) con `center / cover no-repeat`. En escritorio
+  se muestra centrada; en móvil (≤720px) se desplaza a `85% 20%` para mostrar
+  la zona iluminada de la seda y evitar que se vea solo el centro negro.
+  Sustituye a las imágenes generadas previamente (`bg-silk.jpg` /
+  `bg-silk-m.jpg`), que fueron eliminadas junto con `tools/generar_fondo_seda.py`.
   Footer (2026-07-18): fondo transparente para que el mismo fondo de seda
   se extienda hasta el final de la página.
   Nav (2026-07-18): cápsula flotante sticky — `.nav` es wrapper con

@@ -21,11 +21,15 @@ body {
 }
 /* Fondo de seda monocromo: imagen descargada del sitio de Resend
    (assets/img/background-auth.webp). Fijo: no se mueve con el scroll.
-   Se usa la misma imagen en escritorio y móvil con `cover` para que ocupe
-   toda la pantalla igual que en PC. */
+   Se usa la misma imagen en escritorio y móvil con `cover`. En móvil se
+   desplaza la posición para mostrar la zona iluminada de la seda en lugar
+   del centro negro. */
 body::before {
     content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
     background: url("img/background-auth.webp") center / cover no-repeat;
+}
+@media (max-width: 720px) {
+    body::before { background-position: 85% 20%; }
 }
 img { max-width: 100%; display: block; }
 a { -webkit-tap-highlight-color: transparent; }
