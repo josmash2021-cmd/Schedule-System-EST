@@ -522,6 +522,12 @@
             animateElement(els.calendarGrid, 'animate-fade-in');
         }
 
+        function autoSelectFirstAvailable() {
+            if (selectedDate) return;
+            const firstAvailable = els.calendarGrid.querySelector('.cal-cell.available');
+            if (firstAvailable) firstAvailable.click();
+        }
+
         function selectDate(dateStr) {
             selectedDate = dateStr; selectedTime = null;
             renderCalendar(); setStep(2);
@@ -647,12 +653,13 @@
             else if (value.length > 0) e.target.value = `(${value}`;
         });
 
-        els.prevMonth.addEventListener('click', () => { currentMonth.setMonth(currentMonth.getMonth() - 1); renderCalendar(); });
-        els.nextMonth.addEventListener('click', () => { currentMonth.setMonth(currentMonth.getMonth() + 1); renderCalendar(); });
+        els.prevMonth.addEventListener('click', () => { currentMonth.setMonth(currentMonth.getMonth() - 1); renderCalendar(); autoSelectFirstAvailable(); });
+        els.nextMonth.addEventListener('click', () => { currentMonth.setMonth(currentMonth.getMonth() + 1); renderCalendar(); autoSelectFirstAvailable(); });
         els.resetBtn.addEventListener('click', resetAll);
         els.newBookingBtn.addEventListener('click', resetAll);
 
         renderCalendar();
+        autoSelectFirstAvailable();
     </script>
     <script src="assets/transitions.js" defer></script>
 </body>
