@@ -44,7 +44,8 @@
 
 ### `index.html` — landing oscura estilo Apple (usa `assets/site.css`)
 Hero a pantalla completa con parallax (`data-parallax="0.28"`), entrada
-escalonada (`.h-in-1..4`), marquee infinito, 2 "capítulos" (MacBook desde
+escalonada (`.h-in-1..4`), sin indicador de scroll (`.scroll-cue` eliminado),
+marquee infinito, 2 "capítulos" (MacBook desde
 $1,099 / iPhone desde $799) con glow de color, 4 valores, y panel de reserva
 final (`.cta-banner`): fondo transparente para mostrar la seda de la página;
 luz blanca animada (`@keyframes ctaLight` en `::before`) y campo de puntos

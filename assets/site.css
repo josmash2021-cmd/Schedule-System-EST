@@ -213,24 +213,6 @@ a { -webkit-tap-highlight-color: transparent; }
     to { opacity: 1; transform: none; }
 }
 
-/* Indicador de scroll */
-.scroll-cue {
-    position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%);
-    width: 24px; height: 38px; border: 1.5px solid rgba(255, 255, 255, .45);
-    border-radius: 14px; z-index: 2;
-    opacity: 0; animation: heroUp 1s var(--ease) 1s forwards;
-}
-.scroll-cue span {
-    position: absolute; top: 7px; left: 50%; width: 3px; height: 8px;
-    margin-left: -1.5px; border-radius: 3px; background: #fff;
-    animation: cue 1.9s ease-in-out infinite;
-}
-@keyframes cue {
-    0% { transform: translateY(0); opacity: 1; }
-    70% { transform: translateY(13px); opacity: 0; }
-    100% { transform: translateY(13px); opacity: 0; }
-}
-
 /* ---------------- Marquee ---------------- */
 .marquee {
     border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
