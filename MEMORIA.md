@@ -125,6 +125,9 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   `body::before` (z-index -1) con `center / cover no-repeat`. En escritorio
   se muestra centrada; en móvil (≤720px) se desplaza a `85% 20%` para mostrar
   la zona iluminada de la seda y evitar que se vea solo el centro negro.
+  Overlay superior (2026-07-19): `body::after` con un degradado negro fijo
+  de 220px de alto sobre el fondo de seda, para oscurecer la zona que queda
+  detrás del menú translúcido.
   Sustituye a las imágenes generadas previamente (`bg-silk.jpg` /
   `bg-silk-m.jpg`), que fueron eliminadas junto con `tools/generar_fondo_seda.py`.
   Footer (2026-07-18): fondo semitransparente (`rgba(0,0,0,.25)`) con
