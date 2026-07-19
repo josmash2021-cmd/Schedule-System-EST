@@ -108,16 +108,12 @@ a { -webkit-tap-highlight-color: transparent; }
     background: rgba(8, 8, 10, .85);
     border-color: rgba(255, 255, 255, .16);
 }
-.brand { position: relative; z-index: 2; display: flex; align-items: center; gap: 5px; text-decoration: none; color: var(--text); font-weight: 700; font-size: 16px; }
+.brand { position: relative; z-index: 2; display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 700; font-size: 16px; }
 .brand img {
-    height: 92px; width: auto;
+    height: 44px; width: auto;
     transition: transform .35s var(--ease);
 }
 .brand:hover img { transform: scale(1.06); }
-@media (max-width: 720px) {
-    .nav-inner { height: 60px; }
-    .brand img { height: 52px; }
-}
 .burger { position: relative; z-index: 2; }
 .nav-links { position: relative; z-index: 1; display: flex; align-items: center; gap: 4px; }
 .nav-links > a {
