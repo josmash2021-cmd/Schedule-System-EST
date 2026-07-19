@@ -266,6 +266,9 @@ a { -webkit-tap-highlight-color: transparent; }
 }
 
 /* Cuadros flotantes sobre la imagen del capítulo */
+.figure-media {
+    position: relative; display: inline-block; width: 100%;
+}
 .figure-badge {
     position: absolute; z-index: 2;
     display: flex; flex-direction: column; gap: 4px;
@@ -280,19 +283,19 @@ a { -webkit-tap-highlight-color: transparent; }
     transition: opacity .7s var(--ease), transform .7s var(--ease);
 }
 .figure-badge-top {
-    top: 28px; left: 28px;
+    top: 6%; left: 6%;
     transition-delay: .25s;
 }
 .figure-badge-top-right {
-    top: 28px; right: 28px;
+    top: 6%; right: 6%;
     transition-delay: .35s;
 }
 .figure-badge-bottom {
-    bottom: 28px; right: 28px;
+    bottom: 6%; right: 6%;
     transition-delay: .45s;
 }
 .figure-badge-bottom-left {
-    bottom: 28px; left: 28px;
+    bottom: 6%; left: 6%;
     transition-delay: .55s;
 }
 .chapter-figure.in .figure-badge {
@@ -311,12 +314,12 @@ a { -webkit-tap-highlight-color: transparent; }
     .figure-badge {
         padding: 10px 12px;
         border-radius: 12px;
-        max-width: calc(50% - 20px);
+        max-width: calc(50% - 16px);
     }
-    .figure-badge-top { top: 12px; left: 12px; }
-    .figure-badge-top-right { top: 12px; right: 12px; }
-    .figure-badge-bottom { bottom: 12px; right: 12px; }
-    .figure-badge-bottom-left { bottom: 12px; left: 12px; }
+    .figure-badge-top { top: 4%; left: 4%; }
+    .figure-badge-top-right { top: 4%; right: 4%; }
+    .figure-badge-bottom { bottom: 4%; right: 4%; }
+    .figure-badge-bottom-left { bottom: 4%; left: 4%; }
     .badge-eyebrow { font-size: 9px; letter-spacing: .12em; }
     .badge-title { font-size: 13px; }
 }
