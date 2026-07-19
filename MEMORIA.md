@@ -106,6 +106,9 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   `.btn-blue` ahora es botón blanco con texto negro (idéntico a `.btn-light`),
   y todos los acentos (eyebrow, iconos, link-arrow, marquee, badge `.new`,
   glows de capítulos) usan blancos/grises. No reintroducir color sin pedirlo.
+  Tarjetas `.value` (2026-07-19): fondo de vidrio translúcido con blur, borde
+  sutil, icono envuelto en `.value-icon` con caja redondeada, y elevación + brillo
+  en hover.
   Fondo de seda (2026-07-18): imagen real descargada del sitio de Resend,
   guardada como `assets/img/background-auth.webp`. Servida fija vía
   `body::before` (z-index -1) con `center / cover no-repeat`. En escritorio

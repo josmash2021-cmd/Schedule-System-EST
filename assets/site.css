@@ -270,10 +270,45 @@ a { -webkit-tap-highlight-color: transparent; }
 
 /* ---------------- Valores ---------------- */
 .values { padding: 110px 0; }
-.values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 44px 32px; }
-.value svg { width: 26px; height: 26px; color: rgba(255, 255, 255, .85); margin-bottom: 16px; }
-.value h3 { font-size: 16.5px; font-weight: 700; margin-bottom: 8px; }
-.value p { color: var(--muted); font-size: 14px; }
+.values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
+.value {
+    position: relative;
+    padding: 34px 30px;
+    border-radius: 26px;
+    background: rgba(255, 255, 255, .04);
+    border: 1px solid var(--line);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, .35);
+    transition: transform .4s var(--ease), background .3s, border-color .3s, box-shadow .4s var(--ease);
+    overflow: hidden;
+}
+.value::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(120% 80% at 20% 0%, rgba(255, 255, 255, .08) 0%, transparent 55%);
+    opacity: 0; transition: opacity .4s;
+}
+.value:hover {
+    transform: translateY(-7px);
+    background: rgba(255, 255, 255, .07);
+    border-color: rgba(255, 255, 255, .18);
+    box-shadow: 0 28px 70px rgba(0, 0, 0, .5);
+}
+.value:hover::before { opacity: 1; }
+.value-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 52px; height: 52px; margin-bottom: 22px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .08);
+    border: 1px solid rgba(255, 255, 255, .1);
+    transition: transform .4s var(--ease), background .3s;
+}
+.value:hover .value-icon {
+    transform: scale(1.08);
+    background: rgba(255, 255, 255, .12);
+}
+.value svg { width: 24px; height: 24px; color: rgba(255, 255, 255, .9); }
+.value h3 { position: relative; font-size: 18px; font-weight: 700; margin-bottom: 10px; letter-spacing: -.01em; }
+.value p { position: relative; color: var(--muted); font-size: 14px; line-height: 1.55; }
 
 /* ---------------- Panel de reserva (CTA) ---------------- */
 .cta-banner {
