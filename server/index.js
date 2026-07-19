@@ -19,6 +19,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 const htmlRoutes = {
   '/': 'index.html',
   '/productos': 'productos.html',
+  '/macbook-air-13': 'macbook-air-13.html',
   '/solicitud-servicio': 'solicitud-servicio.html',
   '/admin': 'admin.html',
   '/terminos': 'terminos.html',
