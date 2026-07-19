@@ -89,8 +89,10 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   nav y footer de las páginas oscuras (`index.html`, `productos.html`) a 92px
   de alto en PC (52px en móvil); el logo sobresale de la cápsula `.nav-inner`
   que mantiene 60px de alto. También aparece arriba del título
-  "¿Tu equipo necesita reparación?" en `.cta-copy` de `index.html` a 240px
-  de ancho, centrado (clase `.cta-logo`). El archivo `logo.jpg` sigue en el repo para
+  "¿Tu equipo necesita reparación?" en `.cta-copy` de `index.html` a 320px
+  de ancho, centrado (clase `.cta-logo`). El PNG se recortó con `sharp.trim()`
+  para eliminar el espacio transparente y que ocupe más. El archivo `logo.jpg`
+  sigue en el repo para
   las páginas claras que aún lo referencian (`solicitud-servicio.html`,
   `admin.html`, `terminos.html`, `politicas.html`).
 - `assets/site.js` (IIFE ES5): nav (cápsula flotante con estado `.scrolled`,
