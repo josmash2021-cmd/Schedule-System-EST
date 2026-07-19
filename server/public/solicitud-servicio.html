@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservar Cita - ElectronicST</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000000;
+            --surface: rgba(255, 255, 255, .06);
+            --text: #ffffff;
+            --text-muted: #a1a1aa;
+            --border: rgba(255, 255, 255, .12);
+            --accent: #ffffff;
+            --accent-dark: #ffffff;
+            --accent-light: rgba(255, 255, 255, .12);
+            --ok: #22c55e;
+            --error: #ef4444;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, .25), 0 2px 4px -2px rgba(0, 0, 0, .25);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, .35), 0 4px 6px -4px rgba(0, 0, 0, .35);
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            --dur-fast: 0.15s;
+            --dur-base: 0.3s;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.94); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .animate-fade-in { animation: fadeIn var(--dur-base) var(--ease-out) forwards; opacity: 0; }
+        .animate-fade-in-up { animation: fadeInUp var(--dur-base) var(--ease-out) forwards; opacity: 0; }
+        .animate-scale-in { animation: scaleIn var(--dur-base) var(--ease-out) forwards; opacity: 0; }
+
+        html, body {
+            overflow-x: hidden;
+        }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            color: var(--text); min-height: 100vh; padding: 24px;
+        }
+        body::before {
+            content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+            background: url("assets/img/background-auth.webp") center / cover no-repeat;
+        }
+        body::after {
+            content: ""; position: fixed; top: 0; left: 0; right: 0; height: 280px; z-index: -1; pointer-events: none;
+            background: linear-gradient(180deg, #000 0%, #000 30%, rgba(0, 0, 0, .85) 55%, rgba(0, 0, 0, .45) 85%, transparent 100%);
+        }
+        @media (max-width: 720px) {
+            body::before { background-position: 85% 20%; }
+        }
+        .page { width: 100%; max-width: 920px; margin: 0 auto; }
+
+        header {
+            display: flex; align-items: center; gap: 16px; margin-bottom: 28px;
+            opacity: 0; animation: fadeInUp 0.6s var(--ease-out) forwards;
+        }
+        header img {
+            height: 52px; width: auto;
+        }
+        header h1 { font-size: 22px; font-weight: 800; }
+        header h1 span { color: var(--accent-dark); }
+        header p { color: var(--text-muted); font-size: 14px; }
+
+        .card {
+            background: rgba(255, 255, 255, .06); border: 1px solid var(--border); border-radius: 20px;
+            padding: 28px; box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(22px) saturate(1.5);
+            -webkit-backdrop-filter: blur(22px) saturate(1.5);
+            opacity: 0; animation: scaleIn 0.6s var(--ease-out) 0.1s forwards;
+        }
+
+        .steps {
+            display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 28px;
+        }
+        .step {
+            display: flex; align-items: center; gap: 8px; padding: 8px 14px;
+            border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--text-muted);
+            background: var(--bg); border: 1px solid var(--border);
+            transition: all var(--dur-base) var(--ease-out);
+        }
+        .step .num {
+            width: 22px; height: 22px; border-radius: 50%; background: var(--border);
+            display: flex; align-items: center; justify-content: center; font-size: 11px;
+        }
+        .step.active {
+            background: var(--accent-light); color: var(--accent-dark); border-color: var(--border);
+        }
+        .step.active .num { background: var(--accent); color: #000; }
+
+        .booking-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        @media (max-width: 720px) { .booking-grid { grid-template-columns: 1fr; } }
+
+        .panel-title {
+            font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+            color: var(--text-muted); margin-bottom: 14px;
+        }
+
+        .cal-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;
+        }
+        .cal-header button {
+            width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--border);
+            background: var(--surface); color: var(--text); cursor: pointer; font-size: 18px;
+            transition: all var(--dur-fast) var(--ease-out);
+        }
+        .cal-header button:hover:not(:disabled) { background: var(--accent-light); border-color: var(--accent); color: #000; }
+        .cal-header button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .cal-header span { font-weight: 800; font-size: 15px; }
+        .cal-grid {
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center;
+            opacity: 0; animation: fadeIn var(--dur-base) var(--ease-out) forwards;
+        }
+        .cal-day-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; padding: 8px 0; }
+        .cal-cell {
+            aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+            border-radius: 12px; border: 1px solid transparent; font-size: 14px; font-weight: 500;
+            cursor: default; transition: all var(--dur-fast) var(--ease-out);
+        }
+        .cal-cell.available {
+            background: var(--surface); border-color: var(--border); color: var(--text); cursor: pointer;
+            opacity: 0; animation: fadeInUp 0.3s var(--ease-out) forwards;
+        }
+        .cal-cell.available:hover {
+            border-color: var(--accent); background: var(--accent-light); color: #000; transform: translateY(-2px);
+        }
+        .cal-cell.selected,
+        .cal-cell.selected.available,
+        .cal-cell.selected.available:hover {
+            background: var(--accent) !important;
+            color: #000 !important;
+            border-color: var(--accent) !important;
+            font-weight: 700;
+            transform: scale(1.06);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, .12);
+        }
+        .cal-cell.disabled { color: rgba(255, 255, 255, .35); cursor: not-allowed; }
+        .cal-cell.today { position: relative; }
+        .cal-cell.today::after {
+            content: ""; position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%);
+            width: 3px; height: 3px; border-radius: 50%; background: rgba(255, 255, 255, .25);
+        }
+
+        .slots-empty { color: var(--text-muted); font-size: 14px; text-align: center; padding: 40px 10px; }
+        .slots-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+        @media (max-width: 640px) { .slots-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 360px) { .slots-grid { grid-template-columns: 1fr; } }
+        .slot-btn {
+            background: var(--surface); border: 1px solid var(--border); color: var(--text);
+            padding: 16px 8px; border-radius: 14px; cursor: pointer; font-weight: 600; font-size: 13px;
+            height: 54px; width: 100%; text-align: center; white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis;
+            box-shadow: var(--shadow);
+            opacity: 0; animation: fadeInUp 0.35s var(--ease-out) forwards;
+            transition: all var(--dur-fast) var(--ease-out);
+        }
+        .slot-btn:hover:not(:disabled) { border-color: var(--accent); color: #000; background: var(--accent-light); transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+        .slot-btn.selected { background: var(--accent); color: #000; border-color: var(--accent); transform: scale(1.04); box-shadow: 0 6px 18px rgba(255, 255, 255, .12); }
+        .slot-btn:active:not(:disabled) { transform: scale(0.98); }
+
+        .section-divider {
+            margin: 28px 0 24px; border: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+        }
+
+        .form-section h3, .success-section h3 {
+            font-size: 18px; font-weight: 700; text-align: center; margin-bottom: 20px;
+        }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } }
+        .form-group { display: flex; flex-direction: column; gap: 6px; opacity: 0; animation: fadeInUp 0.35s var(--ease-out) forwards; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label { font-size: 13px; font-weight: 600; color: var(--text); }
+        .form-group input {
+            padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px;
+            background: var(--surface); color: var(--text); font-size: 15px;
+            transition: border-color var(--dur-fast), box-shadow var(--dur-fast), transform var(--dur-fast);
+        }
+        .form-group input:focus {
+            outline: none; border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, .12); transform: translateY(-1px);
+        }
+        .form-group input::placeholder { color: rgba(255, 255, 255, .45); }
+
+        .service-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        @media (max-width: 480px) { .service-options { grid-template-columns: 1fr; } }
+        .service-card {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 10px; padding: 24px 14px; border: 1px solid var(--border); border-radius: 16px;
+            background: var(--surface); color: var(--text); cursor: pointer; font-size: 14px; font-weight: 600;
+            opacity: 0; animation: fadeInUp 0.35s var(--ease-out) forwards;
+            transition: all var(--dur-fast) var(--ease-out);
+        }
+        .service-card .service-icon {
+            width: 48px; height: 48px; border-radius: 14px; background: rgba(255, 255, 255, .12);
+            color: var(--accent-dark); display: flex; align-items: center; justify-content: center; font-size: 24px;
+            transition: all var(--dur-fast) var(--ease-out);
+        }
+        .service-card:hover { border-color: var(--accent); background: var(--accent-light); color: #000; transform: translateY(-3px); }
+        .service-card.selected { background: var(--accent); color: #000; border-color: var(--accent); transform: scale(1.03); box-shadow: 0 8px 22px rgba(255, 255, 255, .12); }
+        .service-card.selected .service-icon { background: rgba(255,255,255,0.2); color: #fff; }
+
+        .form-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+        .btn {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 14px; border-radius: 12px; border: none; font-weight: 700; font-size: 15px;
+            cursor: pointer; transition: all var(--dur-fast) var(--ease-out);
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn:active { transform: translateY(0) scale(0.98); }
+        .btn-primary {
+            background: var(--accent); color: #000; box-shadow: 0 4px 14px rgba(255, 255, 255, .12);
+        }
+        .btn-primary:hover { background: var(--accent-dark); box-shadow: 0 6px 20px rgba(255, 255, 255, .16); }
+        .btn-primary:disabled { opacity: 0.7; transform: none; cursor: not-allowed; }
+        .btn-secondary { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+        .btn-secondary:hover { color: #000; border-color: var(--accent); background: var(--accent-light); }
+        .form-status { margin-top: 14px; text-align: center; font-size: 14px; min-height: 20px; font-weight: 500; }
+        .form-status.ok { color: var(--ok); }
+        .form-status.error { color: var(--error); animation: shake 0.3s ease; }
+
+        .terms-group { flex-direction: row; align-items: flex-start; gap: 10px; margin-top: 8px; }
+        .terms-label { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; font-weight: 500; color: var(--text); cursor: pointer; }
+        .terms-label input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--accent); flex-shrink: 0; cursor: pointer; }
+        .terms-label a { color: var(--accent-dark); text-decoration: underline; }
+        .terms-label a:hover { text-decoration: none; }
+
+        .spinner {
+            width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff;
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+
+        .success-box { text-align: center; padding: 10px 0 24px; }
+        .success-box .icon {
+            width: 72px; height: 72px; border-radius: 50%; background: #dcfce7; color: var(--ok);
+            display: flex; align-items: center; justify-content: center; font-size: 32px;
+            margin: 0 auto 16px; opacity: 0; animation: scaleIn 0.5s var(--ease-out) forwards;
+        }
+        .success-box h2 { color: var(--ok); font-size: 24px; margin-bottom: 6px; opacity: 0; animation: fadeInUp 0.5s var(--ease-out) 0.1s forwards; }
+        .success-box > p { color: var(--text-muted); margin-bottom: 24px; opacity: 0; animation: fadeInUp 0.5s var(--ease-out) 0.2s forwards; }
+        .success-detail {
+            background: var(--bg); border: 1px solid var(--border); border-radius: 16px;
+            padding: 20px; margin-bottom: 24px; text-align: left; font-size: 14px; line-height: 1.9;
+            opacity: 0; animation: fadeInUp 0.5s var(--ease-out) 0.3s forwards;
+        }
+        .success-detail strong { color: var(--accent-dark); }
+        .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-row span { color: var(--text-muted); }
+        .detail-row strong { color: var(--text); font-weight: 600; }
+        .store-info {
+            background: var(--bg); border: 1px solid var(--border); border-radius: 14px;
+            padding: 18px; text-align: left; margin-bottom: 24px;
+            opacity: 0; animation: fadeInUp 0.5s var(--ease-out) 0.35s forwards;
+        }
+        .store-info h4 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 12px; }
+        .store-info p { font-size: 14px; line-height: 1.7; color: var(--text); margin-bottom: 10px; }
+        .store-info p:last-child { margin-bottom: 0; }
+        .store-info a { color: var(--accent-dark); text-decoration: none; font-weight: 600; }
+        .store-info a:hover { text-decoration: underline; }
+
+        .hidden { display: none !important; }
+
+        footer {
+            margin-top: 40px; padding: 32px 0 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted); font-size: 13px;
+        }
+        .footer-inner {
+            display: flex; flex-wrap: wrap; gap: 24px 32px;
+            align-items: flex-start; justify-content: space-between;
+            margin-bottom: 24px;
+        }
+        .footer-brand p { margin-top: 10px; max-width: 300px; line-height: 1.5; }
+        .footer-links { display: flex; flex-wrap: wrap; gap: 14px 26px; align-items: center; }
+        .footer-links a { color: var(--text); text-decoration: none; font-weight: 500; transition: color .2s; }
+        .footer-links a:hover { color: var(--accent-dark); text-decoration: underline; }
+        .footer-bottom {
+            display: flex; flex-wrap: wrap; gap: 8px 24px;
+            justify-content: space-between; padding-top: 18px;
+            border-top: 1px solid var(--border);
+        }
+        .footer-bottom a { color: var(--text-muted); text-decoration: none; transition: color .2s; }
+        .footer-bottom a:hover { color: var(--accent-dark); text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header>
+            <a href="/" style="display:flex;align-items:center;gap:16px;text-decoration:none;color:inherit;">
+                <img src="assets/img/logo-cruise.png" alt="ElectronicST">
+                <div>
+                    <h1>ElectronicST</h1>
+                    <p>Reserva tu cita de servicio técnico en Hoover</p>
+                </div>
+            </a>
+        </header>
+
+        <main class="card">
+            <div id="bookingSection">
+                <div class="steps">
+                    <span class="step active" id="step1"><span class="num">1</span> Fecha</span>
+                    <span class="step" id="step2"><span class="num">2</span> Hora</span>
+                    <span class="step" id="step3"><span class="num">3</span> Datos</span>
+                </div>
+
+                <div class="booking-grid">
+                    <div>
+                        <div class="panel-title">Selecciona una fecha</div>
+                        <div class="cal-header">
+                            <button type="button" id="prevMonth" aria-label="Mes anterior">‹</button>
+                            <span id="monthLabel"></span>
+                            <button type="button" id="nextMonth" aria-label="Mes siguiente">›</button>
+                        </div>
+                        <div class="cal-grid" id="calendarGrid"></div>
+                    </div>
+
+                    <div>
+                        <div class="panel-title" id="slotsTitle">Horarios disponibles</div>
+                        <div id="slotsGrid" class="slots-grid">
+                            <p class="slots-empty">Elige una fecha para ver los horarios.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="section-divider">
+            </div>
+
+            <div class="form-section hidden" id="formSection">
+                <h3>Completa tus datos</h3>
+                <form id="serviceForm">
+                    <div class="form-grid">
+                        <div class="form-group" style="animation-delay:0.05s">
+                            <label for="nombre">Nombre y apellido</label>
+                            <input type="text" id="nombre" name="nombre" placeholder="Ej. Juan Pérez" required>
+                        </div>
+                        <div class="form-group" style="animation-delay:0.1s">
+                            <label for="telefono">Teléfono</label>
+                            <input type="tel" id="telefono" name="telefono" placeholder="(205) 555-1234" required>
+                        </div>
+                        <div class="form-group" style="animation-delay:0.15s">
+                            <label for="correo">Correo electrónico <span style="font-weight:400;color:var(--text-muted)">(opcional)</span></label>
+                            <input type="email" id="correo" name="correo" placeholder="tu@correo.com">
+                        </div>
+                        <div class="form-group full" style="animation-delay:0.2s">
+                            <label>Servicio</label>
+                            <div class="service-options" id="serviceOptions">
+                                <button type="button" class="service-card" data-value="Consulta" style="animation-delay:0.15s">
+                                    <div class="service-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                                    </div>
+                                    <span>Consulta</span>
+                                </button>
+                                <button type="button" class="service-card" data-value="Mantenimiento" style="animation-delay:0.2s">
+                                    <div class="service-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                                    </div>
+                                    <span>Mantenimiento</span>
+                                </button>
+                                <button type="button" class="service-card" data-value="Reparacion" style="animation-delay:0.25s">
+                                    <div class="service-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 12l-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"></path><path d="M17.64 15L22 10.64"></path><path d="m2 7 6-6 4.36 4.36L6.36 13 2 7.64z"></path></svg>
+                                    </div>
+                                    <span>Reparación</span>
+                                </button>
+                            </div>
+                            <input type="hidden" id="servicio" name="servicio" required>
+                        </div>
+                    </div>
+                    <p class="hidden">
+                        <label>Don't fill this out if you're human: <input type="text" name="bot-field" style="display:none" /></label>
+                    </p>
+                    <div class="form-group full terms-group" style="animation-delay:0.25s">
+                        <label class="terms-label">
+                            <input type="checkbox" id="terms" name="terms" required>
+                            <span>He leído y acepto los <a href="/terminos" target="_blank" rel="noopener">términos y condiciones</a> y la <a href="/politicas" target="_blank" rel="noopener">política de privacidad</a>.</span>
+                        </label>
+                    </div>
+                    <div class="form-group full terms-group" style="animation-delay:0.3s">
+                        <label class="terms-label">
+                            <input type="checkbox" id="smsConsent" name="smsConsent" required>
+                            <span>Acepto recibir mensajes de texto de <strong>ElectronicST</strong> sobre confirmaciones, recordatorios y actualizaciones de mi cita. La frecuencia de los mensajes varía según la cita, generalmente hasta 3 mensajes por cita. Entiendo que puedo responder <strong>STOP</strong> en cualquier momento para cancelar la suscripción, <strong>HELP</strong> para obtener ayuda, y que pueden aplicarse tarifas estándar de mensajes y datos. (<a href="/terminos#sms" target="_blank" rel="noopener">Ver términos de mensajería</a>)</span>
+                        </label>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <span>Confirmar cita</span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="resetBtn">↺ Empezar de nuevo</button>
+                    </div>
+                    <p class="form-status" id="formStatus" role="status"></p>
+                </form>
+            </div>
+
+            <div class="success-section hidden" id="successSection">
+                <div class="success-box">
+                    <div class="icon">✓</div>
+                    <h2>¡Cita registrada!</h2>
+                    <p>Un agente de ElectronicST te contactará pronto para confirmar tu cita.</p>
+
+                    <div class="success-detail" id="successDetail"></div>
+
+                    <div class="store-info">
+                        <h4>📍 Información de la tienda</h4>
+                        <p><strong>Dirección:</strong><br><a href="#" id="mapLink" target="_blank" rel="noopener">3659 Lorna Rd Suite 157, Hoover, AL 35216</a></p>
+                        <p><strong>Teléfono:</strong><br><a href="tel:+12055737840">(205) 573-7840</a></p>
+                    </div>
+
+                    <button type="button" class="btn btn-primary" id="newBookingBtn" style="width:100%;padding:18px 24px;font-size:16px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        Reservar otra cita
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;font-weight:700;">
+                        <img src="assets/img/logo-cruise.png" alt="ElectronicST" style="height:34px;width:auto;">
+                        <span>ElectronicST</span>
+                    </a>
+                    <p>Reserva tu cita de servicio técnico en Hoover, Alabama.</p>
+                </div>
+                <div class="footer-links">
+                    <a href="/">Inicio</a>
+                    <a href="/productos">Productos</a>
+                    <a href="/solicitud-servicio">Reservar cita</a>
+                    <a href="/terminos">Términos y condiciones</a>
+                    <a href="/politicas">Políticas de privacidad</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© ElectronicST. Todos los derechos reservados.</span>
+                <span>
+                    <a href="https://maps.google.com/?q=3659%20Lorna%20Rd%20Suite%20157%2C%20Hoover%2C%20AL%2035216" target="_blank" rel="noopener">3659 Lorna Rd Suite 157, Hoover, AL 35216</a>
+                    · <a href="tel:+12055737840">(205) 573-7840</a>
+                </span>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const API = {
+            slots: '/api/slots',
+            create: '/api/appointments',
+        };
+        const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        const dayLabels = ['Do','Lu','Ma','Mi','Ju','Vi','Sa'];
+
+        let currentMonth = new Date(); currentMonth.setDate(1);
+        let selectedDate = null;
+        let selectedTime = null;
+
+        const els = {
+            monthLabel: document.getElementById('monthLabel'),
+            prevMonth: document.getElementById('prevMonth'),
+            nextMonth: document.getElementById('nextMonth'),
+            calendarGrid: document.getElementById('calendarGrid'),
+            slotsTitle: document.getElementById('slotsTitle'),
+            slotsGrid: document.getElementById('slotsGrid'),
+            bookingSection: document.getElementById('bookingSection'),
+            formSection: document.getElementById('formSection'),
+            successSection: document.getElementById('successSection'),
+            serviceForm: document.getElementById('serviceForm'),
+            serviceInput: document.getElementById('servicio'),
+            serviceOptions: document.getElementById('serviceOptions'),
+            submitBtn: document.getElementById('submitBtn'),
+            resetBtn: document.getElementById('resetBtn'),
+            newBookingBtn: document.getElementById('newBookingBtn'),
+            formStatus: document.getElementById('formStatus'),
+            successDetail: document.getElementById('successDetail'),
+        };
+
+        function toISODate(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+        function formatHora(hhmm) {
+            let [h, m] = hhmm.split(':').map(Number);
+            const ampm = h >= 12 ? 'p.m.' : 'a.m.'; h = h % 12 || 12;
+            return `${h}:${String(m).padStart(2,'0')} ${ampm}`;
+        }
+        function setStep(n) { [1,2,3].forEach(i => document.getElementById(`step${i}`).classList.toggle('active', i === n)); }
+        function setStatus(msg, type) { els.formStatus.textContent = msg || ''; els.formStatus.className = 'form-status' + (type ? ' ' + type : ''); }
+
+        function animateElement(el, className = 'animate-fade-in-up') {
+            el.classList.remove(className); void el.offsetWidth; el.classList.add(className);
+        }
+
+        function selectService(value) {
+            els.serviceInput.value = value;
+            Array.from(els.serviceOptions.children).forEach(card => {
+                card.classList.toggle('selected', card.dataset.value === value);
+            });
+        }
+
+        function renderCalendar() {
+            const year = currentMonth.getFullYear(), month = currentMonth.getMonth();
+            els.monthLabel.textContent = `${monthNames[month]} ${year}`;
+            const today = new Date(), todayStr = toISODate(today);
+            const maxMonth = new Date(); maxMonth.setMonth(maxMonth.getMonth() + 3);
+            els.prevMonth.disabled = currentMonth.getFullYear() === today.getFullYear() && currentMonth.getMonth() === today.getMonth();
+            els.nextMonth.disabled = currentMonth.getFullYear() > maxMonth.getFullYear() ||
+                (currentMonth.getFullYear() === maxMonth.getFullYear() && currentMonth.getMonth() >= maxMonth.getMonth());
+
+            els.calendarGrid.innerHTML = '';
+            dayLabels.forEach(d => { const lbl = document.createElement('div'); lbl.className = 'cal-day-label'; lbl.textContent = d; els.calendarGrid.appendChild(lbl); });
+            const firstDay = new Date(year, month, 1).getDay(), daysInMonth = new Date(year, month + 1, 0).getDate();
+            for (let i = 0; i < firstDay; i++) els.calendarGrid.appendChild(document.createElement('div'));
+            for (let d = 1; d <= daysInMonth; d++) {
+                const date = new Date(year, month, d), dateStr = toISODate(date);
+                const cell = document.createElement('div'); cell.className = 'cal-cell'; cell.textContent = d;
+                const isPast = dateStr <= todayStr, isSunday = date.getDay() === 0, isAvailable = !isPast && !isSunday;
+                if (isAvailable) { cell.classList.add('available'); cell.style.animationDelay = `${(d % 7) * 0.03}s`; }
+                else cell.classList.add('disabled');
+                if (dateStr === todayStr) cell.classList.add('today');
+                // Nunca marcar como selected un día que no esté disponible.
+                if (isAvailable && dateStr === selectedDate) cell.classList.add('selected');
+                if (isAvailable) cell.addEventListener('click', () => selectDate(dateStr));
+                els.calendarGrid.appendChild(cell);
+            }
+            animateElement(els.calendarGrid, 'animate-fade-in');
+        }
+
+        function autoSelectFirstAvailable() {
+            if (selectedDate) return;
+            const firstAvailable = els.calendarGrid.querySelector('.cal-cell.available:not(.disabled):not(.today)');
+            if (firstAvailable) firstAvailable.click();
+        }
+
+        function selectDate(dateStr) {
+            // Seguridad adicional: nunca seleccionar fechas pasadas, domingos o el día actual.
+            const today = new Date(), todayStr = toISODate(today);
+            const date = new Date(dateStr + 'T00:00:00');
+            const isPast = dateStr <= todayStr, isSunday = date.getDay() === 0;
+            if (isPast || isSunday) {
+                selectedDate = null; selectedTime = null;
+                renderCalendar();
+                return;
+            }
+            selectedDate = dateStr; selectedTime = null;
+            renderCalendar(); setStep(2);
+            els.slotsTitle.textContent = `Horarios para ${dateStr}`;
+            els.slotsGrid.innerHTML = '<div style="display:flex;justify-content:center;padding:30px"><div class="spinner"></div></div>';
+            els.formSection.classList.add('hidden'); els.successSection.classList.add('hidden');
+            loadSlots(dateStr);
+        }
+
+        async function loadSlots(dateStr) {
+            try {
+                const res = await fetch(`${API.slots}?date=${dateStr}`);
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Error al cargar horarios');
+                if (!data.abierto || data.slots.length === 0) {
+                    els.slotsGrid.innerHTML = '<p class="slots-empty animate-fade-in-up">No hay horarios disponibles ese día.</p>';
+                    return;
+                }
+                renderSlots(data.slots);
+            } catch (err) { els.slotsGrid.innerHTML = `<p class="slots-empty animate-fade-in-up">${err.message}</p>`; }
+        }
+
+        function renderSlots(slots) {
+            const libres = slots.filter(s => s.disponible);
+            if (libres.length === 0) { els.slotsGrid.innerHTML = '<p class="slots-empty animate-fade-in-up">Todos los horarios están ocupados ese día.</p>'; return; }
+            els.slotsGrid.innerHTML = '';
+            libres.forEach((s, i) => {
+                const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'slot-btn'; btn.textContent = formatHora(s.hora);
+                btn.style.animationDelay = `${i * 0.05}s`;
+                btn.addEventListener('click', () => selectTime(s.hora));
+                els.slotsGrid.appendChild(btn);
+            });
+        }
+
+        function selectTime(time) {
+            selectedTime = time;
+            Array.from(els.slotsGrid.children).forEach(btn => btn.classList.toggle('selected', btn.textContent === formatHora(time)));
+            setStep(3); els.formSection.classList.remove('hidden');
+            animateElement(els.formSection, 'animate-fade-in-up');
+            els.formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setStatus('');
+        }
+
+        function getFormData() {
+            return {
+                nombre: document.getElementById('nombre').value.trim(),
+                telefono: document.getElementById('telefono').value.trim(),
+                correo: document.getElementById('correo').value.trim(),
+                fecha: selectedDate, hora: selectedTime,
+                servicio: els.serviceInput.value.trim(),
+            };
+        }
+
+        const STORE_ADDRESS = '3659 Lorna Rd Suite 157, Hoover, AL 35216';
+
+        function getMapUrl() {
+            const query = encodeURIComponent(STORE_ADDRESS);
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            return isIOS ? `http://maps.apple.com/?q=${query}` : `https://maps.google.com/?q=${query}`;
+        }
+
+        els.serviceForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!els.serviceForm.checkValidity()) { els.serviceForm.reportValidity(); return; }
+            const d = getFormData();
+            els.submitBtn.disabled = true;
+            els.submitBtn.innerHTML = '<div class="spinner"></div> Guardando…';
+            setStatus('');
+            try {
+                const res = await fetch(API.create, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...d, 'bot-field': els.serviceForm.elements['bot-field'].value }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Error al guardar la cita.');
+                showSuccess(d);
+            } catch (err) {
+                setStatus('❌ ' + err.message, 'error');
+                if (err.message.includes('ocupado')) loadSlots(selectedDate);
+            } finally {
+                els.submitBtn.disabled = false;
+                els.submitBtn.innerHTML = '<span>Confirmar cita</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
+            }
+        });
+
+        function showSuccess(d) {
+            els.bookingSection.classList.add('hidden');
+            els.formSection.classList.add('hidden');
+            els.successSection.classList.remove('hidden');
+            animateElement(els.successSection, 'animate-scale-in');
+            els.successSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            els.successDetail.innerHTML = `
+                <div class="detail-row"><span>Fecha</span> <strong>${d.fecha}</strong></div>
+                <div class="detail-row"><span>Hora</span> <strong>${formatHora(d.hora)}</strong></div>
+                <div class="detail-row"><span>Servicio</span> <strong>${escapeHtml(d.servicio)}</strong></div>
+                <div class="detail-row"><span>Cliente</span> <strong>${escapeHtml(d.nombre)}</strong></div>
+                <div class="detail-row"><span>Teléfono</span> <strong>${escapeHtml(d.telefono)}</strong></div>
+                ${d.correo ? `<div class="detail-row"><span>Correo</span> <strong>${escapeHtml(d.correo)}</strong></div>` : ''}
+            `;
+            document.getElementById('mapLink').href = getMapUrl();
+        }
+        function escapeHtml(str) { return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+        function resetAll() {
+            selectedDate = null; selectedTime = null; els.serviceForm.reset(); selectService('');
+            els.bookingSection.classList.remove('hidden');
+            els.formSection.classList.add('hidden'); els.successSection.classList.add('hidden');
+            els.slotsTitle.textContent = 'Horarios disponibles';
+            els.slotsGrid.innerHTML = '<p class="slots-empty">Elige una fecha para ver los horarios.</p>';
+            setStatus(''); setStep(1); renderCalendar(); window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        Array.from(els.serviceOptions.children).forEach(card => {
+            card.addEventListener('click', () => selectService(card.dataset.value));
+        });
+
+        const telefonoInput = document.getElementById('telefono');
+        telefonoInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 10) value = value.slice(0, 10);
+            if (value.length > 6) e.target.value = `(${value.slice(0, 3)}) ${value.slice(3, 6)}-${value.slice(6)}`;
+            else if (value.length > 3) e.target.value = `(${value.slice(0, 3)}) ${value.slice(3)}`;
+            else if (value.length > 0) e.target.value = `(${value}`;
+        });
+
+        els.prevMonth.addEventListener('click', () => { currentMonth.setMonth(currentMonth.getMonth() - 1); renderCalendar(); autoSelectFirstAvailable(); });
+        els.nextMonth.addEventListener('click', () => { currentMonth.setMonth(currentMonth.getMonth() + 1); renderCalendar(); autoSelectFirstAvailable(); });
+        els.resetBtn.addEventListener('click', resetAll);
+        els.newBookingBtn.addEventListener('click', resetAll);
+
+        renderCalendar();
+        autoSelectFirstAvailable();
+    </script>
+    <script src="assets/transitions.js" defer></script>
+</body>
+</html>

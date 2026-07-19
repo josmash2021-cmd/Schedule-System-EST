@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Políticas de Privacidad - ElectronicST</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --accent: #111827;
+            --accent-dark: #000000;
+            --accent-light: #f3f4f6;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { overflow-x: hidden; }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.7;
+        }
+        .container { max-width: 800px; margin: 0 auto; padding: 0 24px; }
+        header {
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            padding: 16px 0; position: sticky; top: 0; z-index: 10;
+        }
+        .nav { display: flex; align-items: center; }
+        .brand {
+            display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text);
+            font-weight: 700; font-size: 16px;
+        }
+        .brand img { height: 44px; width: auto; border-radius: 10px; }
+        main { padding: 48px 0; }
+        h1 { font-size: 32px; font-weight: 800; margin-bottom: 24px; }
+        h2 { font-size: 20px; font-weight: 700; margin: 32px 0 12px; }
+        p { color: var(--text-muted); margin-bottom: 16px; }
+        ul { color: var(--text-muted); margin: 0 0 16px 20px; }
+        li { margin-bottom: 8px; }
+        a { color: var(--accent-dark); }
+        footer {
+            text-align: center; padding: 40px 0; color: var(--text-muted); font-size: 14px;
+            border-top: 1px solid var(--border);
+        }
+        .footer-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 16px; margin-bottom: 12px; }
+        .footer-links a { text-decoration: none; }
+        .footer-links a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav class="nav">
+                <a href="/" class="brand">
+                    <img src="logo.jpg" alt="ElectronicST">
+                    <span>ElectronicST</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <h1>Políticas de Privacidad</h1>
+            <p>Última actualización: 18 de julio de 2026.</p>
+
+            <h2>1. Información que recopilamos</h2>
+            <p>Para agendar tu cita recopilamos tu nombre, teléfono, la fecha y hora seleccionadas, y el tipo de servicio solicitado.</p>
+
+            <h2>2. Uso de la información</h2>
+            <p>Usamos tus datos únicamente para:</p>
+            <ul>
+                <li>Gestionar y confirmar tu cita.</li>
+                <li>Contactarte sobre tu servicio.</li>
+                <li>Mejorar nuestra atención.</li>
+            </ul>
+
+            <h2>3. Mensajes de texto</h2>
+            <p>Si aceptas recibir mensajes de texto, usamos tu número de teléfono únicamente para enviarte comunicaciones transaccionales sobre tu cita (confirmaciones, recordatorios y actualizaciones). La frecuencia es limitada, generalmente hasta 3 mensajes por cita. Tu número se comparte únicamente con nuestro proveedor de mensajería autorizado para la entrega de dichos mensajes. Puedes cancelar la suscripción en cualquier momento respondiendo <strong>STOP</strong>.</p>
+
+            <h2>4. Protección de datos</h2>
+            <p>Implementamos medidas de seguridad para proteger tu información. No vendemos ni compartimos tus datos con terceros para fines comerciales.</p>
+
+            <h2>5. Tus derechos</h2>
+            <p>Puedes solicitar la actualización o eliminación de tus datos personales escribiéndonos al correo electrónico o teléfono de contacto.</p>
+
+            <h2>6. Cambios en esta política</h2>
+            <p>Podemos actualizar esta política ocasionalmente. Cualquier cambio se publicará en esta página.</p>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="/terminos">Términos y condiciones</a>
+                <a href="/politicas">Políticas de privacidad</a>
+                <a href="/">Inicio</a>
+            </div>
+            <p>3659 Lorna Rd Suite 157, Hoover, AL 35216</p>
+        </div>
+    </footer>
+    <script src="assets/transitions.js" defer></script>
+</body>
+</html>
