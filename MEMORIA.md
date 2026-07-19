@@ -46,7 +46,7 @@
 Hero a pantalla completa con parallax (`data-parallax="0.28"`), entrada
 escalonada (`.h-in-1..4`), marquee infinito, 2 "capítulos" (MacBook desde
 $1,099 / iPhone desde $799) con glow de color; imagen de MacBook lleva clase
-`.diagonal` y se corta con `clip-path: polygon(8% 0, 100% 0, 92% 100%, 0 100%)`.
+`.diagonal` y se corta con `clip-path: polygon(15% 0, 100% 0, 85% 100%, 0 100%)`.
 4 valores, y panel de reserva final (`.cta-banner`): fondo transparente para
 mostrar la seda de la página;
 luz blanca animada (`@keyframes ctaLight` en `::before`) y campo de puntos
