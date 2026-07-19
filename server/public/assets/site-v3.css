@@ -18,6 +18,8 @@ body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background: var(--black); color: var(--text); line-height: 1.6;
     -webkit-font-smoothing: antialiased; overflow-x: hidden;
+    touch-action: pan-x pan-y;
+    -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
 }
 /* Fondo de seda monocromo: imagen descargada del sitio de Resend
    (assets/img/background-auth.webp). Fijo: no se mueve con el scroll.

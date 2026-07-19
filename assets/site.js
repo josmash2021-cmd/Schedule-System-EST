@@ -19,6 +19,10 @@
     document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
     document.addEventListener('gesturechange', function (e) { e.preventDefault(); });
     document.addEventListener('gestureend', function (e) { e.preventDefault(); });
+    // Prevenir touchmove con 2 dedos (pellizco)
+    document.addEventListener('touchmove', function (e) {
+        if (e.touches && e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
     // Prevenir menú contextual en imágenes (clic derecho)
     document.addEventListener('contextmenu', function (e) {
         if (e.target.tagName === 'IMG') e.preventDefault();
