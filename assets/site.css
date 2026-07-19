@@ -363,6 +363,10 @@ a { -webkit-tap-highlight-color: transparent; }
     backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
     box-shadow: 0 24px 60px rgba(0, 0, 0, .4);
 }
+.cta-card .cta-logo {
+    width: 78px; height: auto; margin: 0 auto 6px;
+    filter: drop-shadow(0 4px 14px rgba(0, 0, 0, .45));
+}
 .cta-card .btn { width: 100%; }
 .cta-qr {
     display: flex; align-items: center; gap: 14px;

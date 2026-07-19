@@ -84,12 +84,12 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
 (solo garantía del fabricante). Fechadas "18 de julio de 2026".
 
 ### Assets JS
-- `logo.jpg`: imagen con fondo negro propio. Desde 2026-07-18 está recortada al
-  contenido (1040×640, letras EST + icono dorado) y se muestra SIN la tarjeta
-  blanca que antes la enmarcaba: `height` fijo con `width:auto` en todas las
-  páginas (nav/footer 44px vía `site.css`, solicitud 72px, admin 52/88px,
-  legales 44px); radius sutil solo en las páginas claras, donde el fondo negro
-  del logo se ve como placa. No volver a poner `background`/`padding` al img.
+- `assets/img/logo-cruise.png` (antes `logo.jpg`): logo con fondo transparente
+  (940×788, letras EST blancas + icono dorado). Desde 2026-07-19 se usa en el
+  nav y footer de las páginas oscuras (`index.html`, `productos.html`) y también
+  aparece dentro de `.cta-card` en `index.html` (clase `.cta-logo`). El archivo
+  `logo.jpg` sigue en el repo para las páginas claras que aún lo referencian
+  (`solicitud-servicio.html`, `admin.html`, `terminos.html`, `politicas.html`).
 - `assets/site.js` (IIFE ES5): nav (cápsula flotante con estado `.scrolled`,
   píldora deslizante `.nav-pill` que sigue al hover y descansa en el activo,
   menú móvil a pantalla completa con entrada escalonada vía `--d`, contacto
