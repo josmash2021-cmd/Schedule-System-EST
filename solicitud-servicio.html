@@ -511,7 +511,7 @@
             for (let d = 1; d <= daysInMonth; d++) {
                 const date = new Date(year, month, d), dateStr = toISODate(date);
                 const cell = document.createElement('div'); cell.className = 'cal-cell'; cell.textContent = d;
-                const isPast = dateStr < todayStr, isSunday = date.getDay() === 0, isAvailable = !isPast && !isSunday;
+                const isPast = dateStr <= todayStr, isSunday = date.getDay() === 0, isAvailable = !isPast && !isSunday;
                 if (isAvailable) { cell.classList.add('available'); cell.style.animationDelay = `${(d % 7) * 0.03}s`; }
                 else cell.classList.add('disabled');
                 if (dateStr === todayStr) cell.classList.add('today');
