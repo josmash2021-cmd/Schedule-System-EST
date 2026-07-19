@@ -97,7 +97,7 @@ a { -webkit-tap-highlight-color: transparent; }
 .nav-inner::before {
     content: ""; position: absolute; inset: 0; z-index: 0;
     border-radius: 999px;
-    background: rgba(12, 12, 16, .55);
+    background: rgba(6, 6, 8, .82);
     backdrop-filter: blur(22px) saturate(1.5);
     -webkit-backdrop-filter: blur(22px) saturate(1.5);
     border: 1px solid rgba(255, 255, 255, .1);
@@ -105,7 +105,7 @@ a { -webkit-tap-highlight-color: transparent; }
     transition: background .3s, border-color .3s;
 }
 .nav.scrolled .nav-inner::before {
-    background: rgba(8, 8, 10, .85);
+    background: rgba(4, 4, 6, .94);
     border-color: rgba(255, 255, 255, .16);
 }
 .brand { position: relative; z-index: 2; display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 700; font-size: 16px; }
