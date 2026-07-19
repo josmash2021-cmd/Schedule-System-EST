@@ -20,10 +20,14 @@ body {
     -webkit-font-smoothing: antialiased; overflow-x: hidden;
 }
 /* Fondo de seda monocromo: imagen descargada del sitio de Resend
-   (assets/img/background-auth.webp). Fijo: no se mueve con el scroll. */
+   (assets/img/background-auth.webp; versión vertical background-auth-m.webp
+   para móvil). Fijo: no se mueve con el scroll. */
 body::before {
     content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
     background: url("img/background-auth.webp") center / cover no-repeat;
+}
+@media (max-width: 720px) {
+    body::before { background-image: url("img/background-auth-m.webp"); }
 }
 img { max-width: 100%; display: block; }
 a { -webkit-tap-highlight-color: transparent; }
