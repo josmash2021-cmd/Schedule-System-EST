@@ -580,6 +580,12 @@ a { -webkit-tap-highlight-color: transparent; }
 .testimonial-author {
     color: var(--text); font-size: 13px; font-weight: 600;
 }
+.trustpilot-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--muted); font-size: 11px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: .06em;
+}
+.trustpilot-badge svg { flex-shrink: 0; }
 
 @media (max-width: 720px) {
     .testimonial-card { flex: 0 0 280px; padding: 20px; }
