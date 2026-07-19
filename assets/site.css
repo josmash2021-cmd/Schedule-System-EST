@@ -110,7 +110,7 @@ a { -webkit-tap-highlight-color: transparent; }
 }
 .brand { position: relative; z-index: 2; display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 700; font-size: 16px; }
 .brand img {
-    height: 52px; width: auto;
+    height: 64px; width: auto;
     transition: transform .35s var(--ease);
 }
 .brand:hover img { transform: scale(1.06); }
@@ -364,7 +364,7 @@ a { -webkit-tap-highlight-color: transparent; }
     box-shadow: 0 24px 60px rgba(0, 0, 0, .4);
 }
 .cta-card .cta-logo {
-    width: 120px; height: auto; margin: 0 auto 6px;
+    width: 170px; height: auto; margin: 0 auto 6px;
     filter: drop-shadow(0 4px 14px rgba(0, 0, 0, .45));
 }
 .cta-card .btn { width: 100%; }
