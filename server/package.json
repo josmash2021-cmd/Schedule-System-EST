@@ -4,6 +4,7 @@
   "description": "Backend API for Electronic Service Technology appointment system",
   "main": "index.js",
   "scripts": {
+    "build": "node scripts/copy-frontend.js",
     "start": "node index.js",
     "dev": "nodemon index.js"
   },

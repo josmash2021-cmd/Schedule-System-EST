@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const { PORT, CORS_ORIGIN } = require('./config');
 const { initDb } = require('./db');
 const slotsRouter = require('./routes/slots');
@@ -10,6 +11,25 @@ const app = express();
 
 app.use(cors({ origin: CORS_ORIGIN }));
 app.use(express.json());
+
+// Servir frontend estático desde server/public/
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Rutas explícitas para cada página HTML (clean URLs)
+const htmlRoutes = {
+  '/': 'index.html',
+  '/productos': 'productos.html',
+  '/solicitud-servicio': 'solicitud-servicio.html',
+  '/admin': 'admin.html',
+  '/terminos': 'terminos.html',
+  '/politicas': 'politicas.html',
+};
+
+for (const [route, file] of Object.entries(htmlRoutes)) {
+  app.get(route, (_req, res) => {
+    res.sendFile(path.join(__dirname, 'public', file));
+  });
+}
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, time: new Date().toISOString() });
