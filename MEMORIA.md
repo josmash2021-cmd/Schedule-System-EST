@@ -67,9 +67,11 @@ Wizard de 3 pasos: (1) calendario mensual, (2) slots, (3) formulario.
 
 - **Tema visual (2026-07-18/19):** fondo negro con la misma imagen de seda que
   la home (`assets/img/background-auth.webp`) aplicada en `body::before` y
-  overlay oscuro fijo de 280px en `body::after` para la zona del header. Card
-  principal con glassmorphism (`backdrop-filter: blur(22px) saturate(1.5)`),
-  bordes sutiles y tipografía blanca.
+  overlay oscuro fijo de 280px en `body::after` para la zona del header. En
+  móvil (≤720px) la posición del fondo se desplaza a `85% 20%`, igual que en
+  `site-v3.css`, para mostrar la zona iluminada de la seda. Card principal con
+  glassmorphism (`backdrop-filter: blur(22px) saturate(1.5)`), bordes sutiles y
+  tipografía blanca.
 - **Calendario:** máx. 3 meses adelante, domingos deshabilitados, **día actual
   bloqueado como no disponible** (`solicitud-servicio.html:519` compara
   `dateStr <= todayStr`). Al cargar y al cambiar de mes se
