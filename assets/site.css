@@ -287,6 +287,14 @@ a { -webkit-tap-highlight-color: transparent; }
     background: radial-gradient(120% 80% at 20% 0%, rgba(255, 255, 255, .08) 0%, transparent 55%);
     opacity: 0; transition: opacity .4s;
 }
+.value::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image: radial-gradient(circle, rgba(255, 255, 255, .11) 1px, transparent 1.5px);
+    background-size: 18px 18px;
+    mask-image: radial-gradient(ellipse at center, rgba(0,0,0,.9) 0%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,.9) 0%, transparent 70%);
+    opacity: .55;
+}
 .value:hover {
     transform: translateY(-7px);
     background: rgba(255, 255, 255, .07);
