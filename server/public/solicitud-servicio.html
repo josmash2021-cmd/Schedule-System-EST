@@ -59,7 +59,10 @@
         }
         body::before {
             content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-            background: url("assets/img/background-auth.webp") center / cover no-repeat;
+            background:
+                radial-gradient(circle, rgba(255, 255, 255, .08) 1px, transparent 1.6px),
+                url("assets/img/background-auth.webp") center / cover no-repeat;
+            background-size: 24px 24px, cover;
         }
         body::after {
             content: ""; position: fixed; top: 0; left: 0; right: 0; height: 280px; z-index: -1; pointer-events: none;
