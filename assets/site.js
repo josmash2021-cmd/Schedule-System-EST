@@ -168,6 +168,15 @@
         });
     }
 
+    /* ---------- Tarjetas de producto clicables: abren la página de detalle ---------- */
+    document.querySelectorAll('.card-product[data-href]').forEach(function (card) {
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', function (e) {
+            if (e.target.closest('a')) return;
+            window.location.href = card.dataset.href;
+        });
+    });
+
     /* ---------- Enlaces de dirección: Apple Maps en iOS, Google Maps en el resto ---------- */
     var STORE_ADDRESS = '3659 Lorna Rd Suite 157, Hoover, AL 35216';
     document.addEventListener('click', function (e) {
