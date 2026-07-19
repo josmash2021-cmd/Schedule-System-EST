@@ -265,6 +265,47 @@ a { -webkit-tap-highlight-color: transparent; }
     box-shadow: 0 40px 100px rgba(0, 0, 0, .65);
 }
 
+/* Cuadros flotantes sobre la imagen del capítulo */
+.figure-badge {
+    position: absolute; z-index: 2;
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 14px 20px;
+    background: rgba(12, 12, 15, .72);
+    border: 1px solid rgba(255, 255, 255, .14);
+    border-radius: 16px;
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, .45);
+    opacity: 0; transform: translateY(18px);
+    transition: opacity .7s var(--ease), transform .7s var(--ease);
+}
+.figure-badge-top {
+    top: 28px; left: 28px;
+    transition-delay: .25s;
+}
+.figure-badge-bottom {
+    bottom: 28px; right: 28px;
+    transition-delay: .45s;
+}
+.chapter-figure.in .figure-badge {
+    opacity: 1; transform: none;
+}
+.badge-eyebrow {
+    font-size: 11px; font-weight: 600; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--muted);
+}
+.badge-title {
+    font-size: 17px; font-weight: 800; letter-spacing: -.01em;
+    color: var(--text);
+}
+
+@media (max-width: 720px) {
+    .figure-badge { padding: 12px 16px; }
+    .figure-badge-top { top: 16px; left: 16px; }
+    .figure-badge-bottom { bottom: 16px; right: 16px; }
+    .badge-title { font-size: 15px; }
+}
+
 /* ---------------- Valores ---------------- */
 .values { padding: 110px 0; }
 .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; max-width: 960px; margin: 0 auto; }
