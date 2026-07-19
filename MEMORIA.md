@@ -108,7 +108,7 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
 - `assets/site.css`: sistema de diseño oscuro (tokens: `--black #000`,
   `--panel #0c0c0f`, radio 999px en botones). Tema MONOCROMO blanco/negro desde
   2026-07-18: se eliminaron los tokens azules (`--blue`, `--blue-h`, `--link`);
-  `.btn-blue` ahora es botón blanco con texto negro (idéntico a `.btn-light`),
+  `.btn-blue` ahora es botón blanco con texto negro puro `#000`,
   y todos los acentos (eyebrow, iconos, link-arrow, marquee, badge `.new`,
   glows de capítulos) usan blancos/grises. No reintroducir color sin pedirlo.
   Tarjetas `.value` (2026-07-19): fondo de vidrio translúcido con blur, borde
