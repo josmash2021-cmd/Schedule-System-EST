@@ -74,7 +74,11 @@ Wizard de 3 pasos: (1) calendario mensual, (2) slots, (3) formulario.
   bloqueado como no disponible** (`solicitud-servicio.html:519` compara
   `dateStr <= todayStr`). Al cargar y al cambiar de mes se
   **auto-selecciona el primer día disponible**
-  (`autoSelectFirstAvailable()` en `:532`).
+  (`autoSelectFirstAvailable()` en `:532`), ahora con selector defensivo
+  `:not(.disabled):not(.today)` para evitar seleccionar el día actual.
+  Además `selectDate()` valida nuevamente que la fecha no sea pasada o domingo
+  antes de guardarla como seleccionada, y `renderCalendar()` solo aplica la
+  clase `.selected` sobre celdas `.available`.
 - **Horarios:** grid de **3 columnas iguales** (`slots-grid` en `:157`),
   botones de alto fijo 54px para evitar tamaños desiguales. Slots 10:00 a.m. –
   3:00 p.m. cada 30 min (viene del backend Express).
