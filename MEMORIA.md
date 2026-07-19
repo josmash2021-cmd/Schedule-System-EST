@@ -46,9 +46,10 @@
 Hero a pantalla completa con parallax (`data-parallax="0.28"`), entrada
 escalonada (`.h-in-1..4`), marquee infinito, 2 "capítulos" (MacBook desde
 $1,099 / iPhone desde $799) con glow de color, 4 valores, y panel de reserva
-final (`.cta-banner`): campo de puntos + luz blanca animada que deriva lenta
-(`@keyframes ctaLight` en `::before`, puntos en `::after`), copy con 3 puntos
-con iconos, y `.cta-card` de vidrio con botones + QR de citas (`qr-cita.png`).
+final (`.cta-banner`): fondo transparente para mostrar la seda de la página;
+luz blanca animada (`@keyframes ctaLight` en `::before`) y campo de puntos
+(`::after`) por encima. `.cta-card` de vidrio más translúcido
+(`backdrop-filter: blur(18px)`) con botones + QR de citas (`qr-cita.png`).
 Footer con datos de la tienda.
 
 ### `productos.html` — catálogo (misma hoja oscura)

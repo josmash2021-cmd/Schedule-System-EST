@@ -279,7 +279,7 @@ a { -webkit-tap-highlight-color: transparent; }
 .cta-banner {
     position: relative; margin: 40px 14px 0; border-radius: 28px; overflow: hidden;
     border: 1px solid var(--line);
-    background: linear-gradient(180deg, #0d0d12 0%, #08080a 100%);
+    background: transparent;
 }
 /* Luz blanca que deriva lentamente por el panel */
 .cta-banner::before {
@@ -314,10 +314,10 @@ a { -webkit-tap-highlight-color: transparent; }
 .cta-points svg { width: 18px; height: 18px; color: rgba(255, 255, 255, .85); flex-shrink: 0; }
 
 .cta-card {
-    background: rgba(255, 255, 255, .05);
+    background: rgba(255, 255, 255, .06);
     border: 1px solid var(--line); border-radius: 22px;
     padding: 24px; display: flex; flex-direction: column; gap: 12px;
-    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
     box-shadow: 0 24px 60px rgba(0, 0, 0, .4);
 }
 .cta-card .btn { width: 100%; }
