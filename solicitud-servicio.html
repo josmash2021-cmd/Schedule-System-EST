@@ -55,10 +55,15 @@
         }
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg);
-            background-image: radial-gradient(circle, rgba(255, 255, 255, .10) 1px, transparent 1.6px);
-            background-size: 24px 24px;
             color: var(--text); min-height: 100vh; padding: 24px;
+        }
+        body::before {
+            content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+            background: url("assets/img/background-auth.webp") center / cover no-repeat;
+        }
+        body::after {
+            content: ""; position: fixed; top: 0; left: 0; right: 0; height: 280px; z-index: -1; pointer-events: none;
+            background: linear-gradient(180deg, #000 0%, #000 30%, rgba(0, 0, 0, .85) 55%, rgba(0, 0, 0, .45) 85%, transparent 100%);
         }
         .page { width: 100%; max-width: 920px; margin: 0 auto; }
 
