@@ -403,7 +403,7 @@ a { -webkit-tap-highlight-color: transparent; }
 .reveal.in, .reveal-scale.in { opacity: 1; transform: none; }
 
 /* ---------------- Footer ---------------- */
-footer { margin-top: 110px; border-top: 1px solid var(--line); background: #000; }
+footer { margin-top: 110px; border-top: 1px solid var(--line); background: transparent; }
 .footer-inner {
     display: flex; flex-wrap: wrap; gap: 24px 32px; align-items: flex-start;
     justify-content: space-between; padding: 46px 0 22px;
