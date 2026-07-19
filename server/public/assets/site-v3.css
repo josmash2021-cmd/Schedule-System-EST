@@ -283,9 +283,17 @@ a { -webkit-tap-highlight-color: transparent; }
     top: 28px; left: 28px;
     transition-delay: .25s;
 }
+.figure-badge-top-right {
+    top: 28px; right: 28px;
+    transition-delay: .35s;
+}
 .figure-badge-bottom {
     bottom: 28px; right: 28px;
     transition-delay: .45s;
+}
+.figure-badge-bottom-left {
+    bottom: 28px; left: 28px;
+    transition-delay: .55s;
 }
 .chapter-figure.in .figure-badge {
     opacity: 1; transform: none;
