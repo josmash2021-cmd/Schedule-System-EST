@@ -270,7 +270,7 @@ a { -webkit-tap-highlight-color: transparent; }
 
 /* ---------------- Valores ---------------- */
 .values { padding: 110px 0; }
-.values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
+.values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; max-width: 960px; margin: 0 auto; }
 .value {
     position: relative;
     padding: 34px 30px;
