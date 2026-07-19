@@ -574,7 +574,7 @@ a { -webkit-tap-highlight-color: transparent; }
     display: flex; align-items: center; gap: 10px;
 }
 .testimonial-stars {
-    color: #00b67a; font-size: 16px; letter-spacing: 2px;
+    display: flex; align-items: center; gap: 2px;
 }
 .testimonial-score {
     color: var(--text); font-size: 14px; font-weight: 700;
