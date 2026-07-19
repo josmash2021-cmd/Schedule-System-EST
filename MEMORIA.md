@@ -126,7 +126,8 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   Nav (2026-07-18): cápsula flotante sticky — `.nav` es wrapper con
   `pointer-events:none`; el fondo/blur va en `.nav-inner::before` (si se pone en
   `.nav-inner`, el menú móvil `fixed` dejaría de ser relativo al viewport).
-  Capas: brand/burger z2 > `.nav-links` z1 > fondo cápsula z0. Hero usa
+  Capas: brand/burger z2 > `.nav-links` z1 > fondo cápsula z0. `.brand` tiene
+  `gap: 5px` para que el texto quede pegado al logo. Hero usa
   `calc(100svh - 70px)` porque la cápsula ocupa 70px en flujo.
 
 ### ⚠️ Dos sistemas de diseño coexisten
