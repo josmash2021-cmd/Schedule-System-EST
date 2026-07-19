@@ -118,7 +118,7 @@ a { -webkit-tap-highlight-color: transparent; }
 }
 .brand { position: relative; z-index: 2; display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 700; font-size: 16px; }
 .brand img {
-    height: 38px; width: auto;
+    height: 32px; width: auto;
     transition: transform .35s var(--ease);
 }
 .brand .logo-desktop { display: block; }
