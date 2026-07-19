@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "echo 'Static site ready'",
+  "buildCommand": "echo 'Static site ready v2'",
   "outputDirectory": ".",
   "cleanUrls": true,
   "trailingSlash": false,
