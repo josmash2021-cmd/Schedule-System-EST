@@ -491,6 +491,13 @@ footer {
     .hero-content { padding: 90px 20px 80px; }
 }
 
+/* ---------------- Scan-reveal entre imágenes al scroll ---------------- */
+.scan-reveal { position: relative; overflow: hidden; border-radius: 26px; }
+.scan-back { position: absolute; inset: 0; z-index: 1; }
+.scan-back img { width: 100%; height: 100%; object-fit: cover; }
+.scan-slices { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.scan-slice { position: absolute; left: 0; right: 0; background-image: var(--scan-img); background-size: cover; background-position: center; will-change: transform, opacity; }
+
 /* Accesibilidad: menos movimiento */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }

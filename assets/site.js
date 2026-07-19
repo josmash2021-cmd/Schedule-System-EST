@@ -168,6 +168,47 @@
         });
     }
 
+    /* ---------- Efecto scan-reveal entre imágenes al scroll ---------- */
+    var scanReveal = document.getElementById('laptopScan');
+    if (scanReveal && !reduceMotion) {
+        var slicesWrap = scanReveal.querySelector('.scan-slices');
+        var imgUrl = slicesWrap.dataset.img;
+        var count = parseInt(slicesWrap.dataset.count, 10) || 12;
+        slicesWrap.style.setProperty('--scan-img', 'url(' + imgUrl + ')');
+
+        for (var i = 0; i < count; i++) {
+            var slice = document.createElement('div');
+            slice.className = 'scan-slice';
+            var top = (i / count) * 100;
+            var bottom = 100 - ((i + 1) / count) * 100;
+            slice.style.clipPath = 'inset(' + top + '% 0 ' + bottom + '% 0)';
+            slicesWrap.appendChild(slice);
+        }
+
+        var tickingScan = false;
+        var updateScan = function () {
+            tickingScan = false;
+            var rect = scanReveal.getBoundingClientRect();
+            var vh = window.innerHeight;
+            var start = vh * 0.65;
+            var end = -rect.height * 0.35;
+            var progress = Math.max(0, Math.min(1, (start - rect.top) / (start - end)));
+
+            var slices = slicesWrap.children;
+            for (var i = 0; i < slices.length; i++) {
+                var dir = (i % 2 === 0) ? 1 : -1;
+                var offset = progress * 55 * dir;
+                var glitch = Math.sin(progress * Math.PI * 5 + i * 0.8) * 3 * progress;
+                slices[i].style.transform = 'translateX(' + (offset + glitch) + '%)';
+                slices[i].style.opacity = (1 - progress * 0.3).toFixed(3);
+            }
+        };
+        window.addEventListener('scroll', function () {
+            if (!tickingScan) { tickingScan = true; requestAnimationFrame(updateScan); }
+        }, { passive: true });
+        updateScan();
+    }
+
     /* ---------- Enlaces de dirección: Apple Maps en iOS, Google Maps en el resto ---------- */
     var STORE_ADDRESS = '3659 Lorna Rd Suite 157, Hoover, AL 35216';
     document.addEventListener('click', function (e) {
