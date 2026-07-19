@@ -199,7 +199,7 @@ a { -webkit-tap-highlight-color: transparent; }
 .hero-media img { width: 100%; height: 100%; object-fit: cover; opacity: .9; }
 .hero::after {
     content: ""; position: absolute; inset: -30% 0 0; height: 130%; z-index: -1;
-    background: linear-gradient(180deg, rgba(0, 0, 0, .88) 0%, rgba(0, 0, 0, .75) 12%, rgba(0, 0, 0, .2) 35%, rgba(0, 0, 0, .5) 74%, #000 100%);
+    background: linear-gradient(180deg, #000 0%, #000 18%, rgba(0, 0, 0, .55) 34%, rgba(0, 0, 0, .45) 72%, #000 100%);
 }
 .hero-content { position: relative; z-index: 1; text-align: center; padding: 110px 24px 90px; max-width: 920px; will-change: opacity; }
 .hero-eyebrow {
