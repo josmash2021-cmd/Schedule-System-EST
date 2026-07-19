@@ -88,7 +88,7 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   recortar con `sharp.trim()`, letras EST blancas + icono dorado). Solo se usa
   arriba del título "¿Tu equipo necesita reparación?" en `.cta-copy` de
   `index.html` a 320px de ancho en PC y 190px en móvil, centrado (clase
-  `.cta-logo`), con 36px de separación del título debajo (26px en móvil). El
+  `.cta-logo`), con 48px de separación del título debajo (34px en móvil). El
   nav y footer de las páginas oscuras (`index.html`, `productos.html`) usan
   `logo.jpg` a 44px de alto en PC y 30px en móvil. El archivo `logo.jpg` sigue
   en el repo para
