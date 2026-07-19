@@ -368,11 +368,8 @@ a { -webkit-tap-highlight-color: transparent; }
     box-shadow: 0 24px 60px rgba(0, 0, 0, .4);
 }
 .cta-logo {
-    width: 150px; height: auto; margin: 0 0 14px;
+    width: 240px; height: auto; margin: 0 auto 14px; display: block;
     filter: drop-shadow(0 4px 14px rgba(0, 0, 0, .45));
-}
-@media (max-width: 860px) {
-    .cta-logo { margin: 0 auto 14px; }
 }
 .cta-card .btn { width: 100%; }
 .cta-qr {
