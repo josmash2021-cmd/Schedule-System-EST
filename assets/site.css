@@ -28,6 +28,10 @@ body::before {
     content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
     background: url("img/background-auth.webp") center / cover no-repeat;
 }
+body::after {
+    content: ""; position: fixed; top: 0; left: 0; right: 0; height: 220px; z-index: -1; pointer-events: none;
+    background: linear-gradient(180deg, rgba(0, 0, 0, .92) 0%, rgba(0, 0, 0, .7) 45%, transparent 100%);
+}
 @media (max-width: 720px) {
     body::before { background-position: 85% 20%; }
 }
