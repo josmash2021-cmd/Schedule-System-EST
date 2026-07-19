@@ -42,16 +42,20 @@ function copyRecursive(src, dest) {
   }
 }
 
+const missing = itemsToCopy.filter(item => !fs.existsSync(path.join(repoRoot, item)));
+if (missing.length) {
+  console.warn(`Archivos fuente no encontrados en ${repoRoot}. Posiblemente estamos en el contenedor de Railway.`);
+  console.warn(`Faltantes: ${missing.join(', ')}`);
+  console.log('Se conserva server/public/ tal como está (si existe).');
+  process.exit(0);
+}
+
 console.log('Limpiando server/public/...');
 rmrf(publicDir);
 
 for (const item of itemsToCopy) {
   const src = path.join(repoRoot, item);
   const dest = path.join(publicDir, item);
-  if (!fs.existsSync(src)) {
-    console.warn(`No encontrado: ${src}`);
-    continue;
-  }
   copyRecursive(src, dest);
   console.log(`Copiado: ${item}`);
 }
