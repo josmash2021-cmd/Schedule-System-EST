@@ -136,6 +136,9 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   Capas: brand/burger z2 > `.nav-links` z1 > fondo cápsula z0. `.brand` tiene
   `gap: 5px` para que el texto quede pegado al logo. Hero usa
   `calc(100svh - 70px)` porque la cápsula ocupa 70px en flujo.
+  Fondo de la cápsula oscurecido (2026-07-19): `rgba(6,6,8,.82)` en estado
+  inicial y `rgba(4,4,6,.94)` al hacer scroll, para tapar mejor el hero
+  brillante que queda detrás del menú translúcido.
 
 ### ⚠️ Dos sistemas de diseño coexisten
 - Oscuro cinematográfico: `index.html` + `productos.html` (vía `site.css`).
