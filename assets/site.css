@@ -88,7 +88,7 @@ a { -webkit-tap-highlight-color: transparent; }
 }
 .nav-inner {
     position: relative; z-index: 61;
-    display: flex; align-items: center; justify-content: space-between; height: 76px; gap: 16px;
+    display: flex; align-items: center; justify-content: space-between; height: 92px; gap: 16px;
     padding: 0 8px 0 16px;
     pointer-events: auto;
 }
@@ -110,7 +110,7 @@ a { -webkit-tap-highlight-color: transparent; }
 }
 .brand { position: relative; z-index: 2; display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 700; font-size: 16px; }
 .brand img {
-    height: 76px; width: auto;
+    height: 92px; width: auto;
     transition: transform .35s var(--ease);
 }
 .brand:hover img { transform: scale(1.06); }
@@ -180,7 +180,7 @@ a { -webkit-tap-highlight-color: transparent; }
 
 /* ---------------- Hero a pantalla completa ---------------- */
 .hero {
-    position: relative; min-height: calc(100svh - 86px);
+    position: relative; min-height: calc(100svh - 102px);
     display: flex; align-items: center; justify-content: center;
     overflow: hidden; isolation: isolate;
 }
