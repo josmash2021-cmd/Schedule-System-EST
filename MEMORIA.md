@@ -125,8 +125,9 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   la zona iluminada de la seda y evitar que se vea solo el centro negro.
   Sustituye a las imágenes generadas previamente (`bg-silk.jpg` /
   `bg-silk-m.jpg`), que fueron eliminadas junto con `tools/generar_fondo_seda.py`.
-  Footer (2026-07-18): fondo transparente para que el mismo fondo de seda
-  se extienda hasta el final de la página.
+  Footer (2026-07-18): fondo semitransparente (`rgba(0,0,0,.25)`) con
+  `backdrop-filter: blur(14px)` para que la seda se extienda borrosa hasta el
+  final de la página.
   Nav (2026-07-18): cápsula flotante sticky — `.nav` es wrapper con
   `pointer-events:none`; el fondo/blur va en `.nav-inner::before` (si se pone en
   `.nav-inner`, el menú móvil `fixed` dejaría de ser relativo al viewport).

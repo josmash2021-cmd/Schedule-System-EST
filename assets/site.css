@@ -448,7 +448,12 @@ a { -webkit-tap-highlight-color: transparent; }
 .reveal.in, .reveal-scale.in { opacity: 1; transform: none; }
 
 /* ---------------- Footer ---------------- */
-footer { margin-top: 110px; border-top: 1px solid var(--line); background: transparent; }
+footer {
+    position: relative;
+    margin-top: 110px; border-top: 1px solid var(--line);
+    background: rgba(0, 0, 0, .25);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
 .footer-inner {
     display: flex; flex-wrap: wrap; gap: 24px 32px; align-items: flex-start;
     justify-content: space-between; padding: 46px 0 22px;
