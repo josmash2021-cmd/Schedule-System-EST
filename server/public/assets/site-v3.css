@@ -279,24 +279,24 @@ a { -webkit-tap-highlight-color: transparent; }
     backdrop-filter: blur(18px) saturate(1.4);
     -webkit-backdrop-filter: blur(18px) saturate(1.4);
     box-shadow: 0 18px 50px rgba(0, 0, 0, .45);
-    opacity: 0; transform: translateY(18px);
-    transition: opacity .7s var(--ease), transform .7s var(--ease);
+    opacity: 0; transform: translateY(30px) scale(.92);
+    transition: opacity 1.1s cubic-bezier(.34, 1.56, .64, 1), transform 1.1s cubic-bezier(.34, 1.56, .64, 1);
 }
 .figure-badge-top {
     top: 6%; left: 6%;
-    transition-delay: .25s;
+    transition-delay: .35s;
 }
 .figure-badge-top-right {
     top: 6%; right: 6%;
-    transition-delay: .35s;
+    transition-delay: .5s;
 }
 .figure-badge-bottom {
     bottom: 6%; right: 6%;
-    transition-delay: .45s;
+    transition-delay: .65s;
 }
 .figure-badge-bottom-left {
     bottom: 6%; left: 6%;
-    transition-delay: .55s;
+    transition-delay: .8s;
 }
 .chapter-figure.in .figure-badge {
     opacity: 1; transform: none;
