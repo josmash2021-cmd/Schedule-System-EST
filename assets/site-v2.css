@@ -196,10 +196,10 @@ a { -webkit-tap-highlight-color: transparent; }
     overflow: hidden; isolation: isolate;
 }
 .hero-media { position: absolute; inset: -12% 0 0; height: 112%; z-index: -2; will-change: transform; }
-.hero-media img { width: 100%; height: 100%; object-fit: cover; opacity: .85; }
+.hero-media img { width: 100%; height: 100%; object-fit: cover; opacity: .95; }
 .hero::after {
     content: ""; position: absolute; inset: -30% 0 0; height: 130%; z-index: -1;
-    background: linear-gradient(180deg, #000 0%, #000 28%, rgba(0, 0, 0, .65) 46%, rgba(0, 0, 0, .5) 72%, #000 100%);
+    background: linear-gradient(180deg, #000 0%, #000 15%, rgba(0, 0, 0, .5) 32%, rgba(0, 0, 0, .4) 72%, #000 100%);
 }
 .hero-content { position: relative; z-index: 1; text-align: center; padding: 110px 24px 90px; max-width: 920px; will-change: opacity; }
 .hero-eyebrow {
