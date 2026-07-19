@@ -86,10 +86,11 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
 ### Assets JS
 - `assets/img/logo-cruise.png` (antes `logo.jpg`): logo con fondo transparente
   (940×788, letras EST blancas + icono dorado). Desde 2026-07-19 se usa en el
-  nav y footer de las páginas oscuras (`index.html`, `productos.html`) y también
-  aparece dentro de `.cta-card` en `index.html` (clase `.cta-logo`). El archivo
-  `logo.jpg` sigue en el repo para las páginas claras que aún lo referencian
-  (`solicitud-servicio.html`, `admin.html`, `terminos.html`, `politicas.html`).
+  nav y footer de las páginas oscuras (`index.html`, `productos.html`) a 52px
+  de alto, y también aparece dentro de `.cta-card` en `index.html` a 120px
+  de ancho (clase `.cta-logo`). El archivo `logo.jpg` sigue en el repo para
+  las páginas claras que aún lo referencian (`solicitud-servicio.html`,
+  `admin.html`, `terminos.html`, `politicas.html`).
 - `assets/site.js` (IIFE ES5): nav (cápsula flotante con estado `.scrolled`,
   píldora deslizante `.nav-pill` que sigue al hover y descansa en el activo,
   menú móvil a pantalla completa con entrada escalonada vía `--d`, contacto
