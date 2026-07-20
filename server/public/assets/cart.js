@@ -263,7 +263,7 @@
             '<h3>' + item.name + '</h3>' +
             '<p>' + item.desc + '</p>' +
             (item.cond ? '<div class="cart-item-cond">Condición: ' + item.cond + '</div>' : '') +
-            '<span class="cart-item-price">' + money(item.price) + ' c/u</span>' +
+            '<span class="cart-item-price">' + money(item.price) + '</span>' +
             '</div>' +
             '<div class="cart-item-actions">' +
             '<div class="qty">' +

@@ -214,6 +214,14 @@ Wizard de 3 pasos: (1) calendario mensual, (2) slots, (3) formulario.
 - POST a `/api/appointments`. Pantalla de éxito con detalle y link a mapa
   (Apple Maps en iOS, Google Maps en el resto). Si el error contiene "ocupado",
   recarga los slots.
+- **Modo pickup** (2026-07-20, `?pickup=1` desde el carrito): si hay items en
+  `localStorage['est_cart']`, muestra el resumen del pedido en el formulario
+  (foto, condición, cantidad, subtotal, impuestos 10% y total, `.pickup-box`),
+  deja solo la tarjeta de servicio "Pickup" preseleccionada y envía el campo
+  `servicio` compuesto: `Pickup: <nombre> (<cond>) x<qty> $<linea>; ... |
+  Total: $<con tax>` (así el admin y el SMS ven el pedido completo). Al
+  confirmar con éxito, VACÍA el carrito. Sin `?pickup=1` o sin items, la
+  página funciona igual que antes (la tarjeta Pickup queda oculta).
 
 ### `admin.html` — panel de citas (tema claro, `noindex`)
 Login por contraseña → `POST /api/auth/login` → JWT guardado en

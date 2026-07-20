@@ -297,6 +297,18 @@
 
         .hidden { display: none !important; }
 
+        /* ---- Modo pickup (desde el carrito) ---- */
+        .pickup-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; display: grid; gap: 12px; }
+        .pickup-item { display: flex; align-items: center; gap: 12px; }
+        .pickup-item img { width: 46px; height: 46px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border); }
+        .pickup-item-info { flex: 1; display: grid; gap: 2px; }
+        .pickup-item-info strong { font-size: 14px; }
+        .pickup-item-info span { color: var(--text-muted); font-size: 12.5px; }
+        .pickup-totals { border-top: 1px solid var(--border); padding-top: 10px; display: grid; gap: 6px; }
+        .pickup-totals > div { display: flex; justify-content: space-between; color: var(--text-muted); font-size: 13.5px; }
+        .pickup-totals strong { color: var(--text); }
+        .pickup-totals .pickup-total, .pickup-totals .pickup-total strong { color: var(--text); font-weight: 800; font-size: 15.5px; }
+
         footer {
             margin-top: 40px; padding: 32px 0 24px;
             border-top: 1px solid var(--border);
@@ -378,9 +390,19 @@
                             <label for="correo">Correo electrónico <span style="font-weight:400;color:var(--text-muted)">(opcional)</span></label>
                             <input type="email" id="correo" name="correo" placeholder="tu@correo.com">
                         </div>
+                        <div class="form-group full pickup-summary hidden" id="pickupSummary" style="animation-delay:0.18s">
+                            <label>Tu pedido · Recogida en tienda</label>
+                            <div class="pickup-box" id="pickupBox"></div>
+                        </div>
                         <div class="form-group full" style="animation-delay:0.2s">
                             <label>Servicio</label>
                             <div class="service-options" id="serviceOptions">
+                                <button type="button" class="service-card hidden" id="servicePickup" data-value="Pickup" style="animation-delay:0.1s">
+                                    <div class="service-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                                    </div>
+                                    <span>Pickup</span>
+                                </button>
                                 <button type="button" class="service-card" data-value="Consulta" style="animation-delay:0.15s">
                                     <div class="service-icon">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -542,6 +564,50 @@
             });
         }
 
+        /* ---------- Modo pickup (viene del carrito con ?pickup=1) ---------- */
+        const pickupMode = new URLSearchParams(location.search).get('pickup') === '1';
+        let pickupItems = [];
+        if (pickupMode) {
+            try { pickupItems = JSON.parse(localStorage.getItem('est_cart')) || []; } catch (e) { pickupItems = []; }
+        }
+        const PICKUP_TAX = 0.10;
+        function pickupMoney(n) {
+            const r = Math.round(n * 100) / 100;
+            return '$' + r.toLocaleString('en-US', { minimumFractionDigits: r % 1 ? 2 : 0, maximumFractionDigits: 2 });
+        }
+        function pickupSubtotal() { return pickupItems.reduce((s, i) => s + i.price * i.qty, 0); }
+        function pickupServiceString() {
+            const lines = pickupItems.map(i => `${i.name}${i.cond ? ' (' + i.cond + ')' : ''} x${i.qty} ${pickupMoney(i.price * i.qty)}`);
+            const sub = pickupSubtotal(), tax = Math.round(sub * PICKUP_TAX * 100) / 100;
+            return `Pickup: ${lines.join('; ')} | Total: ${pickupMoney(sub + tax)}`;
+        }
+        function initPickup() {
+            if (!pickupMode || !pickupItems.length) return;
+            const sub = pickupSubtotal(), tax = Math.round(sub * PICKUP_TAX * 100) / 100;
+            document.getElementById('pickupBox').innerHTML =
+                pickupItems.map(i => `
+                    <div class="pickup-item">
+                        <img src="${i.img}" alt="">
+                        <div class="pickup-item-info">
+                            <strong>${i.name}</strong>
+                            <span>${[i.cond, 'x' + i.qty].filter(Boolean).join(' · ')}</span>
+                        </div>
+                        <strong>${pickupMoney(i.price * i.qty)}</strong>
+                    </div>`).join('') +
+                `<div class="pickup-totals">
+                    <div><span>Subtotal</span><strong>${pickupMoney(sub)}</strong></div>
+                    <div><span>Impuestos (10%)</span><strong>${pickupMoney(tax)}</strong></div>
+                    <div class="pickup-total"><span>Total</span><strong>${pickupMoney(sub + tax)}</strong></div>
+                </div>`;
+            document.getElementById('pickupSummary').classList.remove('hidden');
+            // Servicio: solo la tarjeta Pickup, preseleccionada
+            Array.from(els.serviceOptions.children).forEach(card => {
+                card.classList.toggle('hidden', card.id !== 'servicePickup');
+            });
+            document.getElementById('servicePickup').classList.remove('hidden');
+            selectService('Pickup');
+        }
+
         function renderCalendar(skipAnimation = false) {
             const year = currentMonth.getFullYear(), month = currentMonth.getMonth();
             els.monthLabel.textContent = `${monthNames[month]} ${year}`;
@@ -641,7 +707,7 @@
                 telefono: document.getElementById('telefono').value.trim(),
                 correo: document.getElementById('correo').value.trim(),
                 fecha: selectedDate, hora: selectedTime,
-                servicio: els.serviceInput.value.trim(),
+                servicio: (pickupMode && pickupItems.length) ? pickupServiceString() : els.serviceInput.value.trim(),
             };
         }
 
@@ -667,6 +733,7 @@
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Error al guardar la cita.');
+                if (pickupMode) { localStorage.removeItem('est_cart'); pickupItems = []; }
                 showSuccess(d);
             } catch (err) {
                 setStatus('❌ ' + err.message, 'error');
@@ -731,6 +798,7 @@
 
         renderCalendar();
         autoSelectFirstAvailable();
+        initPickup();
     </script>
     <script src="assets/security.js" defer></script>
     <script src="assets/transitions.js" defer></script>
