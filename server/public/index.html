@@ -577,29 +577,32 @@
                 [-88.470, 31.890], [-88.240, 34.900], [-88.203, 34.995]
             ];
 
+            // Mapa NO interactivo: el usuario no puede hacer zoom, arrastrar ni rotar
             var map = new maplibregl.Map({
                 container: 'coverageMap',
                 style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
                 center: [-86.9, 32.6],
                 zoom: 5.6,
                 scrollZoom: false,
+                boxZoom: false,
+                dragRotate: false,
+                dragPan: false,
                 keyboard: false,
+                doubleClickZoom: false,
+                touchZoomRotate: false,
+                touchPitch: false,
+                pitchWithRotate: false,
                 attributionControl: false
             });
 
-            // Pin dorado de la tienda (la punta marca el punto exacto) con popup
+            // Dot 3D dorado de la tienda con popup
             var markerEl = document.createElement('div');
-            markerEl.className = 'map-pin';
-            markerEl.innerHTML =
-                '<svg viewBox="0 0 30 40" aria-hidden="true">' +
-                '<path d="M15 40C15 40 2 24 2 14a13 13 0 1 1 26 0C28 24 15 40 15 40Z" ' +
-                'fill="#d4af37" stroke="rgba(0,0,0,.35)" stroke-width="1.5"/>' +
-                '<circle cx="15" cy="14" r="5" fill="#0c0c0f"/>' +
-                '</svg>';
-            var storeMarker = new maplibregl.Marker({ element: markerEl, anchor: 'bottom' })
+            markerEl.className = 'map-dot';
+            markerEl.innerHTML = '<div class="marker-dot"></div>';
+            var storeMarker = new maplibregl.Marker({ element: markerEl })
                 .setLngLat(storeLngLat)
                 .setPopup(new maplibregl.Popup({
-                    offset: [0, -46],
+                    offset: [0, -16],
                     closeButton: false,
                     className: 'store-popup',
                     maxWidth: '280px'

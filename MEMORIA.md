@@ -71,11 +71,16 @@ oscuro), y el borde de Alabama declarado `#d4af37` en realidad SE VE
 sí son dorados reales (son DOM, no pasan por el filtro). Los edificios
 APARECEN FLUIDOS (2026-07-20): altura, base y opacidad interpoladas por
 zoom (`interpolate linear` 13.8→15.5/15.2), así crecen desde el suelo
-durante el flyTo en vez de aparecer de golpe. Marcador (2026-07-20): pin dorado SVG `.map-pin` (gota con punta abajo,
-`anchor: 'bottom'` para que la punta caiga en la coordenada exacta) con
-pulso animado en la punta (`@keyframes pinPulse`). Popup `.store-popup`
-simplificado: SOLO dirección + horario (sin eyebrow "Headquarters" ni
-teléfono, eliminados a petición del dueño), animación de entrada `spIn`.
+durante el flyTo en vez de aparecer de golpe. Marcador (2026-07-20): dot dorado 3D `.marker-dot` (esfera con gradiente
+radial y sombras inset; el dueño rechazó el pin tipo aguja) dentro de
+`.map-dot` con pulso dorado en la base (`@keyframes dotPulse`). Popup
+`.store-popup` simplificado: SOLO dirección + horario (sin eyebrow
+"Headquarters" ni teléfono, eliminados a petición del dueño), animación
+de entrada `spIn`. El mapa es 100% NO interactivo para el usuario
+(2026-07-20): `dragPan`, `scrollZoom`, `boxZoom`, `dragRotate`,
+`doubleClickZoom`, `touchZoomRotate`, `touchPitch`, `pitchWithRotate` y
+`keyboard` todos en `false`; solo corre la animación automática de
+entrada.
 Cuadro `.coverage-legend` como HTML estático posicionado absolute en la
 esquina inferior izquierda (lista solo Alabama). `fitBounds` inicial al
 estado (2026-07-20; se retiró del mapa la zona de South Florida, aunque la
