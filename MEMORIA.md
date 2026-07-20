@@ -255,6 +255,10 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
 (solo garantía del fabricante). Fechadas "18 de julio de 2026".
 
 ### Assets JS
+- **Enlaces del menú en INGLÉS desde 2026-07-20** (petición del dueño):
+  "Home", "Products", "Book appointment" (nav y footer de index/productos/
+  macbook/carrito) y "Cart" en la etiqueta móvil del carrito. El resto del
+  contenido (botones tipo "Agendar visita", textos) sigue en español.
 - `assets/img/logo-cruise.png`: logo con fondo transparente (410×193 tras
   recortar con `sharp.trim()`, letras EST blancas + icono dorado). Se usa
   arriba del título "¿Tu equipo necesita reparación?" en `.cta-copy` de
