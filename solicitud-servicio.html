@@ -517,7 +517,7 @@
             });
         }
 
-        function renderCalendar() {
+        function renderCalendar(skipAnimation = false) {
             const year = currentMonth.getFullYear(), month = currentMonth.getMonth();
             els.monthLabel.textContent = `${monthNames[month]} ${year}`;
             const today = new Date(), todayStr = toISODate(today);
@@ -537,7 +537,7 @@
                 if (isAvailable) {
                     cell.classList.add('available');
                     cell.dataset.date = dateStr;
-                    cell.style.animationDelay = `${(d % 7) * 0.03}s`;
+                    if (!skipAnimation) cell.style.animationDelay = `${(d % 7) * 0.03}s`;
                 }
                 else cell.classList.add('disabled');
                 if (dateStr === todayStr) cell.classList.add('today');
@@ -545,7 +545,7 @@
                 if (isAvailable && dateStr === selectedDate) cell.classList.add('selected');
                 els.calendarGrid.appendChild(cell);
             }
-            animateElement(els.calendarGrid, 'animate-fade-in');
+            if (!skipAnimation) animateElement(els.calendarGrid, 'animate-fade-in');
         }
 
         function autoSelectFirstAvailable() {
@@ -561,11 +561,11 @@
             const isPast = dateStr <= todayStr, isSunday = date.getDay() === 0;
             if (isPast || isSunday) {
                 selectedDate = null; selectedTime = null;
-                renderCalendar();
+                renderCalendar(true);
                 return;
             }
             selectedDate = dateStr; selectedTime = null;
-            renderCalendar(); setStep(2);
+            renderCalendar(true); setStep(2);
             els.slotsTitle.textContent = `Horarios para ${dateStr}`;
             els.slotsGrid.innerHTML = '<div style="display:flex;justify-content:center;padding:30px"><div class="spinner"></div></div>';
             els.formSection.classList.add('hidden'); els.successSection.classList.add('hidden');
