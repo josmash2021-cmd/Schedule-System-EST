@@ -511,6 +511,18 @@
         };
 
         function toISODate(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+        // "Ahora" en la zona del negocio (America/Chicago): fecha + minutos del día
+        function businessNow() {
+            const parts = new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'America/Chicago',
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+            }).formatToParts(new Date()).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});
+            return {
+                dateStr: `${parts.year}-${parts.month}-${parts.day}`,
+                minutes: (Number(parts.hour) % 24) * 60 + Number(parts.minute)
+            };
+        }
         function formatHora(hhmm) {
             let [h, m] = hhmm.split(':').map(Number);
             const ampm = h >= 12 ? 'p.m.' : 'a.m.'; h = h % 12 || 12;
@@ -533,9 +545,10 @@
         function renderCalendar(skipAnimation = false) {
             const year = currentMonth.getFullYear(), month = currentMonth.getMonth();
             els.monthLabel.textContent = `${monthNames[month]} ${year}`;
-            const today = new Date(), todayStr = toISODate(today);
+            const bizNow = businessNow(), todayStr = bizNow.dateStr;
+            const [bizYear, bizMonth] = todayStr.split('-').map(Number);
             const maxMonth = new Date(); maxMonth.setMonth(maxMonth.getMonth() + 3);
-            els.prevMonth.disabled = currentMonth.getFullYear() === today.getFullYear() && currentMonth.getMonth() === today.getMonth();
+            els.prevMonth.disabled = year === bizYear && month === bizMonth - 1;
             els.nextMonth.disabled = currentMonth.getFullYear() > maxMonth.getFullYear() ||
                 (currentMonth.getFullYear() === maxMonth.getFullYear() && currentMonth.getMonth() >= maxMonth.getMonth());
 
@@ -546,7 +559,10 @@
             for (let d = 1; d <= daysInMonth; d++) {
                 const date = new Date(year, month, d), dateStr = toISODate(date);
                 const cell = document.createElement('div'); cell.className = 'cal-cell'; cell.textContent = d;
-                const isPast = dateStr <= todayStr, isSunday = date.getDay() === 0, isAvailable = !isPast && !isSunday;
+                // Hoy es seleccionable si aún quedan horarios con 1 h de anticipación
+                const isPast = dateStr < todayStr, isSunday = date.getDay() === 0;
+                const todaySinTiempo = dateStr === todayStr && bizNow.minutes + 60 > 15 * 60;
+                const isAvailable = !isPast && !isSunday && !todaySinTiempo;
                 if (isAvailable) {
                     cell.classList.add('available');
                     cell.dataset.date = dateStr;
@@ -563,15 +579,15 @@
 
         function autoSelectFirstAvailable() {
             if (selectedDate) return;
-            const firstAvailable = els.calendarGrid.querySelector('.cal-cell.available:not(.disabled):not(.today)');
+            const firstAvailable = els.calendarGrid.querySelector('.cal-cell.available:not(.disabled)');
             if (firstAvailable) firstAvailable.click();
         }
 
         function selectDate(dateStr) {
-            // Seguridad adicional: nunca seleccionar fechas pasadas, domingos o el día actual.
-            const today = new Date(), todayStr = toISODate(today);
+            // Seguridad adicional: nunca seleccionar fechas pasadas ni domingos.
+            const todayStr = businessNow().dateStr;
             const date = new Date(dateStr + 'T00:00:00');
-            const isPast = dateStr <= todayStr, isSunday = date.getDay() === 0;
+            const isPast = dateStr < todayStr, isSunday = date.getDay() === 0;
             if (isPast || isSunday) {
                 selectedDate = null; selectedTime = null;
                 renderCalendar(true);

@@ -4,6 +4,28 @@ const { JWT_SECRET } = require('./config');
 const OPEN_HOUR = 10;
 const CLOSE_HOUR = 15;
 const SLOT_MINUTES = 30;
+const BUSINESS_TZ = 'America/Chicago';
+const LEAD_MINUTES = 60; // mismo día: reservable solo con 1 h de anticipación
+
+// "Ahora" en la zona horaria del negocio: { dateStr: 'YYYY-MM-DD', minutes: minutos desde medianoche }
+function businessNow() {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: BUSINESS_TZ,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+  }).formatToParts(new Date()).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});
+  return {
+    dateStr: `${parts.year}-${parts.month}-${parts.day}`,
+    minutes: (Number(parts.hour) % 24) * 60 + Number(parts.minute)
+  };
+}
+
+// ¿Se puede reservar ese slot? Para hoy exige LEAD_MINUTES de anticipación.
+function isSlotBookable(dateStr, hora, now = businessNow()) {
+  if (dateStr !== now.dateStr) return true;
+  const [h, m] = hora.split(':').map(Number);
+  return h * 60 + m >= now.minutes + LEAD_MINUTES;
+}
 
 function generateSlots() {
   const slots = [];
@@ -25,8 +47,7 @@ function isSunday(dateStr) {
 }
 
 function isPastDate(dateStr) {
-  const today = toISODate(new Date());
-  return dateStr < today;
+  return dateStr < businessNow().dateStr;
 }
 
 function validateDate(dateStr) {
@@ -69,4 +90,7 @@ module.exports = {
   validateDate,
   validateHora,
   requireAuth,
+  businessNow,
+  isSlotBookable,
+  LEAD_MINUTES,
 };

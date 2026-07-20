@@ -1,6 +1,6 @@
 const express = require('express');
 const { pool } = require('../db');
-const { generateSlots, validateDate } = require('../utils');
+const { generateSlots, validateDate, isSlotBookable } = require('../utils');
 
 const router = express.Router();
 
@@ -20,6 +20,7 @@ router.get('/', async (req, res) => {
     const allSlots = generateSlots();
     const slots = allSlots
       .filter(hora => !booked.has(hora))
+      .filter(hora => isSlotBookable(date, hora))
       .map(hora => ({ hora, disponible: true }));
 
     res.json({ abierto: true, date, slots });

@@ -1,7 +1,7 @@
 const express = require('express');
 const { pool } = require('../db');
 const { validateCreate } = require('../validation');
-const { validateDate, validateHora, requireAuth } = require('../utils');
+const { validateDate, validateHora, requireAuth, isSlotBookable } = require('../utils');
 const { sendOwnerSMSNotification, sendClientSMSConfirmation } = require('../notifications');
 
 const router = express.Router();
@@ -18,6 +18,11 @@ router.post('/', async (req, res) => {
 
   const horaError = validateHora(hora);
   if (horaError) return res.status(400).json({ error: horaError });
+
+  // Mismo día: exigir al menos 1 hora de anticipación
+  if (!isSlotBookable(fecha, hora)) {
+    return res.status(400).json({ error: 'Ese horario ya no está disponible. Reserva con al menos 1 hora de anticipación.' });
+  }
 
   try {
     const result = await pool.query(

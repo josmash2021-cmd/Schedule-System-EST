@@ -120,15 +120,18 @@ Wizard de 3 pasos: (1) calendario mensual, (2) slots, (3) formulario.
   `site-v3.css`, para mostrar la zona iluminada de la seda. Card principal con
   glassmorphism (`backdrop-filter: blur(22px) saturate(1.5)`), bordes sutiles y
   tipografía blanca.
-- **Calendario:** máx. 3 meses adelante, domingos deshabilitados, **día actual
-  bloqueado como no disponible** (`solicitud-servicio.html:519` compara
-  `dateStr <= todayStr`). Al cargar y al cambiar de mes se
-  **auto-selecciona el primer día disponible**
-  (`autoSelectFirstAvailable()` en `:532`), ahora con selector defensivo
-  `:not(.disabled):not(.today)` para evitar seleccionar el día actual.
-  Además `selectDate()` valida nuevamente que la fecha no sea pasada o domingo
-  antes de guardarla como seleccionada, y `renderCalendar()` solo aplica la
-  clase `.selected` sobre celdas `.available`.
+- **Calendario:** máx. 3 meses adelante, domingos deshabilitados. **El día
+  actual ES reservable desde 2026-07-20, con 1 hora de anticipación**
+  (regla del dueño: a las 10:00 ya no se puede 10:00, sí 11:00). Hoy solo
+  se deshabilita cuando ya no queda ningún slot con esa anticipación
+  (`todaySinTiempo` en `renderCalendar`). "Hoy" se calcula en la TZ del
+  negocio con `businessNow()` (Intl, America/Chicago) tanto en frontend
+  como en Express. Al cargar y al cambiar de mes se
+  **auto-selecciona el primer día disponible** (`autoSelectFirstAvailable()`),
+  selector `.cal-cell.available:not(.disabled)` (puede ser hoy). Además
+  `selectDate()` valida nuevamente que la fecha no sea pasada o domingo
+  antes de guardarla como seleccionada, y `renderCalendar()` solo aplica
+  la clase `.selected` sobre celdas `.available`.
 - **Estilo del día actual (2026-07-19):** se reemplazó el borde blanco interior
   (`box-shadow`) que lo hacía parecer seleccionado por un pequeño punto sutil
   (`::after`), para que no compita visualmente con el día realmente
@@ -250,7 +253,8 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   + índice por fecha. Se crea sola al arrancar.
 - `routes/slots.js` GET: valida fecha y devuelve `{abierto:true, date, slots}`
   solo con slots LIBRES (`{hora, disponible:true}`); ocupado = existe cita con
-  estado != 'cancelada'.
+  estado != 'cancelada'. Desde 2026-07-20 filtra además los slots de HOY con
+  menos de 1 h de anticipación (`isSlotBookable`).
 - `routes/appointments.js`:
   - POST público: valida campos + fecha + hora; INSERT con
     `ON CONFLICT (fecha,hora) DO NOTHING` → 409 "Este horario ya está ocupado…";
@@ -264,7 +268,11 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   `{role:'admin'}` 8h con `JWT_SECRET`. Responde `remainingAttempts`.
 - `utils.js`: slots 10:00–15:00 cada 30 min **incluyendo 15:00** (11 slots,
   `m <= totalMinutes`), validaciones de fecha (formato, no pasada, no domingo),
-  middleware `requireAuth` (JWT, role admin).
+  middleware `requireAuth` (JWT, role admin). Desde 2026-07-20: `businessNow()`
+  (fecha+minutos en America/Chicago vía Intl), `isSlotBookable(fecha, hora)`
+  (mismo día exige `LEAD_MINUTES=60` de anticipación) y `isPastDate` usa la
+  fecha del negocio, no la UTC del servidor. El POST de citas también valida
+  `isSlotBookable` (no se puede saltar la regla con un POST directo).
 - `validation.js`: solo campos obligatorios (nombre, telefono, servicio, fecha,
   hora). NO valida formato de teléfono ni que la hora de hoy ya haya pasado.
 - `notifications.js`: Twilio SMS. Al crear cita: SMS al dueño (`OWNER_PHONE`)
@@ -318,10 +326,12 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
 
 1. **Doble backend y doble hosting config** (§2, §6): mantener dos lógicas
    divergentes es riesgo; hay que decidir una y borrar/congelar la otra.
-2. **Bug de zona horaria en Express:** "hoy" se calcula en la TZ del servidor
-   (UTC en Railway), no en America/Chicago → cerca de medianoche el calendario
-   del servidor y el del cliente discrepan; y se puede reservar una hora de hoy
-   que ya pasó (`server/utils.js:27-38`, `routes/appointments.js`).
+2. **~~Bug de zona horaria en Express~~** (RESUELTO 2026-07-20): "hoy" se
+   calculaba en la TZ del servidor (UTC en Railway) y se podía reservar una
+   hora de hoy ya pasada. Ahora `businessNow()` usa America/Chicago en
+   `isPastDate` y en la regla de 1 h de anticipación (`isSlotBookable`),
+   tanto en slots GET como en el POST. El frontend usa la misma TZ.
+   OJO: el Netlify legacy (`slots.mjs`) sigue con su propia lógica vieja.
 3. **Slot de cierre reservable:** Express permite reservar 15:00, la hora exacta
    de cierre (`server/utils.js:11`). Netlify no. Inconsistente con el horario
    publicado.
