@@ -617,7 +617,7 @@ a { -webkit-tap-highlight-color: transparent; }
 /* ---------------- Página de detalle de producto ---------------- */
 .product-detail {
     display: grid; grid-template-columns: 1fr 1fr; gap: 44px; align-items: center;
-    padding: 84px 0 40px;
+    padding: 84px 24px 40px;
 }
 .product-media { position: relative; }
 .product-media img {
@@ -637,12 +637,12 @@ a { -webkit-tap-highlight-color: transparent; }
 .product-actions { display: flex; flex-wrap: wrap; gap: 12px; }
 
 @media (max-width: 860px) {
-    .product-detail { grid-template-columns: 1fr; padding: 56px 0 30px; }
+    .product-detail { grid-template-columns: 1fr; padding: 56px 24px 30px; }
     .product-actions .btn { width: 100%; }
 }
 
 /* ---------------- Componentes del producto ---------------- */
-.components { padding: 40px 0 30px; }
+.components { padding: 40px 24px 30px; }
 .components-head { text-align: center; margin-bottom: 36px; }
 .components-head h2 {
     font-size: clamp(30px, 4vw, 44px); font-weight: 800; letter-spacing: -.03em;
@@ -678,7 +678,7 @@ a { -webkit-tap-highlight-color: transparent; }
 }
 
 /* ---------------- Galería del producto ---------------- */
-.product-gallery { padding: 40px 0 60px; }
+.product-gallery { padding: 40px 24px 60px; }
 .gallery-head { text-align: center; margin-bottom: 30px; }
 .gallery-head h2 {
     font-size: clamp(30px, 4vw, 44px); font-weight: 800; letter-spacing: -.03em;
@@ -704,7 +704,7 @@ a { -webkit-tap-highlight-color: transparent; }
 }
 
 /* ---------------- Reseñas / Testimonios ---------------- */
-.testimonials { padding: 40px 0 60px; overflow: hidden; }
+.testimonials { padding: 40px 24px 60px; overflow: hidden; }
 .testimonials-head { text-align: center; margin-bottom: 30px; }
 .testimonials-head h2 {
     font-size: clamp(30px, 4vw, 44px); font-weight: 800; letter-spacing: -.03em;
@@ -803,6 +803,8 @@ footer {
     /* Aire lateral en móvil: mapa y tarjetas no pegados a los bordes */
     .operate { padding-left: 30px; padding-right: 30px; }
     .values { padding: 80px 30px; }
+    /* Página de producto: nada pegado a los lados en teléfonos */
+    .product-detail, .components, .product-gallery, .testimonials { padding-left: 30px; padding-right: 30px; }
     .card-foot { flex-direction: column; align-items: flex-start; }
     .card-foot .btn { width: 100%; }
     .hero-content { padding: 90px 20px 80px; }

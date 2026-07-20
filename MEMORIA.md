@@ -92,7 +92,10 @@ entrada.
 Responsive (2026-07-20): `.operate` y `.values` tienen padding lateral
 propio (24px base; 30px en ≤720px) — antes su shorthand `padding: X 0`
 anulaba el padding lateral del `.container` y el mapa y las tarjetas
-quedaban pegados a los bordes en pantallas < ~1228px.
+quedaban pegados a los bordes en pantallas < ~1228px. Mismo fix en la
+página de producto: `.product-detail` (base y su regla ≤860px),
+`.components`, `.product-gallery` y `.testimonials` (24px; 30px en
+≤720px).
 Cuadro `.coverage-legend` como HTML estático posicionado absolute en la
 esquina inferior izquierda (lista solo Alabama). `fitBounds` inicial al
 estado (2026-07-20; se retiró del mapa la zona de South Florida, aunque la
