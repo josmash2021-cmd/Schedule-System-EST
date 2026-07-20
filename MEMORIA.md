@@ -226,11 +226,16 @@ Wizard de 3 pasos: (1) calendario mensual, (2) slots, (3) formulario.
 ### `admin.html` — panel de citas (tema claro, `noindex`)
 Login por contraseña → `POST /api/auth/login` → JWT guardado en
 `sessionStorage['est_admin_token']` (8h). Muestra errores con intentos restantes
-y bloqueo 429. Stats por estado, filtro por fecha, lista de tarjetas.
+y bloqueo 429. Stats por estado, filtro por fecha (+ botón rápido **"Hoy"** en
+TZ America/Chicago, 2026-07-20), lista de tarjetas **ordenadas con las citas
+próximas primero** (ASC, orden client-side; el servidor las manda DESC).
 Acciones según estado: pendiente→Confirmar/Cancelar, confirmada→Atendida/Cancelar,
 cancelada→Reabrir. Botón "Eliminar todas" (DELETE con confirmación).
 **Las citas se identifican por (fecha, hora), no por id** — las acciones PATCH
-mandan `fecha`+`hora`.
+mandan `fecha`+`hora`. Nombre y servicio en líneas separadas (los textos largos
+de pickup no se aprietan) y badge dorado **"Pickup"** cuando el servicio
+empieza con "Pickup" (2026-07-20). Logo nuevo `logo-cruise.png` en login y
+topbar (antes `logo.jpg`).
 
 ### `terminos.html` / `politicas.html` — legales (tema claro, CSS inline duplicado)
 Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolsos

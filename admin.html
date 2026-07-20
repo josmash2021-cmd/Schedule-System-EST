@@ -173,6 +173,8 @@
         .badge.confirmada { background: #f0fdf4; color: #16a34a; }
         .badge.atendida { background: #eff6ff; color: var(--info); }
         .badge.cancelada { background: #fef2f2; color: var(--error); }
+        .badge.pickup { background: rgba(212, 175, 55, .14); color: #8a6d1f; border: 1px solid rgba(212, 175, 55, .4); }
+        .appt-body .service { display: block; font-size: 13.5px; color: var(--text-muted); margin-top: 2px; word-break: break-word; }
 
         .panel-status { text-align: center; font-size: 14px; min-height: 20px; margin-bottom: 14px; color: var(--error); transition: opacity var(--dur-fast); }
         .spinner {
@@ -189,7 +191,7 @@
 <body>
     <div class="login-wrapper" id="loginView">
         <div class="login-card">
-            <a href="/"><img draggable="false" src="logo.jpg" alt="ElectronicST" class="logo"></a>
+            <a href="/"><img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST" class="logo"></a>
             <h1>ElectronicST</h1>
             <p>Panel de administración de citas</p>
             <input type="password" id="tokenInput" placeholder="Contraseña de administrador" autocomplete="current-password">
@@ -201,7 +203,7 @@
     <div class="container hidden" id="panelView">
         <div class="topbar">
             <a href="/" class="brand">
-                <img draggable="false" src="logo.jpg" alt="ElectronicST">
+                <img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST">
                 <div>
                     <h1>ElectronicST</h1>
                     <p>Panel de citas</p>
@@ -213,6 +215,7 @@
         <div class="toolbar">
             <input type="date" id="filterDate">
             <button class="btn btn-primary" id="filterBtn">Ver día</button>
+            <button class="btn btn-secondary" id="todayBtn">Hoy</button>
             <button class="btn btn-secondary" id="allBtn">Ver todas</button>
             <button class="btn btn-secondary" id="refreshBtn">↻ Actualizar</button>
             <button class="btn btn-danger" id="deleteAllBtn">🗑️ Eliminar todas</button>
@@ -320,8 +323,11 @@
 
         function renderAppointments(citas) {
             if (citas.length === 0) { listEl.innerHTML = '<p class="empty">No hay citas para mostrar.</p>'; return; }
-            listEl.innerHTML = citas.map((c, i) => {
+            // Próximas primero (orden cronológico ascendente)
+            const sorted = [...citas].sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+            listEl.innerHTML = sorted.map((c, i) => {
                 const [y, m, d] = c.fecha.split('-').map(Number);
+                const isPickup = /^pickup/i.test(c.servicio || '');
                 const metaParts = [];
                 if (c.telefono) metaParts.push(`📞 <a href="tel:${escapeHtml(c.telefono)}">${escapeHtml(c.telefono)}</a>`);
                 if (c.correo) metaParts.push(`✉️ <a href="mailto:${escapeHtml(c.correo)}">${escapeHtml(c.correo)}</a>`);
@@ -334,8 +340,9 @@
                         <div class="hour">${formatHora(c.hora)}</div>
                     </div>
                     <div class="appt-body">
-                        <span class="badge ${escapeHtml(c.estado)}">${escapeHtml(c.estado)}</span>
-                        <div class="name">${escapeHtml(c.nombre)} — ${escapeHtml(c.servicio)}</div>
+                        <span class="badge ${escapeHtml(c.estado)}">${escapeHtml(c.estado)}</span>${isPickup ? ' <span class="badge pickup">Pickup</span>' : ''}
+                        <div class="name">${escapeHtml(c.nombre)}</div>
+                        <div class="service">${escapeHtml(c.servicio)}</div>
                         <div class="meta">${metaParts.join(' · ') || ''}</div>
                     </div>
                     <div class="appt-actions">${actionButtons(c)}</div>
@@ -426,6 +433,13 @@
             currentFilter = filterDate.value; loadAppointments();
         });
         document.getElementById('allBtn').addEventListener('click', () => { currentFilter = null; filterDate.value = ''; loadAppointments(); });
+        document.getElementById('todayBtn').addEventListener('click', () => {
+            // "Hoy" en la zona del negocio (America/Chicago)
+            const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit' })
+                .formatToParts(new Date()).reduce((a, p) => { a[p.type] = p.value; return a; }, {});
+            const today = `${parts.year}-${parts.month}-${parts.day}`;
+            filterDate.value = today; currentFilter = today; loadAppointments();
+        });
         document.getElementById('refreshBtn').addEventListener('click', loadAppointments);
         document.getElementById('logoutBtn').addEventListener('click', () => { sessionStorage.removeItem(TOKEN_KEY); showLogin(''); });
 
