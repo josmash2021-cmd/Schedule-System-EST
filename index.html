@@ -569,6 +569,48 @@
                 maxZoom: 19
             }).addTo(map);
 
+            // Cobertura estatal: polígono simplificado del estado de Alabama
+            var alabamaArea = L.polygon([
+                [34.995, -88.203],
+                [34.985, -85.607],
+                [34.400, -85.450],
+                [33.950, -85.280],
+                [33.600, -85.200],
+                [32.880, -85.180],
+                [32.470, -85.000],
+                [31.960, -85.060],
+                [31.550, -85.040],
+                [31.000, -85.100],
+                [31.000, -87.600],
+                [30.420, -87.600],
+                [30.280, -87.630],
+                [30.240, -88.040],
+                [30.210, -88.390],
+                [31.890, -88.470],
+                [34.900, -88.240]
+            ], {
+                color: '#f5f5f7',
+                weight: 2,
+                opacity: 0.9,
+                fillColor: '#f5f5f7',
+                fillOpacity: 0.10
+            }).addTo(map);
+
+            // Zona de South Florida (Miami / Fort Lauderdale)
+            var southFloridaArea = L.polygon([
+                [26.900, -80.050],
+                [26.900, -80.850],
+                [25.400, -80.900],
+                [25.400, -80.050]
+            ], {
+                color: '#86868b',
+                weight: 1.5,
+                opacity: 0.8,
+                fillColor: '#86868b',
+                fillOpacity: 0.08,
+                dashArray: '4 4'
+            }).addTo(map);
+
             var alabamaIcon = L.divIcon({
                 className: 'map-marker',
                 html: '<div class="marker-dot"></div>',
@@ -582,6 +624,24 @@
                 .bindPopup('Miami, FL — South Florida');
             L.marker([26.1224, -80.1373], { icon: alabamaIcon }).addTo(map)
                 .bindPopup('Fort Lauderdale, FL');
+
+            // Cuadro de áreas de cobertura (esquina inferior izquierda)
+            var legend = L.control({ position: 'bottomleft' });
+            legend.onAdd = function () {
+                var div = L.DomUtil.create('div', 'coverage-legend');
+                div.innerHTML =
+                    '<h4>Coverage areas</h4>' +
+                    '<ul>' +
+                    '<li><span class="swatch swatch-alabama"></span>Alabama</li>' +
+                    '<li><span class="swatch swatch-florida"></span>South Florida</li>' +
+                    '</ul>';
+                return div;
+            };
+            legend.addTo(map);
+
+            // Encuadre: todo el estado de Alabama + zona de South Florida
+            var view = alabamaArea.getBounds().extend(southFloridaArea.getBounds());
+            map.fitBounds(view, { padding: [24, 24] });
         })();
     </script>
     <script src="assets/security.js" defer></script>
