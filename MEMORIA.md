@@ -132,6 +132,24 @@ con icono SVG propio en caja redondeada (`.component-icon`, 2026-07-20) y
 entrada escalonada (`transition-delay` por `:nth-child` sobre el reveal
 individual de cada tarjeta; el hover resetea el delay). Galería de 2
 fotos, carrusel de reseñas (marquee infinito) y CTA de cita.
+En las acciones del producto: botón "Agendar visita" + **"Agregar al
+carrito"** (`#addToCart` con `data-id/name/desc/price/img`; reemplazó al
+botón "Llamar" el 2026-07-20 — el "Llamar" del banner CTA sigue).
+
+### `carrito.html` — carrito de compras (2026-07-20, SIN backend)
+- `assets/cart.js` (IIFE): store en `localStorage['est_cart']`
+  (`[{id,name,desc,price,img,qty}]`), inyecta enlace Carrito + contador
+  dorado `.nav-cart-count` en `.nav-links` (antes de `.nav-cta`; visible
+  en index/productos/macbook/carrito — `solicitud-servicio` no usa ese
+  nav). Se carga ANTES de `site.js` en esas páginas para que la píldora
+  del nav lo incluya. En móvil el enlace muestra la etiqueta "Carrito".
+- Página: grid items + resumen sticky; cada item con foto, specs, stepper
+  de cantidad (−/+), total por línea y quitar; subtotal/total; CTA
+  "Agendar visita" → `/solicitud-servicio` (no hay pago en línea: la
+  compra se cierra en tienda). Estado vacío con icono y link a productos.
+  Precio guardado: $150 ("desde"; nota de precio final según condición).
+- Ruta limpia `/carrito` en `server/index.js` y `carrito.html` incluido
+  en `copy-frontend.js`.
 
 ### `solicitud-servicio.html` — reserva de cita (TEMA OSCURO, CSS inline propio)
 Wizard de 3 pasos: (1) calendario mensual, (2) slots, (3) formulario.

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Carrito — ElectronicST</title>
+    <meta name="description" content="Tu carrito en ElectronicST, Hoover, AL. Revisa tus equipos y agenda tu visita.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="assets/img/favicon.png">
+    <link rel="stylesheet" href="assets/site-v3.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="container nav-inner">
+            <a href="/" class="brand">
+                <img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST" class="logo-desktop">
+                <img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST" class="logo-mobile">
+                <span>ElectronicST</span>
+            </a>
+            <button class="burger" aria-label="Abrir menú" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+            <div class="nav-links">
+                <a href="/">Inicio</a>
+                <a href="/productos">Productos</a>
+                <a href="/solicitud-servicio" class="btn btn-blue btn-sm nav-cta">Reservar cita</a>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="cart-section container">
+            <div class="cart-head reveal">
+                <span class="eyebrow">Carrito</span>
+                <h1>Tu carrito.</h1>
+            </div>
+
+            <!-- Estado vacío -->
+            <div id="cartEmpty" class="cart-empty hidden">
+                <div class="cart-empty-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                </div>
+                <h2>Tu carrito está vacío.</h2>
+                <p>Explora el catálogo y agrega el equipo que te interese.</p>
+                <a href="/productos" class="btn btn-blue">Ver productos</a>
+            </div>
+
+            <!-- Contenido del carrito -->
+            <div id="cartContent" class="cart-grid hidden">
+                <div id="cartItems" class="cart-items"></div>
+                <aside class="cart-summary">
+                    <h2>Resumen</h2>
+                    <div class="cart-row"><span>Subtotal</span><strong id="cartSubtotal">$0</strong></div>
+                    <div class="cart-row"><span>Recogida en tienda</span><strong>Gratis</strong></div>
+                    <div class="cart-row cart-total"><span>Total</span><strong id="cartTotal">$0</strong></div>
+                    <p class="cart-note">Precio "desde": el valor final depende de la condición del equipo. Lo confirmas en tu visita.</p>
+                    <a href="/solicitud-servicio" class="btn btn-blue">Agendar visita</a>
+                    <a href="/productos" class="btn btn-ghost">Seguir viendo productos</a>
+                </aside>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <a href="/" class="brand">
+                        <img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST">
+                        <span>ElectronicST</span>
+                    </a>
+                    <p>Tu tienda de confianza para MacBook, iPhone y servicio técnico especializado en Hoover, Alabama.</p>
+                </div>
+                <div class="footer-links">
+                    <a href="/productos">Productos</a>
+                    <a href="/solicitud-servicio">Reservar cita</a>
+                    <a href="/terminos">Términos y condiciones</a>
+                    <a href="/politicas">Políticas de privacidad</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© ElectronicST. Todos los derechos reservados.</span>
+                <span><a href="#" class="map-link">3659 Lorna Rd Suite 157, Hoover, AL 35216</a> · <a href="tel:+12055737840">(205) 573-7840</a></span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/security.js" defer></script>
+    <script src="assets/transitions.js" defer></script>
+    <script src="assets/cart.js" defer></script>
+    <script src="assets/site.js" defer></script>
+</body>
+</html>
