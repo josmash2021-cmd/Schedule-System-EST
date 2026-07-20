@@ -71,12 +71,15 @@ oscuro), y el borde de Alabama declarado `#d4af37` en realidad SE VE
 sí son dorados reales (son DOM, no pasan por el filtro). Los edificios
 APARECEN FLUIDOS (2026-07-20): altura, base y opacidad interpoladas por
 zoom (`interpolate linear` 13.8→15.5/15.2), así crecen desde el suelo
-durante el flyTo en vez de aparecer de golpe. Marcador (2026-07-20): dot dorado 3D `.marker-dot` (esfera con gradiente
-radial y sombras inset; el dueño rechazó el pin tipo aguja) dentro de
-`.map-dot` con pulso dorado en la base (`@keyframes dotPulse`). Popup
-`.store-popup` simplificado: SOLO dirección + horario (sin eyebrow
-"Headquarters" ni teléfono, eliminados a petición del dueño), animación
-de entrada `spIn`. El mapa es 100% NO interactivo para el usuario
+durante el flyTo en vez de aparecer de golpe. SIN marcador sobre la tienda (2026-07-20: el dueño pidió quitar el dot —
+antes hubo pin tipo aguja y dot 3D, ambos rechazados; no reintroducir).
+La dirección + horario se muestran en una tarjeta fija `.store-card`
+(HTML estático dentro de `.operate-map`, arriba-centro,
+`pointer-events: none`, mismo estilo vidrio+dorado `.sp-*`) que aparece
+con transición al terminar el vuelo (`showStoreCard` en `moveend`). Ya NO
+es un popup de MapLibre, así el autopan nunca descentra la cámara (ese
+bug dejaba el marcador pegado al borde izquierdo). El mapa es 100% NO
+interactivo para el usuario
 (2026-07-20): `dragPan`, `scrollZoom`, `boxZoom`, `dragRotate`,
 `doubleClickZoom`, `touchZoomRotate`, `touchPitch`, `pitchWithRotate` y
 `keyboard` todos en `false`; solo corre la animación automática de
