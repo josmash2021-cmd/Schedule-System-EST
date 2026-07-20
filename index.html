@@ -603,8 +603,10 @@
                 iconAnchor: [10, 10]
             });
 
-            L.marker([33.4054, -86.8114], { icon: alabamaIcon }).addTo(map)
-                .bindPopup('Hoover, AL — Headquarters');
+            // Tienda: 3659 Lorna Rd Suite 157, Hoover, AL 35216 (geocodificado)
+            var storeLatLng = [33.3809, -86.7996];
+            var storeMarker = L.marker(storeLatLng, { icon: alabamaIcon }).addTo(map)
+                .bindPopup('3659 Lorna Rd, Hoover, AL — Headquarters');
 
             // Cuadro de áreas de cobertura (esquina inferior izquierda)
             var legend = L.control({ position: 'bottomleft' });
@@ -619,8 +621,38 @@
             };
             legend.addTo(map);
 
-            // Encuadre: todo el estado de Alabama
+            // Vista inicial: todo el estado de Alabama
             map.fitBounds(alabamaArea.getBounds(), { padding: [24, 24] });
+
+            // Animación: cuando el mapa entra en pantalla, acercar hasta la tienda
+            var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            var zoomed = false;
+            function flyToStore() {
+                if (zoomed) return;
+                zoomed = true;
+                setTimeout(function () {
+                    if (reduceMotion) {
+                        map.setView(storeLatLng, 16);
+                        storeMarker.openPopup();
+                    } else {
+                        map.once('moveend', function () { storeMarker.openPopup(); });
+                        map.flyTo(storeLatLng, 16, { duration: 3.5 });
+                    }
+                }, 1200);
+            }
+            if ('IntersectionObserver' in window) {
+                var mapObserver = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (entry.isIntersecting) {
+                            flyToStore();
+                            mapObserver.disconnect();
+                        }
+                    });
+                }, { threshold: 0.4 });
+                mapObserver.observe(document.getElementById('coverageMap'));
+            } else {
+                flyToStore();
+            }
         })();
     </script>
     <script src="assets/security.js" defer></script>

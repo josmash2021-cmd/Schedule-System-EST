@@ -58,8 +58,13 @@ Sección "Where we operate": mapa Leaflet oscuro (tiles CartoDB `dark_all`)
 con polígono simplificado de todo Alabama en dorado `#d4af37` (borde +
 relleno translúcido .18), un marcador dorado (Hoover HQ), cuadro
 `.coverage-legend` en la esquina inferior izquierda (lista solo Alabama)
-y `fitBounds` al estado (2026-07-20; se retiró del mapa la zona de South
-Florida, aunque la tarjeta de texto al lado la sigue mencionando).
+y `fitBounds` inicial al estado (2026-07-20; se retiró del mapa la zona de
+South Florida, aunque la tarjeta de texto al lado la sigue mencionando).
+Animación (2026-07-20): al entrar el mapa en pantalla (IntersectionObserver,
+threshold .4), espera 1.2 s y hace `flyTo` (3.5 s, zoom 16) hasta la
+tienda — 3659 Lorna Rd geocodificada a `[33.3809, -86.7996]` vía Nominatim
+(antes el pin estaba en `[33.4054, -86.8114]`, ~2.5 km al norte) — y abre
+el popup al llegar. Con `prefers-reduced-motion` usa `setView` directo.
 Footer con datos de la tienda.
 
 ### `productos.html` — catálogo (misma hoja oscura)
