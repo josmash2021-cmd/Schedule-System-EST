@@ -54,7 +54,10 @@ final (`.cta-banner`): fondo transparente para mostrar la seda de la página;
 luz blanca animada (`@keyframes ctaLight` en `::before`) y campo de puntos
 (`::after`) por encima. `.cta-card` de vidrio más translúcido
 (`backdrop-filter: blur(18px)`) con botones + QR de citas (`qr-cita.png`).
-Sección "Where we operate": mapa 3D con **MapLibre GL JS 4.7.1** (desde
+Sección "Dónde operamos" (antes "Where we operate"; todo el texto pasó a
+español el 2026-07-20: eyebrow "Nuestra cobertura", tarjetas "Alabama —
+Sede principal y cobertura en todo el estado" y "Sur de Florida", leyenda
+"Áreas de cobertura"): mapa 3D con **MapLibre GL JS 4.7.1** (desde
 2026-07-20; reemplazó a Leaflet) usando el estilo vectorial CartoDB
 `dark-matter-gl-style` (source `carto`), teñido azul navy vía filtro CSS en
 `.maplibregl-canvas` (`brightness(.9) sepia(.6) hue-rotate(185deg)
