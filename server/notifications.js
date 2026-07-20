@@ -4,6 +4,7 @@ const {
   TWILIO_AUTH_TOKEN,
   TWILIO_SMS_FROM,
   OWNER_PHONE,
+  CALLMEBOT_API_KEY,
 } = require('./config');
 
 const STORE_ADDRESS = '3659 Lorna Rd Suite 157, Hoover, AL 35216';
@@ -95,4 +96,31 @@ function formatHora(hhmm) {
   return `${h}:${String(m).padStart(2, '0')} ${ampm}`;
 }
 
-module.exports = { sendOwnerSMSNotification, sendClientSMSConfirmation };
+// WhatsApp al dueño vía CallMeBot (canal activo mientras el SMS espera A2P)
+async function sendOwnerWhatsAppNotification(cita) {
+  if (!OWNER_PHONE || !CALLMEBOT_API_KEY) return;
+
+  const text = [
+    '*Nueva cita registrada*',
+    '',
+    `Cliente: ${cita.nombre || '-'}`,
+    `Telefono: ${cita.telefono || '-'}`,
+    `Fecha: ${cita.fecha || '-'}`,
+    `Hora: ${cita.hora || '-'}`,
+    `Servicio: ${cita.servicio || '-'}`,
+    cita.correo ? `Correo: ${cita.correo}` : '',
+    '',
+    `ElectronicST - ${STORE_ADDRESS}`,
+  ].join('\n');
+
+  try {
+    const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(OWNER_PHONE)}&text=${encodeURIComponent(text)}&apikey=${encodeURIComponent(CALLMEBOT_API_KEY)}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    console.log('WhatsApp al dueño encolado (CallMeBot).');
+  } catch (err) {
+    console.error('Failed to send WhatsApp:', err.message);
+  }
+}
+
+module.exports = { sendOwnerSMSNotification, sendClientSMSConfirmation, sendOwnerWhatsAppNotification };

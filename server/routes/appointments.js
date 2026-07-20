@@ -2,7 +2,7 @@ const express = require('express');
 const { pool } = require('../db');
 const { validateCreate } = require('../validation');
 const { validateDate, validateHora, requireAuth, isSlotBookable } = require('../utils');
-const { sendOwnerSMSNotification, sendClientSMSConfirmation } = require('../notifications');
+const { sendOwnerSMSNotification, sendClientSMSConfirmation, sendOwnerWhatsAppNotification } = require('../notifications');
 
 const router = express.Router();
 
@@ -42,6 +42,7 @@ router.post('/', async (req, res) => {
     // Notificaciones por SMS (no bloqueantes)
     const notificationData = { nombre, telefono, correo, servicio, fecha, hora };
     sendOwnerSMSNotification(notificationData).catch(() => {});
+    sendOwnerWhatsAppNotification(notificationData).catch(() => {});
     sendClientSMSConfirmation(notificationData).catch(() => {});
 
     res.status(201).json({ ok: true, cita });

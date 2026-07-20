@@ -349,15 +349,19 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   `isSlotBookable` (no se puede saltar la regla con un POST directo).
 - `validation.js`: solo campos obligatorios (nombre, telefono, servicio, fecha,
   hora). NO valida formato de teléfono ni que la hora de hoy ya haya pasado.
-- `notifications.js`: Twilio SMS. Al crear cita: SMS al dueño (`OWNER_PHONE`)
-  con los datos + SMS de confirmación al cliente con dirección, STOP/HELP.
-  `toE164` asume EE.UU. (+1). Si faltan credenciales, solo loguea y sigue.
-  **Diagnóstico 2026-07-20:** las 4 vars están en Railway y las credenciales
-  son VÁLIDAS (cuenta + número `+12052094654` verificados vía API), pero un
-  SMS de prueba al dueño fue BLOQUEADO con **error 30034 (A2P 10DLC)** — las
-  operadoras de EE.UU. exigen registrar marca+campaña A2P para entregar SMS
-  desde números locales. Hasta registrarla en Twilio Console, ningún SMS
-  llegará (ni al dueño ni a clientes).
+- `notifications.js`: notificaciones al crear cita (3 canales, no bloqueantes):
+  SMS Twilio al dueño (`OWNER_PHONE`), **WhatsApp al dueño vía CallMeBot**
+  (`sendOwnerWhatsAppNotification`, 2026-07-20 — mismo texto con *negritas*,
+  GET `api.callmebot.com/whatsapp.php?phone/text/apikey`; requiere que el
+  número destino haya activado el bot de CallMeBot alguna vez) y SMS de
+  confirmación al cliente con dirección, STOP/HELP. `toE164` asume EE.UU. (+1).
+  Si faltan credenciales, solo loguea y sigue.
+  **Diagnóstico 2026-07-20:** las 4 vars Twilio están en Railway y las
+  credenciales son VÁLIDAS (cuenta + número `+12052094654` verificados vía
+  API), pero un SMS de prueba al dueño fue BLOQUEADO con **error 30034 (A2P
+  10DLC)** — las operadoras de EE.UU. exigen registrar marca+campaña A2P
+  para entregar SMS desde números locales. Mientras tanto el canal que SÍ
+  llega es WhatsApp (prueba real encolada y aceptada el mismo día).
 - `config.js`: env vars. Default inseguro `ADMIN_PASSWORD='admin123'`;
   `JWT_SECRET` obligatorio en producción (sale con error si falta);
   `CALLMEBOT_API_KEY` y `OWNER_PHONE` presentes pero **CallMeBot ya no se usa**
