@@ -97,7 +97,8 @@ página de producto: `.product-detail` (base y su regla ≤860px),
 `.components`, `.product-gallery` y `.testimonials` (24px; 30px en
 ≤720px). Además en ≤720px: `.operate-map` pasa a `aspect-ratio: 4/5`
 (más alto, para que la tarjeta de dirección no tape la flecha de la
-tienda) y `.coverage-legend` se oculta (`display: none`).
+tienda). El `.coverage-legend` se mantiene también en móvil (el dueño
+pidió conservarlo tras probar ocultarlo).
 Cuadro `.coverage-legend` como HTML estático posicionado absolute en la
 esquina inferior izquierda (lista solo Alabama). `fitBounds` inicial al
 estado (2026-07-20; se retiró del mapa la zona de South Florida, aunque la

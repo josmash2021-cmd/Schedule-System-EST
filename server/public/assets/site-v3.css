@@ -807,7 +807,6 @@ footer {
     .product-detail, .components, .product-gallery, .testimonials { padding-left: 30px; padding-right: 30px; }
     /* Mapa más alto en teléfonos: la flecha queda visible bajo la tarjeta */
     .operate-map { aspect-ratio: 4 / 5; }
-    .coverage-legend { display: none; }
     .card-foot { flex-direction: column; align-items: flex-start; }
     .card-foot .btn { width: 100%; }
     .hero-content { padding: 90px 20px 80px; }
