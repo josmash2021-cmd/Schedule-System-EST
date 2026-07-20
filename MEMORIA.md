@@ -211,18 +211,16 @@ Wizard de 3 pasos: (1) calendario mensual, (2) slots, (3) formulario.
   consentimiento SMS (texto TCPA: STOP/HELP, hasta 3 msg por cita).
 - **Footer completo** añadido el 2026-07-18 con logo, links legales y datos de
   la tienda.
-- POST a `/api/appointments`. Pantalla de éxito con **resumen visual
-  (2026-07-20)**: la fecha como mini calendario (mes/día/día de semana),
-  la hora como reloj digital (dos puntos parpadeantes + chip a.m./p.m.),
-  el servicio en tarjeta con el mismo icono del formulario (en pickup el
-  texto largo del pedido se muestra completo) y el cliente como **factura**
-  (2026-07-20, reemplaza al carnet): encabezado con logo + datos de la
-  tienda, número `#EST-<fecha>-<hora>`, etiqueta "Tu información",
-  líneas de items (en pickup: productos con precio, subtotal, impuestos
-  10% y total; en servicios: la línea "Por confirmar") y borde inferior
-  troquelado tipo recibo (`.inv-tear`). Para que la factura de pickup
-  tenga los items, el carrito se vacía DESPUÉS de `showSuccess`.
-  Link a mapa (Apple Maps en iOS, Google Maps en el resto).
+- POST a `/api/appointments`. Pantalla de éxito con **factura unificada**
+  (2026-07-20): UN solo documento con encabezado (logo + ElectronicST +
+  número `#EST-<fecha>-<hora>`, SIN la palabra "Factura"), filas de Fecha /
+  Hora / Servicio, "Tu información" (nombre, teléfono clicable, correo),
+  líneas de items (en pickup: productos con precio, subtotal, impuestos 10%
+  y total; en servicios: "Por confirmar"), la información de la tienda
+  (dirección con link a mapas y teléfono) y borde troquelado de recibo.
+  Se eliminaron las tarjetas separadas de calendario, reloj digital,
+  servicio, carnet y el bloque `.store-info`. Para que la factura de
+  pickup tenga los items, el carrito se vacía DESPUÉS de `showSuccess`.
   Si el error contiene "ocupado", recarga los slots.
 - **Modo pickup** (2026-07-20, `?pickup=1` desde el carrito): si hay items en
   `localStorage['est_cart']`, muestra el resumen del pedido en el formulario

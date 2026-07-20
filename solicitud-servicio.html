@@ -280,20 +280,6 @@
             opacity: 0; animation: fadeInUp 0.5s var(--ease-out) 0.3s forwards;
         }
         .success-detail strong { color: var(--accent-dark); }
-        .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
-        .detail-row:last-child { border-bottom: none; }
-        .detail-row span { color: var(--text-muted); }
-        .detail-row strong { color: var(--text); font-weight: 600; }
-        .store-info {
-            background: var(--bg); border: 1px solid var(--border); border-radius: 14px;
-            padding: 18px; text-align: left; margin-bottom: 24px;
-            opacity: 0; animation: fadeInUp 0.5s var(--ease-out) 0.35s forwards;
-        }
-        .store-info h4 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 12px; }
-        .store-info p { font-size: 14px; line-height: 1.7; color: var(--text); margin-bottom: 10px; }
-        .store-info p:last-child { margin-bottom: 0; }
-        .store-info a { color: var(--accent-dark); text-decoration: none; font-weight: 600; }
-        .store-info a:hover { text-decoration: underline; }
 
         .hidden { display: none !important; }
 
@@ -309,27 +295,18 @@
         .pickup-totals strong { color: var(--text); }
         .pickup-totals .pickup-total, .pickup-totals .pickup-total strong { color: var(--text); font-weight: 800; font-size: 15.5px; }
 
-        /* ---- Resumen de cita registrada (pantalla de éxito) ---- */
-        .sum-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px; text-align: left; }
-        .sum-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
-        /* Mini calendario */
-        .sum-cal { text-align: center; padding: 0; overflow: hidden; }
-        .sum-cal-head { background: rgba(212, 175, 55, .15); color: #d4af37; font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; padding: 7px 0; }
-        .sum-cal-day { font-size: 34px; font-weight: 800; color: var(--text); padding: 8px 0 2px; line-height: 1.1; }
-        .sum-cal-sub { color: var(--text-muted); font-size: 12px; padding-bottom: 12px; text-transform: capitalize; }
-        /* Reloj digital */
-        .sum-clock { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
-        .sum-clock-face { font-size: 32px; font-weight: 800; color: var(--text); letter-spacing: 2px; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 2px; text-shadow: 0 0 18px rgba(255, 255, 255, .15); }
-        .sum-blink { animation: sumBlink 1.2s steps(1) infinite; }
-        @keyframes sumBlink { 50% { opacity: .15; } }
-        .sum-ampm { font-size: 11px; font-weight: 700; color: #d4af37; border: 1px solid rgba(212, 175, 55, .4); border-radius: 6px; padding: 2px 6px; margin-left: 8px; }
-        .sum-clock-sub { color: var(--text-muted); font-size: 12px; }
-        /* Servicio (mismo estilo que las tarjetas del formulario) */
-        .sum-service { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; }
-        .sum-service .service-icon { flex-shrink: 0; margin-bottom: 0; }
-        .sum-service-info { display: grid; gap: 2px; min-width: 0; }
-        .sum-service-info span { font-size: 11.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); }
-        .sum-service-info strong { font-size: 15px; color: var(--text); word-break: break-word; }
+        /* ---- Resumen de cita registrada: factura unificada ---- */
+        .sum-grid { display: grid; gap: 12px; margin-top: 22px; text-align: left; }
+        .inv-rows { display: grid; gap: 8px; }
+        .inv-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 13.5px; padding-bottom: 8px; border-bottom: 1px dashed rgba(255, 255, 255, .12); }
+        .inv-row:last-child { border-bottom: 0; padding-bottom: 0; }
+        .inv-row span { color: var(--text-muted); font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+        .inv-row strong { color: var(--text); text-align: right; word-break: break-word; }
+        .inv-store { display: grid; gap: 6px; }
+        .inv-store p { font-size: 13px; color: var(--text-muted); margin: 0; }
+        .inv-store strong { color: var(--text); font-size: 13.5px; }
+        .inv-store a { color: var(--text); text-decoration: none; }
+        .inv-store a:hover { text-decoration: underline; }
         /* Factura del cliente (reemplaza al carnet) */
         .sum-invoice { grid-column: 1 / -1; background: var(--surface); border: 1px solid var(--border); border-bottom: none; border-radius: 18px 18px 0 0; padding: 18px 18px 8px; text-align: left; }
         .inv-head { display: flex; align-items: center; gap: 12px; }
@@ -338,9 +315,8 @@
         .inv-head-info { display: grid; gap: 1px; min-width: 0; }
         .inv-head-info strong { font-size: 14.5px; color: var(--text); }
         .inv-head-info span { font-size: 11.5px; color: var(--text-muted); }
-        .inv-no { margin-left: auto; text-align: right; display: grid; gap: 1px; flex-shrink: 0; }
-        .inv-no span { font-size: 10.5px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #d4af37; }
-        .inv-no strong { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+        .inv-no { margin-left: auto; flex-shrink: 0; }
+        .inv-no strong { font-size: 13px; color: #d4af37; font-weight: 700; }
         .inv-divider { border-top: 1px dashed rgba(255, 255, 255, .18); margin: 13px 0; }
         .inv-client { display: grid; gap: 3px; }
         .inv-client .inv-label { font-size: 10.5px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #d4af37; }
@@ -359,10 +335,6 @@
         .inv-footer { text-align: center; color: var(--text-muted); font-size: 11.5px; padding: 12px 0 6px; letter-spacing: .04em; }
         /* Borde troquelado tipo recibo */
         .inv-tear { height: 10px; margin: 0 -18px -8px; background: radial-gradient(circle at 50% 0, var(--surface) 6px, transparent 7px); background-size: 14px 10px; background-repeat: repeat-x; }
-        @media (max-width: 480px) {
-            .sum-grid { grid-template-columns: 1fr; }
-            .sum-service, .sum-invoice { grid-column: auto; }
-        }
 
         footer {
             margin-top: 40px; padding: 32px 0 24px;
@@ -513,12 +485,6 @@
                     <p>Un agente de ElectronicST te contactará pronto para confirmar tu cita.</p>
 
                     <div class="success-detail" id="successDetail"></div>
-
-                    <div class="store-info">
-                        <h4>📍 Información de la tienda</h4>
-                        <p><strong>Dirección:</strong><br><a href="#" id="mapLink" target="_blank" rel="noopener">3659 Lorna Rd Suite 157, Hoover, AL 35216</a></p>
-                        <p><strong>Teléfono:</strong><br><a href="tel:+12055737840">(205) 573-7840</a></p>
-                    </div>
 
                     <button type="button" class="btn btn-primary" id="newBookingBtn" style="width:100%;padding:18px 24px;font-size:16px;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -806,15 +772,11 @@
             els.successSection.classList.remove('hidden');
             animateElement(els.successSection, 'animate-scale-in');
             els.successSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            // Resumen visual: mini calendario + reloj digital + servicio + carnet
+            // Factura unificada: cita, cliente, items y tienda en un solo documento
             const [yy, mm, dd] = d.fecha.split('-').map(Number);
             const weekDay = weekDays[new Date(yy, mm - 1, dd).getDay()];
-            let [hh, mmin] = d.hora.split(':').map(Number);
-            const ampm = hh >= 12 ? 'p.m.' : 'a.m.'; hh = hh % 12 || 12;
+            const fechaLarga = `${weekDay} ${dd} ${monthNames[mm - 1]} ${yy}`;
             const svcKey = /^pickup/i.test(d.servicio) ? 'Pickup' : d.servicio;
-            const svcCard = els.serviceOptions.querySelector(`[data-value="${svcKey}"]`);
-            const svcIcon = svcCard ? svcCard.querySelector('.service-icon').innerHTML : '';
-            // Factura: encabezado tienda + número + info del cliente + líneas
             const invNo = '#EST-' + d.fecha.replace(/-/g, '') + '-' + d.hora.replace(':', '');
             let invItems = '';
             if (pickupMode && pickupItems.length) {
@@ -826,32 +788,21 @@
                  <div class="inv-item inv-sub"><span>Impuestos (10%)</span><strong>${pickupMoney(tax)}</strong></div>
                  <div class="inv-item inv-total"><span>Total</span><strong>${pickupMoney(sub + tax)}</strong></div>`;
             } else {
-                invItems = `<div class="inv-item"><span>${escapeHtml(d.servicio)} · ${weekDay} ${dd} ${monthNames[mm - 1]}, ${hh}:${String(mmin).padStart(2, '0')} ${ampm}</span><strong>Por confirmar</strong></div>`;
+                invItems = `<div class="inv-item"><span>${escapeHtml(d.servicio)}</span><strong>Por confirmar</strong></div>`;
             }
             els.successDetail.innerHTML = `
                 <div class="sum-grid">
-                    <div class="sum-card sum-cal">
-                        <div class="sum-cal-head">${monthNames[mm - 1]}</div>
-                        <div class="sum-cal-day">${dd}</div>
-                        <div class="sum-cal-sub">${weekDay} · ${yy}</div>
-                    </div>
-                    <div class="sum-card sum-clock">
-                        <div class="sum-clock-face"><span>${hh}</span><span class="sum-blink">:</span><span>${String(mmin).padStart(2, '0')}</span><span class="sum-ampm">${ampm}</span></div>
-                        <div class="sum-clock-sub">Hora de tu cita</div>
-                    </div>
-                    <div class="sum-card sum-service">
-                        <div class="service-icon">${svcIcon}</div>
-                        <div class="sum-service-info"><span>Servicio</span><strong>${escapeHtml(d.servicio)}</strong></div>
-                    </div>
                     <div class="sum-invoice">
                         <div class="inv-head">
                             <div class="inv-head-logo"><img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST"></div>
-                            <div class="inv-head-info">
-                                <strong>ElectronicST</strong>
-                                <span>3659 Lorna Rd Suite 157, Hoover, AL 35216</span>
-                                <span>(205) 573-7840</span>
-                            </div>
-                            <div class="inv-no"><span>Factura</span><strong>${invNo}</strong></div>
+                            <div class="inv-head-info"><strong>ElectronicST</strong></div>
+                            <div class="inv-no"><strong>${invNo}</strong></div>
+                        </div>
+                        <div class="inv-divider"></div>
+                        <div class="inv-rows">
+                            <div class="inv-row"><span>Fecha</span><strong>${fechaLarga}</strong></div>
+                            <div class="inv-row"><span>Hora</span><strong>${formatHora(d.hora)}</strong></div>
+                            <div class="inv-row"><span>Servicio</span><strong>${escapeHtml(svcKey)}</strong></div>
                         </div>
                         <div class="inv-divider"></div>
                         <div class="inv-client">
@@ -862,12 +813,17 @@
                         </div>
                         <div class="inv-divider"></div>
                         <div class="inv-items">${invItems}</div>
+                        <div class="inv-divider"></div>
+                        <div class="inv-store">
+                            <span class="inv-label">Información de la tienda</span>
+                            <p><strong>Dirección:</strong> <a href="${getMapUrl()}" target="_blank" rel="noopener">3659 Lorna Rd Suite 157, Hoover, AL 35216</a></p>
+                            <p><strong>Teléfono:</strong> <a href="tel:+12055737840">(205) 573-7840</a></p>
+                        </div>
                         <div class="inv-footer">Gracias por tu preferencia</div>
                         <div class="inv-tear"></div>
                     </div>
                 </div>
             `;
-            document.getElementById('mapLink').href = getMapUrl();
         }
         function escapeHtml(str) { return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
