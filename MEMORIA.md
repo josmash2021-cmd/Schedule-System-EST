@@ -61,8 +61,14 @@ Sección "Where we operate": mapa 3D con **MapLibre GL JS 4.7.1** (desde
 saturate(1.7)`; fondo del contenedor `#0b1426`). Alabama: anillo GeoJSON
 como capa `line` SOLO con borde dorado `#d4af37` (sin relleno). Edificios
 3D: capa `fill-extrusion` sobre `source-layer: building` de Carto
-(alturas `render_height`, color `#22335c`, minzoom 13, insertada antes de
-la primera capa `symbol`). Un marcador dorado (Hoover HQ) con popup.
+(alturas `render_height`, minzoom 13, insertada antes de la primera capa
+`symbol`). OJO con el filtro navy del canvas: ROTA los colores 185°, así
+que los colores de las capas se compensan a la inversa — los edificios
+usan `#3c2606` (marrón oscuro) que tras el filtro SE VE `#1b2a4a` (azul
+oscuro), y el borde de Alabama declarado `#d4af37` en realidad SE VE
+`#8cacff` (azul claro); un dorado real no es alcanzable con este filtro
+(lo más cercano sería un cobrizo). El marcador y el swatch de la leyenda
+sí son dorados reales (son DOM, no pasan por el filtro). Un marcador dorado (Hoover HQ) con popup.
 Cuadro `.coverage-legend` como HTML estático posicionado absolute en la
 esquina inferior izquierda (lista solo Alabama). `fitBounds` inicial al
 estado (2026-07-20; se retiró del mapa la zona de South Florida, aunque la
