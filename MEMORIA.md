@@ -114,11 +114,13 @@ bearing -20) hasta la tienda — 3659 Lorna Rd geocodificada a
 Footer con datos de la tienda.
 
 ### `productos.html` — catálogo (misma hoja oscura)
-8 productos hardcodeados con foto, specs y precio "desde":
-MacBook Air 13" $1,099 · Air 15" $1,299 · Pro 14" $1,999 · Pro 16" $2,999 ·
-iPhone 16 $799 · 16 Plus $899 · 16 Pro $999 · 16 Pro Max $1,199.
-Filtros Todos/Air/Pro/iPhone con píldora animada (`site.js`). Cada tarjeta lleva
-a `/solicitud-servicio`.
+Hoy el catálogo tiene **1 solo producto** hardcodeado: MacBook Air 13"
+(desde $150 hasta $250 según condición, `data-cat="macos"`, link a
+`/macbook-air-13`). Filtros con píldora animada (`site.js`, genéricos por
+`data-cat`): Todos / MacOS / **Windows** / Tablet / iPhone — la categoría
+"Windows" reemplazó a "iOS" el 2026-07-20; las categorías sin productos
+simplemente muestran el grid vacío. Cada tarjeta lleva a
+`/solicitud-servicio`.
 
 ### `solicitud-servicio.html` — reserva de cita (TEMA OSCURO, CSS inline propio)
 Wizard de 3 pasos: (1) calendario mensual, (2) slots, (3) formulario.
