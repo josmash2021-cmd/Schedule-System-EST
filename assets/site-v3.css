@@ -386,11 +386,7 @@ a { -webkit-tap-highlight-color: transparent; }
     to { opacity: 1; transform: translateY(0); }
 }
 .sp-card { padding: 15px 18px 16px; display: grid; gap: 3px; }
-.sp-eyebrow {
-    font-size: 10px; font-weight: 600; letter-spacing: .14em;
-    text-transform: uppercase; color: #d4af37;
-}
-.sp-title { font-size: 14.5px; font-weight: 700; margin-top: 4px; }
+.sp-title { font-size: 14.5px; font-weight: 700; }
 .sp-sub { font-size: 12.5px; color: var(--muted); }
 .sp-meta {
     margin-top: 11px; padding-top: 10px;
@@ -398,12 +394,18 @@ a { -webkit-tap-highlight-color: transparent; }
 }
 .sp-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted-2); }
 .sp-row svg { width: 14px; height: 14px; color: #d4af37; flex-shrink: 0; }
-.sp-row a { color: var(--text); text-decoration: none; }
-.sp-row a:hover { text-decoration: underline; }
-.marker-dot {
-    width: 14px; height: 14px; border-radius: 50%;
-    background: #d4af37; border: 3px solid rgba(0, 0, 0, .4);
-    box-shadow: 0 0 0 4px rgba(212, 175, 55, .28);
+.map-pin { width: 34px; height: 44px; position: relative; }
+.map-pin svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 8px 14px rgba(0, 0, 0, .55)); }
+/* Pulso en la punta del pin: marca el punto exacto de la tienda */
+.map-pin::after {
+    content: ""; position: absolute; left: 50%; bottom: -3px;
+    width: 12px; height: 6px; transform: translateX(-50%);
+    border-radius: 50%; border: 2px solid rgba(212, 175, 55, .9);
+    animation: pinPulse 2s ease-out infinite;
+}
+@keyframes pinPulse {
+    0% { transform: translateX(-50%) scale(.4); opacity: .9; }
+    70%, 100% { transform: translateX(-50%) scale(1.8); opacity: 0; }
 }
 .coverage-legend {
     position: absolute; left: 12px; bottom: 12px; z-index: 5;

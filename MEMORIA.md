@@ -71,10 +71,11 @@ oscuro), y el borde de Alabama declarado `#d4af37` en realidad SE VE
 sí son dorados reales (son DOM, no pasan por el filtro). Los edificios
 APARECEN FLUIDOS (2026-07-20): altura, base y opacidad interpoladas por
 zoom (`interpolate linear` 13.8→15.5/15.2), así crecen desde el suelo
-durante el flyTo en vez de aparecer de golpe. Marcador dorado (Hoover HQ)
-con popup personalizado `.store-popup` (HTML, no `setText`): eyebrow
-dorado "ElectronicST · Headquarters", dirección, horario y teléfono con
-iconos SVG y enlace `tel:`, animación de entrada `spIn`.
+durante el flyTo en vez de aparecer de golpe. Marcador (2026-07-20): pin dorado SVG `.map-pin` (gota con punta abajo,
+`anchor: 'bottom'` para que la punta caiga en la coordenada exacta) con
+pulso animado en la punta (`@keyframes pinPulse`). Popup `.store-popup`
+simplificado: SOLO dirección + horario (sin eyebrow "Headquarters" ni
+teléfono, eliminados a petición del dueño), animación de entrada `spIn`.
 Cuadro `.coverage-legend` como HTML estático posicionado absolute en la
 esquina inferior izquierda (lista solo Alabama). `fitBounds` inicial al
 estado (2026-07-20; se retiró del mapa la zona de South Florida, aunque la

@@ -587,30 +587,30 @@
                 attributionControl: false
             });
 
-            // Marcador dorado de la tienda con popup personalizado
+            // Pin dorado de la tienda (la punta marca el punto exacto) con popup
             var markerEl = document.createElement('div');
-            markerEl.className = 'map-marker';
-            markerEl.innerHTML = '<div class="marker-dot"></div>';
-            var storeMarker = new maplibregl.Marker({ element: markerEl })
+            markerEl.className = 'map-pin';
+            markerEl.innerHTML =
+                '<svg viewBox="0 0 30 40" aria-hidden="true">' +
+                '<path d="M15 40C15 40 2 24 2 14a13 13 0 1 1 26 0C28 24 15 40 15 40Z" ' +
+                'fill="#d4af37" stroke="rgba(0,0,0,.35)" stroke-width="1.5"/>' +
+                '<circle cx="15" cy="14" r="5" fill="#0c0c0f"/>' +
+                '</svg>';
+            var storeMarker = new maplibregl.Marker({ element: markerEl, anchor: 'bottom' })
                 .setLngLat(storeLngLat)
                 .setPopup(new maplibregl.Popup({
-                    offset: 20,
+                    offset: [0, -46],
                     closeButton: false,
                     className: 'store-popup',
                     maxWidth: '280px'
                 }).setHTML(
                     '<div class="sp-card">' +
-                    '<span class="sp-eyebrow">ElectronicST · Headquarters</span>' +
                     '<strong class="sp-title">3659 Lorna Rd, Suite 157</strong>' +
                     '<span class="sp-sub">Hoover, AL 35216</span>' +
                     '<div class="sp-meta">' +
                     '<div class="sp-row">' +
                     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15.5 14"></polyline></svg>' +
                     '<span>Lun–Sáb · 10 a.m.–3 p.m.</span>' +
-                    '</div>' +
-                    '<div class="sp-row">' +
-                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>' +
-                    '<a href="tel:+12055737840">(205) 573-7840</a>' +
                     '</div>' +
                     '</div>' +
                     '</div>'
