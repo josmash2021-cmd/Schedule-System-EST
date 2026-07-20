@@ -76,7 +76,10 @@ antes hubo pin tipo aguja y dot 3D, ambos rechazados; no reintroducir).
 La dirección + horario se muestran en una tarjeta fija `.store-card`
 (HTML estático dentro de `.operate-map`, arriba-centro,
 `pointer-events: none`, mismo estilo vidrio+dorado `.sp-*`) que aparece
-con transición al terminar el vuelo (`showStoreCard` en `moveend`). Ya NO
+con transición al terminar el vuelo (`showStoreCard` en `moveend`), con
+una flechita dorada `.sp-arrow` debajo que rebota en bucle señalando
+hacia la tienda (`@keyframes spBounce`, desactivada con
+`prefers-reduced-motion`). Ya NO
 es un popup de MapLibre, así el autopan nunca descentra la cámara (ese
 bug dejaba el marcador pegado al borde izquierdo). El mapa es 100% NO
 interactivo para el usuario
