@@ -142,7 +142,8 @@ foto del producto cae dentro (rebote de la bolsa al recibir), un clon de
 la bolsa vuela en arco hasta el icono del carrito del nav y ahí el icono
 da un golpe + sube el contador (el item se guarda al LLEGAR, no al hacer
 clic; total ~2.6 s). Al terminar, el botón VUELVE con animación fluida
-(`restoreBtn`: la bolsa se desvanece y el botón se expande de 60px a su
+(`restoreBtn`: la bolsa se retira con el botón aún oculto — evita el
+flash de bolsa visible — y el botón se expande desde opacidad 0 a su
 forma original con resorte suave `cubic-bezier(.3,1.25,.4,1)` y la
 etiqueta aparece al final, ~530 ms). Si el icono no es visible (menú
 móvil cerrado) la bolsa sale con fade local; con

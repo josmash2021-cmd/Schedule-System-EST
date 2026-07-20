@@ -83,11 +83,12 @@
        3) La bolsa vuela en arco hasta el icono del carrito en el nav.
        4) El icono recibe el golpe y sube el contador (ahí se guarda el item). */
     function restoreBtn(btn, label, rect) {
-        // Regreso fluido: la bolsa se desvanece y el botón se expande de
-        // vuelta a su forma original con la etiqueta apareciendo al final
+        // Regreso fluido SIN flash: la bolsa se retira mientras el botón
+        // está oculto, y el botón se expande de vuelta desde opacidad 0
         var bag = btn.querySelector('.atc-bag');
+        if (bag) bag.remove();
         btn.style.visibility = 'visible';
-        if (bag) bag.animate([{ opacity: '1' }, { opacity: '0' }], { duration: 150, easing: 'ease-in', fill: 'forwards' });
+        btn.style.opacity = '0';
         label.animate([{ opacity: '0' }, { opacity: '1' }], { duration: 240, delay: 200, easing: 'ease-out', fill: 'forwards' });
         var back = btn.animate([
             { width: '60px', height: '60px', borderRadius: '50%', opacity: '0' },
