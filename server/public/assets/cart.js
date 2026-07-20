@@ -82,14 +82,25 @@
        2) El producto aparece y cae dentro de la bolsa (rebote al recibir).
        3) La bolsa vuela en arco hasta el icono del carrito en el nav.
        4) El icono recibe el golpe y sube el contador (ahí se guarda el item). */
-    function restoreBtn(btn, label) {
-        btn.getAnimations().forEach(function (a) { a.cancel(); });
-        btn.style.cssText = '';
+    function restoreBtn(btn, label, rect) {
+        // Regreso fluido: la bolsa se desvanece y el botón se expande de
+        // vuelta a su forma original con la etiqueta apareciendo al final
         var bag = btn.querySelector('.atc-bag');
-        if (bag) bag.remove();
-        label.style.transition = '';
-        label.style.opacity = '';
-        btn.disabled = false;
+        btn.style.visibility = 'visible';
+        if (bag) bag.animate([{ opacity: '1' }, { opacity: '0' }], { duration: 150, easing: 'ease-in', fill: 'forwards' });
+        label.animate([{ opacity: '0' }, { opacity: '1' }], { duration: 240, delay: 200, easing: 'ease-out', fill: 'forwards' });
+        var back = btn.animate([
+            { width: '60px', height: '60px', borderRadius: '50%', opacity: '0' },
+            { width: rect.width + 'px', height: rect.height + 'px', borderRadius: '999px', opacity: '1' }
+        ], { duration: 440, delay: 90, easing: 'cubic-bezier(.3,1.25,.4,1)', fill: 'forwards' });
+        back.onfinish = function () {
+            btn.getAnimations().forEach(function (a) { a.cancel(); });
+            label.getAnimations().forEach(function (a) { a.cancel(); });
+            btn.style.cssText = '';
+            label.style.cssText = '';
+            if (bag) bag.remove();
+            btn.disabled = false;
+        };
     }
 
     function flyToCart(btn, finish) {
@@ -163,7 +174,7 @@
                 // Icono no visible (menú móvil cerrado): salida local elegante
                 btn.animate([{ opacity: '1' }, { opacity: '0' }], { duration: 280, easing: 'ease-in', fill: 'forwards' }).onfinish = function () {
                     finish();
-                    restoreBtn(btn, label);
+                    restoreBtn(btn, label, rect);
                 };
                 return;
             }
@@ -190,7 +201,7 @@
                     { transform: 'scale(1)' }
                 ], { duration: 380, easing: 'cubic-bezier(.34,1.56,.64,1)' });
                 finish();
-                restoreBtn(btn, label);
+                restoreBtn(btn, label, rect);
             };
         }, 1900);
     }

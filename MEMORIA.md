@@ -141,9 +141,12 @@ botón se morfa a un círculo y la bolsa SE DIBUJA trazo a trazo
 foto del producto cae dentro (rebote de la bolsa al recibir), un clon de
 la bolsa vuela en arco hasta el icono del carrito del nav y ahí el icono
 da un golpe + sube el contador (el item se guarda al LLEGAR, no al hacer
-clic; total ~2.6 s). Si el icono no es visible (menú móvil cerrado) la
-bolsa sale con fade local; con `prefers-reduced-motion` se agrega directo
-sin animación.
+clic; total ~2.6 s). Al terminar, el botón VUELVE con animación fluida
+(`restoreBtn`: la bolsa se desvanece y el botón se expande de 60px a su
+forma original con resorte suave `cubic-bezier(.3,1.25,.4,1)` y la
+etiqueta aparece al final, ~530 ms). Si el icono no es visible (menú
+móvil cerrado) la bolsa sale con fade local; con
+`prefers-reduced-motion` se agrega directo sin animación.
 
 ### `carrito.html` — carrito de compras (2026-07-20, SIN backend)
 - `assets/cart.js` (IIFE): store en `localStorage['est_cart']`
