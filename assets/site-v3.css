@@ -843,6 +843,8 @@ footer {
 }
 
 /* ---------------- Carrito: enlace en el nav ---------------- */
+/* Animación "agregar al carrito": bolsa que aparece dentro del botón */
+.atc-bag { position: absolute; inset: 0; margin: auto; width: 26px; height: 26px; color: #d4af37; opacity: 0; }
 .nav-cart { position: relative; display: inline-flex; align-items: center; gap: 8px; }
 .nav-cart svg { width: 19px; height: 19px; }
 .nav-cart-label { display: none; }

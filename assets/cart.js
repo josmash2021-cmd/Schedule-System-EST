@@ -77,28 +77,127 @@
         updateBadge(false);
     }
 
-    /* ---------- Botón "Agregar al carrito" (página de producto) ---------- */
+    /* ---------- Botón "Agregar al carrito": animación coreografiada ----------
+       1) El botón se transforma en una bolsa dorada.
+       2) El producto aparece y cae dentro de la bolsa (rebote al recibir).
+       3) La bolsa vuela en arco hasta el icono del carrito en el nav.
+       4) El icono recibe el golpe y sube el contador (ahí se guarda el item). */
+    function restoreBtn(btn, label) {
+        btn.getAnimations().forEach(function (a) { a.cancel(); });
+        btn.style.cssText = '';
+        var bag = btn.querySelector('.atc-bag');
+        if (bag) bag.remove();
+        label.style.transition = '';
+        label.style.opacity = '';
+        btn.disabled = false;
+    }
+
+    function flyToCart(btn, finish) {
+        var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduced) { finish(); return; }
+        var cartIcon = document.querySelector('.nav-cart');
+        var iconRect = cartIcon ? cartIcon.getBoundingClientRect() : null;
+        var canFly = !!(iconRect && iconRect.width > 0 && iconRect.height > 0);
+
+        var rect = btn.getBoundingClientRect();
+        var cx = rect.left + rect.width / 2;
+        var cy = rect.top + rect.height / 2;
+        var parent = btn.parentElement;
+        var prect = parent.getBoundingClientRect();
+        parent.style.position = 'relative';
+        btn.style.cssText += ';position:absolute;left:' + (rect.left - prect.left) + 'px;top:' + (rect.top - prect.top) + 'px;width:' + rect.width + 'px;height:' + rect.height + 'px;margin:0;padding:0;z-index:70;display:flex;align-items:center;justify-content:center;';
+        btn.disabled = true;
+        var label = btn.querySelector('span');
+        label.style.transition = 'opacity .15s';
+        label.style.opacity = '0';
+
+        // 1) Morph: botón → bolsa
+        btn.insertAdjacentHTML('beforeend', '<svg class="atc-bag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>');
+        var bag = btn.querySelector('.atc-bag');
+        btn.animate([
+            { width: rect.width + 'px', height: rect.height + 'px', borderRadius: '999px' },
+            { width: '60px', height: '60px', borderRadius: '50%' }
+        ], { duration: 480, delay: 120, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'forwards' });
+        bag.animate([
+            { opacity: 0, transform: 'scale(.4) rotate(-14deg)' },
+            { opacity: 1, transform: 'scale(1) rotate(0deg)' }
+        ], { duration: 380, delay: 400, easing: 'cubic-bezier(.34,1.56,.64,1)', fill: 'forwards' });
+
+        // 2) El producto cae dentro de la bolsa
+        var size = 104;
+        var img = document.createElement('img');
+        img.src = btn.dataset.img;
+        img.alt = '';
+        img.setAttribute('aria-hidden', 'true');
+        img.style.cssText = 'position:fixed;left:' + (cx - size / 2) + 'px;top:' + (cy - 186) + 'px;width:' + size + 'px;height:' + size + 'px;object-fit:cover;border-radius:18px;z-index:80;opacity:0;pointer-events:none;box-shadow:0 18px 44px rgba(0,0,0,.55);';
+        document.body.appendChild(img);
+        img.animate([
+            { opacity: 0, transform: 'translateY(-14px) scale(1.06)' },
+            { opacity: 1, transform: 'translateY(0) scale(1)' }
+        ], { duration: 300, delay: 620, easing: 'ease-out', fill: 'forwards' });
+        img.animate([
+            { transform: 'translateY(0) scale(1)', opacity: 1 },
+            { transform: 'translateY(126px) scale(.1)', opacity: .9 }
+        ], { duration: 420, delay: 950, easing: 'cubic-bezier(.55,0,.85,.36)', fill: 'forwards' });
+        // rebote de la bolsa al recibir el producto
+        btn.animate([
+            { transform: 'scale(1,1)' },
+            { transform: 'scale(1.08,.82)' },
+            { transform: 'scale(.96,1.06)' },
+            { transform: 'scale(1,1)' }
+        ], { duration: 340, delay: 1240, easing: 'ease-out' });
+
+        // 3) Vuelo de la bolsa al icono del carrito
+        setTimeout(function () {
+            img.remove();
+            if (!canFly) {
+                // Icono no visible (menú móvil cerrado): salida local elegante
+                btn.animate([{ opacity: '1' }, { opacity: '0' }], { duration: 280, easing: 'ease-in', fill: 'forwards' }).onfinish = function () {
+                    finish();
+                    restoreBtn(btn, label);
+                };
+                return;
+            }
+            var clone = document.createElement('div');
+            clone.setAttribute('aria-hidden', 'true');
+            clone.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>';
+            clone.style.cssText = 'position:fixed;left:' + (cx - 30) + 'px;top:' + (cy - 30) + 'px;width:60px;height:60px;border-radius:50%;background:rgba(16,14,9,.96);border:1px solid rgba(212,175,55,.55);display:flex;align-items:center;justify-content:center;z-index:90;color:#d4af37;box-shadow:0 14px 34px rgba(0,0,0,.55);pointer-events:none;';
+            clone.firstChild.style.cssText = 'width:26px;height:26px;';
+            document.body.appendChild(clone);
+            btn.style.visibility = 'hidden';
+
+            var tx = iconRect.left + iconRect.width / 2 - cx;
+            var ty = iconRect.top + iconRect.height / 2 - cy;
+            clone.animate([
+                { transform: 'translate(0,0) scale(1)', opacity: 1, offset: 0 },
+                { transform: 'translate(' + tx * .5 + 'px,' + (ty * .5 - 72) + 'px) scale(.72)', opacity: 1, offset: .55 },
+                { transform: 'translate(' + tx + 'px,' + ty + 'px) scale(.22)', opacity: .85, offset: 1 }
+            ], { duration: 720, easing: 'cubic-bezier(.45,.05,.55,.95)', fill: 'forwards' }).onfinish = function () {
+                clone.remove();
+                // 4) Golpe en el icono + contador
+                cartIcon.animate([
+                    { transform: 'scale(1)' },
+                    { transform: 'scale(1.3)' },
+                    { transform: 'scale(1)' }
+                ], { duration: 380, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+                finish();
+                restoreBtn(btn, label);
+            };
+        }, 1460);
+    }
+
     function wireAddButton() {
         var btn = document.getElementById('addToCart');
         if (!btn) return;
         btn.addEventListener('click', function () {
-            addItem({
+            var item = {
                 id: btn.dataset.id,
                 name: btn.dataset.name,
                 desc: btn.dataset.desc,
                 price: Number(btn.dataset.price),
                 img: btn.dataset.img
-            });
-            var label = btn.querySelector('span');
-            var prev = label.textContent;
-            label.textContent = 'Agregado al carrito';
-            btn.classList.add('added');
-            btn.disabled = true;
-            setTimeout(function () {
-                label.textContent = prev;
-                btn.classList.remove('added');
-                btn.disabled = false;
-            }, 1600);
+            };
+            flyToCart(btn, function () { addItem(item); });
         });
     }
 
