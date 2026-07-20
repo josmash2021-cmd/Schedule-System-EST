@@ -54,12 +54,15 @@ final (`.cta-banner`): fondo transparente para mostrar la seda de la página;
 luz blanca animada (`@keyframes ctaLight` en `::before`) y campo de puntos
 (`::after`) por encima. `.cta-card` de vidrio más translúcido
 (`backdrop-filter: blur(18px)`) con botones + QR de citas (`qr-cita.png`).
-Sección "Where we operate": mapa Leaflet oscuro (tiles CartoDB `dark_all`)
-con polígono simplificado de todo Alabama en dorado `#d4af37` (borde +
-relleno translúcido .18), un marcador dorado (Hoover HQ), cuadro
-`.coverage-legend` en la esquina inferior izquierda (lista solo Alabama)
-y `fitBounds` inicial al estado (2026-07-20; se retiró del mapa la zona de
-South Florida, aunque la tarjeta de texto al lado la sigue mencionando).
+Sección "Where we operate": mapa Leaflet con tiles CartoDB `dark_all`
+teñidos azul navy vía filtro CSS en `.leaflet-tile-pane`
+(`brightness(.9) sepia(.6) hue-rotate(185deg) saturate(1.7)`; fondo del
+contenedor `#0b1426`), polígono simplificado de todo Alabama SOLO con
+borde dorado `#d4af37` (`fill: false`, sin relleno), un marcador dorado
+(Hoover HQ), cuadro `.coverage-legend` en la esquina inferior izquierda
+(lista solo Alabama) y `fitBounds` inicial al estado (2026-07-20; se
+retiró del mapa la zona de South Florida, aunque la tarjeta de texto al
+lado la sigue mencionando).
 Animación (2026-07-20): al entrar el mapa en pantalla (IntersectionObserver,
 threshold .4), espera 1.2 s y hace `flyTo` (3.5 s, zoom 16) hasta la
 tienda — 3659 Lorna Rd geocodificada a `[33.3809, -86.7996]` vía Nominatim
