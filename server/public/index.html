@@ -589,26 +589,11 @@
                 [31.890, -88.470],
                 [34.900, -88.240]
             ], {
-                color: '#f5f5f7',
-                weight: 2,
-                opacity: 0.9,
-                fillColor: '#f5f5f7',
-                fillOpacity: 0.10
-            }).addTo(map);
-
-            // Zona de South Florida (Miami / Fort Lauderdale)
-            var southFloridaArea = L.polygon([
-                [26.900, -80.050],
-                [26.900, -80.850],
-                [25.400, -80.900],
-                [25.400, -80.050]
-            ], {
-                color: '#86868b',
-                weight: 1.5,
-                opacity: 0.8,
-                fillColor: '#86868b',
-                fillOpacity: 0.08,
-                dashArray: '4 4'
+                color: '#d4af37',
+                weight: 2.5,
+                opacity: 0.95,
+                fillColor: '#d4af37',
+                fillOpacity: 0.18
             }).addTo(map);
 
             var alabamaIcon = L.divIcon({
@@ -620,10 +605,6 @@
 
             L.marker([33.4054, -86.8114], { icon: alabamaIcon }).addTo(map)
                 .bindPopup('Hoover, AL — Headquarters');
-            L.marker([25.7617, -80.1918], { icon: alabamaIcon }).addTo(map)
-                .bindPopup('Miami, FL — South Florida');
-            L.marker([26.1224, -80.1373], { icon: alabamaIcon }).addTo(map)
-                .bindPopup('Fort Lauderdale, FL');
 
             // Cuadro de áreas de cobertura (esquina inferior izquierda)
             var legend = L.control({ position: 'bottomleft' });
@@ -633,15 +614,13 @@
                     '<h4>Coverage areas</h4>' +
                     '<ul>' +
                     '<li><span class="swatch swatch-alabama"></span>Alabama</li>' +
-                    '<li><span class="swatch swatch-florida"></span>South Florida</li>' +
                     '</ul>';
                 return div;
             };
             legend.addTo(map);
 
-            // Encuadre: todo el estado de Alabama + zona de South Florida
-            var view = alabamaArea.getBounds().extend(southFloridaArea.getBounds());
-            map.fitBounds(view, { padding: [24, 24] });
+            // Encuadre: todo el estado de Alabama
+            map.fitBounds(alabamaArea.getBounds(), { padding: [24, 24] });
         })();
     </script>
     <script src="assets/security.js" defer></script>

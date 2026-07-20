@@ -55,10 +55,11 @@ luz blanca animada (`@keyframes ctaLight` en `::before`) y campo de puntos
 (`::after`) por encima. `.cta-card` de vidrio más translúcido
 (`backdrop-filter: blur(18px)`) con botones + QR de citas (`qr-cita.png`).
 Sección "Where we operate": mapa Leaflet oscuro (tiles CartoDB `dark_all`)
-con polígono simplificado de todo Alabama (borde/relleno blanco translúcido),
-zona de South Florida en gris discontinuo, 3 marcadores blancos (Hoover HQ,
-Miami, Fort Lauderdale), cuadro `.coverage-legend` en la esquina inferior
-izquierda y `fitBounds` que encuadra ambas áreas (2026-07-20, monocromo).
+con polígono simplificado de todo Alabama en dorado `#d4af37` (borde +
+relleno translúcido .18), un marcador dorado (Hoover HQ), cuadro
+`.coverage-legend` en la esquina inferior izquierda (lista solo Alabama)
+y `fitBounds` al estado (2026-07-20; se retiró del mapa la zona de South
+Florida, aunque la tarjeta de texto al lado la sigue mencionando).
 Footer con datos de la tienda.
 
 ### `productos.html` — catálogo (misma hoja oscura)

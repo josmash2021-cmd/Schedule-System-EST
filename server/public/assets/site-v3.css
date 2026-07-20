@@ -376,8 +376,8 @@ a { -webkit-tap-highlight-color: transparent; }
 .leaflet-popup-tip { background: rgba(12, 12, 15, .92); }
 .marker-dot {
     width: 14px; height: 14px; border-radius: 50%;
-    background: #fff; border: 3px solid rgba(0, 0, 0, .4);
-    box-shadow: 0 0 0 4px rgba(255, 255, 255, .22);
+    background: #d4af37; border: 3px solid rgba(0, 0, 0, .4);
+    box-shadow: 0 0 0 4px rgba(212, 175, 55, .28);
 }
 .coverage-legend {
     background: rgba(12, 12, 15, .92); color: var(--text);
@@ -392,8 +392,7 @@ a { -webkit-tap-highlight-color: transparent; }
 .coverage-legend ul { list-style: none; display: grid; gap: 6px; }
 .coverage-legend li { display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .coverage-legend .swatch { width: 12px; height: 12px; border-radius: 4px; flex-shrink: 0; }
-.coverage-legend .swatch-alabama { background: #f5f5f7; }
-.coverage-legend .swatch-florida { background: var(--muted); }
+.coverage-legend .swatch-alabama { background: #d4af37; }
 
 @media (max-width: 860px) {
     .operate-grid { grid-template-columns: 1fr; }
