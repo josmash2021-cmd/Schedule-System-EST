@@ -251,7 +251,9 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
 - `assets/site.js` (IIFE ES5): nav (cápsula flotante con estado `.scrolled`,
   píldora deslizante `.nav-pill` que sigue al hover y descansa en el activo,
   menú móvil a pantalla completa con entrada escalonada vía `--d`, contacto
-  inyectado `.nav-meta` con teléfono y dirección como `.map-link`, cierre con
+  inyectado `.nav-meta` con teléfono, dirección como `.map-link` y enlace
+  dorado "Login / Register" → `/admin` (2026-07-20; solo en el menú móvil,
+  abajo de la dirección), cierre con
   ESC y scroll-lock del body), reveals por IntersectionObserver, parallax/fade
   del hero, filtros del catálogo, y listeners `.map-link` que abren Apple Maps
   en iOS/iPadOS y Google Maps en otros. Respeta `prefers-reduced-motion`. OJO:

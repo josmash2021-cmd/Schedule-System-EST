@@ -194,6 +194,8 @@ a { -webkit-tap-highlight-color: transparent; }
     }
     .nav-links.open .nav-meta { opacity: 1; transform: none; transition-delay: .32s; }
     .nav-meta a { color: var(--muted-2); font-weight: 600; text-decoration: none; }
+    /* Link de acceso al admin (solo visible en el menú móvil) */
+    .nav-meta .nav-admin-link { color: #d4af37; letter-spacing: .05em; }
 }
 
 /* ---------------- Hero a pantalla completa ---------------- */
