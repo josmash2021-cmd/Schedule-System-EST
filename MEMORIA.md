@@ -125,6 +125,14 @@ Hoy el catálogo tiene **1 solo producto** hardcodeado: MacBook Air 13"
 simplemente muestran el grid vacío. Cada tarjeta lleva a
 `/solicitud-servicio`.
 
+### `macbook-air-13.html` — página del producto (misma hoja oscura)
+Detalle (foto + info + precio), sección "Componentes" con 4 tarjetas
+(Processor i5 / Memory 8GB / Storage 256GB / Graphics HD 6000), cada una
+con icono SVG propio en caja redondeada (`.component-icon`, 2026-07-20) y
+entrada escalonada (`transition-delay` por `:nth-child` sobre el reveal
+individual de cada tarjeta; el hover resetea el delay). Galería de 2
+fotos, carrusel de reseñas (marquee infinito) y CTA de cita.
+
 ### `solicitud-servicio.html` — reserva de cita (TEMA OSCURO, CSS inline propio)
 Wizard de 3 pasos: (1) calendario mensual, (2) slots, (3) formulario.
 

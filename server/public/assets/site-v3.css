@@ -661,6 +661,18 @@ a { -webkit-tap-highlight-color: transparent; }
     transform: translateY(-6px);
     border-color: rgba(255, 255, 255, .22);
 }
+/* Entrada escalonada de las tarjetas de componentes (reveal una por una) */
+.components-grid .component-card:nth-child(2) { transition-delay: .08s; }
+.components-grid .component-card:nth-child(3) { transition-delay: .16s; }
+.components-grid .component-card:nth-child(4) { transition-delay: .24s; }
+.components-grid .component-card:hover { transition-delay: 0s; }
+.component-icon {
+    width: 46px; height: 46px; margin: 0 auto 14px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 14px; border: 1px solid var(--line);
+    background: rgba(255, 255, 255, .05); color: rgba(255, 255, 255, .9);
+}
+.component-icon svg { width: 22px; height: 22px; }
 .component-label {
     display: block; font-size: 11.5px; font-weight: 700; letter-spacing: .18em;
     text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
