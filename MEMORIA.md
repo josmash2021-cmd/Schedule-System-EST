@@ -352,6 +352,12 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
 - `notifications.js`: Twilio SMS. Al crear cita: SMS al dueño (`OWNER_PHONE`)
   con los datos + SMS de confirmación al cliente con dirección, STOP/HELP.
   `toE164` asume EE.UU. (+1). Si faltan credenciales, solo loguea y sigue.
+  **Diagnóstico 2026-07-20:** las 4 vars están en Railway y las credenciales
+  son VÁLIDAS (cuenta + número `+12052094654` verificados vía API), pero un
+  SMS de prueba al dueño fue BLOQUEADO con **error 30034 (A2P 10DLC)** — las
+  operadoras de EE.UU. exigen registrar marca+campaña A2P para entregar SMS
+  desde números locales. Hasta registrarla en Twilio Console, ningún SMS
+  llegará (ni al dueño ni a clientes).
 - `config.js`: env vars. Default inseguro `ADMIN_PASSWORD='admin123'`;
   `JWT_SECRET` obligatorio en producción (sale con error si falta);
   `CALLMEBOT_API_KEY` y `OWNER_PHONE` presentes pero **CallMeBot ya no se usa**
@@ -455,4 +461,7 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
 - ¿El horario real es hasta las 3:00 p.m. (última cita 2:30) o se atiende a
   las 3:00?
 - ¿Se quiere unificar el tema visual (todo oscuro estilo Apple o todo claro)?
-- ¿Twilio está activo en producción o los SMS solo se loguean?
+- ¿~~Twilio está activo en producción o los SMS solo se loguean?~~ RESUELTO
+  (2026-07-20): credenciales válidas y configuradas, pero los SMS se bloquean
+  por falta de registro **A2P 10DLC** (error 30034). Falta registrar marca y
+  campaña en Twilio Console para que entreguen.
