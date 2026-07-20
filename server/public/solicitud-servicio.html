@@ -138,6 +138,7 @@
             aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
             border-radius: 12px; border: 1px solid transparent; font-size: 14px; font-weight: 500;
             cursor: default; transition: all var(--dur-fast) var(--ease-out);
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
         }
         .cal-cell.available {
             background: var(--surface); border-color: var(--border); color: var(--text); cursor: pointer;
@@ -693,8 +694,18 @@
         els.resetBtn.addEventListener('click', resetAll);
         els.newBookingBtn.addEventListener('click', resetAll);
 
-        // Delegación de eventos para el calendario: un solo listener en el grid
+        // Delegación de eventos para el calendario: touchend en móvil, click en desktop
+        let lastTouchEnd = 0;
+        els.calendarGrid.addEventListener('touchend', (e) => {
+            const cell = e.target.closest('.cal-cell.available');
+            if (!cell || !cell.dataset.date) return;
+            lastTouchEnd = Date.now();
+            e.preventDefault(); // Evita el click fantasma
+            selectDate(cell.dataset.date);
+        });
         els.calendarGrid.addEventListener('click', (e) => {
+            // Ignorar click si viene de un touchend reciente
+            if (Date.now() - lastTouchEnd < 500) return;
             const cell = e.target.closest('.cal-cell.available');
             if (!cell || !cell.dataset.date) return;
             selectDate(cell.dataset.date);
