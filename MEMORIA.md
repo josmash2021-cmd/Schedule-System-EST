@@ -223,7 +223,12 @@ Wizard de 3 pasos: (1) calendario mensual, (2) slots, (3) formulario.
   confirmar con éxito, VACÍA el carrito. Sin `?pickup=1` o sin items, la
   página funciona igual que antes (la tarjeta Pickup queda oculta).
 
-### `admin.html` — panel de citas (tema claro, `noindex`)
+### `admin.html` — panel de citas (**tema NEGRO desde 2026-07-20**, `noindex`)
+Antes era tema claro "slate"; ahora negro con el mismo fondo de seda del sitio
+(`body::before` + `background-auth.webp`), tarjetas de vidrio oscuras, botones
+primarios blancos y acentos dorados. `color-scheme: dark` para que los controles
+nativos (input date) se vean bien. Los números de fecha (`.appt-time .day`) van
+en **blanco puro #fff** (el dueño reportó que no se veían).
 Login por contraseña → `POST /api/auth/login` → JWT guardado en
 `sessionStorage['est_admin_token']` (8h). Muestra errores con intentos restantes
 y bloqueo 429. Stats por estado, filtro por fecha (+ botón rápido **"Hoy"** en
