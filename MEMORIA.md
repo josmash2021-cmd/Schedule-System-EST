@@ -215,9 +215,14 @@ Wizard de 3 pasos: (1) calendario mensual, (2) slots, (3) formulario.
   (2026-07-20)**: la fecha como mini calendario (mes/día/día de semana),
   la hora como reloj digital (dos puntos parpadeantes + chip a.m./p.m.),
   el servicio en tarjeta con el mismo icono del formulario (en pickup el
-  texto largo del pedido se muestra completo) y el cliente como **carnet**
-  con foto de perfil (logo `logo-cruise.png`), teléfono clicable y correo
-  si lo dejó. Link a mapa (Apple Maps en iOS, Google Maps en el resto).
+  texto largo del pedido se muestra completo) y el cliente como **factura**
+  (2026-07-20, reemplaza al carnet): encabezado con logo + datos de la
+  tienda, número `#EST-<fecha>-<hora>`, etiqueta "Tu información",
+  líneas de items (en pickup: productos con precio, subtotal, impuestos
+  10% y total; en servicios: la línea "Por confirmar") y borde inferior
+  troquelado tipo recibo (`.inv-tear`). Para que la factura de pickup
+  tenga los items, el carrito se vacía DESPUÉS de `showSuccess`.
+  Link a mapa (Apple Maps en iOS, Google Maps en el resto).
   Si el error contiene "ocupado", recarga los slots.
 - **Modo pickup** (2026-07-20, `?pickup=1` desde el carrito): si hay items en
   `localStorage['est_cart']`, muestra el resumen del pedido en el formulario
