@@ -375,6 +375,31 @@ a { -webkit-tap-highlight-color: transparent; }
     backdrop-filter: blur(14px); font-family: inherit;
 }
 .maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: rgba(12, 12, 15, .92); }
+/* Popup de la tienda: tarjeta de vidrio con acentos dorados */
+.store-popup .maplibregl-popup-content {
+    padding: 0; overflow: hidden; border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .55);
+    animation: spIn .5s var(--ease) both;
+}
+@keyframes spIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.sp-card { padding: 15px 18px 16px; display: grid; gap: 3px; }
+.sp-eyebrow {
+    font-size: 10px; font-weight: 600; letter-spacing: .14em;
+    text-transform: uppercase; color: #d4af37;
+}
+.sp-title { font-size: 14.5px; font-weight: 700; margin-top: 4px; }
+.sp-sub { font-size: 12.5px; color: var(--muted); }
+.sp-meta {
+    margin-top: 11px; padding-top: 10px;
+    border-top: 1px solid var(--line); display: grid; gap: 7px;
+}
+.sp-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted-2); }
+.sp-row svg { width: 14px; height: 14px; color: #d4af37; flex-shrink: 0; }
+.sp-row a { color: var(--text); text-decoration: none; }
+.sp-row a:hover { text-decoration: underline; }
 .marker-dot {
     width: 14px; height: 14px; border-radius: 50%;
     background: #d4af37; border: 3px solid rgba(0, 0, 0, .4);

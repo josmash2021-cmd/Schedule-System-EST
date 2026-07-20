@@ -68,13 +68,20 @@ usan `#3c2606` (marrón oscuro) que tras el filtro SE VE `#1b2a4a` (azul
 oscuro), y el borde de Alabama declarado `#d4af37` en realidad SE VE
 `#8cacff` (azul claro); un dorado real no es alcanzable con este filtro
 (lo más cercano sería un cobrizo). El marcador y el swatch de la leyenda
-sí son dorados reales (son DOM, no pasan por el filtro). Un marcador dorado (Hoover HQ) con popup.
+sí son dorados reales (son DOM, no pasan por el filtro). Los edificios
+APARECEN FLUIDOS (2026-07-20): altura, base y opacidad interpoladas por
+zoom (`interpolate linear` 13.8→15.5/15.2), así crecen desde el suelo
+durante el flyTo en vez de aparecer de golpe. Marcador dorado (Hoover HQ)
+con popup personalizado `.store-popup` (HTML, no `setText`): eyebrow
+dorado "ElectronicST · Headquarters", dirección, horario y teléfono con
+iconos SVG y enlace `tel:`, animación de entrada `spIn`.
 Cuadro `.coverage-legend` como HTML estático posicionado absolute en la
 esquina inferior izquierda (lista solo Alabama). `fitBounds` inicial al
 estado (2026-07-20; se retiró del mapa la zona de South Florida, aunque la
 tarjeta de texto al lado la sigue mencionando). OJO: MapLibre usa
-`[lng, lat]` (al revés que Leaflet). Atribución compacta visible (Carto la
-exige para tiles gratis).
+`[lng, lat]` (al revés que Leaflet). Atribución Carto/OSM DESACTIVADA
+(`attributionControl: false`) a petición del dueño (2026-07-20) — OJO: la
+licencia de OSM/Carto pide crédito; si hace falta, ponerlo en el footer.
 Animación (2026-07-20): al entrar el mapa en pantalla (IntersectionObserver,
 threshold .4), espera 1.2 s y hace `flyTo` 3D (4.5 s, zoom 16, pitch 55,
 bearing -20) hasta la tienda — 3659 Lorna Rd geocodificada a

@@ -584,17 +584,37 @@
                 zoom: 5.6,
                 scrollZoom: false,
                 keyboard: false,
-                attributionControl: { compact: true }
+                attributionControl: false
             });
 
-            // Marcador dorado de la tienda con popup
+            // Marcador dorado de la tienda con popup personalizado
             var markerEl = document.createElement('div');
             markerEl.className = 'map-marker';
             markerEl.innerHTML = '<div class="marker-dot"></div>';
             var storeMarker = new maplibregl.Marker({ element: markerEl })
                 .setLngLat(storeLngLat)
-                .setPopup(new maplibregl.Popup({ offset: 16, closeButton: false })
-                    .setText('3659 Lorna Rd, Hoover, AL — Headquarters'))
+                .setPopup(new maplibregl.Popup({
+                    offset: 20,
+                    closeButton: false,
+                    className: 'store-popup',
+                    maxWidth: '280px'
+                }).setHTML(
+                    '<div class="sp-card">' +
+                    '<span class="sp-eyebrow">ElectronicST · Headquarters</span>' +
+                    '<strong class="sp-title">3659 Lorna Rd, Suite 157</strong>' +
+                    '<span class="sp-sub">Hoover, AL 35216</span>' +
+                    '<div class="sp-meta">' +
+                    '<div class="sp-row">' +
+                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15.5 14"></polyline></svg>' +
+                    '<span>Lun–Sáb · 10 a.m.–3 p.m.</span>' +
+                    '</div>' +
+                    '<div class="sp-row">' +
+                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>' +
+                    '<a href="tel:+12055737840">(205) 573-7840</a>' +
+                    '</div>' +
+                    '</div>' +
+                    '</div>'
+                ))
                 .addTo(map);
 
             map.on('load', function () {
@@ -630,9 +650,22 @@
                         paint: {
                             // #3c2606 + filtro navy del canvas = se ve #1b2a4a (azul oscuro)
                             'fill-extrusion-color': '#3c2606',
-                            'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 8],
-                            'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], 0],
-                            'fill-extrusion-opacity': 0.8
+                            // Crecen desde el suelo y aparecen fluido al acercar
+                            'fill-extrusion-height': [
+                                'interpolate', ['linear'], ['zoom'],
+                                13.8, 0,
+                                15.5, ['coalesce', ['get', 'render_height'], 8]
+                            ],
+                            'fill-extrusion-base': [
+                                'interpolate', ['linear'], ['zoom'],
+                                13.8, 0,
+                                15.5, ['coalesce', ['get', 'render_min_height'], 0]
+                            ],
+                            'fill-extrusion-opacity': [
+                                'interpolate', ['linear'], ['zoom'],
+                                13.8, 0,
+                                15.2, 0.85
+                            ]
                         }
                     }, firstSymbol ? firstSymbol.id : undefined);
                 } catch (e) { /* sin capa de edificios: el mapa sigue en 2D */ }
