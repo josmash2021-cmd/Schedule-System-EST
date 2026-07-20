@@ -246,6 +246,7 @@
             '</article>';
     }
 
+    var firstRender = true;
     function renderCartPage() {
         var itemsEl = document.getElementById('cartItems');
         if (!itemsEl) return;
@@ -255,8 +256,23 @@
         var hasItems = items.length > 0;
         emptyEl.classList.toggle('hidden', hasItems);
         contentEl.classList.toggle('hidden', !hasItems);
+        // Entrada animada solo en la PRIMERA carga de la página
+        if (firstRender) {
+            firstRender = false;
+            if (hasItems) {
+                contentEl.classList.add('cart-enter');
+            } else {
+                emptyEl.classList.add('cart-enter');
+            }
+        }
         if (!hasItems) return;
         itemsEl.innerHTML = items.map(itemHTML).join('');
+        if (contentEl.classList.contains('cart-enter')) {
+            Array.prototype.forEach.call(itemsEl.children, function (el, i) {
+                el.classList.add('cart-enter');
+                el.style.animationDelay = (i * 90) + 'ms';
+            });
+        }
         var total = cartTotal();
         document.getElementById('cartSubtotal').textContent = money(total);
         document.getElementById('cartTotal').textContent = money(total);

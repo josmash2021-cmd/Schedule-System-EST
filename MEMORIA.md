@@ -161,6 +161,9 @@ móvil cerrado) la bolsa sale con fade local; con
   "Agendar visita" → `/solicitud-servicio` (no hay pago en línea: la
   compra se cierra en tienda). Estado vacío con icono y link a productos.
   Precio guardado: $150 ("desde"; nota de precio final según condición).
+  Entrada fluida (2026-07-20): items en cascada (90 ms entre cada uno,
+  `@keyframes cartIn`) y resumen con retraso, SOLO en la primera carga —
+  los re-renders por cantidad/quitar no reaniman.
 - Ruta limpia `/carrito` en `server/index.js` y `carrito.html` incluido
   en `copy-frontend.js`.
 

@@ -871,6 +871,14 @@ footer {
 }
 .cart-empty { text-align: center; padding: 60px 0 30px; }
 .cart-empty.hidden, .cart-grid.hidden { display: none; }
+/* Entrada fluida de la página del carrito (solo primera carga) */
+@keyframes cartIn {
+    from { opacity: 0; transform: translateY(20px) scale(.985); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.cart-empty.cart-enter { animation: cartIn .6s var(--ease) .08s both; }
+.cart-grid.cart-enter .cart-summary { animation: cartIn .6s var(--ease) .2s both; }
+.cart-item.cart-enter { animation: cartIn .55s var(--ease) both; }
 .cart-empty-icon {
     width: 74px; height: 74px; margin: 0 auto 22px; border-radius: 22px;
     display: flex; align-items: center; justify-content: center;
