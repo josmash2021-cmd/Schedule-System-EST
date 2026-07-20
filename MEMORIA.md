@@ -54,20 +54,26 @@ final (`.cta-banner`): fondo transparente para mostrar la seda de la página;
 luz blanca animada (`@keyframes ctaLight` en `::before`) y campo de puntos
 (`::after`) por encima. `.cta-card` de vidrio más translúcido
 (`backdrop-filter: blur(18px)`) con botones + QR de citas (`qr-cita.png`).
-Sección "Where we operate": mapa Leaflet con tiles CartoDB `dark_all`
-teñidos azul navy vía filtro CSS en `.leaflet-tile-pane`
-(`brightness(.9) sepia(.6) hue-rotate(185deg) saturate(1.7)`; fondo del
-contenedor `#0b1426`), polígono simplificado de todo Alabama SOLO con
-borde dorado `#d4af37` (`fill: false`, sin relleno), un marcador dorado
-(Hoover HQ), cuadro `.coverage-legend` en la esquina inferior izquierda
-(lista solo Alabama) y `fitBounds` inicial al estado (2026-07-20; se
-retiró del mapa la zona de South Florida, aunque la tarjeta de texto al
-lado la sigue mencionando).
+Sección "Where we operate": mapa 3D con **MapLibre GL JS 4.7.1** (desde
+2026-07-20; reemplazó a Leaflet) usando el estilo vectorial CartoDB
+`dark-matter-gl-style` (source `carto`), teñido azul navy vía filtro CSS en
+`.maplibregl-canvas` (`brightness(.9) sepia(.6) hue-rotate(185deg)
+saturate(1.7)`; fondo del contenedor `#0b1426`). Alabama: anillo GeoJSON
+como capa `line` SOLO con borde dorado `#d4af37` (sin relleno). Edificios
+3D: capa `fill-extrusion` sobre `source-layer: building` de Carto
+(alturas `render_height`, color `#22335c`, minzoom 13, insertada antes de
+la primera capa `symbol`). Un marcador dorado (Hoover HQ) con popup.
+Cuadro `.coverage-legend` como HTML estático posicionado absolute en la
+esquina inferior izquierda (lista solo Alabama). `fitBounds` inicial al
+estado (2026-07-20; se retiró del mapa la zona de South Florida, aunque la
+tarjeta de texto al lado la sigue mencionando). OJO: MapLibre usa
+`[lng, lat]` (al revés que Leaflet). Atribución compacta visible (Carto la
+exige para tiles gratis).
 Animación (2026-07-20): al entrar el mapa en pantalla (IntersectionObserver,
-threshold .4), espera 1.2 s y hace `flyTo` (3.5 s, zoom 16) hasta la
-tienda — 3659 Lorna Rd geocodificada a `[33.3809, -86.7996]` vía Nominatim
-(antes el pin estaba en `[33.4054, -86.8114]`, ~2.5 km al norte) — y abre
-el popup al llegar. Con `prefers-reduced-motion` usa `setView` directo.
+threshold .4), espera 1.2 s y hace `flyTo` 3D (4.5 s, zoom 16, pitch 55,
+bearing -20) hasta la tienda — 3659 Lorna Rd geocodificada a
+`[-86.7996, 33.3809]` vía Nominatim (antes el pin estaba ~2.5 km al norte)
+— y abre el popup al llegar. Con `prefers-reduced-motion` usa `jumpTo`.
 Footer con datos de la tienda.
 
 ### `productos.html` — catálogo (misma hoja oscura)

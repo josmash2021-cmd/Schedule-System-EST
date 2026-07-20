@@ -18,7 +18,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="assets/img/favicon.png">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
     <link rel="stylesheet" href="assets/site-v3.css">
 </head>
 <body>
@@ -475,6 +475,12 @@
                 </div>
                 <div class="operate-map reveal">
                     <div id="coverageMap"></div>
+                    <div class="coverage-legend">
+                        <h4>Coverage areas</h4>
+                        <ul>
+                            <li><span class="swatch swatch-alabama"></span>Alabama</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </section>
@@ -554,88 +560,109 @@
         </div>
     </footer>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
     <script>
         (function () {
-            var map = L.map('coverageMap', {
-                center: [33.4054, -86.8114],
-                zoom: 7,
-                scrollWheelZoom: false,
-                dragging: true,
-                zoomControl: false,
-                attributionControl: false
-            });
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                maxZoom: 19
-            }).addTo(map);
-
-            // Cobertura estatal: polígono simplificado del estado de Alabama
-            var alabamaArea = L.polygon([
-                [34.995, -88.203],
-                [34.985, -85.607],
-                [34.400, -85.450],
-                [33.950, -85.280],
-                [33.600, -85.200],
-                [32.880, -85.180],
-                [32.470, -85.000],
-                [31.960, -85.060],
-                [31.550, -85.040],
-                [31.000, -85.100],
-                [31.000, -87.600],
-                [30.420, -87.600],
-                [30.280, -87.630],
-                [30.240, -88.040],
-                [30.210, -88.390],
-                [31.890, -88.470],
-                [34.900, -88.240]
-            ], {
-                color: '#d4af37',
-                weight: 2.5,
-                opacity: 0.95,
-                fill: false
-            }).addTo(map);
-
-            var alabamaIcon = L.divIcon({
-                className: 'map-marker',
-                html: '<div class="marker-dot"></div>',
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
-            });
-
             // Tienda: 3659 Lorna Rd Suite 157, Hoover, AL 35216 (geocodificado)
-            var storeLatLng = [33.3809, -86.7996];
-            var storeMarker = L.marker(storeLatLng, { icon: alabamaIcon }).addTo(map)
-                .bindPopup('3659 Lorna Rd, Hoover, AL — Headquarters');
+            // OJO: MapLibre usa [longitud, latitud]
+            var storeLngLat = [-86.7996, 33.3809];
 
-            // Cuadro de áreas de cobertura (esquina inferior izquierda)
-            var legend = L.control({ position: 'bottomleft' });
-            legend.onAdd = function () {
-                var div = L.DomUtil.create('div', 'coverage-legend');
-                div.innerHTML =
-                    '<h4>Coverage areas</h4>' +
-                    '<ul>' +
-                    '<li><span class="swatch swatch-alabama"></span>Alabama</li>' +
-                    '</ul>';
-                return div;
-            };
-            legend.addTo(map);
+            // Contorno simplificado del estado de Alabama [lng, lat]
+            var alabamaRing = [
+                [-88.203, 34.995], [-85.607, 34.985], [-85.450, 34.400],
+                [-85.280, 33.950], [-85.200, 33.600], [-85.180, 32.880],
+                [-85.000, 32.470], [-85.060, 31.960], [-85.040, 31.550],
+                [-85.100, 31.000], [-87.600, 31.000], [-87.600, 30.420],
+                [-87.630, 30.280], [-88.040, 30.240], [-88.390, 30.210],
+                [-88.470, 31.890], [-88.240, 34.900], [-88.203, 34.995]
+            ];
 
-            // Vista inicial: todo el estado de Alabama
-            map.fitBounds(alabamaArea.getBounds(), { padding: [24, 24] });
+            var map = new maplibregl.Map({
+                container: 'coverageMap',
+                style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+                center: [-86.9, 32.6],
+                zoom: 5.6,
+                scrollZoom: false,
+                keyboard: false,
+                attributionControl: { compact: true }
+            });
 
-            // Animación: cuando el mapa entra en pantalla, acercar hasta la tienda
+            // Marcador dorado de la tienda con popup
+            var markerEl = document.createElement('div');
+            markerEl.className = 'map-marker';
+            markerEl.innerHTML = '<div class="marker-dot"></div>';
+            var storeMarker = new maplibregl.Marker({ element: markerEl })
+                .setLngLat(storeLngLat)
+                .setPopup(new maplibregl.Popup({ offset: 16, closeButton: false })
+                    .setText('3659 Lorna Rd, Hoover, AL — Headquarters'))
+                .addTo(map);
+
+            map.on('load', function () {
+                // Alabama: solo borde dorado, sin relleno
+                map.addSource('alabama', {
+                    type: 'geojson',
+                    data: {
+                        type: 'Feature',
+                        geometry: { type: 'Polygon', coordinates: [alabamaRing] }
+                    }
+                });
+                map.addLayer({
+                    id: 'alabama-outline',
+                    type: 'line',
+                    source: 'alabama',
+                    paint: {
+                        'line-color': '#d4af37',
+                        'line-width': 2.5,
+                        'line-opacity': 0.95
+                    }
+                });
+
+                // Edificios 3D (los tiles vectoriales de Carto traen alturas)
+                try {
+                    var firstSymbol = (map.getStyle().layers || [])
+                        .filter(function (layer) { return layer.type === 'symbol'; })[0];
+                    map.addLayer({
+                        id: 'buildings-3d',
+                        type: 'fill-extrusion',
+                        source: 'carto',
+                        'source-layer': 'building',
+                        minzoom: 13,
+                        paint: {
+                            'fill-extrusion-color': '#22335c',
+                            'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 8],
+                            'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], 0],
+                            'fill-extrusion-opacity': 0.8
+                        }
+                    }, firstSymbol ? firstSymbol.id : undefined);
+                } catch (e) { /* sin capa de edificios: el mapa sigue en 2D */ }
+
+                // Vista inicial: todo el estado de Alabama
+                map.fitBounds([[-88.47, 30.21], [-85.0, 34.995]], { padding: 24, duration: 0 });
+            });
+
+            // Animación 3D: cuando el mapa entra en pantalla, la cámara
+            // vuela hasta la tienda inclinándose (pitch) para el efecto 3D
             var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             var zoomed = false;
+            function openStorePopup() {
+                if (!storeMarker.getPopup().isOpen()) storeMarker.togglePopup();
+            }
             function flyToStore() {
                 if (zoomed) return;
                 zoomed = true;
                 setTimeout(function () {
                     if (reduceMotion) {
-                        map.setView(storeLatLng, 16);
-                        storeMarker.openPopup();
+                        map.jumpTo({ center: storeLngLat, zoom: 16, pitch: 55, bearing: -20 });
+                        openStorePopup();
                     } else {
-                        map.once('moveend', function () { storeMarker.openPopup(); });
-                        map.flyTo(storeLatLng, 16, { duration: 3.5 });
+                        map.once('moveend', openStorePopup);
+                        map.flyTo({
+                            center: storeLngLat,
+                            zoom: 16,
+                            pitch: 55,
+                            bearing: -20,
+                            duration: 4500
+                        });
                     }
                 }, 1200);
             }
