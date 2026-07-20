@@ -486,7 +486,6 @@
                                 </div>
                             </div>
                         </div>
-                        <svg class="sp-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </div>
                     <div class="coverage-legend">
                         <h4>Coverage areas</h4>
@@ -608,6 +607,16 @@
                 attributionControl: false
             });
 
+            // Flechita dorada que señala el punto EXACTO de la tienda
+            // (marcador anclado por la punta; el rebote va en el SVG hijo)
+            var arrowEl = document.createElement('div');
+            arrowEl.className = 'map-arrow';
+            arrowEl.innerHTML =
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+            new maplibregl.Marker({ element: arrowEl, anchor: 'bottom' })
+                .setLngLat(storeLngLat)
+                .addTo(map);
+
             map.on('load', function () {
                 // Alabama: solo borde dorado, sin relleno
                 map.addSource('alabama', {
@@ -673,6 +682,7 @@
             function showStoreCard() {
                 var card = document.getElementById('storeCard');
                 if (card) card.classList.add('visible');
+                arrowEl.classList.add('visible');
             }
             function flyToStore() {
                 if (zoomed) return;
