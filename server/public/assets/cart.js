@@ -46,7 +46,14 @@
     function removeItem(id) {
         saveCart(getCart().filter(function (i) { return i.id !== id; }));
     }
-    function money(n) { return '$' + Number(n).toLocaleString('en-US'); }
+    function money(n) {
+        var r = Math.round(n * 100) / 100;
+        return '$' + r.toLocaleString('en-US', {
+            minimumFractionDigits: r % 1 ? 2 : 0,
+            maximumFractionDigits: 2
+        });
+    }
+    var TAX_RATE = 0.10;
 
     /* ---------- Enlace Carrito + contador en el nav ---------- */
     var countEl = null;
@@ -273,9 +280,11 @@
                 el.style.animationDelay = (i * 90) + 'ms';
             });
         }
-        var total = cartTotal();
-        document.getElementById('cartSubtotal').textContent = money(total);
-        document.getElementById('cartTotal').textContent = money(total);
+        var subtotal = cartTotal();
+        var tax = Math.round(subtotal * TAX_RATE * 100) / 100;
+        document.getElementById('cartSubtotal').textContent = money(subtotal);
+        document.getElementById('cartTax').textContent = money(tax);
+        document.getElementById('cartTotal').textContent = money(subtotal + tax);
     }
 
     function wireCartPage() {

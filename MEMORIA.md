@@ -161,6 +161,9 @@ móvil cerrado) la bolsa sale con fade local; con
   "Agendar visita" → `/solicitud-servicio` (no hay pago en línea: la
   compra se cierra en tienda). Estado vacío con icono y link a productos.
   Precio guardado: $150 ("desde"; nota de precio final según condición).
+  Impuestos: `TAX_RATE = 0.10` en cart.js — el resumen muestra Subtotal,
+  Impuestos (10%), Recogida gratis y Total (subtotal + tax); `money()`
+  formatea con 2 decimales solo cuando hacen falta.
   Entrada fluida (2026-07-20): items en cascada (90 ms entre cada uno,
   `@keyframes cartIn`) y resumen con retraso, SOLO en la primera carga —
   los re-renders por cantidad/quitar no reaniman.
