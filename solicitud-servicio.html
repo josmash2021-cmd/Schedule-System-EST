@@ -56,6 +56,8 @@
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             color: var(--text); min-height: 100vh; padding: 24px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
         body::before {
             content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
@@ -694,18 +696,8 @@
         els.resetBtn.addEventListener('click', resetAll);
         els.newBookingBtn.addEventListener('click', resetAll);
 
-        // Delegación de eventos para el calendario: touchend en móvil, click en desktop
-        let lastTouchEnd = 0;
-        els.calendarGrid.addEventListener('touchend', (e) => {
-            const cell = e.target.closest('.cal-cell.available');
-            if (!cell || !cell.dataset.date) return;
-            lastTouchEnd = Date.now();
-            e.preventDefault(); // Evita el click fantasma
-            selectDate(cell.dataset.date);
-        });
-        els.calendarGrid.addEventListener('click', (e) => {
-            // Ignorar click si viene de un touchend reciente
-            if (Date.now() - lastTouchEnd < 500) return;
+        // Delegación de eventos para el calendario: pointerup unifica touch y mouse
+        els.calendarGrid.addEventListener('pointerup', (e) => {
             const cell = e.target.closest('.cal-cell.available');
             if (!cell || !cell.dataset.date) return;
             selectDate(cell.dataset.date);
