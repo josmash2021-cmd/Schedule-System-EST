@@ -133,8 +133,14 @@ entrada escalonada (`transition-delay` por `:nth-child` sobre el reveal
 individual de cada tarjeta; el hover resetea el delay). Galería de 2
 fotos, carrusel de reseñas (marquee infinito) y CTA de cita.
 En las acciones del producto: botón "Agendar visita" + **"Agregar al
-carrito"** (`#addToCart` con `data-id/name/desc/price/img`; reemplazó al
+carrito"** (`#addToCart` con `data-id/name/desc/price/cond/img`; reemplazó al
 botón "Llamar" el 2026-07-20 — el "Llamar" del banner CTA sigue).
+Selector de condición (2026-07-20): 3 opciones **Bueno $150 / Muy bueno
+$200 / Excelente $250** (`.condition-option`, radio group) — al elegir,
+el precio grande (`#priceAmount`) y la nota (`#priceNote`) se actualizan
+y el item del carrito guarda `cond` (id `macbook-air-13-<cond>`: cada
+condición es una línea separada del carrito, con badge dorado
+`.cart-item-cond` en la página del carrito).
 Animación coreografiada al agregar (WAAPI, `flyToCart` en cart.js): el
 botón se morfa a un círculo y la bolsa SE DIBUJA trazo a trazo
 (stroke-dash draw-on: cuerpo → línea media → asa, ~500/150/230 ms), la

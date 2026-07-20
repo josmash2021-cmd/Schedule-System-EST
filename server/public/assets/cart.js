@@ -32,7 +32,7 @@
         var found = null;
         items.forEach(function (i) { if (i.id === item.id) found = i; });
         if (found) found.qty += 1;
-        else items.push({ id: item.id, name: item.name, desc: item.desc, price: item.price, img: item.img, qty: 1 });
+        else items.push({ id: item.id, name: item.name, desc: item.desc, cond: item.cond || '', price: item.price, img: item.img, qty: 1 });
         saveCart(items);
     }
     function setQty(id, qty) {
@@ -214,14 +214,39 @@
         }, 1900);
     }
 
+    /* ---------- Selector de condición (página de producto) ---------- */
+    function wireConditionPicker() {
+        var picker = document.querySelector('.condition-options');
+        if (!picker) return;
+        var btn = document.getElementById('addToCart');
+        var amount = document.getElementById('priceAmount');
+        var note = document.getElementById('priceNote');
+        picker.addEventListener('click', function (e) {
+            var opt = e.target.closest('.condition-option');
+            if (!opt) return;
+            picker.querySelectorAll('.condition-option').forEach(function (o) {
+                o.classList.toggle('active', o === opt);
+                o.setAttribute('aria-checked', o === opt ? 'true' : 'false');
+            });
+            if (amount) amount.textContent = '$' + opt.dataset.price;
+            if (note) note.textContent = 'en condición: ' + opt.dataset.cond;
+            if (btn) {
+                btn.dataset.price = opt.dataset.price;
+                btn.dataset.cond = opt.dataset.cond;
+            }
+        });
+    }
+
     function wireAddButton() {
         var btn = document.getElementById('addToCart');
         if (!btn) return;
         btn.addEventListener('click', function () {
+            var slug = (btn.dataset.cond || '').toLowerCase().replace(/\s+/g, '');
             var item = {
-                id: btn.dataset.id,
+                id: btn.dataset.id + (slug ? '-' + slug : ''),
                 name: btn.dataset.name,
                 desc: btn.dataset.desc,
+                cond: btn.dataset.cond || '',
                 price: Number(btn.dataset.price),
                 img: btn.dataset.img
             };
@@ -237,6 +262,7 @@
             '<div class="cart-item-info">' +
             '<h3>' + item.name + '</h3>' +
             '<p>' + item.desc + '</p>' +
+            (item.cond ? '<div class="cart-item-cond">Condición: ' + item.cond + '</div>' : '') +
             '<span class="cart-item-price">' + money(item.price) + ' c/u</span>' +
             '</div>' +
             '<div class="cart-item-actions">' +
@@ -305,6 +331,7 @@
 
     /* ---------- Init ---------- */
     injectCartLink();
+    wireConditionPicker();
     wireAddButton();
     wireCartPage();
     renderCartPage();

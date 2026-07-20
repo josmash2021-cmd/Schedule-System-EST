@@ -58,8 +58,8 @@
 
                 <div class="price-detail">
                     <small>desde</small>
-                    <span class="amount">$150</span>
-                    <small>hasta $250 según condición</small>
+                    <span class="amount" id="priceAmount">$150</span>
+                    <small id="priceNote">hasta $250 según condición</small>
                 </div>
 
                 <p class="product-desc">
@@ -69,11 +69,30 @@
                     te mostramos las unidades disponibles.
                 </p>
 
+                <div class="condition-picker">
+                    <span class="condition-label">Elige la condición</span>
+                    <div class="condition-options" role="radiogroup" aria-label="Condición del equipo">
+                        <button type="button" class="condition-option active" role="radio" aria-checked="true" data-cond="Bueno" data-price="150">
+                            <strong>Bueno</strong>
+                            <span>$150</span>
+                        </button>
+                        <button type="button" class="condition-option" role="radio" aria-checked="false" data-cond="Muy bueno" data-price="200">
+                            <strong>Muy bueno</strong>
+                            <span>$200</span>
+                        </button>
+                        <button type="button" class="condition-option" role="radio" aria-checked="false" data-cond="Excelente" data-price="250">
+                            <strong>Excelente</strong>
+                            <span>$250</span>
+                        </button>
+                    </div>
+                </div>
+
                 <div class="product-actions">
                     <a href="/solicitud-servicio" class="btn btn-blue">Agendar visita</a>
                     <button type="button" id="addToCart" class="btn btn-ghost"
                             data-id="macbook-air-13" data-name="MacBook Air 13&quot;"
                             data-desc="Intel i5 · 8 GB RAM · 256 GB SSD" data-price="150"
+                            data-cond="Bueno"
                             data-img="assets/img/macbook-air-13.jpg">
                         <span>Agregar al carrito</span>
                     </button>
