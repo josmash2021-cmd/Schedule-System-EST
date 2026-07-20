@@ -309,6 +309,43 @@
         .pickup-totals strong { color: var(--text); }
         .pickup-totals .pickup-total, .pickup-totals .pickup-total strong { color: var(--text); font-weight: 800; font-size: 15.5px; }
 
+        /* ---- Resumen de cita registrada (pantalla de éxito) ---- */
+        .sum-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px; text-align: left; }
+        .sum-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
+        /* Mini calendario */
+        .sum-cal { text-align: center; padding: 0; overflow: hidden; }
+        .sum-cal-head { background: rgba(212, 175, 55, .15); color: #d4af37; font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; padding: 7px 0; }
+        .sum-cal-day { font-size: 34px; font-weight: 800; color: var(--text); padding: 8px 0 2px; line-height: 1.1; }
+        .sum-cal-sub { color: var(--text-muted); font-size: 12px; padding-bottom: 12px; text-transform: capitalize; }
+        /* Reloj digital */
+        .sum-clock { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+        .sum-clock-face { font-size: 32px; font-weight: 800; color: var(--text); letter-spacing: 2px; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 2px; text-shadow: 0 0 18px rgba(255, 255, 255, .15); }
+        .sum-blink { animation: sumBlink 1.2s steps(1) infinite; }
+        @keyframes sumBlink { 50% { opacity: .15; } }
+        .sum-ampm { font-size: 11px; font-weight: 700; color: #d4af37; border: 1px solid rgba(212, 175, 55, .4); border-radius: 6px; padding: 2px 6px; margin-left: 8px; }
+        .sum-clock-sub { color: var(--text-muted); font-size: 12px; }
+        /* Servicio (mismo estilo que las tarjetas del formulario) */
+        .sum-service { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; }
+        .sum-service .service-icon { flex-shrink: 0; margin-bottom: 0; }
+        .sum-service-info { display: grid; gap: 2px; min-width: 0; }
+        .sum-service-info span { font-size: 11.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); }
+        .sum-service-info strong { font-size: 15px; color: var(--text); word-break: break-word; }
+        /* Carnet del cliente con foto de perfil (logo EST) */
+        .sum-carnet { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; background: linear-gradient(135deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .02)); border: 1px solid var(--border); border-radius: 18px; padding: 16px 18px; position: relative; overflow: hidden; }
+        .sum-carnet::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, #d4af37, transparent); }
+        .sum-carnet-photo { width: 64px; height: 64px; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); background: #0b0b0e; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .sum-carnet-photo img { width: 80%; height: 80%; object-fit: contain; }
+        .sum-carnet-info { display: grid; gap: 3px; min-width: 0; }
+        .sum-carnet-label { font-size: 10.5px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #d4af37; }
+        .sum-carnet-info strong { font-size: 17px; color: var(--text); }
+        .sum-carnet-tel { color: var(--text-muted); font-size: 13.5px; text-decoration: none; }
+        .sum-carnet-tel:hover { text-decoration: underline; }
+        .sum-carnet-mail { color: var(--text-muted); font-size: 12.5px; word-break: break-all; }
+        @media (max-width: 480px) {
+            .sum-grid { grid-template-columns: 1fr; }
+            .sum-service, .sum-carnet { grid-column: auto; }
+        }
+
         footer {
             margin-top: 40px; padding: 32px 0 24px;
             border-top: 1px solid var(--border);
@@ -506,6 +543,7 @@
             create: '/api/appointments',
         };
         const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        const weekDays = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
         const dayLabels = ['Do','Lu','Ma','Mi','Ju','Vi','Sa'];
 
         let currentMonth = new Date(); currentMonth.setDate(1);
@@ -750,13 +788,39 @@
             els.successSection.classList.remove('hidden');
             animateElement(els.successSection, 'animate-scale-in');
             els.successSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Resumen visual: mini calendario + reloj digital + servicio + carnet
+            const [yy, mm, dd] = d.fecha.split('-').map(Number);
+            const weekDay = weekDays[new Date(yy, mm - 1, dd).getDay()];
+            let [hh, mmin] = d.hora.split(':').map(Number);
+            const ampm = hh >= 12 ? 'p.m.' : 'a.m.'; hh = hh % 12 || 12;
+            const svcKey = /^pickup/i.test(d.servicio) ? 'Pickup' : d.servicio;
+            const svcCard = els.serviceOptions.querySelector(`[data-value="${svcKey}"]`);
+            const svcIcon = svcCard ? svcCard.querySelector('.service-icon').innerHTML : '';
             els.successDetail.innerHTML = `
-                <div class="detail-row"><span>Fecha</span> <strong>${d.fecha}</strong></div>
-                <div class="detail-row"><span>Hora</span> <strong>${formatHora(d.hora)}</strong></div>
-                <div class="detail-row"><span>Servicio</span> <strong>${escapeHtml(d.servicio)}</strong></div>
-                <div class="detail-row"><span>Cliente</span> <strong>${escapeHtml(d.nombre)}</strong></div>
-                <div class="detail-row"><span>Teléfono</span> <strong>${escapeHtml(d.telefono)}</strong></div>
-                ${d.correo ? `<div class="detail-row"><span>Correo</span> <strong>${escapeHtml(d.correo)}</strong></div>` : ''}
+                <div class="sum-grid">
+                    <div class="sum-card sum-cal">
+                        <div class="sum-cal-head">${monthNames[mm - 1]}</div>
+                        <div class="sum-cal-day">${dd}</div>
+                        <div class="sum-cal-sub">${weekDay} · ${yy}</div>
+                    </div>
+                    <div class="sum-card sum-clock">
+                        <div class="sum-clock-face"><span>${hh}</span><span class="sum-blink">:</span><span>${String(mmin).padStart(2, '0')}</span><span class="sum-ampm">${ampm}</span></div>
+                        <div class="sum-clock-sub">Hora de tu cita</div>
+                    </div>
+                    <div class="sum-card sum-service">
+                        <div class="service-icon">${svcIcon}</div>
+                        <div class="sum-service-info"><span>Servicio</span><strong>${escapeHtml(d.servicio)}</strong></div>
+                    </div>
+                    <div class="sum-carnet">
+                        <div class="sum-carnet-photo"><img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST"></div>
+                        <div class="sum-carnet-info">
+                            <span class="sum-carnet-label">Carnet de cita</span>
+                            <strong>${escapeHtml(d.nombre)}</strong>
+                            <a class="sum-carnet-tel" href="tel:+1${escapeHtml(d.telefono.replace(/\D/g, ''))}">${escapeHtml(d.telefono)}</a>
+                            ${d.correo ? `<span class="sum-carnet-mail">${escapeHtml(d.correo)}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
             `;
             document.getElementById('mapLink').href = getMapUrl();
         }

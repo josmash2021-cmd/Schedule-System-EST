@@ -211,9 +211,14 @@ Wizard de 3 pasos: (1) calendario mensual, (2) slots, (3) formulario.
   consentimiento SMS (texto TCPA: STOP/HELP, hasta 3 msg por cita).
 - **Footer completo** añadido el 2026-07-18 con logo, links legales y datos de
   la tienda.
-- POST a `/api/appointments`. Pantalla de éxito con detalle y link a mapa
-  (Apple Maps en iOS, Google Maps en el resto). Si el error contiene "ocupado",
-  recarga los slots.
+- POST a `/api/appointments`. Pantalla de éxito con **resumen visual
+  (2026-07-20)**: la fecha como mini calendario (mes/día/día de semana),
+  la hora como reloj digital (dos puntos parpadeantes + chip a.m./p.m.),
+  el servicio en tarjeta con el mismo icono del formulario (en pickup el
+  texto largo del pedido se muestra completo) y el cliente como **carnet**
+  con foto de perfil (logo `logo-cruise.png`), teléfono clicable y correo
+  si lo dejó. Link a mapa (Apple Maps en iOS, Google Maps en el resto).
+  Si el error contiene "ocupado", recarga los slots.
 - **Modo pickup** (2026-07-20, `?pickup=1` desde el carrito): si hay items en
   `localStorage['est_cart']`, muestra el resumen del pedido en el formulario
   (foto, condición, cantidad, subtotal, impuestos 10% y total, `.pickup-box`),
