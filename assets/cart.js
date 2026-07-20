@@ -111,17 +111,26 @@
         label.style.transition = 'opacity .15s';
         label.style.opacity = '0';
 
-        // 1) Morph: botón → bolsa
-        btn.insertAdjacentHTML('beforeend', '<svg class="atc-bag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>');
+        // 1) Morph: botón → círculo, y la bolsa SE DIBUJA trazo a trazo
+        btn.insertAdjacentHTML('beforeend', '<svg class="atc-bag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>');
         var bag = btn.querySelector('.atc-bag');
         btn.animate([
             { width: rect.width + 'px', height: rect.height + 'px', borderRadius: '999px' },
             { width: '60px', height: '60px', borderRadius: '50%' }
-        ], { duration: 480, delay: 120, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'forwards' });
-        bag.animate([
-            { opacity: 0, transform: 'scale(.4) rotate(-14deg)' },
-            { opacity: 1, transform: 'scale(1) rotate(0deg)' }
-        ], { duration: 380, delay: 400, easing: 'cubic-bezier(.34,1.56,.64,1)', fill: 'forwards' });
+        ], { duration: 440, delay: 120, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'forwards' });
+        // La bolsa se "arma" dibujándose: cuerpo → línea media → asa
+        var drawTimes = [[400, 500], [900, 150], [1050, 230]];
+        bag.querySelectorAll('path').forEach(function (p, i) {
+            var len = p.getTotalLength();
+            p.style.strokeDasharray = len + ' ' + len;
+            p.style.strokeDashoffset = len;
+            var t = drawTimes[i] || [1050, 230];
+            p.animate([
+                { strokeDashoffset: len },
+                { strokeDashoffset: 0 }
+            ], { duration: t[1], delay: t[0], easing: 'cubic-bezier(.5,0,.3,1)', fill: 'forwards' });
+        });
+        bag.style.opacity = '1';
 
         // 2) El producto cae dentro de la bolsa
         var size = 104;
@@ -134,18 +143,18 @@
         img.animate([
             { opacity: 0, transform: 'translateY(-14px) scale(1.06)' },
             { opacity: 1, transform: 'translateY(0) scale(1)' }
-        ], { duration: 300, delay: 620, easing: 'ease-out', fill: 'forwards' });
+        ], { duration: 240, delay: 1280, easing: 'ease-out', fill: 'forwards' });
         img.animate([
             { transform: 'translateY(0) scale(1)', opacity: 1 },
             { transform: 'translateY(126px) scale(.1)', opacity: .9 }
-        ], { duration: 420, delay: 950, easing: 'cubic-bezier(.55,0,.85,.36)', fill: 'forwards' });
+        ], { duration: 360, delay: 1520, easing: 'cubic-bezier(.55,0,.85,.36)', fill: 'forwards' });
         // rebote de la bolsa al recibir el producto
         btn.animate([
             { transform: 'scale(1,1)' },
             { transform: 'scale(1.08,.82)' },
             { transform: 'scale(.96,1.06)' },
             { transform: 'scale(1,1)' }
-        ], { duration: 340, delay: 1240, easing: 'ease-out' });
+        ], { duration: 240, delay: 1740, easing: 'ease-out' });
 
         // 3) Vuelo de la bolsa al icono del carrito
         setTimeout(function () {
@@ -183,7 +192,7 @@
                 finish();
                 restoreBtn(btn, label);
             };
-        }, 1460);
+        }, 1900);
     }
 
     function wireAddButton() {

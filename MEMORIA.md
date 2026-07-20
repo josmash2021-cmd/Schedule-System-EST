@@ -136,12 +136,14 @@ En las acciones del producto: botón "Agendar visita" + **"Agregar al
 carrito"** (`#addToCart` con `data-id/name/desc/price/img`; reemplazó al
 botón "Llamar" el 2026-07-20 — el "Llamar" del banner CTA sigue).
 Animación coreografiada al agregar (WAAPI, `flyToCart` en cart.js): el
-botón se morfa a una bolsa circular dorada, la foto del producto cae
-dentro (rebote de la bolsa al recibir), un clon de la bolsa vuela en arco
-hasta el icono del carrito del nav y ahí el icono da un golpe + sube el
-contador (el item se guarda al LLEGAR, no al hacer clic). Si el icono no
-es visible (menú móvil cerrado) la bolsa sale con fade local; con
-`prefers-reduced-motion` se agrega directo sin animación.
+botón se morfa a un círculo y la bolsa SE DIBUJA trazo a trazo
+(stroke-dash draw-on: cuerpo → línea media → asa, ~500/150/230 ms), la
+foto del producto cae dentro (rebote de la bolsa al recibir), un clon de
+la bolsa vuela en arco hasta el icono del carrito del nav y ahí el icono
+da un golpe + sube el contador (el item se guarda al LLEGAR, no al hacer
+clic; total ~2.6 s). Si el icono no es visible (menú móvil cerrado) la
+bolsa sale con fade local; con `prefers-reduced-motion` se agrega directo
+sin animación.
 
 ### `carrito.html` — carrito de compras (2026-07-20, SIN backend)
 - `assets/cart.js` (IIFE): store en `localStorage['est_cart']`
