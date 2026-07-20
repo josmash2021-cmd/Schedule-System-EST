@@ -18,6 +18,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="assets/img/favicon.png">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="assets/site-v3.css">
 </head>
 <body>
@@ -473,11 +474,7 @@
                     </div>
                 </div>
                 <div class="operate-map reveal">
-                    <iframe
-                        src="https://maps.google.com/maps?q=Hoover,AL&z=8&output=embed"
-                        width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"
-                        referrerpolicy="no-referrer-when-downgrade" title="Mapa de cobertura">
-                    </iframe>
+                    <div id="coverageMap"></div>
                 </div>
             </div>
         </section>
@@ -557,6 +554,36 @@
         </div>
     </footer>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        (function () {
+            var map = L.map('coverageMap', {
+                center: [33.4054, -86.8114],
+                zoom: 7,
+                scrollWheelZoom: false,
+                dragging: true,
+                zoomControl: false,
+                attributionControl: false
+            });
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                maxZoom: 19
+            }).addTo(map);
+
+            var alabamaIcon = L.divIcon({
+                className: 'map-marker',
+                html: '<div class="marker-dot"></div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+
+            L.marker([33.4054, -86.8114], { icon: alabamaIcon }).addTo(map)
+                .bindPopup('Hoover, AL — Headquarters');
+            L.marker([25.7617, -80.1918], { icon: alabamaIcon }).addTo(map)
+                .bindPopup('Miami, FL — South Florida');
+            L.marker([26.1224, -80.1373], { icon: alabamaIcon }).addTo(map)
+                .bindPopup('Fort Lauderdale, FL');
+        })();
+    </script>
     <script src="assets/security.js" defer></script>
     <script src="assets/transitions.js" defer></script>
     <script src="assets/site.js" defer></script>
