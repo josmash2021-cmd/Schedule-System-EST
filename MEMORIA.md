@@ -89,6 +89,10 @@ interactivo para el usuario
 `doubleClickZoom`, `touchZoomRotate`, `touchPitch`, `pitchWithRotate` y
 `keyboard` todos en `false`; solo corre la animación automática de
 entrada.
+Responsive (2026-07-20): `.operate` y `.values` tienen padding lateral
+propio (24px base; 30px en ≤720px) — antes su shorthand `padding: X 0`
+anulaba el padding lateral del `.container` y el mapa y las tarjetas
+quedaban pegados a los bordes en pantallas < ~1228px.
 Cuadro `.coverage-legend` como HTML estático posicionado absolute en la
 esquina inferior izquierda (lista solo Alabama). `fitBounds` inicial al
 estado (2026-07-20; se retiró del mapa la zona de South Florida, aunque la

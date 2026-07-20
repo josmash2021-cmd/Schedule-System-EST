@@ -332,7 +332,7 @@ a { -webkit-tap-highlight-color: transparent; }
 }
 
 /* ---------------- Where we operate ---------------- */
-.operate { padding: 80px 0 40px; }
+.operate { padding: 80px 24px 40px; }
 .operate-grid {
     display: grid; grid-template-columns: 1fr 1.2fr; gap: 44px; align-items: center;
 }
@@ -430,7 +430,7 @@ a { -webkit-tap-highlight-color: transparent; }
 }
 
 /* ---------------- Valores ---------------- */
-.values { padding: 110px 0; }
+.values { padding: 110px 24px; }
 .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; max-width: 960px; margin: 0 auto; }
 .value {
     position: relative;
@@ -800,7 +800,9 @@ footer {
 /* ---------------- Responsive ---------------- */
 @media (max-width: 720px) {
     .chapter { padding: 90px 0 20px; }
-    .values { padding: 80px 0; }
+    /* Aire lateral en móvil: mapa y tarjetas no pegados a los bordes */
+    .operate { padding-left: 30px; padding-right: 30px; }
+    .values { padding: 80px 30px; }
     .card-foot { flex-direction: column; align-items: flex-start; }
     .card-foot .btn { width: 100%; }
     .hero-content { padding: 90px 20px 80px; }
