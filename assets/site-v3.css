@@ -73,6 +73,13 @@ a { -webkit-tap-highlight-color: transparent; }
 
 .btn-sm { padding: 9px 18px; font-size: 13px; }
 
+/* Botones de contacto: WhatsApp (verde) y mensaje de texto (negro) */
+.btn-wa { background: #25d366; border: 1px solid transparent; color: #04120a; }
+.btn-wa:hover { background: #2ee06f; }
+.btn-sms { background: #000; border: 1px solid var(--line); color: #fff; }
+.btn-sms:hover { background: #16161a; }
+.btn-ico { width: 17px; height: 17px; flex: none; }
+
 /* Brillo que recorre el botón */
 .btn-blue::after, .btn-light::after {
     content: ""; position: absolute; top: 0; left: -90%; width: 45%; height: 100%;
