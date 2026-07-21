@@ -9,6 +9,9 @@ import {
 } from '@whiskeysockets/baileys';
 import qrcode from 'qrcode-terminal';
 import pino from 'pino';
+import path from 'node:path';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import config from './src/config.js';
 import { responder, iaDisponible } from './src/ai.js';
 import { notificarDueno } from './src/notificar.js';
@@ -21,6 +24,41 @@ const logger = pino({ level: 'warn' });
 // Usuarios a los que ya se les avisó que el LLM no está disponible
 // (para no spamear al dueño con el mismo aviso en cada mensaje).
 const avisadosSinIA = new Set();
+
+// Registro persistente del último mensaje entrante procesado por chat
+// (timestamp en segundos). Así, tras un reinicio, se responde lo que
+// quedó pendiente aunque el bot haya escrito después en ese chat.
+const ESTADO_PATH = path.join(config.dataDir, 'chats-estado.json');
+let estadoChats = {};
+try {
+  if (existsSync(ESTADO_PATH)) {
+    estadoChats = JSON.parse(readFileSync(ESTADO_PATH, 'utf8'));
+  }
+} catch { /* estado nuevo */ }
+
+let estadoTimer = null;
+function guardarEstadoChats() {
+  if (estadoTimer) return;
+  estadoTimer = setTimeout(() => {
+    estadoTimer = null;
+    try {
+      mkdirSync(path.dirname(ESTADO_PATH), { recursive: true });
+      const tmp = `${ESTADO_PATH}.tmp`;
+      writeFileSync(tmp, JSON.stringify(estadoChats));
+      renameSync(tmp, ESTADO_PATH);
+    } catch (err) {
+      console.error(`[bot] No se pudo guardar chats-estado: ${err.message}`);
+    }
+  }, 1000);
+  estadoTimer.unref?.();
+}
+
+function marcarProcesado(jid, ts) {
+  if ((estadoChats[jid] || 0) < ts) {
+    estadoChats[jid] = ts;
+    guardarEstadoChats();
+  }
+}
 
 function extraerTexto(mensaje) {
   const m = mensaje.message || {};
@@ -47,6 +85,7 @@ async function manejarMensaje(sock, mensaje) {
   if (esIgnorable(mensaje)) return;
 
   const jid = mensaje.key.remoteJid;
+  marcarProcesado(jid, Number(mensaje.messageTimestamp || Math.floor(Date.now() / 1000)));
   let texto = extraerTexto(mensaje);
 
   // Nota de voz: descargar y transcribir para responderla como texto.
@@ -228,26 +267,26 @@ async function iniciarBot() {
     }
 
     // Mensajes que llegaron mientras el bot estaba apagado (type 'append'):
-    // por cada chat se mira el ÚLTIMO mensaje. Si es del cliente, tiene
-    // texto y es reciente (<24h), el bot retoma la conversación con el
-    // contexto restaurado de data/conversaciones.json. Si el último
-    // mensaje es nuestro, la conversación ya quedó contestada.
+    // por cada chat se toma el ÚLTIMO mensaje ENTRANTE (texto o nota de
+    // voz) y se responde solo si es más nuevo que lo ya procesado (registro
+    // persistente en data/chats-estado.json) — así no importa si el bot
+    // escribió después en ese chat (p. ej. notificaciones al dueño).
     if (type === 'append') {
       const ultimoPorChat = new Map();
       for (const m of messages) {
         const jid = m.key?.remoteJid || '';
-        if (!jid || jid.endsWith('@g.us') || jid.endsWith('@broadcast') ||
+        if (!jid || m.key.fromMe || jid.endsWith('@g.us') || jid.endsWith('@broadcast') ||
             jid === 'status@broadcast' || jid.endsWith('@newsletter')) continue;
+        if (!extraerTexto(m) && !m.message?.audioMessage) continue;
         const ts = Number(m.messageTimestamp || 0);
         const actual = ultimoPorChat.get(jid);
         if (!actual || ts > actual.ts) ultimoPorChat.set(jid, { m, ts });
       }
       const ahoraSeg = Math.floor(Date.now() / 1000);
       for (const [jid, { m, ts }] of ultimoPorChat) {
-        if (m.key.fromMe) continue;               // ya hubo respuesta
-        if (!extraerTexto(m) && !m.message?.audioMessage) continue;  // texto o nota de voz
-        if (ahoraSeg - ts > 24 * 3600) continue;  // muy viejo para retomar
-        console.log(`[mensaje] Retomando mensaje no respondido de ${jid.split('@')[0]} (llegó mientras el bot estaba apagado)`);
+        if (ts <= (estadoChats[jid] || 0)) continue;  // ya procesado
+        if (ahoraSeg - ts > 24 * 3600) continue;      // muy viejo para retomar
+        console.log(`[mensaje] Retomando mensaje no respondido de ${(m.key.remoteJidAlt || jid).split('@')[0]} (llegó mientras el bot estaba apagado)`);
         encolar(jid, () => manejarMensaje(sock, m));
       }
     }
