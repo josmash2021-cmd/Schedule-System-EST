@@ -294,7 +294,13 @@
         if (!drawer) buildDrawer();
         drawer.innerHTML =
             '<div class="cd-head">' +
-                '<strong>' + T('Agregado al carrito', 'Added to cart') + '</strong>' +
+                '<div class="cd-title">' +
+                    '<span class="cd-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>' +
+                    '<div class="cd-title-text">' +
+                        '<strong>' + T('Agregado al carrito', 'Added to cart') + '</strong>' +
+                        '<span>' + cartCount() + ' ' + T('artículo(s) en tu carrito', 'item(s) in your cart') + '</span>' +
+                    '</div>' +
+                '</div>' +
                 '<button type="button" class="cd-close" aria-label="' + T('Cerrar', 'Close') + '">&times;</button>' +
             '</div>' +
             '<div class="cd-item">' +
@@ -304,12 +310,12 @@
                     '<span>' + item.desc + '</span>' +
                     (item.cond ? '<span class="cd-cond">' + T('Condición: ', 'Condition: ') + condLabel(item.cond) + '</span>' : '') +
                 '</div>' +
-                '<strong>' + money(item.price) + '</strong>' +
+                '<strong class="cd-price">' + money(item.price) + '</strong>' +
             '</div>' +
             '<div class="cd-subtotal"><span>' + T('Subtotal', 'Subtotal') + '</span><strong>' + money(cartTotal()) + '</strong></div>' +
             '<div class="cd-actions">' +
-                '<a href="/cart" class="btn btn-blue">' + T('Ir al carrito', 'Go to cart') + '</a>' +
-                '<a href="/book-appointment" class="btn btn-ghost">' + T('Reservar cita', 'Book appointment') + '</a>' +
+                '<a href="/cart" class="btn btn-blue"><svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>' + T('Ir al carrito', 'Go to cart') + '</a>' +
+                '<a href="/book-appointment" class="btn btn-ghost"><svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + T('Reservar cita', 'Book appointment') + '</a>' +
             '</div>' +
             '<button type="button" class="cd-continue">' + T('Seguir comprando', 'Continue shopping') + '</button>';
         drawer.querySelector('.cd-close').addEventListener('click', closeDrawer);
