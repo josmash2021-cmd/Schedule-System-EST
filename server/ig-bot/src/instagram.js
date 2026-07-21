@@ -9,7 +9,9 @@ async function postIG(cuerpo) {
     console.log(`[ig] envío simulado (falta IG_ACCESS_TOKEN): ${JSON.stringify(cuerpo)}`);
     return { simulado: true };
   }
-  const url = `https://graph.facebook.com/${config.instagram.graphVersion}/me/messages` +
+  // Tokens de "API setup with Instagram login" (IGAA...) usan el host
+  // graph.instagram.com (no graph.facebook.com).
+  const url = `https://graph.instagram.com/${config.instagram.graphVersion}/me/messages` +
     `?access_token=${encodeURIComponent(config.instagram.accessToken)}`;
   const r = await fetch(url, {
     method: 'POST',
