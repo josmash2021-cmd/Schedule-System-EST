@@ -13,6 +13,8 @@ import config from './src/config.js';
 import { responder, iaDisponible } from './src/ai.js';
 import { notificarDueno } from './src/notificar.js';
 import { transcribirAudio, transcripcionDisponible } from './src/transcribir.js';
+import { encolar } from './src/cola.js';
+import { iniciarAprendizaje } from './src/aprendizaje.js';
 
 const logger = pino({ level: 'warn' });
 
@@ -206,6 +208,7 @@ async function iniciarBot() {
 
     if (connection === 'open') {
       console.log(`[bot] ✅ Conectado a WhatsApp como "${config.negocio.nombre}". Listo para atender clientes.`);
+      iniciarAprendizaje(sock);
       if (!iaDisponible()) {
         console.warn('[bot] ⚠️ OPENAI_API_KEY no configurada: el bot responderá con el mensaje de fallback.');
       }
@@ -213,10 +216,13 @@ async function iniciarBot() {
   });
 
   sock.ev.on('messages.upsert', async ({ messages, type }) => {
-    // Mensajes en vivo: flujo normal.
+    // Mensajes en vivo: cada chat en su propia cola (orden por cliente,
+    // paralelismo entre clientes — hasta 50 chats sin bloquearse).
     if (type === 'notify') {
       for (const mensaje of messages) {
-        await manejarMensaje(sock, mensaje);
+        const jid = mensaje.key?.remoteJid || '';
+        if (!jid) continue;
+        encolar(jid, () => manejarMensaje(sock, mensaje));
       }
       return;
     }
@@ -242,7 +248,7 @@ async function iniciarBot() {
         if (!extraerTexto(m) && !m.message?.audioMessage) continue;  // texto o nota de voz
         if (ahoraSeg - ts > 24 * 3600) continue;  // muy viejo para retomar
         console.log(`[mensaje] Retomando mensaje no respondido de ${jid.split('@')[0]} (llegó mientras el bot estaba apagado)`);
-        await manejarMensaje(sock, m);
+        encolar(jid, () => manejarMensaje(sock, m));
       }
     }
   });

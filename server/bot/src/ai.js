@@ -7,6 +7,7 @@ import config from './config.js';
 import { guardarCita } from './citas.js';
 import { notificarDueno } from './notificar.js';
 import { consultarSlots, crearCitaWeb } from './citasApi.js';
+import { usarIA } from './cola.js';
 
 // Registro de consumo de la API (tokens por llamada) en data/uso-api.json.
 // Reporte con: npm run uso
@@ -68,15 +69,23 @@ function cargarHistoriales() {
   }
 }
 
+let persistirTimer = null;
 function persistirHistoriales() {
-  try {
-    mkdirSync(path.dirname(CONVERSACIONES_PATH), { recursive: true });
-    const tmp = `${CONVERSACIONES_PATH}.tmp`;
-    writeFileSync(tmp, JSON.stringify([...historiales]));
-    renameSync(tmp, CONVERSACIONES_PATH);
-  } catch (err) {
-    console.error(`[ai] No se pudieron guardar los historiales: ${err.message}`);
-  }
+  // Debounce: con muchos chats activos, evita reescribir el archivo en
+  // cada turno; agrupa las escrituras cada ~1.5s.
+  if (persistirTimer) return;
+  persistirTimer = setTimeout(() => {
+    persistirTimer = null;
+    try {
+      mkdirSync(path.dirname(CONVERSACIONES_PATH), { recursive: true });
+      const tmp = `${CONVERSACIONES_PATH}.tmp`;
+      writeFileSync(tmp, JSON.stringify([...historiales]));
+      renameSync(tmp, CONVERSACIONES_PATH);
+    } catch (err) {
+      console.error(`[ai] No se pudieron guardar los historiales: ${err.message}`);
+    }
+  }, 1500);
+  persistirTimer.unref?.();
 }
 
 let cliente = null;
@@ -135,6 +144,15 @@ export function construirSystemPrompt() {
   const enlacesProductos = Object.values(config.fotos || {})
     .map((f) => `- ${f.nombre}: ${f.link}`)
     .join('\n');
+  // Notas de auto-mejora (config/aprendizaje.json, se actualiza solo cada día).
+  let notasAprendidas = '';
+  try {
+    const rutaNotas = path.join(config.root, 'config', 'aprendizaje.json');
+    if (existsSync(rutaNotas)) {
+      const d = JSON.parse(readFileSync(rutaNotas, 'utf8'));
+      notasAprendidas = (d.notas || []).map((n) => `- ${n}`).join('\n');
+    }
+  } catch { /* sin notas aún */ }
 
   return `Eres Angel, el agente y encargado de "${n.nombre}", un negocio que repara y vende laptops, tablets y iPhones.
 
@@ -175,7 +193,10 @@ PÁGINA WEB Y ENLACES (compártelos tal cual, en mensaje corto y natural):
 - Si piden un producto en específico, pasa el link directo de ese producto:
 ${enlacesProductos}
 - Para ver todo el catálogo o productos sin link propio: https://electronicservicetechnology.com/products
-- Si prefieren agendar en línea en vez de por aquí: https://electronicservicetechnology.com/book-appointment
+- Para agendar en línea también puedes compartir: https://electronicservicetechnology.com/book-appointment
+
+INTELIGENCIA APRENDIDA DE CONVERSACIONES REALES (temas que los clientes preguntan o comentan; NO son datos oficiales — nunca la uses para precios ni disponibilidad):
+${notasAprendidas || '(aún sin notas; se generan solas con el uso)'}
 
 CÓMO ATENDER SEGÚN LA INTENCIÓN:
 1. REPARACIÓN: pide con amabilidad el tipo de equipo, el modelo exacto y la falla que presenta. Explica brevemente el proceso (diagnóstico sin costo, un técnico confirma diagnóstico y precio antes de cualquier reparación). NO des precios de reparación, solo un técnico los confirma. Si el cliente quiere que le confirmes un precio o aproximado, usa solicitar_humano (motivo: equipo, falla y qué quiere confirmar) y dile: "deja le pregunto al supervisor y te dejo saber en cuanto me confirme".
@@ -468,12 +489,12 @@ export async function responder(jid, textoUsuario, contexto) {
   // antes de dar la respuesta final en texto.
   const MAX_ITERACIONES = 5;
   for (let i = 0; i < MAX_ITERACIONES; i++) {
-    const respuesta = await cliente.chat.completions.create({
+    const respuesta = await usarIA(() => cliente.chat.completions.create({
       model: config.openai.model,
       messages: sesion.mensajes,
       tools: HERRAMIENTAS,
       tool_choice: 'auto'
-    });
+    }));
     registrarUso(respuesta.usage);
 
     const mensaje = respuesta.choices[0].message;
