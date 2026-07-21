@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MacBook Air 13" — ElectronicST</title>
-    <meta name="description" content="MacBook Air 13 con Intel i5, 8 GB RAM y 256 GB SSD. Equipos verificados y con garantía en Hoover, AL.">
+    <title data-en="MacBook Air 13&quot; — ElectronicST">MacBook Air 13" — ElectronicST</title>
+    <meta name="description" content="MacBook Air 13 con Intel i5, 8 GB RAM y 256 GB SSD. Equipos verificados y con garantía en Hoover, AL." data-en="MacBook Air 13 with Intel i5, 8 GB RAM and 256 GB SSD. Verified devices with warranty in Hoover, AL.">
     <meta property="og:title" content="ElectronicST — MacBook, iPhone y más">
     <meta property="og:description" content="MacBook Air, MacBook Pro y la nueva generación de iPhone. Equipos originales, con garantía y servicio técnico experto.">
     <meta property="og:image" content="https://schedule-system-est-production.up.railway.app/assets/img/og-image.png">
@@ -19,22 +19,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <link rel="stylesheet" href="assets/site-v3.css">
+    <script src="assets/i18n.js"></script>
 </head>
 <body>
     <nav class="nav">
         <div class="container nav-inner">
             <a href="/" class="brand">
-                <img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST" class="logo-desktop">
-                <img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST" class="logo-mobile">
-                <span>ElectronicST</span>
+                <img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST" data-en-alt="ElectronicST" class="logo-desktop">
+                <img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST" data-en-alt="ElectronicST" class="logo-mobile">
+                <span data-en="ElectronicST">ElectronicST</span>
             </a>
-            <button class="burger" aria-label="Abrir menú" aria-expanded="false">
+            <button class="burger" aria-label="Abrir menú" data-en-aria="Open menu" aria-expanded="false">
                 <span></span><span></span><span></span>
             </button>
             <div class="nav-links">
-                <a href="/">Inicio</a>
-                <a href="/products" class="active">Productos</a>
-                <a href="/book-appointment" class="btn btn-blue btn-sm nav-cta">Reservar cita</a>
+                <a href="/" data-en="Home">Inicio</a>
+                <a href="/products" class="active" data-en="Products">Productos</a>
+                <a href="/book-appointment" class="btn btn-blue btn-sm nav-cta" data-en="Book appointment">Reservar cita</a>
             </div>
         </div>
     </nav>
@@ -42,27 +43,27 @@
     <main>
         <section class="product-detail container">
             <div class="product-media reveal">
-                <span class="card-badge">Disponible</span>
-                <img draggable="false" src="assets/img/macbook-air-13.jpg" alt="MacBook Air 13 pulgadas" fetchpriority="high">
+                <span class="card-badge" data-en="Available">Disponible</span>
+                <img draggable="false" src="assets/img/macbook-air-13.jpg" alt="MacBook Air 13 pulgadas" data-en-alt="MacBook Air 13-inch" fetchpriority="high">
             </div>
             <div class="product-info reveal">
-                <span class="eyebrow">MacOS</span>
-                <h1>MacBook Air 13"</h1>
-                <p class="sub">Ligera como el aire. Equipo original, verificado y con garantía.</p>
+                <span class="eyebrow" data-en="macOS">MacOS</span>
+                <h1 data-en="MacBook Air 13&quot;">MacBook Air 13"</h1>
+                <p class="sub" data-en="Light as air. Original device, verified and covered by warranty.">Ligera como el aire. Equipo original, verificado y con garantía.</p>
 
                 <div class="specs">
-                    <span class="spec">Intel i5</span>
-                    <span class="spec">8 GB RAM</span>
-                    <span class="spec">256 GB SSD</span>
+                    <span class="spec" data-en="Intel i5">Intel i5</span>
+                    <span class="spec" data-en="8 GB RAM">8 GB RAM</span>
+                    <span class="spec" data-en="256 GB SSD">256 GB SSD</span>
                 </div>
 
                 <div class="price-detail">
-                    <small>desde</small>
-                    <span class="amount" id="priceAmount">$150</span>
-                    <small id="priceNote">hasta $250 según condición</small>
+                    <small data-en="from">desde</small>
+                    <span class="amount" id="priceAmount" data-en="$150">$150</span>
+                    <small id="priceNote" data-en="up to $250 depending on condition">hasta $250 según condición</small>
                 </div>
 
-                <p class="product-desc">
+                <p class="product-desc" data-en="The MacBook Air 13&quot; is perfect for studying, work, and everyday use. Lightweight, fast, and with excellent battery life. The price varies based on cosmetic condition and battery health. Schedule a visit and we'll show you the available units.">
                     La MacBook Air 13" es perfecta para estudio, trabajo y uso diario.
                     Ligera, rápida y con excelente batería. El precio varía según la
                     condición estética y el estado de la batería. Agenda tu visita y
@@ -70,31 +71,31 @@
                 </p>
 
                 <div class="condition-picker">
-                    <span class="condition-label">Elige la condición</span>
-                    <div class="condition-options" role="radiogroup" aria-label="Condición del equipo">
+                    <span class="condition-label" data-en="Choose the condition">Elige la condición</span>
+                    <div class="condition-options" role="radiogroup" aria-label="Condición del equipo" data-en-aria="Device condition">
                         <button type="button" class="condition-option active" role="radio" aria-checked="true" data-cond="Bueno" data-price="150">
-                            <strong>Bueno</strong>
-                            <span>$150</span>
+                            <strong data-en="Good">Bueno</strong>
+                            <span data-en="$150">$150</span>
                         </button>
                         <button type="button" class="condition-option" role="radio" aria-checked="false" data-cond="Muy bueno" data-price="200">
-                            <strong>Muy bueno</strong>
-                            <span>$200</span>
+                            <strong data-en="Very good">Muy bueno</strong>
+                            <span data-en="$200">$200</span>
                         </button>
                         <button type="button" class="condition-option" role="radio" aria-checked="false" data-cond="Excelente" data-price="250">
-                            <strong>Excelente</strong>
-                            <span>$250</span>
+                            <strong data-en="Excellent">Excelente</strong>
+                            <span data-en="$250">$250</span>
                         </button>
                     </div>
                 </div>
 
                 <div class="product-actions">
-                    <a href="/book-appointment" class="btn btn-blue">Agendar visita</a>
+                    <a href="/book-appointment" class="btn btn-blue" data-en="Schedule a visit">Agendar visita</a>
                     <button type="button" id="addToCart" class="btn btn-ghost"
                             data-id="macbook-air-13" data-name="MacBook Air 13&quot;"
                             data-desc="Intel i5 · 8 GB RAM · 256 GB SSD" data-price="150"
                             data-cond="Bueno"
                             data-img="assets/img/macbook-air-13.jpg">
-                        <span>Agregar al carrito</span>
+                        <span data-en="Add to cart">Agregar al carrito</span>
                     </button>
                 </div>
             </div>
@@ -103,34 +104,34 @@
         <!-- ============ COMPONENTES ============ -->
         <section class="components container">
             <div class="components-head reveal">
-                <span class="eyebrow">Componentes</span>
-                <h2>Lo que lleva por dentro.</h2>
-                <p class="sub">Cada MacBook Air 13" viene verificada con estos componentes.</p>
+                <span class="eyebrow" data-en="Components">Componentes</span>
+                <h2 data-en="What's inside.">Lo que lleva por dentro.</h2>
+                <p class="sub" data-en="Every MacBook Air 13&quot; comes verified with these components.">Cada MacBook Air 13" viene verificada con estos componentes.</p>
             </div>
             <div class="components-grid">
                 <div class="component-card reveal">
                     <div class="component-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg></div>
-                    <span class="component-label">Processor</span>
-                    <span class="component-value">Intel Core i5</span>
-                    <span class="component-desc">1.8 GHz dual-core</span>
+                    <span class="component-label" data-en="Processor">Processor</span>
+                    <span class="component-value" data-en="Intel Core i5">Intel Core i5</span>
+                    <span class="component-desc" data-en="1.8 GHz dual-core">1.8 GHz dual-core</span>
                 </div>
                 <div class="component-card reveal">
                     <div class="component-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="10" rx="1.5"/><line x1="7" y1="17" x2="7" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="17" y1="17" x2="17" y2="21"/><line x1="7.5" y1="10" x2="7.5" y2="14"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="16.5" y1="10" x2="16.5" y2="14"/></svg></div>
-                    <span class="component-label">Memory</span>
-                    <span class="component-value">8 GB RAM</span>
-                    <span class="component-desc">LPDDR3</span>
+                    <span class="component-label" data-en="Memory">Memory</span>
+                    <span class="component-value" data-en="8 GB RAM">8 GB RAM</span>
+                    <span class="component-desc" data-en="LPDDR3">LPDDR3</span>
                 </div>
                 <div class="component-card reveal">
                     <div class="component-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg></div>
-                    <span class="component-label">Storage</span>
-                    <span class="component-value">256 GB SSD</span>
-                    <span class="component-desc">Rápido y silencioso</span>
+                    <span class="component-label" data-en="Storage">Storage</span>
+                    <span class="component-value" data-en="256 GB SSD">256 GB SSD</span>
+                    <span class="component-desc" data-en="Fast and silent">Rápido y silencioso</span>
                 </div>
                 <div class="component-card reveal">
                     <div class="component-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="9" cy="12" r="3"/><line x1="6" y1="18" x2="6" y2="21"/><line x1="11" y1="18" x2="11" y2="21"/><line x1="16" y1="10" x2="19" y2="10"/><line x1="16" y1="14" x2="19" y2="14"/></svg></div>
-                    <span class="component-label">Graphic Card</span>
-                    <span class="component-value">Intel HD Graphics 6000</span>
-                    <span class="component-desc">Integrada</span>
+                    <span class="component-label" data-en="Graphics Card">Graphic Card</span>
+                    <span class="component-value" data-en="Intel HD Graphics 6000">Intel HD Graphics 6000</span>
+                    <span class="component-desc" data-en="Integrated">Integrada</span>
                 </div>
             </div>
         </section>
@@ -138,15 +139,15 @@
         <!-- ============ GALERÍA ============ -->
         <section class="product-gallery container reveal">
             <div class="gallery-head">
-                <span class="eyebrow">MacBook Air 2017</span>
-                <h2>Diseño que enamora.</h2>
+                <span class="eyebrow" data-en="MacBook Air 2017">MacBook Air 2017</span>
+                <h2 data-en="A design you'll love.">Diseño que enamora.</h2>
             </div>
             <div class="gallery-grid">
                 <div class="gallery-item">
-                    <img draggable="false" src="assets/img/macbook-air-2017-1.jpg" alt="MacBook Air 2017 en uso" loading="lazy">
+                    <img draggable="false" src="assets/img/macbook-air-2017-1.jpg" alt="MacBook Air 2017 en uso" data-en-alt="MacBook Air 2017 in use" loading="lazy">
                 </div>
                 <div class="gallery-item">
-                    <img draggable="false" src="assets/img/macbook-air-2017-2.jpg" alt="MacBook Air 2017 pantalla de inicio" loading="lazy">
+                    <img draggable="false" src="assets/img/macbook-air-2017-2.jpg" alt="MacBook Air 2017 pantalla de inicio" data-en-alt="MacBook Air 2017 home screen" loading="lazy">
                 </div>
             </div>
         </section>
@@ -154,309 +155,309 @@
         <!-- ============ RESEÑAS ============ -->
         <section class="testimonials">
             <div class="container testimonials-head reveal">
-                <span class="eyebrow">Reseñas</span>
-                <h2>Lo que dicen nuestros clientes.</h2>
-                <p class="sub">Más de 100+ clientes satisfechos con su MacBook Air 2017.</p>
+                <span class="eyebrow" data-en="Reviews">Reseñas</span>
+                <h2 data-en="What our customers say.">Lo que dicen nuestros clientes.</h2>
+                <p class="sub" data-en="Over 100+ satisfied customers with their MacBook Air 2017.">Más de 100+ clientes satisfechos con su MacBook Air 2017.</p>
             </div>
             <div class="testimonials-marquee" aria-hidden="true">
                 <div class="testimonials-track">
                     <div class="testimonial-card">
                         <div class="testimonial-rating">
                             <div class="testimonial-stars">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
                             </div>
-                            <span class="testimonial-score">5.0</span>
+                            <span class="testimonial-score" data-en="5.0">5.0</span>
                         </div>
-                        <p class="testimonial-text">Excelente equipo, llegó en perfectas condiciones y la batería dura muchísimo. Muy recomendado.</p>
+                        <p class="testimonial-text" data-en="Excellent device, it arrived in perfect condition and the battery lasts a very long time. Highly recommended.">Excelente equipo, llegó en perfectas condiciones y la batería dura muchísimo. Muy recomendado.</p>
                         <div class="testimonial-footer">
-                            <span class="testimonial-author">— María G.</span>
+                            <span class="testimonial-author" data-en="— María G.">— María G.</span>
                             <div class="trustpilot-badge">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" width="16" height="16">
-                                <span>verified by <strong>Trustpilot</strong></span>
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" data-en-alt="Trustpilot" width="16" height="16">
+                                <span>verified by <strong data-en="Trustpilot">Trustpilot</strong></span>
                             </div>
                         </div>
                     </div>
                     <div class="testimonial-card">
                         <div class="testimonial-rating">
                             <div class="testimonial-stars">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
                             </div>
-                            <span class="testimonial-score">5.0</span>
+                            <span class="testimonial-score" data-en="5.0">5.0</span>
                         </div>
-                        <p class="testimonial-text">La MacBook Air funciona como nueva. El servicio fue rápido y muy profesional. Volveré a comprar.</p>
+                        <p class="testimonial-text" data-en="The MacBook Air works like new. The service was fast and very professional. I will buy again.">La MacBook Air funciona como nueva. El servicio fue rápido y muy profesional. Volveré a comprar.</p>
                         <div class="testimonial-footer">
-                            <span class="testimonial-author">— Carlos R.</span>
+                            <span class="testimonial-author" data-en="— Carlos R.">— Carlos R.</span>
                             <div class="trustpilot-badge">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" width="16" height="16">
-                                <span>verified by <strong>Trustpilot</strong></span>
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" data-en-alt="Trustpilot" width="16" height="16">
+                                <span>verified by <strong data-en="Trustpilot">Trustpilot</strong></span>
                             </div>
                         </div>
                     </div>
                     <div class="testimonial-card">
                         <div class="testimonial-rating">
                             <div class="testimonial-stars">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
                             </div>
-                            <span class="testimonial-score">5.0</span>
+                            <span class="testimonial-score" data-en="5.0">5.0</span>
                         </div>
-                        <p class="testimonial-text">Precio justo y equipo verificado. Me explicaron todo antes de comprar. Muy contenta con mi compra.</p>
+                        <p class="testimonial-text" data-en="Fair price and a verified device. They explained everything before I bought it. Very happy with my purchase.">Precio justo y equipo verificado. Me explicaron todo antes de comprar. Muy contenta con mi compra.</p>
                         <div class="testimonial-footer">
-                            <span class="testimonial-author">— Ana L.</span>
+                            <span class="testimonial-author" data-en="— Ana L.">— Ana L.</span>
                             <div class="trustpilot-badge">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" width="16" height="16">
-                                <span>verified by <strong>Trustpilot</strong></span>
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" data-en-alt="Trustpilot" width="16" height="16">
+                                <span>verified by <strong data-en="Trustpilot">Trustpilot</strong></span>
                             </div>
                         </div>
                     </div>
                     <div class="testimonial-card">
                         <div class="testimonial-rating">
                             <div class="testimonial-stars">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
                             </div>
-                            <span class="testimonial-score">5.0</span>
+                            <span class="testimonial-score" data-en="5.0">5.0</span>
                         </div>
-                        <p class="testimonial-text">Perfecta para la universidad. Ligera, rápida y con excelente soporte técnico. 100% recomendada.</p>
+                        <p class="testimonial-text" data-en="Perfect for college. Lightweight, fast, and with excellent technical support. 100% recommended.">Perfecta para la universidad. Ligera, rápida y con excelente soporte técnico. 100% recomendada.</p>
                         <div class="testimonial-footer">
-                            <span class="testimonial-author">— David M.</span>
+                            <span class="testimonial-author" data-en="— David M.">— David M.</span>
                             <div class="trustpilot-badge">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" width="16" height="16">
-                                <span>verified by <strong>Trustpilot</strong></span>
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" data-en-alt="Trustpilot" width="16" height="16">
+                                <span>verified by <strong data-en="Trustpilot">Trustpilot</strong></span>
                             </div>
                         </div>
                     </div>
                     <div class="testimonial-card">
                         <div class="testimonial-rating">
                             <div class="testimonial-stars">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
                             </div>
-                            <span class="testimonial-score">5.0</span>
+                            <span class="testimonial-score" data-en="5.0">5.0</span>
                         </div>
-                        <p class="testimonial-text">Compré para mi hija y quedó encantada. La laptop se ve y funciona como nueva. Gran experiencia.</p>
+                        <p class="testimonial-text" data-en="I bought it for my daughter and she was delighted. The laptop looks and works like new. Great experience.">Compré para mi hija y quedó encantada. La laptop se ve y funciona como nueva. Gran experiencia.</p>
                         <div class="testimonial-footer">
-                            <span class="testimonial-author">— Laura P.</span>
+                            <span class="testimonial-author" data-en="— Laura P.">— Laura P.</span>
                             <div class="trustpilot-badge">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" width="16" height="16">
-                                <span>verified by <strong>Trustpilot</strong></span>
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" data-en-alt="Trustpilot" width="16" height="16">
+                                <span>verified by <strong data-en="Trustpilot">Trustpilot</strong></span>
                             </div>
                         </div>
                     </div>
                     <div class="testimonial-card">
                         <div class="testimonial-rating">
                             <div class="testimonial-stars">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
                             </div>
-                            <span class="testimonial-score">5.0</span>
+                            <span class="testimonial-score" data-en="5.0">5.0</span>
                         </div>
-                        <p class="testimonial-text">Muy buena atención y el equipo llegó impecable. Se nota que revisan cada detalle antes de entregar.</p>
+                        <p class="testimonial-text" data-en="Great service and the device arrived spotless. You can tell they check every detail before delivery.">Muy buena atención y el equipo llegó impecable. Se nota que revisan cada detalle antes de entregar.</p>
                         <div class="testimonial-footer">
-                            <span class="testimonial-author">— Jorge T.</span>
+                            <span class="testimonial-author" data-en="— Jorge T.">— Jorge T.</span>
                             <div class="trustpilot-badge">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" width="16" height="16">
-                                <span>verified by <strong>Trustpilot</strong></span>
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" data-en-alt="Trustpilot" width="16" height="16">
+                                <span>verified by <strong data-en="Trustpilot">Trustpilot</strong></span>
                             </div>
                         </div>
                     </div>
                     <div class="testimonial-card">
                         <div class="testimonial-rating">
                             <div class="testimonial-stars">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
                             </div>
-                            <span class="testimonial-score">5.0</span>
+                            <span class="testimonial-score" data-en="5.0">5.0</span>
                         </div>
-                        <p class="testimonial-text">Rápido, confiable y con garantía. La MacBook Air 2017 sigue siendo una gran opción en 2026.</p>
+                        <p class="testimonial-text" data-en="Fast, reliable, and with warranty. The MacBook Air 2017 is still a great option in 2026.">Rápido, confiable y con garantía. La MacBook Air 2017 sigue siendo una gran opción en 2026.</p>
                         <div class="testimonial-footer">
-                            <span class="testimonial-author">— Sofía H.</span>
+                            <span class="testimonial-author" data-en="— Sofía H.">— Sofía H.</span>
                             <div class="trustpilot-badge">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" width="16" height="16">
-                                <span>verified by <strong>Trustpilot</strong></span>
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" data-en-alt="Trustpilot" width="16" height="16">
+                                <span>verified by <strong data-en="Trustpilot">Trustpilot</strong></span>
                             </div>
                         </div>
                     </div>
                     <div class="testimonial-card">
                         <div class="testimonial-rating">
                             <div class="testimonial-stars">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
                             </div>
-                            <span class="testimonial-score">5.0</span>
+                            <span class="testimonial-score" data-en="5.0">5.0</span>
                         </div>
-                        <p class="testimonial-text">Excelente calidad por el precio. El equipo se siente premium y el servicio post-venta es muy bueno.</p>
+                        <p class="testimonial-text" data-en="Excellent quality for the price. The device feels premium and the after-sales service is very good.">Excelente calidad por el precio. El equipo se siente premium y el servicio post-venta es muy bueno.</p>
                         <div class="testimonial-footer">
-                            <span class="testimonial-author">— Miguel A.</span>
+                            <span class="testimonial-author" data-en="— Miguel A.">— Miguel A.</span>
                             <div class="trustpilot-badge">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" width="16" height="16">
-                                <span>verified by <strong>Trustpilot</strong></span>
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" data-en-alt="Trustpilot" width="16" height="16">
+                                <span>verified by <strong data-en="Trustpilot">Trustpilot</strong></span>
                             </div>
                         </div>
                     </div>
                     <div class="testimonial-card">
                         <div class="testimonial-rating">
                             <div class="testimonial-stars">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
                             </div>
-                            <span class="testimonial-score">5.0</span>
+                            <span class="testimonial-score" data-en="5.0">5.0</span>
                         </div>
-                        <p class="testimonial-text">Mi segunda compra aquí y siempre igual de satisfecho. Equipos originales y muy buen trato.</p>
+                        <p class="testimonial-text" data-en="My second purchase here and always just as satisfied. Original devices and great treatment.">Mi segunda compra aquí y siempre igual de satisfecho. Equipos originales y muy buen trato.</p>
                         <div class="testimonial-footer">
-                            <span class="testimonial-author">— Carmen V.</span>
+                            <span class="testimonial-author" data-en="— Carmen V.">— Carmen V.</span>
                             <div class="trustpilot-badge">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" width="16" height="16">
-                                <span>verified by <strong>Trustpilot</strong></span>
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" data-en-alt="Trustpilot" width="16" height="16">
+                                <span>verified by <strong data-en="Trustpilot">Trustpilot</strong></span>
                             </div>
                         </div>
                     </div>
                     <div class="testimonial-card">
                         <div class="testimonial-rating">
                             <div class="testimonial-stars">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
                             </div>
-                            <span class="testimonial-score">5.0</span>
+                            <span class="testimonial-score" data-en="5.0">5.0</span>
                         </div>
-                        <p class="testimonial-text">La batería dura todo el día y el equipo es súper rápido. Mejor de lo que esperaba por el precio.</p>
+                        <p class="testimonial-text" data-en="The battery lasts all day and the device is super fast. Better than I expected for the price.">La batería dura todo el día y el equipo es súper rápido. Mejor de lo que esperaba por el precio.</p>
                         <div class="testimonial-footer">
-                            <span class="testimonial-author">— Roberto S.</span>
+                            <span class="testimonial-author" data-en="— Roberto S.">— Roberto S.</span>
                             <div class="trustpilot-badge">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" width="16" height="16">
-                                <span>verified by <strong>Trustpilot</strong></span>
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" data-en-alt="Trustpilot" width="16" height="16">
+                                <span>verified by <strong data-en="Trustpilot">Trustpilot</strong></span>
                             </div>
                         </div>
                     </div>
                     <div class="testimonial-card">
                         <div class="testimonial-rating">
                             <div class="testimonial-stars">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
                             </div>
-                            <span class="testimonial-score">5.0</span>
+                            <span class="testimonial-score" data-en="5.0">5.0</span>
                         </div>
-                        <p class="testimonial-text">Atención personalizada y equipo en perfecto estado. Definitivamente volveré para mi próxima compra.</p>
+                        <p class="testimonial-text" data-en="Personalized service and a device in perfect condition. I will definitely come back for my next purchase.">Atención personalizada y equipo en perfecto estado. Definitivamente volveré para mi próxima compra.</p>
                         <div class="testimonial-footer">
-                            <span class="testimonial-author">— Elena D.</span>
+                            <span class="testimonial-author" data-en="— Elena D.">— Elena D.</span>
                             <div class="trustpilot-badge">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" width="16" height="16">
-                                <span>verified by <strong>Trustpilot</strong></span>
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" data-en-alt="Trustpilot" width="16" height="16">
+                                <span>verified by <strong data-en="Trustpilot">Trustpilot</strong></span>
                             </div>
                         </div>
                     </div>
                     <div class="testimonial-card">
                         <div class="testimonial-rating">
                             <div class="testimonial-stars">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
                             </div>
-                            <span class="testimonial-score">5.0</span>
+                            <span class="testimonial-score" data-en="5.0">5.0</span>
                         </div>
-                        <p class="testimonial-text">Muy profesionales. Me ayudaron a elegir el equipo ideal y todo el proceso fue muy sencillo.</p>
+                        <p class="testimonial-text" data-en="Very professional. They helped me choose the ideal device and the whole process was very simple.">Muy profesionales. Me ayudaron a elegir el equipo ideal y todo el proceso fue muy sencillo.</p>
                         <div class="testimonial-footer">
-                            <span class="testimonial-author">— Fernando C.</span>
+                            <span class="testimonial-author" data-en="— Fernando C.">— Fernando C.</span>
                             <div class="trustpilot-badge">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" width="16" height="16">
-                                <span>verified by <strong>Trustpilot</strong></span>
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" data-en-alt="Trustpilot" width="16" height="16">
+                                <span>verified by <strong data-en="Trustpilot">Trustpilot</strong></span>
                             </div>
                         </div>
                     </div>
                     <div class="testimonial-card">
                         <div class="testimonial-rating">
                             <div class="testimonial-stars">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
                             </div>
-                            <span class="testimonial-score">5.0</span>
+                            <span class="testimonial-score" data-en="5.0">5.0</span>
                         </div>
-                        <p class="testimonial-text">La MacBook llegó en excelente estado y con todo lo prometido. Muy contento con la compra.</p>
+                        <p class="testimonial-text" data-en="The MacBook arrived in excellent condition with everything promised. Very happy with the purchase.">La MacBook llegó en excelente estado y con todo lo prometido. Muy contento con la compra.</p>
                         <div class="testimonial-footer">
-                            <span class="testimonial-author">— Isabel N.</span>
+                            <span class="testimonial-author" data-en="— Isabel N.">— Isabel N.</span>
                             <div class="trustpilot-badge">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" width="16" height="16">
-                                <span>verified by <strong>Trustpilot</strong></span>
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" data-en-alt="Trustpilot" width="16" height="16">
+                                <span>verified by <strong data-en="Trustpilot">Trustpilot</strong></span>
                             </div>
                         </div>
                     </div>
                     <div class="testimonial-card">
                         <div class="testimonial-rating">
                             <div class="testimonial-stars">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
                             </div>
-                            <span class="testimonial-score">5.0</span>
+                            <span class="testimonial-score" data-en="5.0">5.0</span>
                         </div>
-                        <p class="testimonial-text">Gran tienda, equipos verificados y precios justos. La recomiendo a cualquiera que busque una MacBook.</p>
+                        <p class="testimonial-text" data-en="Great store, verified devices, and fair prices. I recommend it to anyone looking for a MacBook.">Gran tienda, equipos verificados y precios justos. La recomiendo a cualquiera que busque una MacBook.</p>
                         <div class="testimonial-footer">
-                            <span class="testimonial-author">— Pablo O.</span>
+                            <span class="testimonial-author" data-en="— Pablo O.">— Pablo O.</span>
                             <div class="trustpilot-badge">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" width="16" height="16">
-                                <span>verified by <strong>Trustpilot</strong></span>
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" data-en-alt="Trustpilot" width="16" height="16">
+                                <span>verified by <strong data-en="Trustpilot">Trustpilot</strong></span>
                             </div>
                         </div>
                     </div>
                     <div class="testimonial-card">
                         <div class="testimonial-rating">
                             <div class="testimonial-stars">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Estrella" data-en-alt="Star" width="16" height="16">
                             </div>
-                            <span class="testimonial-score">5.0</span>
+                            <span class="testimonial-score" data-en="5.0">5.0</span>
                         </div>
-                        <p class="testimonial-text">Servicio excepcional y equipo de primera. Mi MacBook Air funciona perfecto desde el primer día.</p>
+                        <p class="testimonial-text" data-en="Exceptional service and a top-notch device. My MacBook Air has worked perfectly since day one.">Servicio excepcional y equipo de primera. Mi MacBook Air funciona perfecto desde el primer día.</p>
                         <div class="testimonial-footer">
-                            <span class="testimonial-author">— Andrea B.</span>
+                            <span class="testimonial-author" data-en="— Andrea B.">— Andrea B.</span>
                             <div class="trustpilot-badge">
-                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" width="16" height="16">
-                                <span>verified by <strong>Trustpilot</strong></span>
+                                <img draggable="false" src="assets/img/trustpilot-star.webp" alt="Trustpilot" data-en-alt="Trustpilot" width="16" height="16">
+                                <span>verified by <strong data-en="Trustpilot">Trustpilot</strong></span>
                             </div>
                         </div>
                     </div>
@@ -468,22 +469,22 @@
         <section class="cta-banner reveal">
             <div class="cta-grid">
                 <div class="cta-copy">
-                    <img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST" class="cta-logo">
-                    <h2>¿Quieres verla en persona?</h2>
-                    <p>Agenda tu cita y te preparamos la MacBook Air 13" para que la pruebes sin compromiso.</p>
+                    <img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST" data-en-alt="ElectronicST" class="cta-logo">
+                    <h2 data-en="Want to see it in person?">¿Quieres verla en persona?</h2>
+                    <p data-en="Book your appointment and we'll have the MacBook Air 13&quot; ready for you to try, no obligation.">Agenda tu cita y te preparamos la MacBook Air 13" para que la pruebes sin compromiso.</p>
                     <ul class="cta-points">
-                        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15.5 14"></polyline></svg>Agenda en 2 minutos</li>
-                        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>Confirmación inmediata</li>
-                        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>Lun–Sáb · 10 a.m.–3 p.m.</li>
+                        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15.5 14"></polyline></svg><span data-en="Book in 2 minutes">Agenda en 2 minutos</span></li>
+                        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg><span data-en="Instant confirmation">Confirmación inmediata</span></li>
+                        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg><span data-en="Mon–Sat · 10 a.m.–3 p.m.">Lun–Sáb · 10 a.m.–3 p.m.</span></li>
                     </ul>
                 </div>
                 <div class="cta-card">
-                    <a href="/book-appointment" class="btn btn-blue"><svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Reservar cita</a>
+                    <a href="/book-appointment" class="btn btn-blue"><svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span data-en="Book appointment">Reservar cita</span></a>
                     <a href="https://wa.me/12055737840?text=Hola%2C%20me%20gustar%C3%ADa%20hablar%20con%20un%20agente." class="btn btn-wa" target="_blank" rel="noopener"><svg class="btn-ico" viewBox="0 0 448 512" fill="currentColor" aria-hidden="true"><path d="M380.9 97.1C339 55.1 283.2 0 193.9 0c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>WhatsApp</a>
-                    <a href="sms:+12055737840?&body=Hola%2C%20me%20gustar%C3%ADa%20hablar%20con%20un%20agente." class="btn btn-sms"><svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Mensaje de texto</a>
+                    <a href="sms:+12055737840?&body=Hola%2C%20me%20gustar%C3%ADa%20hablar%20con%20un%20agente." class="btn btn-sms"><svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span data-en="Text message">Mensaje de texto</span></a>
                     <div class="cta-qr">
-                        <img draggable="false" src="qr-cita.png" alt="Código QR para agendar una cita en ElectronicST" width="84" height="84">
-                        <span>Escanea el código<br>y agenda desde tu teléfono</span>
+                        <img draggable="false" src="qr-cita.png" alt="Código QR para agendar una cita en ElectronicST" data-en-alt="QR code to book an appointment at ElectronicST" width="84" height="84">
+                        <span><span data-en="Scan the code">Escanea el código</span><br><span data-en="and book from your phone">y agenda desde tu teléfono</span></span>
                     </div>
                 </div>
             </div>
@@ -495,21 +496,21 @@
             <div class="footer-inner">
                 <div class="footer-brand">
                     <a href="/" class="brand">
-                        <img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST">
-                        <span>ElectronicST</span>
+                        <img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST" data-en-alt="ElectronicST">
+                        <span data-en="ElectronicST">ElectronicST</span>
                     </a>
-                    <p>Tu tienda de confianza para MacBook, iPhone y servicio técnico especializado en Hoover, Alabama.</p>
+                    <p data-en="Your trusted store for MacBook, iPhone, and specialized technical service in Hoover, Alabama.">Tu tienda de confianza para MacBook, iPhone y servicio técnico especializado en Hoover, Alabama.</p>
                 </div>
                 <div class="footer-links">
-                    <a href="/products">Productos</a>
-                    <a href="/book-appointment">Reservar cita</a>
-                    <a href="/terms">Términos y condiciones</a>
-                    <a href="/privacy">Políticas de privacidad</a>
+                    <a href="/products" data-en="Products">Productos</a>
+                    <a href="/book-appointment" data-en="Book appointment">Reservar cita</a>
+                    <a href="/terms" data-en="Terms and conditions">Términos y condiciones</a>
+                    <a href="/privacy" data-en="Privacy policy">Políticas de privacidad</a>
                 </div>
             </div>
             <div class="footer-bottom">
-                <span>© ElectronicST. Todos los derechos reservados.</span>
-                <span><a href="#" class="map-link">3659 Lorna Rd Suite 157, Hoover, AL 35216</a> · <a href="tel:+12055737840">(205) 573-7840</a></span>
+                <span data-en="© ElectronicST. All rights reserved.">© ElectronicST. Todos los derechos reservados.</span>
+                <span><a href="#" class="map-link" data-en="3659 Lorna Rd Suite 157, Hoover, AL 35216">3659 Lorna Rd Suite 157, Hoover, AL 35216</a> · <a href="tel:+12055737840" data-en="(205) 573-7840">(205) 573-7840</a></span>
             </div>
         </div>
     </footer>

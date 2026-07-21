@@ -9,6 +9,14 @@
     'use strict';
 
     var KEY = 'est_cart';
+    var LANG = window.EST_LANG || 'es';
+    function T(es, en) { return LANG === 'en' ? en : es; }
+    var COND_EN = { 'bueno': 'Good', 'muybueno': 'Very good', 'excelente': 'Excellent' };
+    function condLabel(cond) {
+        if (LANG !== 'en') return cond;
+        var key = String(cond || '').toLowerCase().replace(/\s+/g, '');
+        return COND_EN[key] || cond;
+    }
 
     /* ---------- Store ---------- */
     function getCart() {
@@ -73,10 +81,10 @@
         var a = document.createElement('a');
         a.href = '/cart';
         a.className = 'nav-cart';
-        a.setAttribute('aria-label', 'Carrito');
+        a.setAttribute('aria-label', T('Carrito', 'Cart'));
         a.innerHTML =
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>' +
-            '<span class="nav-cart-label">Carrito</span>' +
+            '<span class="nav-cart-label">' + T('Carrito', 'Cart') + '</span>' +
             '<span class="nav-cart-count hidden">0</span>';
         var cta = links.querySelector('.nav-cta');
         links.insertBefore(a, cta || null);
@@ -234,7 +242,7 @@
                 o.setAttribute('aria-checked', o === opt ? 'true' : 'false');
             });
             if (amount) amount.textContent = '$' + opt.dataset.price;
-            if (note) note.textContent = 'en condición: ' + opt.dataset.cond;
+            if (note) note.textContent = T('en condición: ', 'in condition: ') + condLabel(opt.dataset.cond);
             if (btn) {
                 btn.dataset.price = opt.dataset.price;
                 btn.dataset.cond = opt.dataset.cond;
@@ -250,7 +258,7 @@
             var item = {
                 id: btn.dataset.id + (slug ? '-' + slug : ''),
                 name: btn.dataset.name,
-                desc: btn.dataset.desc,
+                desc: (LANG === 'en' && btn.dataset.descEn) ? btn.dataset.descEn : btn.dataset.desc,
                 cond: btn.dataset.cond || '',
                 price: Number(btn.dataset.price),
                 img: btn.dataset.img
@@ -267,17 +275,17 @@
             '<div class="cart-item-info">' +
             '<h3>' + item.name + '</h3>' +
             '<p>' + item.desc + '</p>' +
-            (item.cond ? '<div class="cart-item-cond">Condición: ' + item.cond + '</div>' : '') +
+            (item.cond ? '<div class="cart-item-cond">' + T('Condición: ', 'Condition: ') + condLabel(item.cond) + '</div>' : '') +
             '<span class="cart-item-price">' + money(item.price) + '</span>' +
             '</div>' +
             '<div class="cart-item-actions">' +
             '<div class="qty">' +
-            '<button type="button" data-act="dec" aria-label="Quitar uno">−</button>' +
+            '<button type="button" data-act="dec" aria-label="' + T('Quitar uno', 'Remove one') + '">−</button>' +
             '<span>' + item.qty + '</span>' +
-            '<button type="button" data-act="inc" aria-label="Agregar uno">+</button>' +
+            '<button type="button" data-act="inc" aria-label="' + T('Agregar uno', 'Add one') + '">+</button>' +
             '</div>' +
             '<strong class="cart-item-total">' + money(item.price * item.qty) + '</strong>' +
-            '<button type="button" class="cart-item-remove" data-act="del" aria-label="Quitar del carrito">' +
+            '<button type="button" class="cart-item-remove" data-act="del" aria-label="' + T('Quitar del carrito', 'Remove from cart') + '">' +
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
             '</button>' +
             '</div>' +
