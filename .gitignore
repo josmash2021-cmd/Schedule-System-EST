@@ -3,3 +3,10 @@ node_modules/
 .DS_Store
 
 .vercel
+
+# Bot de WhatsApp (artefactos locales)
+bot/node_modules/
+bot/auth_info/
+bot/data/
+bot/logs/
+bot/.env

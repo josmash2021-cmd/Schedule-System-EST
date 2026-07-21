@@ -1,0 +1,44 @@
+{
+  "macbook-air-13": {
+    "nombre": "MacBook Air 13\"",
+    "fotos": [
+      "https://electronicservicetechnology.com/assets/img/macbook-air-13.jpg",
+      "https://electronicservicetechnology.com/assets/img/macbook-air-2017-1.jpg",
+      "https://electronicservicetechnology.com/assets/img/macbook-air-2017-2.jpg"
+    ],
+    "link": "https://electronicservicetechnology.com/macbook-air-13"
+  },
+  "macbook-pro": {
+    "nombre": "MacBook Pro",
+    "fotos": [
+      "https://electronicservicetechnology.com/assets/img/macbook-pro.jpg",
+      "https://electronicservicetechnology.com/assets/img/macbook-pro-16.jpg"
+    ],
+    "link": "https://electronicservicetechnology.com/products"
+  },
+  "iphone-15-pro": {
+    "nombre": "iPhone 15 Pro",
+    "fotos": [
+      "https://electronicservicetechnology.com/assets/img/iphone-15-pro.jpg",
+      "https://electronicservicetechnology.com/assets/img/iphone-15-pro-3.jpg",
+      "https://electronicservicetechnology.com/assets/img/iphone-15-pro-oficina.jpg"
+    ],
+    "link": "https://electronicservicetechnology.com/iphone-15-pro"
+  },
+  "iphone-16": {
+    "nombre": "iPhone 16 / 16 Plus",
+    "fotos": [
+      "https://electronicservicetechnology.com/assets/img/iphone-16.jpg",
+      "https://electronicservicetechnology.com/assets/img/iphone-16-plus.jpg"
+    ],
+    "link": "https://electronicservicetechnology.com/products"
+  },
+  "iphone-16-pro": {
+    "nombre": "iPhone 16 Pro / Pro Max",
+    "fotos": [
+      "https://electronicservicetechnology.com/assets/img/iphone-16-pro.jpg",
+      "https://electronicservicetechnology.com/assets/img/iphone-16-pro-max.jpg"
+    ],
+    "link": "https://electronicservicetechnology.com/products"
+  }
+}
