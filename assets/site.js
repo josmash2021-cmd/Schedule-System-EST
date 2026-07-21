@@ -172,7 +172,7 @@
     document.querySelectorAll('.card-product[data-href]').forEach(function (card) {
         card.style.cursor = 'pointer';
         card.addEventListener('click', function (e) {
-            if (e.target.closest('a')) return;
+            if (e.target.closest('a, button')) return;
             window.location.href = card.dataset.href;
         });
     });

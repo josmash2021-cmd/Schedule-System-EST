@@ -633,6 +633,7 @@ a { -webkit-tap-highlight-color: transparent; }
 .specs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
 .spec { font-size: 11.5px; font-weight: 600; color: #d4d4d8; background: rgba(255, 255, 255, .08); padding: 4px 10px; border-radius: 8px; }
 .card-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.card-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 .price { font-size: 21px; font-weight: 800; letter-spacing: -.01em; line-height: 1.1; }
 .price small { display: block; font-size: 11px; font-weight: 500; color: var(--muted); }
 

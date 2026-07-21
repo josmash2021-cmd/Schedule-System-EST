@@ -251,19 +251,20 @@
     }
 
     function wireAddButton() {
-        var btn = document.getElementById('addToCart');
-        if (!btn) return;
-        btn.addEventListener('click', function () {
-            var slug = (btn.dataset.cond || '').toLowerCase().replace(/\s+/g, '');
-            var item = {
-                id: btn.dataset.id + (slug ? '-' + slug : ''),
-                name: btn.dataset.name,
-                desc: (LANG === 'en' && btn.dataset.descEn) ? btn.dataset.descEn : btn.dataset.desc,
-                cond: btn.dataset.cond || '',
-                price: Number(btn.dataset.price),
-                img: btn.dataset.img
-            };
-            flyToCart(btn, function () { addItem(item); openCartDrawer(item); });
+        document.querySelectorAll('#addToCart, .add-cart-card').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var slug = (btn.dataset.cond || '').toLowerCase().replace(/\s+/g, '');
+                var item = {
+                    id: btn.dataset.id + (slug ? '-' + slug : ''),
+                    name: btn.dataset.name,
+                    desc: (LANG === 'en' && btn.dataset.descEn) ? btn.dataset.descEn : btn.dataset.desc,
+                    cond: btn.dataset.cond || '',
+                    price: Number(btn.dataset.price),
+                    img: btn.dataset.img
+                };
+                flyToCart(btn, function () { addItem(item); openCartDrawer(item); });
+            });
         });
     }
 
