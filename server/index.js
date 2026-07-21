@@ -18,13 +18,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Rutas explícitas para cada página HTML (clean URLs en inglés)
 const htmlRoutes = {
   '/': 'index.html',
-  '/products': 'productos.html',
+  '/products': 'products.html',
   '/macbook-air-13': 'macbook-air-13.html',
-  '/cart': 'carrito.html',
-  '/book-appointment': 'solicitud-servicio.html',
+  '/cart': 'cart.html',
+  '/book-appointment': 'book-appointment.html',
   '/admin': 'admin.html',
-  '/terms': 'terminos.html',
-  '/privacy': 'politicas.html',
+  '/terms': 'terms.html',
+  '/privacy': 'privacy.html',
 };
 
 for (const [route, file] of Object.entries(htmlRoutes)) {

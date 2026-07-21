@@ -37,10 +37,13 @@
   **`electronicservicetechnology.com` apunta a VERCEL y está MUY VIVO** —
   despliega solo desde GitHub master y el dueño usa ese dominio como el
   principal. `vercel.json`: `cleanUrls` (sirve `*.html` sin extensión),
-  proxy `/api/*` → Railway, rewrites de las rutas EN (`/products` →
-  `productos.html`, etc.) y redirects permanentes de las rutas ES. Si se
-  agregan/renombran rutas, hay que actualizar AMBOS: `server/index.js`
-  (Railway) y `vercel.json` (dominio personalizado).
+  proxy `/api/*` → Railway y redirects permanentes de las rutas ES.
+  **Los archivos HTML se RENOMBRARON a inglés** (`products.html`,
+  `book-appointment.html`, `cart.html`, `terms.html`, `privacy.html`) —
+  así `cleanUrls` sirve las rutas EN nativamente sin rewrites (los
+  rewrites a `*.html` chocaban con cleanUrls y daban 404/loop).
+  Si se agregan/renombran rutas, hay que actualizar AMBOS: `server/index.js`
+  (Railway) y `vercel.json` (dominio personalizado), más `copy-frontend.js`.
   `qr-cita.png` apuntaba a la URL vieja de Vercel; ahora el sitio vive en
   Railway y el QR debería regenerarse/apuntar a
   `https://schedule-system-est-production.up.railway.app/solicitud-servicio` si

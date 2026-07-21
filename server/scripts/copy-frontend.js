@@ -6,13 +6,13 @@ const publicDir = path.resolve(__dirname, '..', 'public');
 
 const itemsToCopy = [
   'index.html',
-  'productos.html',
+  'products.html',
   'macbook-air-13.html',
-  'carrito.html',
-  'solicitud-servicio.html',
+  'cart.html',
+  'book-appointment.html',
   'admin.html',
-  'terminos.html',
-  'politicas.html',
+  'terms.html',
+  'privacy.html',
   'assets',
   'qr-cita.png',
   'logo.jpg',

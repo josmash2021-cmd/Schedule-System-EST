@@ -3,7 +3,7 @@
    - Store: items {id, name, desc, price, img, qty}
    - Inyecta el enlace Carrito + contador en el nav (páginas con .nav-links)
    - Botón "Agregar al carrito" (#addToCart) en la página de producto
-   - Render completo en carrito.html (#cartItems / #cartEmpty / #cartContent)
+   - Render completo en cart.html (#cartItems / #cartEmpty / #cartContent)
    ============================================================ */
 (function () {
     'use strict';

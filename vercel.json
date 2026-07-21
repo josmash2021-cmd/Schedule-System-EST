@@ -12,11 +12,6 @@
     { "source": "/politicas", "destination": "/privacy", "permanent": true }
   ],
   "rewrites": [
-    { "source": "/products", "destination": "/productos.html" },
-    { "source": "/book-appointment", "destination": "/solicitud-servicio.html" },
-    { "source": "/cart", "destination": "/carrito.html" },
-    { "source": "/terms", "destination": "/terminos.html" },
-    { "source": "/privacy", "destination": "/politicas.html" },
     { "source": "/api/:path*", "destination": "https://schedule-system-est-production.up.railway.app/api/:path*" }
   ]
 }
