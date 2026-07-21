@@ -9,6 +9,8 @@ import {
 } from '@whiskeysockets/baileys';
 import qrcode from 'qrcode-terminal';
 import pino from 'pino';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import config from './src/config.js';
 import { responder, iaDisponible } from './src/ai.js';
 import { notificarDueno } from './src/notificar.js';
@@ -238,7 +240,23 @@ async function iniciarBot() {
   });
 }
 
-iniciarBot().catch((err) => {
-  console.error(`[bot] Error fatal: ${err.message}`);
-  process.exit(1);
-});
+// Arranque seguro para usar desde el servidor web (mismo proceso en Railway):
+// si el bot falla, el servidor Express sigue corriendo.
+export async function iniciarBotSeguro() {
+  try {
+    await iniciarBot();
+  } catch (err) {
+    console.error(`[bot] Error al iniciar (el servidor web sigue corriendo): ${err.message}`);
+  }
+}
+
+// Auto-arranque solo cuando este archivo se ejecuta directamente (`node index.js`),
+// no cuando se importa como módulo desde el servidor web.
+const esPrincipal = process.argv[1] &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (esPrincipal) {
+  iniciarBot().catch((err) => {
+    console.error(`[bot] Error fatal: ${err.message}`);
+    process.exit(1);
+  });
+}

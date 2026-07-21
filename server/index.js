@@ -65,6 +65,14 @@ async function start() {
   app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
   });
+
+  // Bot de WhatsApp (Angel): corre en el mismo proceso (ver server/bot/).
+  // Se puede desactivar con BOT_ENABLED=false. Un fallo del bot no tumba la web.
+  if (process.env.BOT_ENABLED !== 'false') {
+    import('./bot/index.js')
+      .then((m) => m.iniciarBotSeguro())
+      .catch((err) => console.error('[bot] No se pudo iniciar:', err.message));
+  }
 }
 
 start().catch((err) => {
