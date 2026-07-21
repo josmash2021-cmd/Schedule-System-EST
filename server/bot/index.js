@@ -98,19 +98,21 @@ async function manejarMensaje(sock, mensaje) {
       return;
     }
     try {
-      // Marcar la nota como escuchada (palomitas y micrófono en azul),
-      // como cuando una persona le da play en WhatsApp.
+      // Ritmo humano con notas de voz:
+      // 1) 5s de silencio, 2) se marca escuchada (azul),
+      // 3) "la escucha" por su duración real (tope 120s),
+      // 4) 3s más y aparece "escribiendo..." antes de responder.
+      await new Promise((r) => setTimeout(r, 5000));
       try {
         await sock.readMessages([mensaje.key]);
         await sock.sendReceipt(jid, undefined, [mensaje.key.id], 'played');
       } catch { /* best-effort */ }
 
-      // Simular que está escuchando la nota: esperar su duración real
-      // (tope 120s) en silencio, y solo entonces mostrar "escribiendo...".
       const duracionSeg = Math.min(Number(mensaje.message.audioMessage.seconds || 0), 120);
       if (duracionSeg > 0) {
         await new Promise((r) => setTimeout(r, duracionSeg * 1000));
       }
+      await new Promise((r) => setTimeout(r, 3000));
       await sock.sendPresenceUpdate('composing', jid).catch(() => {});
       const buffer = await downloadMediaMessage(mensaje, 'buffer', {});
       texto = await transcribirAudio(buffer, mensaje.message.audioMessage.mimetype);
