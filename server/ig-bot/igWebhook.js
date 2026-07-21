@@ -80,13 +80,14 @@ async function responderYEnviar(igsid, texto) {
   console.log(`[ig] Respuesta enviada a ${igsid} (${burbujas.length} burbuja(s))`);
 }
 
-// Ritmo humano igual que en WhatsApp: mark_seen, pausa, "escribiendo...",
-// respuesta en burbujas y typing_off.
+// Ritmo humano igual que en WhatsApp: a los 5s marca leído, a los 7s
+// "escribiendo...", y la respuesta llega en burbujas.
 async function manejarTexto(igsid, texto) {
   console.log(`[ig] ${igsid}: ${texto}`);
   try {
-    await accionIG(igsid, 'mark_seen');
     await esperar(5000);
+    await accionIG(igsid, 'mark_seen');
+    await esperar(2000);
     await accionIG(igsid, 'typing_on');
     await responderYEnviar(igsid, texto);
   } catch (err) {
