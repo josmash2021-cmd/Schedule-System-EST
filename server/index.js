@@ -15,22 +15,35 @@ app.use(express.json());
 // Servir frontend estático desde server/public/
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Rutas explícitas para cada página HTML (clean URLs)
+// Rutas explícitas para cada página HTML (clean URLs en inglés)
 const htmlRoutes = {
   '/': 'index.html',
-  '/productos': 'productos.html',
+  '/products': 'productos.html',
   '/macbook-air-13': 'macbook-air-13.html',
-  '/carrito': 'carrito.html',
-  '/solicitud-servicio': 'solicitud-servicio.html',
+  '/cart': 'carrito.html',
+  '/book-appointment': 'solicitud-servicio.html',
   '/admin': 'admin.html',
-  '/terminos': 'terminos.html',
-  '/politicas': 'politicas.html',
+  '/terms': 'terminos.html',
+  '/privacy': 'politicas.html',
 };
 
 for (const [route, file] of Object.entries(htmlRoutes)) {
   app.get(route, (_req, res) => {
     res.sendFile(path.join(__dirname, 'public', file));
   });
+}
+
+// Redirecciones permanentes de las rutas antiguas en español
+const legacyRedirects = {
+  '/productos': '/products',
+  '/carrito': '/cart',
+  '/solicitud-servicio': '/book-appointment',
+  '/terminos': '/terms',
+  '/politicas': '/privacy',
+};
+
+for (const [oldPath, newPath] of Object.entries(legacyRedirects)) {
+  app.get(oldPath, (_req, res) => res.redirect(301, newPath));
 }
 
 app.get('/api/health', (_req, res) => {

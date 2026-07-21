@@ -255,10 +255,14 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
 (solo garantía del fabricante). Fechadas "18 de julio de 2026".
 
 ### Assets JS
-- **Enlaces del menú en INGLÉS desde 2026-07-20** (petición del dueño):
-  "Home", "Products", "Book appointment" (nav y footer de index/productos/
-  macbook/carrito) y "Cart" en la etiqueta móvil del carrito. El resto del
-  contenido (botones tipo "Agendar visita", textos) sigue en español.
+- **Rutas/URLs en INGLÉS desde 2026-07-20** (petición del dueño):
+  `/products`, `/book-appointment`, `/cart`, `/terms`, `/privacy`
+  (`/macbook-air-13`, `/admin` y `/` ya estaban en inglés). Las rutas
+  antiguas en español (`/productos`, `/solicitud-servicio`, `/carrito`,
+  `/terminos`, `/politicas`) siguen vivas como **redirect 301** en
+  `server/index.js` (el QR impreso de citas sigue funcionando). Todos los
+  enlaces internos actualizados. El TEXTO del menú quedó en español
+  (una traducción anterior a "Home/Products" fue revertida el mismo día).
 - `assets/img/logo-cruise.png`: logo con fondo transparente (410×193 tras
   recortar con `sharp.trim()`, letras EST blancas + icono dorado). Se usa
   arriba del título "¿Tu equipo necesita reparación?" en `.cta-copy` de
