@@ -1084,3 +1084,51 @@ footer {
 @media (prefers-reduced-motion: reduce) {
     .chat-fab-dot, .chat-panel { animation: none; }
 }
+
+/* ---------------- Mini-carrito lateral al agregar (solo PC) ---------------- */
+.cart-drawer-overlay {
+    position: fixed; inset: 0; z-index: 129; background: rgba(0, 0, 0, .45);
+    opacity: 0; pointer-events: none; transition: opacity .3s ease;
+}
+.cart-drawer-overlay.open { opacity: 1; pointer-events: auto; }
+.cart-drawer {
+    position: fixed; top: 0; right: 0; z-index: 130; height: 100vh; height: 100dvh;
+    width: 380px; max-width: 92vw; padding: 22px;
+    background: var(--panel); border-left: 1px solid var(--line);
+    display: flex; flex-direction: column; gap: 18px;
+    transform: translateX(105%); transition: transform .45s var(--ease);
+    box-shadow: -30px 0 80px rgba(0, 0, 0, .5);
+}
+.cart-drawer.open { transform: none; }
+.cd-head { display: flex; align-items: center; justify-content: space-between; }
+.cd-head strong { font-size: 18px; }
+.cd-close {
+    background: none; border: none; color: var(--muted); font-size: 26px; line-height: 1;
+    cursor: pointer; padding: 2px 8px; border-radius: 8px; font-family: inherit;
+}
+.cd-close:hover { color: #fff; background: rgba(255, 255, 255, .08); }
+.cd-item {
+    display: flex; align-items: center; gap: 14px;
+    background: rgba(255, 255, 255, .05); border: 1px solid var(--line); border-radius: 16px; padding: 14px;
+}
+.cd-item img { width: 64px; height: 64px; object-fit: cover; border-radius: 12px; }
+.cd-item-info { flex: 1; display: grid; gap: 3px; }
+.cd-item-info strong { font-size: 14.5px; }
+.cd-item-info span { color: var(--muted); font-size: 12px; }
+.cd-cond { color: #d4af37 !important; }
+.cd-subtotal {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 14px; border-top: 1px solid var(--line); font-size: 15px;
+}
+.cd-actions { display: grid; gap: 10px; }
+.cd-continue {
+    background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer;
+    text-decoration: underline; text-underline-offset: 3px; font-family: inherit; margin: 0 auto;
+}
+.cd-continue:hover { color: #fff; }
+@media (max-width: 860px) {
+    .cart-drawer, .cart-drawer-overlay { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .cart-drawer, .cart-drawer-overlay { transition: none; }
+}

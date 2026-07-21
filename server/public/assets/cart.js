@@ -263,8 +263,60 @@
                 price: Number(btn.dataset.price),
                 img: btn.dataset.img
             };
-            flyToCart(btn, function () { addItem(item); });
+            flyToCart(btn, function () { addItem(item); openCartDrawer(item); });
         });
+    }
+
+    /* ---------- Mini-carrito lateral al agregar (solo PC) ---------- */
+    var drawer = null, drawerOverlay = null;
+    function isDesktop() { return window.matchMedia('(min-width: 861px)').matches; }
+
+    function buildDrawer() {
+        drawerOverlay = document.createElement('div');
+        drawerOverlay.className = 'cart-drawer-overlay';
+        drawer = document.createElement('aside');
+        drawer.className = 'cart-drawer';
+        drawer.setAttribute('aria-label', T('Producto agregado al carrito', 'Product added to cart'));
+        document.body.appendChild(drawerOverlay);
+        document.body.appendChild(drawer);
+        drawerOverlay.addEventListener('click', closeDrawer);
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrawer(); });
+    }
+
+    function closeDrawer() {
+        if (!drawer) return;
+        drawer.classList.remove('open');
+        drawerOverlay.classList.remove('open');
+    }
+
+    function openCartDrawer(item) {
+        if (!isDesktop()) return;
+        if (!drawer) buildDrawer();
+        drawer.innerHTML =
+            '<div class="cd-head">' +
+                '<strong>' + T('Agregado al carrito', 'Added to cart') + '</strong>' +
+                '<button type="button" class="cd-close" aria-label="' + T('Cerrar', 'Close') + '">&times;</button>' +
+            '</div>' +
+            '<div class="cd-item">' +
+                '<img src="' + item.img + '" alt="">' +
+                '<div class="cd-item-info">' +
+                    '<strong>' + item.name + '</strong>' +
+                    '<span>' + item.desc + '</span>' +
+                    (item.cond ? '<span class="cd-cond">' + T('Condición: ', 'Condition: ') + condLabel(item.cond) + '</span>' : '') +
+                '</div>' +
+                '<strong>' + money(item.price) + '</strong>' +
+            '</div>' +
+            '<div class="cd-subtotal"><span>' + T('Subtotal', 'Subtotal') + '</span><strong>' + money(cartTotal()) + '</strong></div>' +
+            '<div class="cd-actions">' +
+                '<a href="/cart" class="btn btn-blue">' + T('Ir al carrito', 'Go to cart') + '</a>' +
+                '<a href="/book-appointment" class="btn btn-ghost">' + T('Reservar cita', 'Book appointment') + '</a>' +
+            '</div>' +
+            '<button type="button" class="cd-continue">' + T('Seguir comprando', 'Continue shopping') + '</button>';
+        drawer.querySelector('.cd-close').addEventListener('click', closeDrawer);
+        drawer.querySelector('.cd-continue').addEventListener('click', closeDrawer);
+        void drawer.offsetWidth; // reflow para animar la entrada
+        drawer.classList.add('open');
+        drawerOverlay.classList.add('open');
     }
 
     /* ---------- Página del carrito ---------- */
