@@ -541,6 +541,8 @@ a { -webkit-tap-highlight-color: transparent; }
     .cta-logo { width: 190px; margin-bottom: 34px; }
 }
 .cta-card .btn { width: 100%; }
+/* Iconos alineados en columna: posición fija a la izquierda, texto centrado */
+.cta-card .btn .btn-ico { position: absolute; left: 26px; top: 50%; transform: translateY(-50%); }
 .cta-qr {
     display: flex; align-items: center; gap: 14px;
     margin-top: 8px; padding-top: 18px;
