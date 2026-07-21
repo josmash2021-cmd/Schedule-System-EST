@@ -20,6 +20,7 @@ const htmlRoutes = {
   '/': 'index.html',
   '/products': 'products.html',
   '/macbook-air-13': 'macbook-air-13.html',
+  '/iphone-15-pro': 'iphone-15-pro.html',
   '/cart': 'cart.html',
   '/book-appointment': 'book-appointment.html',
   '/admin': 'admin.html',
