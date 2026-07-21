@@ -1089,8 +1089,10 @@ footer {
 .cart-drawer-overlay {
     position: fixed; inset: 0; z-index: 129; background: rgba(0, 0, 0, .5);
     backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
-    opacity: 0; pointer-events: none; transition: opacity .35s ease;
+    opacity: 0; pointer-events: none; transition: opacity .45s ease;
+    will-change: opacity;
 }
+.cart-drawer-overlay.closing { transition: opacity .3s ease; }
 .cart-drawer-overlay.open { opacity: 1; pointer-events: auto; }
 .cart-drawer {
     position: fixed; top: 0; right: 0; z-index: 130; height: 100vh; height: 100dvh;
@@ -1099,7 +1101,8 @@ footer {
     border-left: 1px solid rgba(212, 175, 55, .25);
     border-radius: 26px 0 0 26px;
     display: flex; flex-direction: column; gap: 18px;
-    transform: translateX(105%); transition: transform .55s cubic-bezier(.2, 1.08, .3, 1);
+    transform: translateX(105%); transition: transform .6s cubic-bezier(.22, 1, .36, 1);
+    will-change: transform;
     box-shadow: -40px 0 100px rgba(0, 0, 0, .6);
 }
 .cart-drawer::before {
@@ -1107,6 +1110,7 @@ footer {
     background: linear-gradient(90deg, transparent, #d4af37, transparent);
 }
 .cart-drawer.open { transform: none; }
+.cart-drawer.closing { transition: transform .38s cubic-bezier(.55, 0, .55, .95); }
 /* Entrada escalonada del contenido */
 .cart-drawer.open > * { animation: cdItemIn .5s var(--ease) backwards; }
 .cart-drawer.open > *:nth-child(2) { animation-delay: .08s; }

@@ -285,6 +285,8 @@
 
     function closeDrawer() {
         if (!drawer) return;
+        drawer.classList.add('closing');
+        drawerOverlay.classList.add('closing');
         drawer.classList.remove('open');
         drawerOverlay.classList.remove('open');
     }
@@ -320,6 +322,8 @@
             '<button type="button" class="cd-continue">' + T('Seguir comprando', 'Continue shopping') + '</button>';
         drawer.querySelector('.cd-close').addEventListener('click', closeDrawer);
         drawer.querySelector('.cd-continue').addEventListener('click', closeDrawer);
+        drawer.classList.remove('closing');
+        drawerOverlay.classList.remove('closing');
         void drawer.offsetWidth; // reflow para animar la entrada
         drawer.classList.add('open');
         drawerOverlay.classList.add('open');
