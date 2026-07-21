@@ -1099,7 +1099,7 @@ footer {
     border-left: 1px solid rgba(212, 175, 55, .25);
     border-radius: 26px 0 0 26px;
     display: flex; flex-direction: column; gap: 18px;
-    transform: translateX(105%); transition: transform .5s var(--ease);
+    transform: translateX(105%); transition: transform .55s cubic-bezier(.2, 1.08, .3, 1);
     box-shadow: -40px 0 100px rgba(0, 0, 0, .6);
 }
 .cart-drawer::before {
@@ -1152,7 +1152,7 @@ footer {
 }
 .cd-subtotal span { color: var(--muted); }
 .cd-subtotal strong { font-size: 19px; }
-.cd-actions { display: grid; gap: 10px; margin-top: 4px; }
+.cd-actions { display: grid; gap: 10px; margin-top: auto; padding-top: 14px; }
 .cd-actions .btn { position: relative; }
 .cd-actions .btn .btn-ico { position: absolute; left: 22px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; }
 .cd-continue {
