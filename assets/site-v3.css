@@ -796,6 +796,7 @@ a { -webkit-tap-highlight-color: transparent; }
     white-space: nowrap; flex-shrink: 0;
 }
 .trustpilot-badge svg, .trustpilot-badge img { flex-shrink: 0; }
+.trustpilot-badge strong { color: #fff; }
 
 @media (max-width: 720px) {
     .testimonial-card { flex: 0 0 280px; padding: 20px; }
