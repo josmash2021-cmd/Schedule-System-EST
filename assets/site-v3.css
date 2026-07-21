@@ -1173,3 +1173,18 @@ footer {
     .cart-drawer, .cart-drawer-overlay { transition: none; }
     .cart-drawer.open > *, .cd-check { animation: none; }
 }
+
+/* Animación contenida del botón Agregar al carrito (tarjetas) */
+.add-cart-card .atc-spin {
+    width: 16px; height: 16px; border-radius: 50%; flex: none;
+    border: 2px solid rgba(255, 255, 255, .25); border-top-color: #d4af37;
+    animation: atcSpin .6s linear infinite;
+}
+@keyframes atcSpin { to { transform: rotate(360deg); } }
+.add-cart-card .atc-done {
+    width: 17px; height: 17px; flex: none; color: #d4af37;
+    animation: cdCheckPop .4s cubic-bezier(.34, 1.56, .64, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+    .add-cart-card .atc-spin, .add-cart-card .atc-done { animation: none; }
+}

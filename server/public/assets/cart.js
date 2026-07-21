@@ -250,6 +250,29 @@
         });
     }
 
+    /* Animación corta y contenida dentro del botón (tarjetas del catálogo):
+       spinner → check dorado, y el mini-carrito abre fluido al confirmar. */
+    function quickAddCard(btn, item) {
+        if (btn.disabled) return;
+        var label = btn.querySelector('span');
+        btn.disabled = true;
+        if (label) { label.style.transition = 'opacity .15s'; label.style.opacity = '0'; }
+        btn.insertAdjacentHTML('beforeend', '<span class="atc-spin" aria-hidden="true"></span>');
+        setTimeout(function () {
+            var spin = btn.querySelector('.atc-spin');
+            if (spin) spin.remove();
+            btn.insertAdjacentHTML('beforeend', '<svg class="atc-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>');
+            addItem(item);
+            openCartDrawer(item);
+        }, 550);
+        setTimeout(function () {
+            var done = btn.querySelector('.atc-done');
+            if (done) done.remove();
+            if (label) label.style.opacity = '1';
+            btn.disabled = false;
+        }, 1200);
+    }
+
     function wireAddButton() {
         document.querySelectorAll('#addToCart, .add-cart-card').forEach(function (btn) {
             btn.addEventListener('click', function (e) {
@@ -263,7 +286,8 @@
                     price: Number(btn.dataset.price),
                     img: btn.dataset.img
                 };
-                flyToCart(btn, function () { addItem(item); openCartDrawer(item); });
+                if (btn.classList.contains('add-cart-card')) quickAddCard(btn, item);
+                else flyToCart(btn, function () { addItem(item); openCartDrawer(item); });
             });
         });
     }
