@@ -6,5 +6,7 @@
     "build": "echo 'Static site ready v3'",
     "dev:server": "cd server && npm run dev"
   },
-  "dependencies": {}
+  "dependencies": {
+    "puppeteer-core": "^25.3.0"
+  }
 }

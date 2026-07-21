@@ -89,17 +89,18 @@
        2) El producto aparece y cae dentro de la bolsa (rebote al recibir).
        3) La bolsa vuela en arco hasta el icono del carrito en el nav.
        4) El icono recibe el golpe y sube el contador (ahí se guarda el item). */
-    function restoreBtn(btn, label, rect) {
+    function restoreBtn(btn, label, rect, off) {
         // Regreso fluido SIN flash: la bolsa se retira mientras el botón
-        // está oculto, y el botón se expande de vuelta desde opacidad 0
+        // está oculto, y el botón se expande de vuelta desde opacidad 0,
+        // creciendo desde el centro del círculo
         var bag = btn.querySelector('.atc-bag');
         if (bag) bag.remove();
         btn.style.visibility = 'visible';
         btn.style.opacity = '0';
         label.animate([{ opacity: '0' }, { opacity: '1' }], { duration: 240, delay: 200, easing: 'ease-out', fill: 'forwards' });
         var back = btn.animate([
-            { width: '60px', height: '60px', borderRadius: '50%', opacity: '0' },
-            { width: rect.width + 'px', height: rect.height + 'px', borderRadius: '999px', opacity: '1' }
+            { left: (off.x + off.dx) + 'px', top: (off.y + off.dy) + 'px', width: '60px', height: '60px', borderRadius: '50%', opacity: '0' },
+            { left: off.x + 'px', top: off.y + 'px', width: rect.width + 'px', height: rect.height + 'px', borderRadius: '999px', opacity: '1' }
         ], { duration: 440, delay: 90, easing: 'cubic-bezier(.3,1.25,.4,1)', fill: 'forwards' });
         back.onfinish = function () {
             btn.getAnimations().forEach(function (a) { a.cancel(); });
@@ -124,7 +125,11 @@
         var parent = btn.parentElement;
         var prect = parent.getBoundingClientRect();
         parent.style.position = 'relative';
-        btn.style.cssText += ';position:absolute;left:' + (rect.left - prect.left) + 'px;top:' + (rect.top - prect.top) + 'px;width:' + rect.width + 'px;height:' + rect.height + 'px;margin:0;padding:0;z-index:70;display:flex;align-items:center;justify-content:center;';
+        var baseX = rect.left - prect.left;
+        var baseY = rect.top - prect.top;
+        // Desplazamiento para que el círculo colapse hacia el CENTRO del botón
+        var off = { x: baseX, y: baseY, dx: (rect.width - 60) / 2, dy: (rect.height - 60) / 2 };
+        btn.style.cssText += ';position:absolute;left:' + baseX + 'px;top:' + baseY + 'px;width:' + rect.width + 'px;height:' + rect.height + 'px;margin:0;padding:0;z-index:70;display:flex;align-items:center;justify-content:center;';
         btn.disabled = true;
         var label = btn.querySelector('span');
         label.style.transition = 'opacity .15s';
@@ -134,8 +139,8 @@
         btn.insertAdjacentHTML('beforeend', '<svg class="atc-bag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>');
         var bag = btn.querySelector('.atc-bag');
         btn.animate([
-            { width: rect.width + 'px', height: rect.height + 'px', borderRadius: '999px' },
-            { width: '60px', height: '60px', borderRadius: '50%' }
+            { left: off.x + 'px', top: off.y + 'px', width: rect.width + 'px', height: rect.height + 'px', borderRadius: '999px' },
+            { left: (off.x + off.dx) + 'px', top: (off.y + off.dy) + 'px', width: '60px', height: '60px', borderRadius: '50%' }
         ], { duration: 440, delay: 120, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'forwards' });
         // La bolsa se "arma" dibujándose: cuerpo → línea media → asa
         var drawTimes = [[400, 500], [900, 150], [1050, 230]];
@@ -182,7 +187,7 @@
                 // Icono no visible (menú móvil cerrado): salida local elegante
                 btn.animate([{ opacity: '1' }, { opacity: '0' }], { duration: 280, easing: 'ease-in', fill: 'forwards' }).onfinish = function () {
                     finish();
-                    restoreBtn(btn, label, rect);
+                    restoreBtn(btn, label, rect, off);
                 };
                 return;
             }
@@ -209,7 +214,7 @@
                     { transform: 'scale(1)' }
                 ], { duration: 380, easing: 'cubic-bezier(.34,1.56,.64,1)' });
                 finish();
-                restoreBtn(btn, label, rect);
+                restoreBtn(btn, label, rect, off);
             };
         }, 1900);
     }
