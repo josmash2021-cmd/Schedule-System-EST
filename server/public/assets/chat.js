@@ -8,6 +8,12 @@
     if (document.querySelector('.chat-widget')) return;
 
     var PHONE = '12055737840';
+
+    // Saludo según la hora local del cliente
+    var h = new Date().getHours();
+    var saludo = h < 12 ? 'buenos días' : (h < 19 ? 'buenas tardes' : 'buenas noches');
+    var mensaje = encodeURIComponent('Hola, ' + saludo + ', me gustaría hablar con un agente!');
+
     var wrap = document.createElement('div');
     wrap.className = 'chat-widget';
     wrap.innerHTML =
@@ -25,11 +31,11 @@
                 '<button type="button" class="chat-close" aria-label="Cerrar chat">&times;</button>' +
             '</div>' +
             '<div class="chat-panel-body">' +
-                '<p class="chat-msg">Hola, bienvenido a ElectronicST. ¿En qué te ayudamos? Escríbenos por WhatsApp o llámanos y te atendemos ahora mismo.</p>' +
+                '<p class="chat-msg">Hola, bienvenido a ElectronicST. ¿En qué te ayudamos? Escríbenos por WhatsApp o mensaje de texto y te atendemos ahora mismo.</p>' +
             '</div>' +
             '<div class="chat-panel-actions">' +
-                '<a class="chat-btn chat-btn-wa" href="https://wa.me/' + PHONE + '?text=' + encodeURIComponent('Hola, necesito ayuda con ElectronicST.') + '" target="_blank" rel="noopener">Escribir por WhatsApp</a>' +
-                '<a class="chat-btn chat-btn-ghost" href="tel:+1' + PHONE + '">Llamar: (205) 573-7840</a>' +
+                '<a class="chat-btn chat-btn-wa" href="https://wa.me/' + PHONE + '?text=' + mensaje + '" target="_blank" rel="noopener">Escribir por WhatsApp</a>' +
+                '<a class="chat-btn chat-btn-ghost" href="sms:+1' + PHONE + '?&body=' + mensaje + '">Mensaje de texto</a>' +
                 '<a class="chat-btn chat-btn-blue" href="/book-appointment">Reservar cita</a>' +
             '</div>' +
         '</div>';
