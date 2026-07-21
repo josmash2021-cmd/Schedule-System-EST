@@ -32,8 +32,15 @@
   incluya en el deploy. El build script detecta si los archivos fuente no están
   disponibles (por ejemplo, en el contenedor de Railway) y conserva `public/`
   sin destruirlo.
-- **Vercel/Netlify (legacy):** `vercel.json` y `netlify.toml` quedaron
-  obsoletos; `netlify/functions/` sigue siendo código alternativo no activo.
+- **Vercel/Netlify (legacy):** `netlify.toml` quedó obsoleto; `netlify/functions/` sigue siendo código alternativo no activo.
+  **PERO OJO (corrección 2026-07-20):** el dominio personalizado
+  **`electronicservicetechnology.com` apunta a VERCEL y está MUY VIVO** —
+  despliega solo desde GitHub master y el dueño usa ese dominio como el
+  principal. `vercel.json`: `cleanUrls` (sirve `*.html` sin extensión),
+  proxy `/api/*` → Railway, rewrites de las rutas EN (`/products` →
+  `productos.html`, etc.) y redirects permanentes de las rutas ES. Si se
+  agregan/renombran rutas, hay que actualizar AMBOS: `server/index.js`
+  (Railway) y `vercel.json` (dominio personalizado).
   `qr-cita.png` apuntaba a la URL vieja de Vercel; ahora el sitio vive en
   Railway y el QR debería regenerarse/apuntar a
   `https://schedule-system-est-production.up.railway.app/solicitud-servicio` si
