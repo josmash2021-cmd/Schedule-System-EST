@@ -45,9 +45,23 @@
     var panel = wrap.querySelector('.chat-panel');
     var closeBtn = wrap.querySelector('.chat-close');
 
+    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     function setOpen(open) {
-        panel.hidden = !open;
-        fab.setAttribute('aria-expanded', String(open));
+        if (open) {
+            panel.classList.remove('closing');
+            panel.hidden = false;
+            fab.setAttribute('aria-expanded', 'true');
+        } else if (!panel.hidden) {
+            fab.setAttribute('aria-expanded', 'false');
+            if (reducedMotion) { panel.hidden = true; return; }
+            panel.classList.add('closing');
+            panel.addEventListener('animationend', function done() {
+                panel.removeEventListener('animationend', done);
+                panel.classList.remove('closing');
+                panel.hidden = true;
+            });
+        }
     }
 
     fab.addEventListener('click', function (e) {

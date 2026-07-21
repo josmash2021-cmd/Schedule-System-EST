@@ -1016,11 +1016,18 @@ footer {
     background: var(--panel); border: 1px solid var(--line); border-radius: 20px; overflow: hidden;
     box-shadow: 0 30px 70px rgba(0, 0, 0, .6);
     transform-origin: bottom right;
-    animation: chatPanelIn .28s var(--ease);
+    animation: chatPanelIn .34s cubic-bezier(.22, 1.2, .36, 1);
 }
 @keyframes chatPanelIn {
-    from { opacity: 0; transform: translateY(12px) scale(.96); }
+    from { opacity: 0; transform: translateY(14px) scale(.92); }
     to { opacity: 1; transform: none; }
+}
+.chat-panel.closing {
+    animation: chatPanelOut .22s cubic-bezier(.5, 0, .75, 0) forwards;
+}
+@keyframes chatPanelOut {
+    from { opacity: 1; transform: none; }
+    to { opacity: 0; transform: translateY(12px) scale(.94); }
 }
 .chat-panel-head {
     display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
