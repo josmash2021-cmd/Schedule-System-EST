@@ -26,7 +26,7 @@
             '<div class="chat-panel-head">' +
                 '<div class="chat-panel-title">' +
                     '<strong>Atención al cliente</strong>' +
-                    '<span><i class="chat-online" aria-hidden="true"></i>En línea 24/7 · respondemos en minutos</span>' +
+                    '<span><i class="chat-online" aria-hidden="true"></i>En línea · respondemos en minutos</span>' +
                 '</div>' +
                 '<button type="button" class="chat-close" aria-label="Cerrar chat">&times;</button>' +
             '</div>' +
