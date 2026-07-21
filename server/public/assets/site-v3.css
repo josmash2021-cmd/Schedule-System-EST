@@ -1058,10 +1058,12 @@ footer {
 }
 .chat-panel-actions { display: grid; gap: 8px; padding: 0 16px 16px; }
 .chat-btn {
+    position: relative;
     display: flex; align-items: center; justify-content: center; gap: 8px;
     padding: 11px 14px; border-radius: 12px; font-size: 13.5px; font-weight: 700;
     text-decoration: none; transition: transform .2s var(--ease), filter .2s;
 }
+.chat-btn .btn-ico { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); }
 .chat-btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
 .chat-btn-wa { background: #22c55e; color: #04120a; }
 .chat-btn-ghost { background: rgba(255, 255, 255, .07); color: var(--text); border: 1px solid var(--line); }
