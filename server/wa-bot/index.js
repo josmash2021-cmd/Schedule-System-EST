@@ -11,7 +11,7 @@ import qrcode from 'qrcode-terminal';
 import pino from 'pino';
 import path from 'node:path';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import config from './src/config.js';
 import { responder, iaDisponible } from './src/ai.js';
 import { notificarDueno } from './src/notificar.js';
@@ -295,7 +295,23 @@ async function iniciarBot() {
   });
 }
 
-iniciarBot().catch((err) => {
-  console.error(`[bot] Error fatal: ${err.message}`);
-  process.exit(1);
-});
+// Arranque protegido: el servidor web (website-est/server/index.js) importa
+// este módulo y llama iniciarBotSeguro(); un fallo del bot no tumba la web.
+export async function iniciarBotSeguro() {
+  try {
+    await iniciarBot();
+  } catch (err) {
+    console.error(`[bot] Error al iniciar: ${err.message}`);
+  }
+}
+
+// Auto-arranque solo en ejecución directa (`node index.js`), no al importarse
+// como módulo desde el servidor web.
+const esEjecucionDirecta = process.argv[1]
+  && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
+if (esEjecucionDirecta) {
+  iniciarBot().catch((err) => {
+    console.error(`[bot] Error fatal: ${err.message}`);
+    process.exit(1);
+  });
+}

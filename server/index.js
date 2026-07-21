@@ -10,7 +10,19 @@ const authRouter = require('./routes/auth');
 const app = express();
 
 app.use(cors({ origin: CORS_ORIGIN }));
-app.use(express.json());
+app.use(express.json({
+  // Guardar el body crudo SOLO del webhook de Instagram: la verificación de
+  // firma X-Hub-Signature-256 (HMAC-SHA256) necesita los bytes exactos.
+  verify: (req, _res, buf) => {
+    if (req.originalUrl?.startsWith('/api/instagram/webhook')) req.rawBody = buf;
+  }
+}));
+
+// Webhook de Instagram del bot Angel (server/ig-bot/igWebhook.js, módulo ESM).
+// Va DESPUÉS del express.json() global y nunca debe tumbar el servidor.
+import('./ig-bot/igWebhook.js')
+  .then((m) => app.use(m.default || m.router))
+  .catch((err) => console.error('[ig] No se pudo montar el webhook de Instagram:', err.message));
 
 // Servir frontend estático desde server/public/
 app.use(express.static(path.join(__dirname, 'public')));
@@ -66,10 +78,10 @@ async function start() {
     console.log(`Server listening on port ${PORT}`);
   });
 
-  // Bot de WhatsApp (Angel): corre en el mismo proceso (ver server/bot/).
+  // Bot de WhatsApp (Angel): corre en el mismo proceso (ver server/wa-bot/).
   // Se puede desactivar con BOT_ENABLED=false. Un fallo del bot no tumba la web.
   if (process.env.BOT_ENABLED !== 'false') {
-    import('./bot/index.js')
+    import('./wa-bot/index.js')
       .then((m) => m.iniciarBotSeguro())
       .catch((err) => console.error('[bot] No se pudo iniciar:', err.message));
   }

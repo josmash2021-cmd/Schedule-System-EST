@@ -1,0 +1,23 @@
+{
+  "nombre": "ElectronicST",
+  "descripcion": "Tienda de confianza para MacBook, iPhone y servicio técnico especializado en computadoras, PCs, laptops, tablets, teléfonos y iPhones de cualquier marca y modelo. Atención personalizada, en tu idioma y sin presión.",
+  "direccion": "3659 Lorna Rd, Suite 157, Hoover, AL 35216, Estados Unidos",
+  "telefono": "+1 (205) 573-7840",
+  "sitioWeb": "https://electronicservicetechnology.com/",
+  "horarios": {
+    "lunesASabado": "10:00 a.m. - 3:00 p.m.",
+    "domingo": "Cerrado"
+  },
+  "zonasDeServicio": "Alabama (tienda en Hoover) y el sur de Florida: Miami, Fort Lauderdale y áreas cercanas. Entrega confiable.",
+  "garantias": "Todos los equipos incluyen garantía real y soporte post-venta. Compra con confianza.",
+  "serviciosReparacion": [
+    "Reparación de computadoras y PCs de escritorio (cualquier marca y modelo)",
+    "Reparación de laptops de cualquier marca y modelo (Apple, HP, Dell, Lenovo, etc.)",
+    "Reparación de tablets y iPads de cualquier modelo",
+    "Reparación de teléfonos y iPhones de cualquier marca y modelo (pantallas, baterías, puertos de carga, etc.)",
+    "Mantenimiento preventivo y limpieza de equipos",
+    "Diagnóstico sin costo (un técnico confirma falla y precio antes de reparar)",
+    "Asesoría personalizada para elegir el equipo ideal"
+  ],
+  "notas": "Las compras son con recogida en tienda (in-store pickup) agendando cita. También se puede agendar en línea en https://electronicservicetechnology.com/book-appointment"
+}

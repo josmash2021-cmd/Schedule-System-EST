@@ -1,0 +1,42 @@
+[
+  {
+    "tipo": "laptop",
+    "nombre": "MacBook Air 13\"",
+    "specs": "Intel i5, 8 GB RAM, 256 GB SSD. Ligera, ideal para estudio y trabajo diario",
+    "precio": "$150 - $250 según condición del equipo",
+    "moneda": "USD",
+    "disponibilidad": "Disponible"
+  },
+  {
+    "tipo": "iphone",
+    "nombre": "iPhone 15 Pro",
+    "specs": "Chip A17 Pro, 256 GB, batería al 90%, desbloqueado, sin caja",
+    "precio": "$550",
+    "moneda": "USD",
+    "disponibilidad": "Última unidad"
+  },
+  {
+    "tipo": "laptop",
+    "nombre": "MacBook Pro",
+    "specs": "Modelos con chip M3 Pro, hasta 22 horas de batería, rendimiento profesional",
+    "precio": "Consultar modelos y precios disponibles",
+    "moneda": "USD",
+    "disponibilidad": "Bajo pedido / consultar"
+  },
+  {
+    "tipo": "iphone",
+    "nombre": "iPhone 16 / iPhone 16 Pro",
+    "specs": "Chip A18 Pro, cámara Pro, titanio. Nueva generación de iPhone",
+    "precio": "Desde $400",
+    "moneda": "USD",
+    "disponibilidad": "Bajo pedido / consultar"
+  },
+  {
+    "tipo": "tablet",
+    "nombre": "iPad y tablets",
+    "specs": "Equipos iOS y tablets de varios modelos",
+    "precio": "Consultar modelos y precios disponibles",
+    "moneda": "USD",
+    "disponibilidad": "Bajo pedido / consultar"
+  }
+]

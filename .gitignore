@@ -5,8 +5,15 @@ node_modules/
 .vercel
 
 # Bot de WhatsApp (artefactos locales)
-server/bot/node_modules/
-server/bot/auth_info/
-server/bot/data/
-server/bot/logs/
-server/bot/.env
+server/wa-bot/node_modules/
+server/wa-bot/auth_info/
+server/wa-bot/data/
+server/wa-bot/logs/
+server/wa-bot/.env
+
+# Bot de Instagram (artefactos locales)
+server/ig-bot/node_modules/
+server/ig-bot/auth_info/
+server/ig-bot/data/
+server/ig-bot/logs/
+server/ig-bot/.env

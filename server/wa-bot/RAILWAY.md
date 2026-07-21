@@ -29,7 +29,7 @@ sigue corriendo, y se puede desactivar con `BOT_ENABLED=false`.
 
 - Las dependencias del bot están fusionadas en `server/package.json`
   (Baileys, openai, pino, qrcode-terminal).
-- Datos del negocio, catálogo y fotos: `server/bot/config/*.json`
+- Datos del negocio, catálogo y fotos: `server/wa-bot/config/*.json`
   (se aplican al reiniciar el servicio).
-- El bot también puede correr solo: `cd server/bot && node index.js`
+- El bot también puede correr solo: `cd server/wa-bot && node index.js`
   (útil para pruebas locales con su propio `.env`).
