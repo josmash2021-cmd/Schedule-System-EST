@@ -13,7 +13,7 @@ import config from './config.js';
 const execFileAsync = promisify(execFile);
 
 const API_KEY = process.env.ELEVENLABS_API_KEY || '';
-const VOZ_ID = process.env.ELEVENLABS_VOICE_ID || 'O5hbneAmtjLMgfg5UFIm';
+const VOZ_ID = process.env.ELEVENLABS_VOICE_ID || 'NKNnfxyJilN0daSOIf11';
 const MODELO = 'eleven_v3';
 
 // Zona horaria del negocio (Hoover, Alabama) — la misma que usa src/ai.js.
@@ -26,9 +26,9 @@ const CACHE_DIR = path.join(config.dataDir, 'voz');
 // cacheado, así que al cambiarla los audios viejos se ignoran y se
 // regeneran solos (local y en el volumen de Railway).
 const SLUGS = {
-  'buenos días': 'buenos-dias-v4',
-  'buenas tardes': 'buenas-tardes-v4',
-  'buenas noches': 'buenas-noches-v4'
+  'buenos días': 'buenos-dias-v5',
+  'buenas tardes': 'buenas-tardes-v5',
+  'buenas noches': 'buenas-noches-v5'
 };
 
 let cliente = null;
@@ -125,15 +125,15 @@ async function asegurarAudios(saludo) {
 // noches" después. Se genera cada una una sola vez (caché en disco).
 const DESPEDIDAS = {
   'buenos días': {
-    slug: 'despedida-v2',
+    slug: 'despedida-v3',
     texto: 'Perfecto, cualquier duda o pregunta estamos a la orden, ¡que tenga buen día!'
   },
   'buenas tardes': {
-    slug: 'despedida-tardes-v2',
+    slug: 'despedida-tardes-v3',
     texto: 'Perfecto, cualquier duda o pregunta estamos a la orden, ¡que tenga buenas tardes!'
   },
   'buenas noches': {
-    slug: 'despedida-noches-v2',
+    slug: 'despedida-noches-v3',
     texto: 'Perfecto, cualquier duda o pregunta estamos a la orden, ¡que tenga buenas noches!'
   }
 };
