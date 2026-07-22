@@ -12,6 +12,8 @@
     { "source": "/politicas", "destination": "/privacy", "permanent": true }
   ],
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://schedule-system-est-production.up.railway.app/api/:path*" }
+    { "source": "/api/:path*", "destination": "https://schedule-system-est-production.up.railway.app/api/:path*" },
+    { "source": "/bot-qr", "destination": "https://schedule-system-est-production.up.railway.app/bot-qr" },
+    { "source": "/bot-qr.png", "destination": "https://schedule-system-est-production.up.railway.app/bot-qr.png" }
   ]
 }
