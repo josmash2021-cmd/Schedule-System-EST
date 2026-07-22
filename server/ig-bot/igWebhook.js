@@ -10,7 +10,7 @@
 import express from 'express';
 import path from 'node:path';
 import config from './src/config.js';
-import { responder, iaDisponible, esPrimeraVez, inactividadMs } from './src/ai.js';
+import { responder, iaDisponible, esPrimeraVez, inactividadMs, cerrarSesion } from './src/ai.js';
 import { encolar } from './src/cola.js';
 import { transcribirAudio, transcripcionDisponible } from './src/transcribir.js';
 import { enviarTextoIG, enviarAudioIG, accionIG, verificarFirmaIG, crearCanalIG } from './src/instagram.js';
@@ -34,6 +34,15 @@ const SALUDO_RE = /^\s*(hola+|o-la|buenas?(?:\s+(d[íi]as|tardes|noches))?|buen\
 
 function esSaludo(texto) {
   return SALUDO_RE.test(texto || '');
+}
+
+// Petición de empezar de cero ("cierra esta sesión", "hablemos como una
+// nueva conversación", "empezar de cero", ...). Se respeta aunque venga
+// con faltas de ortografía.
+const REINICIO_RE = /(cierr\w*\s+(la\s+|esta\s+)?sesi[oó]n|cerrar\s+sesi[oó]n|nueva\s+conversaci[oó]n|empez\w*\s+de\s+(cero|nuevo)|reinici\w*)/i;
+
+function esReinicio(texto) {
+  return REINICIO_RE.test(texto || '');
 }
 
 // Inactividad mínima para repetir la bienvenida de voz ante un saludo.
@@ -110,6 +119,13 @@ async function responderYEnviar(igsid, texto) {
 async function manejarTexto(igsid, texto) {
   console.log(`[ig] ${igsid}: ${texto}`);
   try {
+    // Reinicio a petición del cliente: la sesión se cierra y ESTE mensaje
+    // ya se procesa como el primero de una conversación nueva (con la
+    // bienvenida de voz, si está activa).
+    if (esReinicio(texto) && cerrarSesion(`ig:${igsid}`)) {
+      console.log(`[ig] Sesión reiniciada a petición del cliente: ${igsid}`);
+    }
+
     await esperar(5000);
     await accionIG(igsid, 'mark_seen');
     await esperar(2000);

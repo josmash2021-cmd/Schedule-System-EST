@@ -511,6 +511,15 @@ export function inactividadMs(jid) {
   return sesion ? Date.now() - sesion.ultimaActividad : Infinity;
 }
 
+// Cierra la sesión de un chat a petición del cliente ("cerrar sesión",
+// "empezar de cero"...): el siguiente mensaje arranca una conversación
+// nueva, con bienvenida de voz si está activa.
+export function cerrarSesion(jid) {
+  const habia = historiales.delete(jid);
+  if (habia) persistirHistoriales();
+  return habia;
+}
+
 /**
  * Genera una respuesta del asistente para el mensaje de un usuario,
  * manteniendo historial por usuario y ejecutando tool calls si el modelo los pide.

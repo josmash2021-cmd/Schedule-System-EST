@@ -13,7 +13,7 @@ import path from 'node:path';
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import config from './src/config.js';
-import { responder, iaDisponible, esPrimeraVez, inactividadMs } from './src/ai.js';
+import { responder, iaDisponible, esPrimeraVez, inactividadMs, cerrarSesion } from './src/ai.js';
 import { vozDisponible, obtenerAudioBienvenida } from './src/voz.js';
 import { notificarDueno } from './src/notificar.js';
 import { transcribirAudio, transcripcionDisponible } from './src/transcribir.js';
@@ -102,6 +102,15 @@ function esSaludo(texto) {
   return SALUDO_RE.test(texto || '');
 }
 
+// Petición de empezar de cero ("cierra esta sesión", "hablemos como una
+// nueva conversación", "empezar de cero", ...). Se respeta aunque venga
+// con faltas de ortografía.
+const REINICIO_RE = /(cierr\w*\s+(la\s+|esta\s+)?sesi[oó]n|cerrar\s+sesi[oó]n|nueva\s+conversaci[oó]n|empez\w*\s+de\s+(cero|nuevo)|reinici\w*)/i;
+
+function esReinicio(texto) {
+  return REINICIO_RE.test(texto || '');
+}
+
 // Inactividad mínima para repetir la bienvenida de voz ante un saludo.
 const INACTIVIDAD_SALUDO_MS = 3 * 60 * 60 * 1000; // 3 horas
 
@@ -172,6 +181,13 @@ async function manejarMensaje(sock, mensaje) {
   }
   if (!telefono) telefono = jid.split('@')[0];
   console.log(`[mensaje] ${telefono}: ${texto}`);
+
+  // Reinicio a petición del cliente: la sesión se cierra y ESTE mensaje
+  // ya se procesa como el primero de una conversación nueva (con la
+  // bienvenida de voz, si está activa).
+  if (esReinicio(texto) && cerrarSesion(jid)) {
+    console.log(`[mensaje] Sesión reiniciada a petición del cliente: ${telefono}`);
+  }
 
   // La presencia ("escribiendo...") es decorativa: si WhatsApp la rechaza
   // (p. ej. ack 463 por contactos LID), no debe frenar la respuesta.
