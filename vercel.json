@@ -12,9 +12,9 @@
     { "source": "/politicas", "destination": "/privacy", "permanent": true }
   ],
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://schedule-system-est-production.up.railway.app/api/:path*" },
-    { "source": "/bot-qr", "destination": "https://schedule-system-est-production.up.railway.app/bot-qr" },
-    { "source": "/bot-qr.png", "destination": "https://schedule-system-est-production.up.railway.app/bot-qr.png" },
-    { "source": "/voz/:path*", "destination": "https://schedule-system-est-production.up.railway.app/voz/:path*" }
+    { "source": "/api/:path*", "destination": "https://www.electronicservicetechnology.com/api/:path*" },
+    { "source": "/bot-qr", "destination": "https://www.electronicservicetechnology.com/bot-qr" },
+    { "source": "/bot-qr.png", "destination": "https://www.electronicservicetechnology.com/bot-qr.png" },
+    { "source": "/voz/:path*", "destination": "https://www.electronicservicetechnology.com/voz/:path*" }
   ]
 }
