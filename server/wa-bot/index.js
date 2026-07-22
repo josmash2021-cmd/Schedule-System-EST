@@ -129,9 +129,15 @@ function esReinicio(texto) {
 }
 
 // Mensaje que es SOLO una despedida o agradecimiento, sin pregunta ni
-// contenido ("muchísimas gracias", "que pase buen día", "adiós"...).
-// Se responde con la nota de voz de despedida (sin texto repetido).
-const SOLO_DESPEDIDA_RE = /^\s*(?:(?:(?:much[íi]simas|muchas|mil|ok(?:i)?|vale|perfecto)(?:\s+(?:de\s+verdad|por\s+todo|por\s+todo\s+esto))?\s+)*gracias(?:\s+(?:de\s+verdad|por\s+todo|por\s+su\s+(?:ayuda|tiempo)|por\s+tu\s+ayuda|amigo|amiga|rey|brou))?|que\s+pase[n]?s?\s+buen[oa]?s?\s+(?:d[íi]as?|tardes?|noches?)|que\s+tenga[n]?s?\s+buen[oa]?s?\s+(?:d[íi]as?|tardes?|noches?)|adi[oó]s|hasta\s+(?:luego|pronto|mañana)|nos\s+vemos|chao|bye(?:\s+bye)?|thank\s+you(?:\s+so\s+much)?|thanks(?:\s+a\s+lot)?)[\s!¡?¿.,🙏😊👍]*$/iu;
+// contenido ("muchísimas gracias", "gracias que tenga buen día", "está
+// bien gracias", "adiós"...). Se responde con la nota de voz de
+// despedida (sin texto repetido). Se evalúa ANTES que el saludo para que
+// "gracias que tenga buen día" no dispare la bienvenida por error.
+const FRASE_GRACIAS = /(?:(?:much[íi]simas|muchas|mil|ok(?:i)?|vale|perfecto|est[áa]\s+bien|de\s+nada)\s+)*gracias(?:\s+(?:de\s+verdad|por\s+todo|por\s+su\s+(?:ayuda|tiempo)|por\s+tu\s+ayuda|amigo|amiga|rey|brou))?/;
+const FRASE_QUE_TENGA = /que\s+(?:pase[n]?s?|tenga[n]?s?)\s+buen[oa]?s?\s+(?:d[íi]as?|tardes?|noches?)/;
+const FRASE_ADIOS = /(?:adi[oó]s|hasta\s+(?:luego|pronto|mañana)|nos\s+vemos|chao|bye(?:\s+bye)?|thank\s+you(?:\s+so\s+much)?|thanks(?:\s+a\s+lot)?|igualmente|est[áa]\s+bien(?:\s+(?:mi\s+rey|brou|amigo|amiga))?)/;
+const SOLO_DESPEDIDA_RE = new RegExp(
+  '^\\s*(?:(?:' + FRASE_GRACIAS.source + '|' + FRASE_QUE_TENGA.source + '|' + FRASE_ADIOS.source + ')[\\s!¡?¿.,🙏😊👍]*)+$', 'iu');
 
 function esSoloDespedida(texto) {
   return SOLO_DESPEDIDA_RE.test(texto || '');
@@ -251,6 +257,35 @@ async function manejarMensaje(sock, mensaje) {
     try { await sock.readMessages([mensaje.key]); } catch { /* best-effort */ }
     await new Promise((r) => setTimeout(r, 2000));
 
+    // Despedida por nota de voz — se evalúa ANTES que la bienvenida: un
+    // mensaje como "gracias que tenga buen día" contiene "buen día" y
+    // dispararía el saludo por error. Si el cliente SOLO se despide o
+    // agradece ("muchísimas gracias", "está bien gracias", "adiós"...),
+    // se responde con el audio de despedida y no se manda texto repetido.
+    // Mismo antispam de 15 min que la bienvenida.
+    if (esSoloDespedida(texto) && vozDisponible() &&
+        (Date.now() - (ultimaVozPorChat.get(jid) || 0)) >= ANTISPAM_VOZ_MS) {
+      try {
+        await presencia('recording');
+        const audioDesp = await obtenerAudioDespedida();
+        if (audioDesp) {
+          await sock.sendMessage(jid, {
+            audio: audioDesp,
+            mimetype: 'audio/ogg; codecs=opus',
+            ptt: true
+          });
+          ultimaVozPorChat.set(jid, Date.now());
+          console.log(`[mensaje] Nota de voz de despedida enviada a ${telefono}`);
+          await presencia('paused');
+          sembrarDespedidaVoz(jid);
+          marcarProcesado(jid, tsMensaje);
+          return;
+        }
+      } catch (err) {
+        console.error(`[mensaje] No se pudo enviar la despedida de voz: ${err.message}`);
+      }
+    }
+
     // Bienvenida por nota de voz. Se envía cuando:
     //  a) es el primer mensaje de la conversación (sesión nueva),
     //  b) el cliente vuelve a SALUDAR ("hola", "buenas noches", etc.)
@@ -294,34 +329,6 @@ async function manejarMensaje(sock, mensaje) {
         }
       } catch (err) {
         console.error(`[mensaje] No se pudo enviar la bienvenida de voz: ${err.message}`);
-      }
-    }
-
-    // Despedida por nota de voz: si el cliente SOLO se despide o agradece
-    // ("muchísimas gracias", "que pase buen día", "adiós"...), se responde
-    // con el audio "Perfecto, cualquier duda o pregunta estamos a la
-    // orden, ¡que tenga buen día!" y no se manda texto repetido.
-    // Mismo antispam de 15 min que la bienvenida.
-    if (esSoloDespedida(texto) && vozDisponible() &&
-        (Date.now() - (ultimaVozPorChat.get(jid) || 0)) >= ANTISPAM_VOZ_MS) {
-      try {
-        await presencia('recording');
-        const audioDesp = await obtenerAudioDespedida();
-        if (audioDesp) {
-          await sock.sendMessage(jid, {
-            audio: audioDesp,
-            mimetype: 'audio/ogg; codecs=opus',
-            ptt: true
-          });
-          ultimaVozPorChat.set(jid, Date.now());
-          console.log(`[mensaje] Nota de voz de despedida enviada a ${telefono}`);
-          await presencia('paused');
-          sembrarDespedidaVoz(jid);
-          marcarProcesado(jid, tsMensaje);
-          return;
-        }
-      } catch (err) {
-        console.error(`[mensaje] No se pudo enviar la despedida de voz: ${err.message}`);
       }
     }
 

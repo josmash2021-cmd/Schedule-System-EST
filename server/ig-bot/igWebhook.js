@@ -46,9 +46,15 @@ function esSoloSaludo(texto) {
 }
 
 // Mensaje que es SOLO una despedida o agradecimiento, sin pregunta ni
-// contenido ("muchísimas gracias", "que pase buen día", "adiós"...).
-// Se responde con la nota de voz de despedida (sin texto repetido).
-const SOLO_DESPEDIDA_RE = /^\s*(?:(?:(?:much[íi]simas|muchas|mil|ok(?:i)?|vale|perfecto)(?:\s+(?:de\s+verdad|por\s+todo|por\s+todo\s+esto))?\s+)*gracias(?:\s+(?:de\s+verdad|por\s+todo|por\s+su\s+(?:ayuda|tiempo)|por\s+tu\s+ayuda|amigo|amiga|rey|brou))?|que\s+pase[n]?s?\s+buen[oa]?s?\s+(?:d[íi]as?|tardes?|noches?)|que\s+tenga[n]?s?\s+buen[oa]?s?\s+(?:d[íi]as?|tardes?|noches?)|adi[oó]s|hasta\s+(?:luego|pronto|mañana)|nos\s+vemos|chao|bye(?:\s+bye)?|thank\s+you(?:\s+so\s+much)?|thanks(?:\s+a\s+lot)?)[\s!¡?¿.,🙏😊👍]*$/iu;
+// contenido ("muchísimas gracias", "gracias que tenga buen día", "está
+// bien gracias", "adiós"...). Se responde con la nota de voz de
+// despedida (sin texto repetido). Se evalúa ANTES que el saludo para que
+// "gracias que tenga buen día" no dispare la bienvenida por error.
+const FRASE_GRACIAS = /(?:(?:much[íi]simas|muchas|mil|ok(?:i)?|vale|perfecto|est[áa]\s+bien|de\s+nada)\s+)*gracias(?:\s+(?:de\s+verdad|por\s+todo|por\s+su\s+(?:ayuda|tiempo)|por\s+tu\s+ayuda|amigo|amiga|rey|brou))?/;
+const FRASE_QUE_TENGA = /que\s+(?:pase[n]?s?|tenga[n]?s?)\s+buen[oa]?s?\s+(?:d[íi]as?|tardes?|noches?)/;
+const FRASE_ADIOS = /(?:adi[oó]s|hasta\s+(?:luego|pronto|mañana)|nos\s+vemos|chao|bye(?:\s+bye)?|thank\s+you(?:\s+so\s+much)?|thanks(?:\s+a\s+lot)?|igualmente|est[áa]\s+bien(?:\s+(?:mi\s+rey|brou|amigo|amiga))?)/;
+const SOLO_DESPEDIDA_RE = new RegExp(
+  '^\\s*(?:(?:' + FRASE_GRACIAS.source + '|' + FRASE_QUE_TENGA.source + '|' + FRASE_ADIOS.source + ')[\\s!¡?¿.,🙏😊👍]*)+$', 'iu');
 
 function esSoloDespedida(texto) {
   return SOLO_DESPEDIDA_RE.test(texto || '');
@@ -155,6 +161,27 @@ async function manejarTexto(igsid, texto) {
     await accionIG(igsid, 'mark_seen');
     await esperar(2000);
 
+    // Despedida por nota de voz — se evalúa ANTES que la bienvenida (un
+    // "gracias que tenga buen día" contiene "buen día" y dispararía el
+    // saludo por error). Misma regla que WhatsApp: si el cliente SOLO se
+    // despide o agradece, se responde con el audio y no se manda texto.
+    if (esSoloDespedida(texto) && vozDisponible() &&
+        (Date.now() - (ultimaVozPorChat.get(igsid) || 0)) >= ANTISPAM_VOZ_MS) {
+      try {
+        const audioDesp = await obtenerM4aDespedida();
+        if (audioDesp) {
+          const url = `${BASE_PUBLICA}/voz/${path.basename(audioDesp.ruta)}`;
+          await enviarAudioIG(igsid, url);
+          ultimaVozPorChat.set(igsid, Date.now());
+          console.log(`[ig] Nota de voz de despedida enviada a ${igsid}`);
+          sembrarDespedidaVoz(`ig:${igsid}`);
+          return;
+        }
+      } catch (err) {
+        console.error(`[ig] No se pudo enviar la despedida de voz: ${err.message}`);
+      }
+    }
+
     // Bienvenida por nota de voz (misma regla que WhatsApp): primera vez
     // que escribe, cuando vuelve a SALUDAR tras 3+ horas sin actividad,
     // o cuando el saludo incluye la hora del día ("hola buenas tardes",
@@ -190,26 +217,6 @@ async function manejarTexto(igsid, texto) {
         }
       } catch (err) {
         console.error(`[ig] No se pudo enviar la bienvenida de voz: ${err.message}`);
-      }
-    }
-
-    // Despedida por nota de voz (misma regla que WhatsApp): si el cliente
-    // SOLO se despide o agradece ("muchísimas gracias", "que pase buen
-    // día"...), se responde con el audio de despedida y no se manda texto.
-    if (esSoloDespedida(texto) && vozDisponible() &&
-        (Date.now() - (ultimaVozPorChat.get(igsid) || 0)) >= ANTISPAM_VOZ_MS) {
-      try {
-        const audioDesp = await obtenerM4aDespedida();
-        if (audioDesp) {
-          const url = `${BASE_PUBLICA}/voz/${path.basename(audioDesp.ruta)}`;
-          await enviarAudioIG(igsid, url);
-          ultimaVozPorChat.set(igsid, Date.now());
-          console.log(`[ig] Nota de voz de despedida enviada a ${igsid}`);
-          sembrarDespedidaVoz(`ig:${igsid}`);
-          return;
-        }
-      } catch (err) {
-        console.error(`[ig] No se pudo enviar la despedida de voz: ${err.message}`);
       }
     }
 
