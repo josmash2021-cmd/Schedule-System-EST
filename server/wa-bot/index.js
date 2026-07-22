@@ -133,7 +133,7 @@ function esReinicio(texto) {
 // bien gracias", "adiós"...). Se responde con la nota de voz de
 // despedida (sin texto repetido). Se evalúa ANTES que el saludo para que
 // "gracias que tenga buen día" no dispare la bienvenida por error.
-const FRASE_GRACIAS = /(?:(?:much[íi]simas|muchas|mil|ok(?:i)?|vale|perfecto|est[áa]\s+bien|de\s+nada|no)\s+)*gracias(?:\s+(?:de\s+verdad|por\s+todo|por\s+su\s+(?:ayuda|tiempo)|por\s+tu\s+ayuda|mi\s+rey|amigo|amiga|rey|brou))?/;
+const FRASE_GRACIAS = /(?:(?:much[íi]simas|muchas|mil|ok(?:i)?|vale|perfecto|est[áa]\s+bien|de\s+nada|no)[\s,]+)*gracias(?:\s+(?:de\s+verdad|por\s+todo|por\s+su\s+(?:ayuda|tiempo)|por\s+tu\s+ayuda|mi\s+rey|amigo|amiga|rey|brou))?/;
 const FRASE_QUE_TENGA = /que\s+(?:pase[n]?s?|tenga[n]?s?)\s+buen[oa]?s?\s+(?:d[íi]as?|tardes?|noches?)/;
 const FRASE_ADIOS = /(?:adi[oó]s|hasta\s+(?:luego|pronto|mañana)|nos\s+vemos|chao|bye(?:\s+bye)?|thank\s+you(?:\s+so\s+much)?|thanks(?:\s+a\s+lot)?|igualmente|est[áa]\s+bien(?:\s+(?:mi\s+rey|brou|amigo|amiga))?)/;
 const SOLO_DESPEDIDA_RE = new RegExp(
