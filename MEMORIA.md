@@ -32,18 +32,21 @@
   incluya en el deploy. El build script detecta si los archivos fuente no están
   disponibles (por ejemplo, en el contenedor de Railway) y conserva `public/`
   sin destruirlo.
-- **Vercel/Netlify (legacy):** `netlify.toml` quedó obsoleto; `netlify/functions/` sigue siendo código alternativo no activo.
-  **PERO OJO (corrección 2026-07-20):** el dominio personalizado
-  **`electronicservicetechnology.com` apunta a VERCEL y está MUY VIVO** —
-  despliega solo desde GitHub master y el dueño usa ese dominio como el
-  principal. `vercel.json`: `cleanUrls` (sirve `*.html` sin extensión),
-  proxy `/api/*` → Railway y redirects permanentes de las rutas ES.
-  **Los archivos HTML se RENOMBRARON a inglés** (`products.html`,
-  `book-appointment.html`, `cart.html`, `terms.html`, `privacy.html`) —
-  así `cleanUrls` sirve las rutas EN nativamente sin rewrites (los
-  rewrites a `*.html` chocaban con cleanUrls y daban 404/loop).
-  Si se agregan/renombran rutas, hay que actualizar AMBOS: `server/index.js`
-  (Railway) y `vercel.json` (dominio personalizado), más `copy-frontend.js`.
+- **Stack actual (2026-07-22): TODO vive en Railway.** `vercel.json` fue
+  eliminado y Vercel ya no es parte del despliegue: el servidor Express de
+  Railway sirve el frontend (`server/public/`), la API, el bot y `/bot-qr`.
+  `netlify.toml` quedó obsoleto; `netlify/functions/` sigue siendo código
+  alternativo no activo.
+  **PENDIENTE fuera del repo:** apuntar el DNS de
+  `electronicservicetechnology.com` a Railway (dominio personalizado del
+  servicio) y borrar el proyecto en el dashboard de Vercel. Hasta entonces
+  el dominio sigue sirviendo la copia vieja de Vercel (que tenía proxy
+  `/api/*` → Railway); la URL funcional hoy es
+  `https://schedule-system-est-production.up.railway.app`.
+  **Los archivos HTML están en inglés** (`products.html`,
+  `book-appointment.html`, `cart.html`, `terms.html`, `privacy.html`).
+  Si se agregan/renombran rutas, hay que actualizar `server/index.js`
+  y `copy-frontend.js`.
   `qr-cita.png` apuntaba a la URL vieja de Vercel; ahora el sitio vive en
   Railway y el QR debería regenerarse/apuntar a
   `https://schedule-system-est-production.up.railway.app/solicitud-servicio` si
@@ -491,15 +494,14 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   - `ac248bb` — iconos SVG en tarjetas de servicio.
   - `293686e` — fondo de citas ajustado en móvil.
   - `0bd0eb4` — Express sirve frontend completo.
-- Vercel quedó bloqueado por límite diario (`api-deployments-free-per-day`) y
-  ya no es el canal de producción.
+- Vercel se retiró del stack (2026-07-22): `vercel.json` eliminado y Railway
+  sirve frontend + API + bots. Falta mover el DNS del dominio a Railway.
 - URL de producción:
   `https://schedule-system-est-production.up.railway.app`.
 
 ## 10. Preguntas abiertas para el dueño del proyecto
 
-- ¿Confirmamos Vercel+Railway como único stack y retiramos `netlify/functions/`
-  y `netlify.toml` (o al revés)?
+- ¿Retiramos también `netlify/functions/` y `netlify.toml` (ya obsoletos)?
 - ¿El horario real es hasta las 3:00 p.m. (última cita 2:30) o se atiende a
   las 3:00?
 - ¿Se quiere unificar el tema visual (todo oscuro estilo Apple o todo claro)?
