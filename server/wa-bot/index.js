@@ -244,12 +244,16 @@ async function manejarMensaje(sock, mensaje) {
 
     // La IA separa los mensajes con ||| : cada uno va como burbuja propia
     // de WhatsApp, con "escribiendo..." y una pausa según su largo, como
-    // si una persona los estuviera tecleando.
-    const burbujas = String(respuesta)
+    // si una persona los estuviera tecleando. Máximo 3 burbujas, pero
+    // NADA se tira: las sobrantes se fusionan en la tercera (antes se
+    // cortaban y los mensajes llegaban incompletos).
+    const partes = String(respuesta)
       .split('|||')
       .map((s) => s.trim())
-      .filter(Boolean)
-      .slice(0, 3);
+      .filter(Boolean);
+    const burbujas = partes.length <= 3
+      ? partes
+      : [...partes.slice(0, 2), partes.slice(2).join('\n')];
     for (const burbuja of burbujas) {
       await presencia('composing');
       await new Promise((r) => setTimeout(r, 800 + Math.min(burbuja.length * 25, 2500)));

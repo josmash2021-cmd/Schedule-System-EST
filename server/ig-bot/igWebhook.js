@@ -86,11 +86,16 @@ async function responderYEnviar(igsid, texto) {
     }
   }
 
-  const burbujas = String(respuesta)
+  const partes = String(respuesta)
     .split('|||')
     .map((s) => s.trim())
-    .filter(Boolean)
-    .slice(0, 3);
+    .filter(Boolean);
+  // Máximo 3 burbujas, pero NADA se tira: si la IA manda más, las
+  // sobrantes se fusionan en la tercera (antes se cortaban y los
+  // mensajes llegaban incompletos).
+  const burbujas = partes.length <= 3
+    ? partes
+    : [...partes.slice(0, 2), partes.slice(2).join('\n')];
   for (const burbuja of burbujas) {
     await accionIG(igsid, 'typing_on');
     await esperar(800 + Math.min(burbuja.length * 25, 2500));
