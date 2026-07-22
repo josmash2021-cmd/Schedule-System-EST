@@ -363,12 +363,14 @@ async function iniciarBot() {
       return;
     }
 
-    // Mensajes que llegaron mientras el bot estaba apagado (type 'append'):
-    // por cada chat se toma el ÚLTIMO mensaje ENTRANTE (texto o nota de
+    // Mensajes que llegaron mientras el bot estaba apagado. WhatsApp los
+    // entrega al reconectar como 'append' (recientes) o 'history' (sinc
+    // de historial, típico tras vincular con QR nuevo): se tratan igual.
+    // Por cada chat se toma el ÚLTIMO mensaje ENTRANTE (texto o nota de
     // voz) y se responde solo si es más nuevo que lo ya procesado (registro
     // persistente en data/chats-estado.json) — así no importa si el bot
     // escribió después en ese chat (p. ej. notificaciones al dueño).
-    if (type === 'append') {
+    if (type === 'append' || type === 'history') {
       const ultimoPorChat = new Map();
       for (const m of messages) {
         const jid = m.key?.remoteJid || '';
