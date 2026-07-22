@@ -26,6 +26,14 @@ const logger = pino({ level: 'warn' });
 // (para no spamear al dueño con el mismo aviso en cada mensaje).
 const avisadosSinIA = new Set();
 
+// Último QR de vinculación recibido de WhatsApp (null cuando ya está
+// conectado). El servidor web lo expone como imagen en /bot-qr.
+let ultimoQR = null;
+
+export function obtenerQR() {
+  return ultimoQR;
+}
+
 // Registro persistente del último mensaje entrante procesado por chat
 // (timestamp en segundos). Así, tras un reinicio, se responde lo que
 // quedó pendiente aunque el bot haya escrito después en ese chat.
@@ -273,6 +281,9 @@ async function iniciarBot() {
     const { connection, lastDisconnect, qr } = update;
 
     if (qr) {
+      // Se guarda el QR crudo para que el servidor web lo muestre como
+      // imagen en /bot-qr (escanearlo desde los logs es difícil y caduca).
+      ultimoQR = qr;
       console.log('\n[bot] Escanea este código QR con WhatsApp (Dispositivos vinculados):\n');
       qrcode.generate(qr, { small: true });
     }
@@ -289,6 +300,7 @@ async function iniciarBot() {
     }
 
     if (connection === 'open') {
+      ultimoQR = null; // ya vinculado: no hay QR que mostrar
       console.log(`[bot] ✅ Conectado a WhatsApp como "${config.negocio.nombre}". Listo para atender clientes.`);
       iniciarAprendizaje(sock);
       if (!iaDisponible()) {
