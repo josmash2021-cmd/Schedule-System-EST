@@ -10,7 +10,7 @@ import {
 import qrcode from 'qrcode-terminal';
 import pino from 'pino';
 import path from 'node:path';
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import config from './src/config.js';
 import { responder, iaDisponible, esPrimeraVez, inactividadMs } from './src/ai.js';
@@ -29,6 +29,9 @@ const avisadosSinIA = new Set();
 // Último QR de vinculación recibido de WhatsApp (null cuando ya está
 // conectado). El servidor web lo expone como imagen en /bot-qr.
 let ultimoQR = null;
+
+// Historial de auto-reseteos por logout (protección antibucle).
+let reseteosLogout = [];
 
 export function obtenerQR() {
   return ultimoQR;
@@ -295,7 +298,26 @@ async function iniciarBot() {
       if (!fueLogout) {
         iniciarBot(); // reconexión automática
       } else {
-        console.log('[bot] Sesión cerrada (logout). Borra la carpeta auth_info/ y vuelve a iniciar para escanear un nuevo QR.');
+        // Logout (401): las credenciales guardadas ya no sirven (típico
+        // cuando dos instancias pisan la misma sesión en un deploy).
+        // Se borran y se arranca de cero: sale un QR nuevo solo.
+        // Límite de seguridad: máximo 3 reseteos en 10 min para no
+        // entrar en bucle si WhatsApp tiene la cuenta restringida.
+        const ahora = Date.now();
+        reseteosLogout = reseteosLogout.filter((t) => ahora - t < 10 * 60 * 1000);
+        if (reseteosLogout.length >= 3) {
+          console.error('[bot] Sesión cerrada (logout) por 3ª vez en 10 min. No se reintenta: revisa la vinculación manualmente.');
+          return;
+        }
+        reseteosLogout.push(ahora);
+        console.log('[bot] Sesión cerrada (logout). Reseteando credenciales para generar un QR nuevo...');
+        try {
+          rmSync(config.authDir, { recursive: true, force: true });
+          console.log('[bot] Credenciales eliminadas. Reiniciando en 10s para generar QR nuevo...');
+        } catch (err) {
+          console.error(`[bot] No se pudo borrar auth_info: ${err.message}`);
+        }
+        setTimeout(() => iniciarBot(), 10000);
       }
     }
 
