@@ -128,6 +128,11 @@ const INACTIVIDAD_SALUDO_MS = 3 * 60 * 60 * 1000; // 3 horas
 const ANTISPAM_VOZ_MS = 15 * 60 * 1000;
 const ultimaVozPorChat = new Map();
 
+// Antispam de llamadas rechazadas: máximo 1 mensaje + aviso cada hora
+// por número, aunque el cliente insista llamando.
+const ANTISPAM_LLAMADA_MS = 60 * 60 * 1000;
+const ultimaLlamadaPorChat = new Map();
+
 async function manejarMensaje(sock, mensaje) {
   if (esIgnorable(mensaje)) return;
 
@@ -379,6 +384,47 @@ async function iniciarBot() {
       iniciarAprendizaje(sock);
       if (!iaDisponible()) {
         console.warn('[bot] ⚠️ OPENAI_API_KEY no configurada: el bot responderá con el mensaje de fallback.');
+      }
+    }
+  });
+
+  // Llamadas de voz/video: Baileys no puede contestarlas (limitación del
+  // protocolo de WhatsApp Web). Se rechazan automáticamente y se le
+  // responde al cliente por chat al instante, con aviso al supervisor.
+  // Antispam: máximo 1 mensaje + 1 aviso cada hora por número.
+  sock.ev.on('call', async (llamadas) => {
+    for (const llamada of llamadas) {
+      const jid = llamada.from || '';
+      if (!jid || llamada.isGroup) continue;
+      const telefono = jid.split('@')[0];
+      const tipo = llamada.isVideo ? 'videollamada' : 'llamada';
+      try {
+        await sock.rejectCall(llamada.id, jid);
+        console.log(`[llamada] ${tipo} de ${telefono} rechazada automáticamente`);
+      } catch (err) {
+        console.error(`[llamada] No se pudo rechazar la ${tipo} de ${telefono}: ${err.message}`);
+      }
+
+      const ahora = Date.now();
+      if (ahora - (ultimaLlamadaPorChat.get(jid) || 0) < ANTISPAM_LLAMADA_MS) continue;
+      ultimaLlamadaPorChat.set(jid, ahora);
+      try {
+        await sock.sendMessage(jid, {
+          text: '¡Hola! Vi que nos llamaste 😊 Por aquí no puedo contestar llamadas, pero cuéntame por mensaje (texto o nota de voz) y te ayudo enseguida.'
+        });
+      } catch (err) {
+        console.error(`[llamada] No se pudo enviar el mensaje a ${telefono}: ${err.message}`);
+      }
+      try {
+        await notificarDueno(
+          sock,
+          `📞 *Llamada perdida* (rechazada por el bot)\n` +
+          `📱 Cliente: +${telefono}\n` +
+          `🎥 Tipo: ${tipo}\n` +
+          `💬 Ya se le respondió por chat invitándolo a escribir.`
+        );
+      } catch (err) {
+        console.error(`[llamada] No se pudo avisar al supervisor: ${err.message}`);
       }
     }
   });
