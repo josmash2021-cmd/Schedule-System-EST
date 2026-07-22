@@ -22,10 +22,13 @@ const ZONA_NEGOCIO = 'America/Chicago';
 // Los 3 audios posibles se generan UNA sola vez y se guardan en disco:
 // así no se gastan créditos de ElevenLabs en cada cliente nuevo.
 const CACHE_DIR = path.join(config.dataDir, 'voz');
+// Versión de la frase de bienvenida: forma parte del nombre de archivo
+// cacheado, así que al cambiarla los audios viejos se ignoran y se
+// regeneran solos (local y en el volumen de Railway).
 const SLUGS = {
-  'buenos días': 'buenos-dias',
-  'buenas tardes': 'buenas-tardes',
-  'buenas noches': 'buenas-noches'
+  'buenos días': 'buenos-dias-v2',
+  'buenas tardes': 'buenas-tardes-v2',
+  'buenas noches': 'buenas-noches-v2'
 };
 
 let cliente = null;
@@ -105,7 +108,7 @@ async function asegurarAudios(saludo) {
   const rutaM4a = path.join(CACHE_DIR, `${slug}.m4a`);
   if (!existsSync(rutaOgg) || !existsSync(rutaM4a)) {
     console.log(`[voz] Generando audio de bienvenida (${saludo}) con ElevenLabs...`);
-    await generarAudios(`Hola, ${saludo}. Mi nombre es Ángel, ¿cómo te puedo ayudar?`, slug);
+    await generarAudios(`Hola, ${saludo}. Mi nombre es Ángel, ¿en qué te puedo ayudar?`, slug);
   }
   return { rutaOgg, rutaM4a };
 }
