@@ -120,11 +120,29 @@ async function asegurarAudios(saludo) {
   return asegurarPar(slug, `Hola, ${saludo}. Mi nombre es Ángela, ¿en qué te puedo ayudar?`, `bienvenida ${saludo}`);
 }
 
-// Despedida por nota de voz (un solo audio; el texto no depende de la hora).
-const DESPEDIDA = {
-  slug: 'despedida-v1',
-  texto: 'Perfecto, cualquier duda o pregunta estamos a la orden, ¡que tenga buen día!'
+// Despedidas por nota de voz, según la hora del negocio (como el saludo):
+// "buen día" en la mañana, "buenas tardes" de 12 a 7 p.m., "buenas
+// noches" después. Se genera cada una una sola vez (caché en disco).
+const DESPEDIDAS = {
+  'buenos días': {
+    slug: 'despedida-v1',
+    texto: 'Perfecto, cualquier duda o pregunta estamos a la orden, ¡que tenga buen día!'
+  },
+  'buenas tardes': {
+    slug: 'despedida-tardes-v1',
+    texto: 'Perfecto, cualquier duda o pregunta estamos a la orden, ¡que tenga buenas tardes!'
+  },
+  'buenas noches': {
+    slug: 'despedida-noches-v1',
+    texto: 'Perfecto, cualquier duda o pregunta estamos a la orden, ¡que tenga buenas noches!'
+  }
 };
+
+// Texto de la despedida para la hora actual del negocio (lo usan los
+// generadores de audio y el sembrado en el historial de la IA).
+export function textoDespedida() {
+  return DESPEDIDAS[saludoSegunHora()].texto;
+}
 
 /**
  * Devuelve el audio de un saludo como Buffer ogg/opus (WhatsApp),
@@ -171,12 +189,14 @@ export async function obtenerAudioBienvenida() {
 
 /**
  * Despedida por nota de voz para WhatsApp: devuelve el Buffer ogg/opus
- * cacheado (se genera una sola vez). null si la voz no está disponible.
+ * cacheado, con la despedida según la hora del negocio (buen día /
+ * buenas tardes / buenas noches). null si la voz no está disponible.
  */
 export async function obtenerAudioDespedida() {
   if (!vozDisponible()) return null;
+  const d = DESPEDIDAS[saludoSegunHora()];
   try {
-    const { rutaOgg } = await asegurarPar(DESPEDIDA.slug, DESPEDIDA.texto, 'despedida');
+    const { rutaOgg } = await asegurarPar(d.slug, d.texto, `despedida ${saludoSegunHora()}`);
     return readFileSync(rutaOgg);
   } catch (err) {
     console.error(`[voz] Error al generar la despedida de voz: ${err.message}`);
@@ -190,8 +210,9 @@ export async function obtenerAudioDespedida() {
  */
 export async function obtenerM4aDespedida() {
   if (!vozDisponible()) return null;
+  const d = DESPEDIDAS[saludoSegunHora()];
   try {
-    const { rutaM4a } = await asegurarPar(DESPEDIDA.slug, DESPEDIDA.texto, 'despedida');
+    const { rutaM4a } = await asegurarPar(d.slug, d.texto, `despedida ${saludoSegunHora()}`);
     return { ruta: rutaM4a };
   } catch (err) {
     console.error(`[voz] Error al generar la despedida de voz: ${err.message}`);

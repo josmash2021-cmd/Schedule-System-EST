@@ -4,7 +4,7 @@ import OpenAI from 'openai';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync } from 'node:fs';
 import path from 'node:path';
 import config from './config.js';
-import { vozDisponible } from './voz.js';
+import { vozDisponible, textoDespedida } from './voz.js';
 import { guardarCita } from './citas.js';
 import { notificarDueno } from './notificar.js';
 import { consultarSlots, crearCitaWeb } from './citasApi.js';
@@ -547,7 +547,7 @@ export function sembrarDespedidaVoz(jid) {
   sesion.mensajes.push({ role: 'user', content: '(el cliente se despidió agradeciendo)' });
   sesion.mensajes.push({
     role: 'assistant',
-    content: 'Perfecto, cualquier duda o pregunta estamos a la orden, ¡que tenga buen día! (esto ya se envió como nota de voz, no repetirlo por texto)'
+    content: `${textoDespedida()} (esto ya se envió como nota de voz, no repetirlo por texto)`
   });
   persistirHistoriales();
 }

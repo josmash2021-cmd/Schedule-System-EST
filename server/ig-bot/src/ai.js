@@ -6,7 +6,7 @@ import path from 'node:path';
 import config from './config.js';
 // La voz de bienvenida la genera el módulo compartido del wa-bot
 // (mismos audios cacheados, mismo ELEVENLABS_API_KEY).
-import { vozDisponible } from '../../wa-bot/src/voz.js';
+import { vozDisponible, textoDespedida } from '../../wa-bot/src/voz.js';
 import { guardarCita } from './citas.js';
 import { notificarDuenoIG } from './notificar.js';
 import { consultarSlots, crearCitaWeb } from './citasApi.js';
@@ -569,7 +569,7 @@ export function sembrarDespedidaVoz(jid) {
   sesion.mensajes.push({ role: 'user', content: '(el cliente se despidió agradeciendo)' });
   sesion.mensajes.push({
     role: 'assistant',
-    content: 'Perfecto, cualquier duda o pregunta estamos a la orden, ¡que tenga buen día! (esto ya se envió como nota de voz, no repetirlo por texto)'
+    content: `${textoDespedida()} (esto ya se envió como nota de voz, no repetirlo por texto)`
   });
   persistirHistoriales();
 }
