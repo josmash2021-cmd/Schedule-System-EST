@@ -7,6 +7,44 @@
     'use strict';
     if (document.querySelector('.chat-widget')) return;
 
+    // Estilos autocontenidos: el widget se usa en páginas que NO cargan
+    // site-v3.css (privacy, terms, book-appointment). Sin esto el SVG del
+    // botón crecía a pantalla completa y el panel se desarmaba en móviles.
+    // Se usan var() con fallback: en páginas con site-v3.css manda el tema.
+    var css = '' +
+    '.chat-widget{position:fixed;right:22px;bottom:22px;z-index:120;font-family:inherit}' +
+    '.chat-widget *{box-sizing:border-box}' +
+    '.chat-fab{position:relative;width:58px;height:58px;border-radius:50%;cursor:pointer;background:#fff;border:1px solid rgba(255,255,255,.9);color:#0a0a0c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:0 14px 34px rgba(0,0,0,.55);transition:transform .25s,box-shadow .25s}' +
+    '.chat-fab:hover{transform:translateY(-3px);box-shadow:0 20px 44px rgba(0,0,0,.65)}' +
+    '.chat-fab svg{width:22px;height:22px}' +
+    '.chat-fab-247{font-size:8.5px;font-weight:800;letter-spacing:.1em}' +
+    '.chat-fab-dot{position:absolute;top:2px;right:2px;width:12px;height:12px;border-radius:50%;background:#22c55e;border:2px solid #fff;animation:chatDotPulse 1.8s ease-out infinite}' +
+    '@keyframes chatDotPulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.55)}70%{box-shadow:0 0 0 9px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}' +
+    '.chat-panel{position:absolute;right:0;bottom:72px;width:320px;max-width:calc(100vw - 44px);background:var(--panel,#17181d);border:1px solid var(--line,rgba(255,255,255,.1));border-radius:20px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.6);transform-origin:bottom right;animation:chatPanelIn .34s cubic-bezier(.22,1.2,.36,1);color:var(--text,#f2f3f5)}' +
+    '@keyframes chatPanelIn{from{opacity:0;transform:translateY(14px) scale(.92)}to{opacity:1;transform:none}}' +
+    '.chat-panel.closing{animation:chatPanelOut .22s cubic-bezier(.5,0,.75,0) forwards}' +
+    '@keyframes chatPanelOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.94)}}' +
+    '.chat-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:16px 16px 12px;border-bottom:1px solid var(--line,rgba(255,255,255,.1))}' +
+    '.chat-panel-head strong{display:block;font-size:15px}' +
+    '.chat-panel-head span{display:flex;align-items:center;gap:6px;color:var(--muted,#9aa0a8);font-size:12px;margin-top:3px}' +
+    '.chat-online{width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block}' +
+    '.chat-close{background:none;border:none;color:var(--muted,#9aa0a8);font-size:22px;line-height:1;cursor:pointer;padding:2px 6px;border-radius:8px}' +
+    '.chat-close:hover{color:#fff;background:rgba(255,255,255,.08)}' +
+    '.chat-panel-body{padding:14px 16px}' +
+    '.chat-msg{background:rgba(255,255,255,.06);border:1px solid var(--line,rgba(255,255,255,.1));border-radius:14px 14px 14px 4px;padding:10px 13px;font-size:13.5px;line-height:1.5;margin:0}' +
+    '.chat-panel-actions{display:grid;gap:8px;padding:0 16px 16px}' +
+    '.chat-btn{position:relative;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 14px 11px 42px;border-radius:12px;font-size:13.5px;font-weight:700;text-decoration:none;transition:transform .2s,filter .2s}' +
+    '.chat-btn .btn-ico{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:17px;height:17px}' +
+    '.chat-btn:hover{transform:translateY(-1px);filter:brightness(1.08)}' +
+    '.chat-btn-wa{background:#22c55e;color:#04120a}' +
+    '.chat-btn-ghost{background:rgba(255,255,255,.07);color:var(--text,#f2f3f5);border:1px solid var(--line,rgba(255,255,255,.1))}' +
+    '.chat-btn-blue{background:#fff;color:#0a0a0c}' +
+    '@media (max-width:720px){.chat-widget{right:16px;bottom:16px}.chat-fab{width:54px;height:54px}.chat-panel{bottom:66px}}' +
+    '@media (prefers-reduced-motion:reduce){.chat-fab-dot,.chat-panel{animation:none}}';
+    var style = document.createElement('style');
+    style.textContent = css;
+    document.head.appendChild(style);
+
     var PHONE = '12055737840';        // línea de atención (SMS/llamadas)
     var WA_PHONE = '18018017359';     // WhatsApp Business con el bot Angela
     var LANG = window.EST_LANG || 'es';
