@@ -1,6 +1,6 @@
 // Nota de voz de bienvenida: texto a voz con ElevenLabs.
 // Solo se usa para el saludo inicial de cada conversación ("Hola, buenos
-// días/tardes/noches, mi nombre es Ángel..."). El resto de las respuestas
+// días/tardes/noches, mi nombre es Ángela..."). El resto de las respuestas
 // del bot siguen siendo texto.
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs';
@@ -26,9 +26,9 @@ const CACHE_DIR = path.join(config.dataDir, 'voz');
 // cacheado, así que al cambiarla los audios viejos se ignoran y se
 // regeneran solos (local y en el volumen de Railway).
 const SLUGS = {
-  'buenos días': 'buenos-dias-v2',
-  'buenas tardes': 'buenas-tardes-v2',
-  'buenas noches': 'buenas-noches-v2'
+  'buenos días': 'buenos-dias-v3',
+  'buenas tardes': 'buenas-tardes-v3',
+  'buenas noches': 'buenas-noches-v3'
 };
 
 let cliente = null;
@@ -108,7 +108,7 @@ async function asegurarAudios(saludo) {
   const rutaM4a = path.join(CACHE_DIR, `${slug}.m4a`);
   if (!existsSync(rutaOgg) || !existsSync(rutaM4a)) {
     console.log(`[voz] Generando audio de bienvenida (${saludo}) con ElevenLabs...`);
-    await generarAudios(`Hola, ${saludo}. Mi nombre es Ángel, ¿en qué te puedo ayudar?`, slug);
+    await generarAudios(`Hola, ${saludo}. Mi nombre es Ángela, ¿en qué te puedo ayudar?`, slug);
   }
   return { rutaOgg, rutaM4a };
 }

@@ -30,7 +30,7 @@ const BASE_PUBLICA = (process.env.PUBLIC_BASE_URL || 'https://schedule-system-es
 // Saludos típicos de apertura ("hola", "buenas noches", "buen día", ...).
 // Misma regla que en WhatsApp: si un cliente vuelve a saludar tras un
 // rato largo sin escribir, se le manda otra vez la bienvenida de voz.
-const SALUDO_RE = /^\s*(hola+|o-la|buenas?(?:\s+(d[íi]as|tardes|noches))?|buen\s*d[íi]a|qu[eé]\s*tal|saludos|hey|hi|hello)\b/i;
+const SALUDO_RE = /^\s*(hola+|o-la|buen[ao]s?(?:\s+(d[íi]as|tardes|noches))?|buen\s*d[íi]a|qu[eé]\s*tal|saludos|hey|hi|hello)\b/i;
 
 function esSaludo(texto) {
   return SALUDO_RE.test(texto || '');
@@ -39,7 +39,7 @@ function esSaludo(texto) {
 // Mensaje que es SOLO un saludo, sin pregunta ni contenido ("hola",
 // "hola buenas noches!", "buenas"...). Si ya se mandó la nota de voz de
 // bienvenida, no hace falta responder nada por texto.
-const SOLO_SALUDO_RE = /^\s*(?:(?:hola+|o-la|buenas?(?:\s+(?:d[íi]as|tardes|noches|d[íi]a))?|buen\s*d[íi]a|qu[eé]\s*tal|saludos|hey|hi|hello)[\s!¡?¿.,]*)+$/i;
+const SOLO_SALUDO_RE = /^\s*(?:(?:hola+|o-la|buen[ao]s?(?:\s+(?:d[íi]as|tardes|noches|d[íi]a))?|buen\s*d[íi]a|qu[eé]\s*tal|saludos|hey|hi|hello)[\s!¡?¿.,]*)+$/i;
 
 function esSoloSaludo(texto) {
   return SOLO_SALUDO_RE.test(texto || '');

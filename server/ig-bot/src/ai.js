@@ -132,7 +132,7 @@ function fechaActualNegocio() {
 /**
  * Construye el system prompt inyectando los datos del negocio y el catálogo.
  * @param {string} canalTipo - 'instagram' (default) u otro canal. Misma
- *   personalidad (Angel) y reglas; cambian las referencias al canal y, en
+ *   personalidad (Angela) y reglas; cambian las referencias al canal y, en
  *   Instagram, se pide el teléfono del cliente al agendar (Instagram no lo
  *   proporciona y es dato obligatorio en el sistema de citas).
  */
@@ -164,20 +164,20 @@ export function construirSystemPrompt(canalTipo = 'instagram') {
     }
   } catch { /* sin notas aún */ }
 
-  return `Eres Angel, el agente y encargado de "${n.nombre}", un negocio que repara y da mantenimiento a computadoras, PCs, laptops, tablets, teléfonos y iPhones de cualquier marca y modelo, y que vende laptops, tablets y iPhones.
+  return `Eres Angela, la agente y encargada de "${n.nombre}", un negocio que repara y da mantenimiento a computadoras, PCs, laptops, tablets, teléfonos y iPhones de cualquier marca y modelo, y que vende laptops, tablets y iPhones.
 
 FECHA Y HORA ACTUAL (zona del negocio, Alabama):
 - Hoy es ${fechaTexto} (${fechaISO}).
 - Usa esta fecha como referencia cuando el cliente diga "mañana", "el sábado", etc., y conviértela a formato YYYY-MM-DD.
 
 PERSONALIDAD Y ESTILO (lo más importante):
-- Eres Angel, el AGENTE Y ENCARGADO de la tienda. Si te piden hablar con "un agente", "el encargado" o "el manager", ese eres TÚ: dilo con naturalidad ("¡Claro! Hablas con Angel, el encargado de la tienda, ¿en qué te ayudo?").
+- Eres Angela, LA ENCARGADA de la tienda. Si te piden hablar con "un agente", "el encargado" o "el manager", ese eres TÚ: dilo con naturalidad ("¡Claro! Hablas con Angela, la encargada de la tienda, ¿en qué te ayudo?").
 - Arriba de ti solo está el SUPERVISOR (el dueño). No existe ningún "asesor" ni otro empleado: cualquier cosa que tú no puedas resolver la consulta el supervisor y TÚ le avisas al cliente cuando él te responda.
 ${vozDisponible()
-    ? '- El saludo de bienvenida ("Hola, buenos días/tardes/noches, mi nombre es Angel, ¿en qué te puedo ayudar?") se envía SOLO como nota de voz al iniciar la conversación, antes de tu primera respuesta. Por eso, en tu primer mensaje NO saludes ni te presentes de nuevo: responde directo y con naturalidad a lo que el cliente escribió. EXCEPCIÓN: si el cliente dice que no se escucha la nota de voz, que no la puede oír o que no puede escuchar audios ahora, entonces SÍ escríbele el saludo por texto ("Hola, buenos días/tardes/noches, mi nombre es Angel, ¿en qué te puedo ayudar?") y sigue la conversación normal.'
-    : '- En el primer mensaje saluda según la hora del negocio — "buenos días" (antes de las 12 p.m.), "buenas tardes" (de 12 a 7 p.m.), "buenas noches" (después de las 7 p.m.) — y preséntate así de natural: "Hola, buenas tardes, mi nombre es Angel, un gusto 😊 ¿cómo puedo ayudarte?". Varía un poco la fórmula cada vez para que no suene a guion.'}
+    ? '- El saludo de bienvenida ("Hola, buenos días/tardes/noches, mi nombre es Angela, ¿en qué te puedo ayudar?") se envía SOLO como nota de voz al iniciar la conversación, antes de tu primera respuesta. Por eso, en tu primer mensaje NO saludes ni te presentes de nuevo: responde directo y con naturalidad a lo que el cliente escribió. EXCEPCIÓN: si el cliente dice que no se escucha la nota de voz, que no la puede oír o que no puede escuchar audios ahora, entonces SÍ escríbele el saludo por texto ("Hola, buenos días/tardes/noches, mi nombre es Angela, ¿en qué te puedo ayudar?") y sigue la conversación normal.'
+    : '- En el primer mensaje saluda según la hora del negocio — "buenos días" (antes de las 12 p.m.), "buenas tardes" (de 12 a 7 p.m.), "buenas noches" (después de las 7 p.m.) — y preséntate así de natural: "Hola, buenas tardes, mi nombre es Angela, un gusto 😊 ¿cómo puedo ayudarte?". Varía un poco la fórmula cada vez para que no suene a guion.'}
 - PROHIBIDO decir "asistente virtual", "asistente automático", "soy un bot" o frases tipo "Bienvenido a X, soy el asistente de...".
-- Si te preguntan directamente si eres humano o un bot, responde con honestidad y sin drama ("jaja soy Angel, el asistente en línea de la tienda, pero si prefieres te comunico con una persona") y sigue la conversación.
+- Si te preguntan directamente si eres humano o un bot, responde con honestidad y sin drama ("jaja soy Angela, la asistente en línea de la tienda, pero si prefieres te comunico con una persona") y sigue la conversación.
 - MENSAJES CORTOS Y SUELTOS: escribe como escribe la gente por ${nombreCanal}. Nada de párrafos largos, nada de listas con viñetas, nada de bloques organizados tipo ficha (ej. NO escribas "📍 Dirección: ... Horario: ..."). Integra los datos en frases naturales ("estamos sobre Lorna Rd, el 3659 suite 157 en Hoover, y abrimos de lunes a sábado de 10 a 3").
 - Responde SOLO lo que el cliente preguntó. No vuelques toda la información de una vez ni repitas datos que ya diste en la conversación.
 - Tono cálido, cercano y profesional, pero relajado. Varía tus frases: no uses siempre las mismas fórmulas de saludo o despedida.
@@ -537,9 +537,26 @@ export function sembrarSaludoVoz(jid, saludo) {
   sesion.mensajes.push({ role: 'user', content: 'hola' });
   sesion.mensajes.push({
     role: 'assistant',
-    content: `Hola, ${saludo}. Mi nombre es Angel, ¿en qué te puedo ayudar? (esto ya se envió como nota de voz, no repetirlo por texto)`
+    content: `Hola, ${saludo}. Mi nombre es Angela, ¿en qué te puedo ayudar? (esto ya se envió como nota de voz, no repetirlo por texto)`
   });
   persistirHistoriales();
+}
+
+// Limpia el historial antes de mandarlo a la API: los recortes de
+// historial o las sesiones restauradas de disco pueden dejar mensajes
+// 'tool' huérfanos (sin su tool_call en el assistant anterior), y la
+// API responde 400 "tool_call_id is not found" dejando al bot mudo.
+function sanearHistorial(mensajes) {
+  const limpio = [];
+  for (const m of mensajes) {
+    if (m.role === 'tool') {
+      const asistente = [...limpio].reverse().find((x) => x.role === 'assistant');
+      const idsValidos = (asistente?.tool_calls || []).map((t) => t.id);
+      if (!idsValidos.includes(m.tool_call_id)) continue; // huérfano: fuera
+    }
+    limpio.push(m);
+  }
+  return limpio;
 }
 
 /**
@@ -580,7 +597,7 @@ export async function responder(jid, textoUsuario, contexto) {
   for (let i = 0; i < MAX_ITERACIONES; i++) {
     const respuesta = await usarIA(() => cliente.chat.completions.create({
       model: config.openai.model,
-      messages: sesion.mensajes,
+      messages: sanearHistorial(sesion.mensajes),
       tools: HERRAMIENTAS,
       tool_choice: 'auto'
     }, { timeout: 90000, maxRetries: 1 }));

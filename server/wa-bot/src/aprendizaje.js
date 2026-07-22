@@ -1,7 +1,7 @@
-// Auto-mejora de Angel: una vez al día analiza las conversaciones recientes
+// Auto-mejora de Angela: una vez al día analiza las conversaciones recientes
 // con la propia IA, extrae inteligencia de clientes (temas frecuentes,
 // modelos buscados, preguntas sin respuesta) y la guarda en
-// config/aprendizaje.json. Esa nota se inyecta al prompt, así Angel se hace
+// config/aprendizaje.json. Esa nota se inyecta al prompt, así Angela se hace
 // más preciso para este negocio con el tiempo. También envía un resumen
 // diario al dueño con lo que no supo responder (para mejorar el catálogo).
 import OpenAI from 'openai';
@@ -59,7 +59,7 @@ function construirTranscripts() {
     const lineas = sesion.mensajes
       .filter((m) => m.role === 'user' || m.role === 'assistant')
       .slice(-12)
-      .map((m) => `${m.role === 'user' ? 'Cliente' : 'Angel'}: ${String(m.content || '').slice(0, 300)}`)
+      .map((m) => `${m.role === 'user' ? 'Cliente' : 'Angela'}: ${String(m.content || '').slice(0, 300)}`)
       .join('\n');
     if (lineas) {
       transcripts.push(`--- Chat ${String(jid).split('@')[0]} ---\n${lineas}`.slice(0, 2000));
@@ -86,11 +86,11 @@ export async function ejecutarAprendizaje(sock) {
         {
           role: 'user',
           content: (
-            `Analiza estas conversaciones de WhatsApp entre clientes y "Angel", el encargado (bot) de una tienda que repara y vende laptops, tablets y iPhones en Hoover, Alabama.\n\n` +
+            `Analiza estas conversaciones de WhatsApp entre clientes y "Angela", el encargado (bot) de una tienda que repara y vende laptops, tablets y iPhones en Hoover, Alabama.\n\n` +
             `Responde SOLO JSON válido con esta forma exacta:\n` +
             `{"notas": ["..."], "preguntas_sin_respuesta": ["..."], "resumen": "..."}\n\n` +
             `- notas (máx 6): inteligencia útil para el negocio — temas más preguntados, modelos que buscan, dudas o quejas repetidas, objeciones de precio. Frases cortas. SIN precios inventados ni datos personales (ni nombres ni teléfonos).\n` +
-            `- preguntas_sin_respuesta (máx 6): dudas concretas que Angel no pudo responder o tuvo que escalar al supervisor.\n` +
+            `- preguntas_sin_respuesta (máx 6): dudas concretas que Angela no pudo responder o tuvo que escalar al supervisor.\n` +
             `- resumen: una línea general.\n\n` +
             `CONVERSACIONES:\n${transcripts.join('\n\n')}`
           ).slice(0, 12000)
@@ -113,7 +113,7 @@ export async function ejecutarAprendizaje(sock) {
     const preguntas = Array.isArray(datos.preguntas_sin_respuesta) ? datos.preguntas_sin_respuesta : [];
     await notificarDueno(
       sock,
-      `📊 *Resumen diario de Angel* 🤖\n` +
+      `📊 *Resumen diario de Angela* 🤖\n` +
       `💬 Conversaciones analizadas: ${transcripts.length}\n` +
       (datos.resumen ? `🧾 ${datos.resumen}\n` : '') +
       (preguntas.length ? `❓ No supe responder:\n${preguntas.map((p) => `• ${p}`).join('\n')}\n` : '') +
