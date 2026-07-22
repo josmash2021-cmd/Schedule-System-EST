@@ -96,7 +96,7 @@ export async function ejecutarAprendizaje(sock) {
           ).slice(0, 12000)
         }
       ]
-    }));
+    }, { timeout: 90000, maxRetries: 1 }));
 
     const texto = r.choices[0].message.content || '';
     const match = texto.match(/\{[\s\S]*\}/);
@@ -129,20 +129,26 @@ export async function ejecutarAprendizaje(sock) {
 }
 
 let schedulerIniciado = false;
+// Referencia mutable al socket: tras cada reconexión hay un socket nuevo;
+// si el scheduler conservara el primero, el resumen diario dejaría de
+// llegar silenciosamente desde la primera reconexión.
+let sockActual = null;
 
 /**
  * Programa el análisis diario (a las 19:00 hora del negocio, revisa cada hora).
  */
 export function iniciarAprendizaje(sock) {
+  sockActual = sock; // siempre actualizar, aunque el scheduler ya corra
   if (schedulerIniciado) return;
   schedulerIniciado = true;
 
   const revisar = async () => {
     try {
+      if (!sockActual) return;
       if (horaNegocio() < HORA_DIARIA) return;
       const estado = leerJson(RUTA_ESTADO, {});
       if (estado.ultimaCorrida === hoyNegocio()) return;
-      await ejecutarAprendizaje(sock);
+      await ejecutarAprendizaje(sockActual);
     } catch (err) {
       console.error(`[aprendizaje] Error en el programador: ${err.message}`);
     }

@@ -22,6 +22,12 @@ import { iniciarAprendizaje } from './src/aprendizaje.js';
 
 const logger = pino({ level: 'warn' });
 
+// Red de seguridad: el bot comparte proceso con el servidor web y el
+// webhook de Instagram; un rejection sin manejar no debe tumbarlo todo.
+process.on('unhandledRejection', (err) => {
+  console.error(`[bot] unhandledRejection capturado (el proceso sigue): ${err?.message || err}`);
+});
+
 // Usuarios a los que ya se les avisó que el LLM no está disponible
 // (para no spamear al dueño con el mismo aviso en cada mensaje).
 const avisadosSinIA = new Set();
@@ -112,9 +118,11 @@ function esSoloSaludo(texto) {
 }
 
 // Petición de empezar de cero ("cierra esta sesión", "hablemos como una
-// nueva conversación", "empezar de cero", ...). Se respeta aunque venga
-// con faltas de ortografía.
-const REINICIO_RE = /(cierr\w*\s+(la\s+|esta\s+)?sesi[oó]n|cerrar\s+sesi[oó]n|nueva\s+conversaci[oó]n|empez\w*\s+de\s+(cero|nuevo)|reinici\w*)/i;
+// nueva conversación", "empezar de cero", "reinicia la sesión"...).
+// OJO: "reiniciar" solo cuenta con contexto (sesión/conversación/chat) —
+// en un negocio de reparación "mi laptop se reinicia sola" es cotidiano
+// y NO debe borrar la conversación.
+const REINICIO_RE = /(cierr\w*\s+(la\s+|esta\s+)?sesi[oó]n|cerrar\s+sesi[oó]n|nueva\s+conversaci[oó]n|empez\w*\s+de\s+(cero|nuevo)|reinici\w*\s+(la\s+|esta\s+)?(sesi[oó]n|conversaci[oó]n|chat))/i;
 
 function esReinicio(texto) {
   return REINICIO_RE.test(texto || '');
@@ -332,9 +340,25 @@ async function manejarMensaje(sock, mensaje) {
   }
 }
 
+// Reconexión con backoff exponencial (2s → 4s → ... → tope 60s) y SIEMPRE
+// con .catch: un rejection sin manejar tumba el proceso entero, y aquí el
+// bot comparte proceso con el servidor web y el webhook de Instagram.
+let intentosReconexion = 0;
+
+function reconectarConBackoff() {
+  intentosReconexion += 1;
+  const espera = Math.min(2000 * 2 ** (intentosReconexion - 1), 60000);
+  console.log(`[bot] Reconectando en ${espera / 1000}s (intento ${intentosReconexion})...`);
+  setTimeout(() => {
+    iniciarBot().catch((err) => {
+      console.error(`[bot] Error al reiniciar (intento ${intentosReconexion}): ${err.message}`);
+      reconectarConBackoff();
+    });
+  }, espera);
+}
+
 async function iniciarBot() {
-  const { state, saveCreds } = await useMultiFileAuthState(config.authDir);
-  const { version } = await fetchLatestBaileysVersion();
+  const { state, saveCreds } = await useMultiFileAuthState(config.authDir);  const { version } = await fetchLatestBaileysVersion();
   console.log(`[bot] Usando versión de WhatsApp Web: ${version.join('.')}`);
 
   const sock = makeWASocket({
@@ -363,7 +387,7 @@ async function iniciarBot() {
       const fueLogout = codigo === DisconnectReason.loggedOut;
       console.log(`[bot] Conexión cerrada (código ${codigo}). ¿Reconectar? ${!fueLogout}`);
       if (!fueLogout) {
-        iniciarBot(); // reconexión automática
+        reconectarConBackoff();
       } else {
         // Logout (401): las credenciales guardadas ya no sirven (típico
         // cuando dos instancias pisan la misma sesión en un deploy).
@@ -384,12 +408,15 @@ async function iniciarBot() {
         } catch (err) {
           console.error(`[bot] No se pudo borrar auth_info: ${err.message}`);
         }
-        setTimeout(() => iniciarBot(), 10000);
+        setTimeout(() => {
+          iniciarBot().catch((err) => console.error(`[bot] Error al reiniciar tras reseteo: ${err.message}`));
+        }, 10000);
       }
     }
 
     if (connection === 'open') {
       ultimoQR = null; // ya vinculado: no hay QR que mostrar
+      intentosReconexion = 0; // conectado: se resetea el backoff
       console.log(`[bot] ✅ Conectado a WhatsApp como "${config.negocio.nombre}". Listo para atender clientes.`);
       iniciarAprendizaje(sock);
       if (!iaDisponible()) {

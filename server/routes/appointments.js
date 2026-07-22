@@ -6,8 +6,51 @@ const { sendOwnerWhatsAppNotification } = require('../notifications');
 
 const router = express.Router();
 
+// Rate limit del POST público de citas: sin él, un bot puede llenar la
+// agenda de citas basura (y disparar un WhatsApp al dueño por cada una).
+// Máx. 10 creaciones por hora por IP.
+const POST_LIMITE = 10;
+const POST_VENTANA_MS = 60 * 60 * 1000;
+const intentosPorIp = new Map();
+
+setInterval(() => {
+  const ahora = Date.now();
+  for (const [ip, reg] of intentosPorIp) {
+    if (reg.resetAt < ahora) intentosPorIp.delete(ip);
+  }
+}, 60_000).unref();
+
+function ipDe(req) {
+  // El ÚLTIMO valor de X-Forwarded-For es el que añade el proxy (Railway);
+  // el primero lo puede falsear el cliente.
+  const xff = String(req.headers['x-forwarded-for'] || '').split(',').map((s) => s.trim()).filter(Boolean);
+  return xff[xff.length - 1] || req.socket?.remoteAddress || 'unknown';
+}
+
+function rateLimitCitas(req, res, next) {
+  const ip = ipDe(req);
+  const ahora = Date.now();
+  let reg = intentosPorIp.get(ip);
+  if (!reg || reg.resetAt < ahora) {
+    reg = { count: 0, resetAt: ahora + POST_VENTANA_MS };
+    intentosPorIp.set(ip, reg);
+  }
+  reg.count += 1;
+  if (reg.count > POST_LIMITE) {
+    return res.status(429).json({ error: 'Demasiadas reservas seguidas. Intenta de nuevo en un rato.' });
+  }
+  next();
+}
+
 // Crear cita (público)
-router.post('/', async (req, res) => {
+router.post('/', rateLimitCitas, async (req, res) => {
+  // Honeypot anti-bots: el frontend lo deja vacío; los bots lo rellenan.
+  // Se finge éxito para no darles pistas, pero no se crea nada.
+  if (String(req.body?.['bot-field'] || '').trim() !== '') {
+    console.warn(`[citas] Honeypot activado (bot descartado) desde ${ipDe(req)}`);
+    return res.status(201).json({ ok: true, cita: null });
+  }
+
   const { errors, nombre, telefono, correo, servicio, fecha, hora } = validateCreate(req.body);
   if (errors.length) {
     return res.status(400).json({ error: errors.join(' ') });
@@ -28,7 +71,7 @@ router.post('/', async (req, res) => {
     const result = await pool.query(
       `INSERT INTO appointments (nombre, telefono, correo, servicio, fecha, hora, estado)
        VALUES ($1, $2, $3, $4, $5, $6, 'pendiente')
-       ON CONFLICT (fecha, hora) DO NOTHING
+       ON CONFLICT (fecha, hora) WHERE estado <> 'cancelada' DO NOTHING
        RETURNING *`,
       [nombre, telefono, correo || null, servicio, fecha, hora]
     );

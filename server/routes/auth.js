@@ -1,5 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const crypto = require('node:crypto');
 const { ADMIN_PASSWORD, JWT_SECRET } = require('../config');
 
 const router = express.Router();
@@ -9,11 +10,19 @@ const WINDOW_MS = 15 * 60 * 1000; // 15 minutos
 const loginAttempts = new Map();
 
 function getClientIp(req) {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (forwarded) {
-    return String(forwarded).split(',')[0].trim();
-  }
-  return req.socket?.remoteAddress || 'unknown';
+  // El ÚLTIMO valor de X-Forwarded-For es el que añade el proxy (Railway)
+  // y no lo controla el cliente; el PRIMERO se puede falsear para rotar
+  // "IPs" y anular el rate limit.
+  const xff = String(req.headers['x-forwarded-for'] || '').split(',').map((s) => s.trim()).filter(Boolean);
+  return xff[xff.length - 1] || req.socket?.remoteAddress || 'unknown';
+}
+
+// Comparación en tiempo constante (evita oráculo de tiempo).
+function passwordValida(password) {
+  const a = Buffer.from(String(password));
+  const b = Buffer.from(String(ADMIN_PASSWORD));
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
 }
 
 function getAttempts(ip) {
@@ -61,7 +70,7 @@ router.post('/login', (req, res) => {
     return res.status(401).json({ error: 'Contraseña incorrecta.' });
   }
 
-  if (password !== ADMIN_PASSWORD) {
+  if (!passwordValida(password)) {
     const updated = recordFailedAttempt(ip);
     const remaining = Math.max(0, MAX_ATTEMPTS - updated.count);
     return res.status(401).json({

@@ -50,11 +50,21 @@ function isPastDate(dateStr) {
   return dateStr < businessNow().dateStr;
 }
 
+// Ventana máxima de reserva: sin límite, un script podría reservar todos
+// los slots de cualquier fecha futura y bloquear la agenda real.
+const MAX_DIAS_FUTURO = 60;
+
+function isTooFarAhead(dateStr) {
+  const limite = new Date(Date.now() + MAX_DIAS_FUTURO * 24 * 3600 * 1000);
+  return dateStr > toISODate(limite);
+}
+
 function validateDate(dateStr) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return 'Formato de fecha inválido.';
   if (isNaN(Date.parse(dateStr))) return 'Fecha inválida.';
   if (isPastDate(dateStr)) return 'No se pueden reservar citas en días pasados.';
   if (isSunday(dateStr)) return 'No atendemos los domingos.';
+  if (isTooFarAhead(dateStr)) return `Solo se puede reservar con hasta ${MAX_DIAS_FUTURO} días de anticipación.`;
   return null;
 }
 

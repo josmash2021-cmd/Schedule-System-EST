@@ -42,6 +42,6 @@ export async function transcribirAudio(buffer, mimetype = '') {
     // Contexto de dominio: Whisper acierta mucho más el vocabulario del
     // negocio y evita transcripciones incoherentes que luego confunden a la IA.
     prompt: 'Conversación en español con la tienda ElectronicST de reparación de celulares y computadoras en Alabama. Temas frecuentes: pantalla, batería, iPhone, laptop, tablet, PC, precio, reparación, mantenimiento, cita, diagnóstico.'
-  });
+  }, { timeout: 60000, maxRetries: 1 });
   return (r.text || '').trim();
 }

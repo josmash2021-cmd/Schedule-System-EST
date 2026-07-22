@@ -25,7 +25,7 @@ const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // URL pública del servidor (para adjuntar el audio a Instagram: la API de
 // Meta no acepta subir archivos, solo URLs https accesibles).
-const BASE_PUBLICA = (process.env.PUBLIC_BASE_URL || 'https://schedule-system-est-production.up.railway.app').replace(/\/+$/, '');
+const BASE_PUBLICA = (process.env.PUBLIC_BASE_URL || 'https://www.electronicservicetechnology.com').replace(/\/+$/, '');
 
 // Saludos típicos de apertura ("hola", "buenas noches", "buen día", ...).
 // Misma regla que en WhatsApp: si un cliente vuelve a saludar tras un
@@ -46,9 +46,11 @@ function esSoloSaludo(texto) {
 }
 
 // Petición de empezar de cero ("cierra esta sesión", "hablemos como una
-// nueva conversación", "empezar de cero", ...). Se respeta aunque venga
-// con faltas de ortografía.
-const REINICIO_RE = /(cierr\w*\s+(la\s+|esta\s+)?sesi[oó]n|cerrar\s+sesi[oó]n|nueva\s+conversaci[oó]n|empez\w*\s+de\s+(cero|nuevo)|reinici\w*)/i;
+// nueva conversación", "empezar de cero", "reinicia la sesión"...).
+// OJO: "reiniciar" solo cuenta con contexto (sesión/conversación/chat) —
+// en un negocio de reparación "mi laptop se reinicia sola" es cotidiano
+// y NO debe borrar la conversación.
+const REINICIO_RE = /(cierr\w*\s+(la\s+|esta\s+)?sesi[oó]n|cerrar\s+sesi[oó]n|nueva\s+conversaci[oó]n|empez\w*\s+de\s+(cero|nuevo)|reinici\w*\s+(la\s+|esta\s+)?(sesi[oó]n|conversaci[oó]n|chat))/i;
 
 function esReinicio(texto) {
   return REINICIO_RE.test(texto || '');
@@ -211,9 +213,12 @@ async function manejarAudio(igsid, audio) {
 
     const url = audio.payload?.url;
     if (!url) throw new Error('attachment de audio sin URL');
-    const r = await fetch(url);
+    // Timeout + tope de tamaño: una descarga colgada deja mudo al chat
+    // (cola serial) y un audio gigante tumba la transcripción.
+    const r = await fetch(url, { signal: AbortSignal.timeout(20000) });
     if (!r.ok) throw new Error(`descarga del audio falló (HTTP ${r.status})`);
     const buffer = Buffer.from(await r.arrayBuffer());
+    if (buffer.length > 25 * 1024 * 1024) throw new Error(`audio demasiado grande (${buffer.length} bytes)`);
     const texto = await transcribirAudio(buffer, 'audio/mp4');
     console.log(`[ig] Nota de voz de ${igsid} transcrita: "${texto}"`);
     if (!texto) {

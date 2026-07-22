@@ -42,6 +42,10 @@ function registrarUso(usage) {
 const LIMITE_HISTORIAL = 20;          // mensajes (sin contar el system prompt)
 const SESION_EXPIRA_MS = 24 * 60 * 60 * 1000; // 24 horas
 
+// Antispam de alertas al supervisor (solicitar_humano): hora de la última
+// alerta enviada por chat.
+const ultimaAlertaPorChat = new Map();
+
 // Historial en memoria: jid -> { mensajes: [], ultimaActividad: number }
 const historiales = new Map();
 
@@ -430,6 +434,14 @@ async function ejecutarHerramienta(nombre, args, contexto) {
     if (config.notifyNumbers.includes(telefono)) {
       return 'El cliente ES el supervisor (número de aviso), así que no se envió ninguna alerta. Responde tú directo con lo que sepas y, si falta un dato, dilo con naturalidad.';
     }
+    // Antispam: máximo 1 alerta cada 30 min por chat (un cliente troll o un
+    // bucle del modelo no debe bombardear al dueño).
+    const ahora = Date.now();
+    const clave = telefono || contexto.jid || 'desconocido';
+    if (ahora - (ultimaAlertaPorChat.get(clave) || 0) < 30 * 60 * 1000) {
+      return 'Ya se notificó al supervisor hace poco en esta conversación. Dile al cliente que la alerta ya está pasada y que tú mismo le avisas en cuanto respondan; no insistas.';
+    }
+    ultimaAlertaPorChat.set(clave, ahora);
     await notificarDuenoIG(
       `🚨 *Piden hablar con el SUPERVISOR*\n` +
       `📞 Cliente: ${telefono || contexto.jid || 'desconocido'}${contexto.canalTipo === 'instagram' ? ' (Instagram)' : ''}\n` +

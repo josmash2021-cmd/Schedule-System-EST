@@ -115,7 +115,9 @@ async function sendOwnerWhatsAppNotification(cita) {
 
   try {
     const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(OWNER_PHONE)}&text=${encodeURIComponent(text)}&apikey=${encodeURIComponent(CALLMEBOT_API_KEY)}`;
-    const res = await fetch(url);
+    // Sin timeout, un cuelgue de CallMeBot deja la promesa pendiente para
+    // siempre acumulando handles con cada cita.
+    const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     console.log('WhatsApp al dueño encolado (CallMeBot).');
   } catch (err) {

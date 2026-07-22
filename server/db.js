@@ -36,6 +36,17 @@ async function initDb() {
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_appointments_fecha ON appointments(fecha);
     `);
+    // Migración: el UNIQUE (fecha, hora) absoluto impedía re-reservar un
+    // slot cuya cita fue CANCELADA (slots.js la muestra libre pero el
+    // INSERT chocaba con la fila cancelada → 409 permanente). Se reemplaza
+    // por un índice único PARCIAL que solo aplica a citas no canceladas.
+    await client.query(`
+      ALTER TABLE appointments DROP CONSTRAINT IF EXISTS appointments_fecha_hora_key;
+    `);
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS appointments_fecha_hora_activa
+      ON appointments(fecha, hora) WHERE estado <> 'cancelada';
+    `);
     console.log('Database initialized.');
   } finally {
     client.release();

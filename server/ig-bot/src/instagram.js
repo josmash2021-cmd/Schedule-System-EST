@@ -16,7 +16,9 @@ async function postIG(cuerpo) {
   const r = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(cuerpo)
+    body: JSON.stringify(cuerpo),
+    // Sin timeout, un cuelgue de la Graph API deja mudo al chat (cola serial).
+    signal: AbortSignal.timeout(15000)
   });
   if (!r.ok) {
     const detalle = await r.text().catch(() => '');
@@ -68,7 +70,13 @@ export async function enviarAudioIG(igsid, url) {
 export function verificarFirmaIG(rawBody, signatureHeader) {
   const secreto = config.instagram.appSecret;
   if (!secreto) {
-    console.warn('[ig] IG_APP_SECRET no configurada: evento aceptado sin verificar firma.');
+    // Fail-closed en producción: aceptar eventos sin firma deja el webhook
+    // (URL predecible) abierto a eventos falsos. En desarrollo se advierte.
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[ig] IG_APP_SECRET no configurada: evento RECHAZADO (firma no verificable).');
+      return false;
+    }
+    console.warn('[ig] IG_APP_SECRET no configurada: evento aceptado sin verificar firma (solo desarrollo).');
     return true;
   }
   if (!rawBody || !signatureHeader) return false;

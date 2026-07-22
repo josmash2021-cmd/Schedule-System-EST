@@ -66,25 +66,43 @@ app.get('/api/health', (_req, res) => {
 // Vinculación del bot de WhatsApp: muestra el QR actual como imagen real
 // (el de los logs es difícil de escanear y caduca en segundos). La página
 // se auto-recarga cada 15s hasta que el bot queda conectado.
+// SEGURIDAD: este QR vincula el WhatsApp del negocio — quien lo escanee se
+// vuelve el bot. Las dos rutas exigen ?key=QR_ADMIN_KEY (env) en producción.
 let waBot = null;
 
-app.get('/bot-qr', (_req, res) => {
+const crypto = require('node:crypto');
+
+function qrAutorizado(req) {
+  const esperada = process.env.QR_ADMIN_KEY || '';
+  if (!esperada) {
+    // Sin clave configurada: solo se permite en desarrollo.
+    return process.env.NODE_ENV !== 'production';
+  }
+  const a = Buffer.from(String(req.query.key || ''));
+  const b = Buffer.from(esperada);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+app.get('/bot-qr', (req, res) => {
+  if (!qrAutorizado(req)) return res.status(403).send('No autorizado.');
   const qr = waBot?.obtenerQR?.() || null;
+  const keyParam = process.env.QR_ADMIN_KEY ? `?key=${encodeURIComponent(String(req.query.key || ''))}` : '';
   res.type('html').send(`<!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8">
-<meta http-equiv="refresh" content="15">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vincular WhatsApp — Bot</title>
 <style>body{font-family:sans-serif;text-align:center;padding:2rem;background:#111;color:#eee}
 img{background:#fff;padding:16px;border-radius:12px;max-width:90vw}</style></head>
 <body>
 ${qr
-    ? '<h2>Escanea este QR con WhatsApp</h2><p>Dispositivos vinculados → Vincular dispositivo (se actualiza solo cada 15s)</p><img src="/bot-qr.png" alt="QR de vinculación">'
+    ? `<h2>Escanea este QR con WhatsApp</h2><p>Dispositivos vinculados → Vincular dispositivo (se actualiza solo cada 15s)</p><img src="/bot-qr.png${keyParam}" alt="QR de vinculación">`
     : '<h2>✅ Bot conectado (o sin QR pendiente)</h2><p>Si el bot está esperando vinculación, el QR aparecerá aquí en unos segundos.</p>'}
+<script>setTimeout(() => location.reload(), 15000)</script>
 </body></html>`);
 });
 
-app.get('/bot-qr.png', async (_req, res) => {
+app.get('/bot-qr.png', async (req, res) => {
+  if (!qrAutorizado(req)) return res.status(403).json({ error: 'No autorizado.' });
   const qr = waBot?.obtenerQR?.() || null;
   if (!qr) return res.status(404).json({ error: 'No hay QR pendiente (bot conectado o aún no generado).' });
   try {

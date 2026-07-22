@@ -13,7 +13,10 @@ router.get('/', async (req, res) => {
 
   try {
     const result = await pool.query(
-      'SELECT hora::text as hora FROM appointments WHERE fecha = $1 AND estado != $2',
+      // to_char 'HH24:MI': TIME::text devuelve 'HH:MM:SS' y jamás
+      // coincidiría con los slots 'HH:MM' de generateSlots() — bug que
+      // mostraba los horarios ocupados como disponibles.
+      "SELECT to_char(hora, 'HH24:MI') as hora FROM appointments WHERE fecha = $1 AND estado != $2",
       [date, 'cancelada']
     );
     const booked = new Set(result.rows.map(r => r.hora));
