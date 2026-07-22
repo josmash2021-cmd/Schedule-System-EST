@@ -408,6 +408,9 @@ async function iniciarBot() {
       const ahora = Date.now();
       if (ahora - (ultimaLlamadaPorChat.get(jid) || 0) < ANTISPAM_LLAMADA_MS) continue;
       ultimaLlamadaPorChat.set(jid, ahora);
+      // Pausa humana de 5s tras colgar: el mensaje no llega "de inmediato",
+      // como si uno hubiera visto la llamada perdida y escrito enseguida.
+      await new Promise((r) => setTimeout(r, 5000));
       try {
         await sock.sendMessage(jid, {
           text: '¡Hola! Vi que nos llamaste 😊 Por aquí no puedo contestar llamadas, pero cuéntame por mensaje (texto o nota de voz) y te ayudo enseguida.'
