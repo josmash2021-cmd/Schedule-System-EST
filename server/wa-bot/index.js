@@ -151,6 +151,11 @@ const INACTIVIDAD_SALUDO_MS = 3 * 60 * 60 * 1000; // 3 horas
 const ANTISPAM_VOZ_MS = 15 * 60 * 1000;
 const ultimaVozPorChat = new Map();
 
+// Antispam de la despedida, INDEPENDIENTE del de bienvenida: que el
+// cliente reciba el saludo por voz no debe impedir que su despedida unos
+// minutos después también salga por voz.
+const ultimaDespedidaPorChat = new Map();
+
 // Antispam de llamadas rechazadas: máximo 1 mensaje + aviso cada hora
 // por número, aunque el cliente insista llamando.
 const ANTISPAM_LLAMADA_MS = 60 * 60 * 1000;
@@ -264,7 +269,7 @@ async function manejarMensaje(sock, mensaje) {
     // se responde con el audio de despedida y no se manda texto repetido.
     // Mismo antispam de 15 min que la bienvenida.
     if (esSoloDespedida(texto) && vozDisponible() &&
-        (Date.now() - (ultimaVozPorChat.get(jid) || 0)) >= ANTISPAM_VOZ_MS) {
+        (Date.now() - (ultimaDespedidaPorChat.get(jid) || 0)) >= ANTISPAM_VOZ_MS) {
       try {
         await presencia('recording');
         const audioDesp = await obtenerAudioDespedida();
@@ -274,7 +279,7 @@ async function manejarMensaje(sock, mensaje) {
             mimetype: 'audio/ogg; codecs=opus',
             ptt: true
           });
-          ultimaVozPorChat.set(jid, Date.now());
+          ultimaDespedidaPorChat.set(jid, Date.now());
           console.log(`[mensaje] Nota de voz de despedida enviada a ${telefono}`);
           await presencia('paused');
           sembrarDespedidaVoz(jid);

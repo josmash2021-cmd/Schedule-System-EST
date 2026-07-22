@@ -79,6 +79,11 @@ const INACTIVIDAD_SALUDO_MS = 3 * 60 * 60 * 1000; // 3 horas
 const ANTISPAM_VOZ_MS = 15 * 60 * 1000;
 const ultimaVozPorChat = new Map();
 
+// Antispam de la despedida, INDEPENDIENTE del de bienvenida: que el
+// cliente reciba el saludo por voz no debe impedir que su despedida unos
+// minutos después también salga por voz.
+const ultimaDespedidaPorChat = new Map();
+
 // Dedup por message.mid: Meta reintenta la entrega si algo falla y el mismo
 // mensaje no debe procesarse dos veces. Set con tope de 1000 entradas.
 const midsVistos = new Set();
@@ -166,13 +171,13 @@ async function manejarTexto(igsid, texto) {
     // saludo por error). Misma regla que WhatsApp: si el cliente SOLO se
     // despide o agradece, se responde con el audio y no se manda texto.
     if (esSoloDespedida(texto) && vozDisponible() &&
-        (Date.now() - (ultimaVozPorChat.get(igsid) || 0)) >= ANTISPAM_VOZ_MS) {
+        (Date.now() - (ultimaDespedidaPorChat.get(igsid) || 0)) >= ANTISPAM_VOZ_MS) {
       try {
         const audioDesp = await obtenerM4aDespedida();
         if (audioDesp) {
           const url = `${BASE_PUBLICA}/voz/${path.basename(audioDesp.ruta)}`;
           await enviarAudioIG(igsid, url);
-          ultimaVozPorChat.set(igsid, Date.now());
+          ultimaDespedidaPorChat.set(igsid, Date.now());
           console.log(`[ig] Nota de voz de despedida enviada a ${igsid}`);
           sembrarDespedidaVoz(`ig:${igsid}`);
           return;

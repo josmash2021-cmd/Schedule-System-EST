@@ -26,9 +26,9 @@ const CACHE_DIR = path.join(config.dataDir, 'voz');
 // cacheado, así que al cambiarla los audios viejos se ignoran y se
 // regeneran solos (local y en el volumen de Railway).
 const SLUGS = {
-  'buenos días': 'buenos-dias-v5',
-  'buenas tardes': 'buenas-tardes-v5',
-  'buenas noches': 'buenas-noches-v5'
+  'buenos días': 'buenos-dias-v6',
+  'buenas tardes': 'buenas-tardes-v6',
+  'buenas noches': 'buenas-noches-v6'
 };
 
 let cliente = null;
@@ -117,7 +117,7 @@ async function asegurarPar(slug, texto, etiqueta) {
 async function asegurarAudios(saludo) {
   const slug = SLUGS[saludo];
   if (!slug) throw new Error(`Saludo desconocido: ${saludo}`);
-  return asegurarPar(slug, `Hola, ${saludo}. Mi nombre es Ángela, ¿en qué te puedo ayudar?`, `bienvenida ${saludo}`);
+  return asegurarPar(slug, `Hola, ${saludo}. Soy Ángela, ¿cómo te puedo ayudar?`, `bienvenida ${saludo}`);
 }
 
 // Despedidas por nota de voz, según la hora del negocio (como el saludo):
