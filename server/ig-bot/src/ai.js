@@ -6,7 +6,7 @@ import path from 'node:path';
 import config from './config.js';
 // La voz de bienvenida la genera el módulo compartido del wa-bot
 // (mismos audios cacheados, mismo ELEVENLABS_API_KEY).
-import { vozDisponible, textoDespedida } from '../../wa-bot/src/voz.js';
+import { vozDisponible } from '../../wa-bot/src/voz.js';
 import { guardarCita } from './citas.js';
 import { notificarDuenoIG } from './notificar.js';
 import { consultarSlots, crearCitaWeb } from './citasApi.js';
@@ -178,7 +178,7 @@ PERSONALIDAD Y ESTILO (lo más importante):
 - Eres Angela, LA ENCARGADA de la tienda. Si te piden hablar con "un agente", "el encargado" o "el manager", ese eres TÚ: dilo con naturalidad ("¡Claro! Hablas con Angela, la encargada de la tienda, ¿en qué te ayudo?").
 - Arriba de ti solo está el SUPERVISOR (el dueño). No existe ningún "asesor" ni otro empleado: cualquier cosa que tú no puedas resolver la consulta el supervisor y TÚ le avisas al cliente cuando él te responda.
 ${vozDisponible()
-    ? '- El saludo de bienvenida ("Hola, buenos días/tardes/noches, soy Angela, ¿cómo te puedo ayudar?") se envía SOLO como nota de voz al iniciar la conversación, antes de tu primera respuesta. Por eso, en tu primer mensaje NO saludes ni te presentes de nuevo: responde directo y con naturalidad a lo que el cliente escribió. EXCEPCIÓN: si el cliente dice que no se escucha la nota de voz, que no la puede oír o que no puede escuchar audios ahora, entonces SÍ escríbele el saludo por texto ("Hola, buenos días/tardes/noches, soy Angela, ¿cómo te puedo ayudar?") y sigue la conversación normal.'
+    ? '- El saludo de bienvenida ("Hola, buenos días/tardes/noches, soy Angela/Alex, ¿cómo te puedo ayudar?") se envía SOLO como nota de voz al iniciar la conversación, antes de tu primera respuesta (la dice Angela o Alex; el historial te dice cuál). Por eso, en tu primer mensaje NO saludes ni te presentes de nuevo: responde directo y con naturalidad a lo que el cliente escribió. EXCEPCIÓN: si el cliente dice que no se escucha la nota de voz, que no la puede oír o que no puede escuchar audios ahora, entonces SÍ escríbele el saludo por texto ("Hola, buenos días/tardes/noches, soy Angela, ¿cómo te puedo ayudar?") y sigue la conversación normal.'
     : '- En el primer mensaje saluda según la hora del negocio — "buenos días" (antes de las 12 p.m.), "buenas tardes" (de 12 a 7 p.m.), "buenas noches" (después de las 7 p.m.) — y preséntate así de natural: "Hola, buenas tardes, soy Angela, un gusto 😊 ¿cómo puedo ayudarte?". Varía un poco la fórmula cada vez para que no suene a guion.'}
 - PROHIBIDO decir "asistente virtual", "asistente automático", "soy un bot" o frases tipo "Bienvenido a X, soy el asistente de...".
 - Si te preguntan directamente si eres humano o un bot, responde con honestidad y sin drama ("jaja soy Angela, la asistente en línea de la tienda, pero si prefieres te comunico con una persona") y sigue la conversación.
@@ -536,7 +536,8 @@ export function cerrarSesion(jid) {
 // la IA. Se usa cuando el cliente solo dijo "hola" y ya recibió la nota
 // de voz: así el bot NO repite el saludo por texto, y cuando el cliente
 // escriba de nuevo la IA ya tiene el contexto (no es "primera vez").
-export function sembrarSaludoVoz(jid, saludo) {
+// Recibe el texto EXACTO que dijo la voz (Ángela o Alex, variante al azar).
+export function sembrarSaludoVoz(jid, textoBienvenida) {
   let sesion = historiales.get(jid);
   if (!sesion) {
     sesion = {
@@ -549,14 +550,14 @@ export function sembrarSaludoVoz(jid, saludo) {
   sesion.mensajes.push({ role: 'user', content: 'hola' });
   sesion.mensajes.push({
     role: 'assistant',
-    content: `Hola, ${saludo}. Soy Angela, ¿cómo te puedo ayudar? (esto ya se envió como nota de voz, no repetirlo por texto)`
+    content: `${textoBienvenida} (esto ya se envió como nota de voz, no repetirlo por texto)`
   });
   persistirHistoriales();
 }
 
 // Igual pero para la despedida: el cliente solo se despidió/agradeció y
 // ya recibió la nota de voz de despedida — no se llama a la IA.
-export function sembrarDespedidaVoz(jid) {
+export function sembrarDespedidaVoz(jid, textoDespedidaHablada) {
   let sesion = historiales.get(jid);
   if (!sesion) {
     sesion = {
@@ -569,7 +570,7 @@ export function sembrarDespedidaVoz(jid) {
   sesion.mensajes.push({ role: 'user', content: '(el cliente se despidió agradeciendo)' });
   sesion.mensajes.push({
     role: 'assistant',
-    content: `${textoDespedida()} (esto ya se envió como nota de voz, no repetirlo por texto)`
+    content: `${textoDespedidaHablada} (esto ya se envió como nota de voz, no repetirlo por texto)`
   });
   persistirHistoriales();
 }

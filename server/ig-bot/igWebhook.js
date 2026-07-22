@@ -173,13 +173,13 @@ async function manejarTexto(igsid, texto) {
     if (esSoloDespedida(texto) && vozDisponible() &&
         (Date.now() - (ultimaDespedidaPorChat.get(igsid) || 0)) >= ANTISPAM_VOZ_MS) {
       try {
-        const audioDesp = await obtenerM4aDespedida();
+        const audioDesp = await obtenerM4aDespedida(`ig:${igsid}`);
         if (audioDesp) {
           const url = `${BASE_PUBLICA}/voz/${path.basename(audioDesp.ruta)}`;
           await enviarAudioIG(igsid, url);
           ultimaDespedidaPorChat.set(igsid, Date.now());
-          console.log(`[ig] Nota de voz de despedida enviada a ${igsid}`);
-          sembrarDespedidaVoz(`ig:${igsid}`);
+          console.log(`[ig] Nota de voz de despedida enviada a ${igsid} (${audioDesp.nombre})`);
+          sembrarDespedidaVoz(`ig:${igsid}`, audioDesp.texto);
           return;
         }
       } catch (err) {
@@ -203,19 +203,19 @@ async function manejarTexto(igsid, texto) {
         saludoConHora);
     if (tocaVoz && vozDisponible()) {
       try {
-        const audio = await obtenerM4aBienvenida();
+        const audio = await obtenerM4aBienvenida(`ig:${igsid}`);
         if (audio) {
           const url = `${BASE_PUBLICA}/voz/${path.basename(audio.ruta)}`;
           await enviarAudioIG(igsid, url);
           ultimaVozPorChat.set(igsid, Date.now());
-          console.log(`[ig] Nota de voz de bienvenida enviada a ${igsid} (${audio.saludo})`);
+          console.log(`[ig] Nota de voz de bienvenida enviada a ${igsid} (${audio.saludo}, ${audio.nombre})`);
 
           // Si el cliente SOLO saludó ("hola", "buenas noches"...), la
           // nota de voz ya cubre el saludo: NO se manda texto repetido.
           // Queda sembrado en el historial para que la IA tenga contexto.
           // (Si luego dice que no la escuchó, la IA se lo escribe.)
           if (esSoloSaludo(texto)) {
-            sembrarSaludoVoz(`ig:${igsid}`, audio.saludo);
+            sembrarSaludoVoz(`ig:${igsid}`, audio.texto);
             console.log('[ig] Saludo cubierto por la nota de voz; no se envía texto.');
             return;
           }

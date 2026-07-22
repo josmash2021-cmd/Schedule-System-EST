@@ -272,17 +272,17 @@ async function manejarMensaje(sock, mensaje) {
         (Date.now() - (ultimaDespedidaPorChat.get(jid) || 0)) >= ANTISPAM_VOZ_MS) {
       try {
         await presencia('recording');
-        const audioDesp = await obtenerAudioDespedida();
+        const audioDesp = await obtenerAudioDespedida(jid);
         if (audioDesp) {
           await sock.sendMessage(jid, {
-            audio: audioDesp,
+            audio: audioDesp.buffer,
             mimetype: 'audio/ogg; codecs=opus',
             ptt: true
           });
           ultimaDespedidaPorChat.set(jid, Date.now());
-          console.log(`[mensaje] Nota de voz de despedida enviada a ${telefono}`);
+          console.log(`[mensaje] Nota de voz de despedida enviada a ${telefono} (${audioDesp.nombre})`);
           await presencia('paused');
-          sembrarDespedidaVoz(jid);
+          sembrarDespedidaVoz(jid, audioDesp.texto);
           marcarProcesado(jid, tsMensaje);
           return;
         }
@@ -310,7 +310,7 @@ async function manejarMensaje(sock, mensaje) {
     if (tocaVoz && vozDisponible()) {
       try {
         await presencia('recording');
-        const audio = await obtenerAudioBienvenida();
+        const audio = await obtenerAudioBienvenida(jid);
         if (audio) {
           await sock.sendMessage(jid, {
             audio: audio.buffer,
@@ -318,7 +318,7 @@ async function manejarMensaje(sock, mensaje) {
             ptt: true
           });
           ultimaVozPorChat.set(jid, Date.now());
-          console.log(`[mensaje] Nota de voz de bienvenida enviada a ${telefono} (${audio.saludo})`);
+          console.log(`[mensaje] Nota de voz de bienvenida enviada a ${telefono} (${audio.saludo}, ${audio.nombre})`);
           await presencia('paused');
 
           // Si el cliente SOLO saludó ("hola", "buenas noches"...), la
@@ -326,7 +326,7 @@ async function manejarMensaje(sock, mensaje) {
           // Queda sembrado en el historial para que la IA tenga contexto.
           // (Si luego dice que no la escuchó, la IA se lo escribe.)
           if (esSoloSaludo(texto)) {
-            sembrarSaludoVoz(jid, audio.saludo);
+            sembrarSaludoVoz(jid, audio.texto);
             console.log('[mensaje] Saludo cubierto por la nota de voz; no se envía texto.');
             marcarProcesado(jid, tsMensaje);
             return;

@@ -13,8 +13,59 @@ import config from './config.js';
 const execFileAsync = promisify(execFile);
 
 const API_KEY = process.env.ELEVENLABS_API_KEY || '';
-const VOZ_ID = process.env.ELEVENLABS_VOICE_ID || 'NKNnfxyJilN0daSOIf11';
 const MODELO = 'eleven_v3';
+
+// Personas de voz del bot: la bienvenida y la despedida las dice Ángela o
+// Alex, elegida una al azar cada vez. Cada una se presenta con su nombre.
+const VOCES = [
+  { id: process.env.ELEVENLABS_VOICE_ID || 'NKNnfxyJilN0daSOIf11', nombre: 'Ángela', slug: 'angela' },
+  { id: process.env.ELEVENLABS_VOICE_ID_2 || 'Aoh8oiCIlPke1wFxeNuK', nombre: 'Alex', slug: 'alex' }
+];
+
+function vozAlAzar() {
+  return VOCES[Math.floor(Math.random() * VOCES.length)];
+}
+
+// Persona fija POR CHAT: el que atienda la primera vez (Ángela o Alex, al
+// azar) atiende esa conversación para siempre. Se persiste en disco para
+// que sobreviva a los redeploys (volumen de Railway).
+const PERSONAS_PATH = path.join(config.dataDir, 'personas.json');
+let personasPorChat = {};
+try {
+  if (existsSync(PERSONAS_PATH)) {
+    personasPorChat = JSON.parse(readFileSync(PERSONAS_PATH, 'utf8'));
+  }
+} catch { /* mapa nuevo */ }
+
+let personasTimer = null;
+function guardarPersonas() {
+  if (personasTimer) return;
+  personasTimer = setTimeout(() => {
+    personasTimer = null;
+    try {
+      mkdirSync(path.dirname(PERSONAS_PATH), { recursive: true });
+      writeFileSync(PERSONAS_PATH, JSON.stringify(personasPorChat));
+    } catch (err) {
+      console.error(`[voz] No se pudo guardar personas.json: ${err.message}`);
+    }
+  }, 1000);
+  personasTimer.unref?.();
+}
+
+function vozParaChat(jid) {
+  const clave = String(jid || '');
+  if (!clave) return vozAlAzar(); // sin chat (scripts de prueba): aleatorio
+  const asignada = personasPorChat[clave];
+  if (asignada) {
+    const voz = VOCES.find((v) => v.slug === asignada);
+    if (voz) return voz;
+  }
+  const nueva = vozAlAzar();
+  personasPorChat[clave] = nueva.slug;
+  guardarPersonas();
+  console.log(`[voz] Chat ${clave.slice(-10)} asignado a ${nueva.nombre} (lo atiende siempre)`);
+  return nueva;
+}
 
 // Zona horaria del negocio (Hoover, Alabama) — la misma que usa src/ai.js.
 const ZONA_NEGOCIO = 'America/Chicago';
@@ -24,17 +75,18 @@ const ZONA_NEGOCIO = 'America/Chicago';
 const CACHE_DIR = path.join(config.dataDir, 'voz');
 
 // Variantes de bienvenida por franja horaria (se elige una AL AZAR cada
-// vez para que no suene repetitivo). El slug lleva versión: al cambiar
-// las frases se sube y los audios viejos se ignoran.
+// vez para que no suene repetitivo). Cada persona se presenta con su
+// nombre. El slug lleva versión: al cambiar frases se sube y los audios
+// viejos se ignoran.
 const VARIANTES_BIENVENIDA = [
-  (s) => `Hola, ${s}. Soy Ángela, ¿cómo te puedo ayudar?`,
-  (s) => `Hola, ${s}, habla Ángela. ¿En qué te puedo ayudar?`,
-  (s) => `${s.charAt(0).toUpperCase() + s.slice(1)}, bienvenido a Electronic Service Technology. Soy Ángela, ¿en qué te ayudo?`
+  (s, n) => `Hola, ${s}. Soy ${n}, ¿cómo te puedo ayudar?`,
+  (s, n) => `Hola, ${s}, habla ${n}. ¿En qué te puedo ayudar?`,
+  (s, n) => `${s.charAt(0).toUpperCase() + s.slice(1)}, bienvenido a Electronic Service Technology. Soy ${n}, ¿en qué te ayudo?`
 ];
 const SLUG_BIENVENIDA = {
-  'buenos días': 'buenos-dias-v7',
-  'buenas tardes': 'buenas-tardes-v7',
-  'buenas noches': 'buenas-noches-v7'
+  'buenos días': 'buenos-dias-v8',
+  'buenas tardes': 'buenas-tardes-v8',
+  'buenas noches': 'buenas-noches-v8'
 };
 
 let cliente = null;
@@ -72,8 +124,8 @@ export function saludoSegunHora() {
  *  - ogg/opus: WhatsApp (nota de voz con waveform).
  *  - m4a/aac:  Instagram (adjunto de audio por URL pública).
  */
-async function generarAudios(texto, slug) {
-  const stream = await cliente.textToSpeech.convert(VOZ_ID, {
+async function generarAudios(texto, slug, vozId) {
+  const stream = await cliente.textToSpeech.convert(vozId, {
     modelId: MODELO,
     text: texto,
     outputFormat: 'mp3_44100_128'
@@ -106,28 +158,30 @@ async function generarAudios(texto, slug) {
 /**
  * Garantiza que exista el par de audios (ogg + m4a) de un texto cacheado.
  */
-async function asegurarPar(slug, texto, etiqueta) {
+async function asegurarPar(slug, texto, etiqueta, vozId) {
   const rutaOgg = path.join(CACHE_DIR, `${slug}.ogg`);
   const rutaM4a = path.join(CACHE_DIR, `${slug}.m4a`);
   if (!existsSync(rutaOgg) || !existsSync(rutaM4a)) {
     console.log(`[voz] Generando audio (${etiqueta}) con ElevenLabs...`);
-    await generarAudios(texto, slug);
+    await generarAudios(texto, slug, vozId);
   }
   return { rutaOgg, rutaM4a };
 }
 
 /**
- * Garantiza que existan los audios cacheados de una variante de saludo y
- * devuelve las rutas de UNA variante elegida al azar (para que la
- * bienvenida no suene siempre igual).
+ * Bienvenida: garantiza los audios de una variante al azar dicha por una
+ * persona al azar (Ángela o Alex). Devuelve rutas + metadatos (saludo,
+ * nombre y texto exacto hablado, para sembrar el historial).
  */
-async function asegurarAudios(saludo) {
+async function asegurarAudios(saludo, jid) {
   const base = SLUG_BIENVENIDA[saludo];
   if (!base) throw new Error(`Saludo desconocido: ${saludo}`);
+  const voz = vozParaChat(jid);
   const i = Math.floor(Math.random() * VARIANTES_BIENVENIDA.length);
-  const slug = `${base}-${i + 1}`;
-  const texto = VARIANTES_BIENVENIDA[i](saludo);
-  return asegurarPar(slug, texto, `bienvenida ${saludo} v${i + 1}`);
+  const slug = `${base}-${voz.slug}-${i + 1}`;
+  const texto = VARIANTES_BIENVENIDA[i](saludo, voz.nombre);
+  const par = await asegurarPar(slug, texto, `bienvenida ${saludo} ${voz.nombre} v${i + 1}`, voz.id);
+  return { ...par, saludo, nombre: voz.nombre, texto };
 }
 
 // Despedidas por nota de voz, según la hora del negocio (como el saludo):
@@ -139,9 +193,9 @@ const VARIANTES_DESPEDIDA = [
   (d) => `Gracias por escribirnos. Cualquier cosa me avisa, ¡que tenga ${d}!`
 ];
 const SLUG_DESPEDIDA = {
-  'buenos días': { slug: 'despedida-v4', texto: 'buen día' },
-  'buenas tardes': { slug: 'despedida-tardes-v4', texto: 'buenas tardes' },
-  'buenas noches': { slug: 'despedida-noches-v4', texto: 'buenas noches' }
+  'buenos días': { slug: 'despedida-v5', texto: 'buen día' },
+  'buenas tardes': { slug: 'despedida-tardes-v5', texto: 'buenas tardes' },
+  'buenas noches': { slug: 'despedida-noches-v5', texto: 'buenas noches' }
 };
 
 // Texto de la despedida para la hora actual del negocio (lo usan los
@@ -150,21 +204,23 @@ export function textoDespedida() {
   return `Perfecto, cualquier duda o pregunta estamos a la orden, ¡que tenga ${SLUG_DESPEDIDA[saludoSegunHora()].texto}!`;
 }
 
-async function asegurarDespedida() {
+async function asegurarDespedida(jid) {
   const d = SLUG_DESPEDIDA[saludoSegunHora()];
+  const voz = vozParaChat(jid);
   const i = Math.floor(Math.random() * VARIANTES_DESPEDIDA.length);
-  const slug = `${d.slug}-${i + 1}`;
+  const slug = `${d.slug}-${voz.slug}-${i + 1}`;
   const texto = VARIANTES_DESPEDIDA[i](d.texto);
-  return asegurarPar(slug, texto, `despedida ${d.texto} v${i + 1}`);
+  const par = await asegurarPar(slug, texto, `despedida ${d.texto} ${voz.nombre} v${i + 1}`, voz.id);
+  return { ...par, nombre: voz.nombre, texto };
 }
 
 /**
  * Devuelve el audio de un saludo como Buffer ogg/opus (WhatsApp),
- * usando caché en disco.
+ * con la persona asignada al chat y una variante al azar.
  */
-export async function obtenerAudioSaludo(saludo) {
-  const { rutaOgg } = await asegurarAudios(saludo);
-  return readFileSync(rutaOgg);
+export async function obtenerAudioSaludo(saludo, jid) {
+  const { rutaOgg, ...meta } = await asegurarAudios(saludo, jid);
+  return { buffer: readFileSync(rutaOgg), ...meta };
 }
 
 /**
@@ -172,12 +228,12 @@ export async function obtenerAudioSaludo(saludo) {
  * por URL pública, así que se devuelve la RUTA del m4a cacheado (el
  * servidor web lo expone en /voz/). null si la voz no está disponible.
  */
-export async function obtenerM4aBienvenida() {
+export async function obtenerM4aBienvenida(jid) {
   if (!vozDisponible()) return null;
   const saludo = saludoSegunHora();
   try {
-    const { rutaM4a } = await asegurarAudios(saludo);
-    return { ruta: rutaM4a, saludo };
+    const { rutaM4a, ...meta } = await asegurarAudios(saludo, jid);
+    return { ruta: rutaM4a, ...meta };
   } catch (err) {
     console.error(`[voz] Error al generar la bienvenida de voz: ${err.message}`);
     return null;
@@ -186,15 +242,14 @@ export async function obtenerM4aBienvenida() {
 
 /**
  * Audio de bienvenida según la hora del negocio.
- * Devuelve { buffer, saludo } o null si la voz no está disponible o falla
- * (en ese caso el bot saluda por texto como antes).
+ * Devuelve { buffer, saludo, nombre, texto } o null si la voz no está
+ * disponible o falla (en ese caso el bot saluda por texto como antes).
  */
-export async function obtenerAudioBienvenida() {
+export async function obtenerAudioBienvenida(jid) {
   if (!vozDisponible()) return null;
   const saludo = saludoSegunHora();
   try {
-    const buffer = await obtenerAudioSaludo(saludo);
-    return { buffer, saludo };
+    return await obtenerAudioSaludo(saludo, jid);
   } catch (err) {
     console.error(`[voz] Error al generar la bienvenida de voz: ${err.message}`);
     return null;
@@ -202,15 +257,15 @@ export async function obtenerAudioBienvenida() {
 }
 
 /**
- * Despedida por nota de voz para WhatsApp: devuelve el Buffer ogg/opus
- * de una variante al azar, según la hora del negocio (buen día / buenas
- * tardes / buenas noches). null si la voz no está disponible.
+ * Despedida por nota de voz para WhatsApp: devuelve { buffer, nombre,
+ * texto } de una variante al azar con la persona asignada al chat, según
+ * la hora del negocio. null si la voz no está disponible.
  */
-export async function obtenerAudioDespedida() {
+export async function obtenerAudioDespedida(jid) {
   if (!vozDisponible()) return null;
   try {
-    const { rutaOgg } = await asegurarDespedida();
-    return readFileSync(rutaOgg);
+    const { rutaOgg, ...meta } = await asegurarDespedida(jid);
+    return { buffer: readFileSync(rutaOgg), ...meta };
   } catch (err) {
     console.error(`[voz] Error al generar la despedida de voz: ${err.message}`);
     return null;
@@ -218,14 +273,14 @@ export async function obtenerAudioDespedida() {
 }
 
 /**
- * Despedida por nota de voz para Instagram: devuelve la RUTA del m4a
- * cacheado (Meta solo acepta audios por URL pública, servida en /voz/).
+ * Despedida por nota de voz para Instagram: devuelve { ruta, nombre,
+ * texto } del m4a cacheado (Meta solo acepta audios por URL pública).
  */
-export async function obtenerM4aDespedida() {
+export async function obtenerM4aDespedida(jid) {
   if (!vozDisponible()) return null;
   try {
-    const { rutaM4a } = await asegurarDespedida();
-    return { ruta: rutaM4a };
+    const { rutaM4a, ...meta } = await asegurarDespedida(jid);
+    return { ruta: rutaM4a, ...meta };
   } catch (err) {
     console.error(`[voz] Error al generar la despedida de voz: ${err.message}`);
     return null;
