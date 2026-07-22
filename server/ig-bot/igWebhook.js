@@ -57,6 +57,11 @@ function esReinicio(texto) {
 // Inactividad mínima para repetir la bienvenida de voz ante un saludo.
 const INACTIVIDAD_SALUDO_MS = 3 * 60 * 60 * 1000; // 3 horas
 
+// Antispam de la nota de voz: aunque el cliente salude varias veces
+// seguidas, máximo 1 audio de bienvenida cada 15 min por chat.
+const ANTISPAM_VOZ_MS = 15 * 60 * 1000;
+const ultimaVozPorChat = new Map();
+
 // Dedup por message.mid: Meta reintenta la entrega si algo falla y el mismo
 // mensaje no debe procesarse dos veces. Set con tope de 1000 entradas.
 const midsVistos = new Set();
@@ -140,18 +145,26 @@ async function manejarTexto(igsid, texto) {
     await esperar(2000);
 
     // Bienvenida por nota de voz (misma regla que WhatsApp): primera vez
-    // que escribe, o cuando vuelve a SALUDAR tras 3+ horas sin actividad.
+    // que escribe, cuando vuelve a SALUDAR tras 3+ horas sin actividad,
+    // o cuando el saludo incluye la hora del día ("hola buenas tardes",
+    // "buenos días"...) aunque la sesión siga activa.
+    // Antispam: máximo 1 nota de voz cada 15 min por chat.
     // El saludo ("buenos días/tardes/noches") depende de la hora del
     // negocio. Si falla, la IA saluda por texto como antes.
+    const saludoConHora = /(buenos\s+d[íi]as|buenas\s+tardes|buenas\s+noches|buen\s+d[íi]a)/i.test(texto);
+    const vozReciente = (Date.now() - (ultimaVozPorChat.get(igsid) || 0)) < ANTISPAM_VOZ_MS;
     const tocaVoz =
-      esPrimeraVez(`ig:${igsid}`) ||
-      (esSaludo(texto) && inactividadMs(`ig:${igsid}`) > INACTIVIDAD_SALUDO_MS);
+      !vozReciente &&
+      (esPrimeraVez(`ig:${igsid}`) ||
+        (esSaludo(texto) && inactividadMs(`ig:${igsid}`) > INACTIVIDAD_SALUDO_MS) ||
+        saludoConHora);
     if (tocaVoz && vozDisponible()) {
       try {
         const audio = await obtenerM4aBienvenida();
         if (audio) {
           const url = `${BASE_PUBLICA}/voz/${path.basename(audio.ruta)}`;
           await enviarAudioIG(igsid, url);
+          ultimaVozPorChat.set(igsid, Date.now());
           console.log(`[ig] Nota de voz de bienvenida enviada a ${igsid} (${audio.saludo})`);
 
           // Si el cliente SOLO saludó ("hola", "buenas noches"...), la

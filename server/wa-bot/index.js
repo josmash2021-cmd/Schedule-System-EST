@@ -123,6 +123,11 @@ function esReinicio(texto) {
 // Inactividad mínima para repetir la bienvenida de voz ante un saludo.
 const INACTIVIDAD_SALUDO_MS = 3 * 60 * 60 * 1000; // 3 horas
 
+// Antispam de la nota de voz: aunque el cliente salude varias veces
+// seguidas, máximo 1 audio de bienvenida cada 15 min por chat.
+const ANTISPAM_VOZ_MS = 15 * 60 * 1000;
+const ultimaVozPorChat = new Map();
+
 async function manejarMensaje(sock, mensaje) {
   if (esIgnorable(mensaje)) return;
 
@@ -219,14 +224,21 @@ async function manejarMensaje(sock, mensaje) {
     await new Promise((r) => setTimeout(r, 2000));
 
     // Bienvenida por nota de voz. Se envía cuando:
-    //  a) es el primer mensaje de la conversación (sesión nueva), o
+    //  a) es el primer mensaje de la conversación (sesión nueva),
     //  b) el cliente vuelve a SALUDAR ("hola", "buenas noches", etc.)
-    //     tras más de 3 horas sin escribir.
+    //     tras más de 3 horas sin escribir, o
+    //  c) el saludo incluye la hora del día ("hola buenas tardes",
+    //     "buenos días"...) — aunque la sesión siga activa.
     // Saluda según la hora del negocio ("buenos días/tardes/noches").
+    // Antispam: máximo 1 nota de voz cada 15 min por chat.
     // Si falla, la IA saluda por texto.
+    const saludoConHora = /(buenos\s+d[íi]as|buenas\s+tardes|buenas\s+noches|buen\s+d[íi]a)/i.test(texto);
+    const vozReciente = (Date.now() - (ultimaVozPorChat.get(jid) || 0)) < ANTISPAM_VOZ_MS;
     const tocaVoz =
-      esPrimeraVez(jid) ||
-      (esSaludo(texto) && inactividadMs(jid) > INACTIVIDAD_SALUDO_MS);
+      !vozReciente &&
+      (esPrimeraVez(jid) ||
+        (esSaludo(texto) && inactividadMs(jid) > INACTIVIDAD_SALUDO_MS) ||
+        saludoConHora);
     if (tocaVoz && vozDisponible()) {
       try {
         await presencia('recording');
@@ -237,6 +249,7 @@ async function manejarMensaje(sock, mensaje) {
             mimetype: 'audio/ogg; codecs=opus',
             ptt: true
           });
+          ultimaVozPorChat.set(jid, Date.now());
           console.log(`[mensaje] Nota de voz de bienvenida enviada a ${telefono} (${audio.saludo})`);
           await presencia('paused');
 
