@@ -547,6 +547,10 @@ export async function responder(jid, textoUsuario, contexto) {
 
   // Loop de tool calling: el modelo puede pedir herramientas varias veces
   // antes de dar la respuesta final en texto.
+  // TIMEOUT por llamada: si la API de IA se cuelga sin responder, sin esto
+  // el request queda colgado para siempre ocupando un slot del semáforo —
+  // y con 4 colgados TODOS los chats se quedan mudos. Con timeout, la
+  // llamada falla, libera el slot y el cliente recibe el fallback.
   const MAX_ITERACIONES = 5;
   for (let i = 0; i < MAX_ITERACIONES; i++) {
     const respuesta = await usarIA(() => cliente.chat.completions.create({
@@ -554,7 +558,7 @@ export async function responder(jid, textoUsuario, contexto) {
       messages: sesion.mensajes,
       tools: HERRAMIENTAS,
       tool_choice: 'auto'
-    }));
+    }, { timeout: 90000, maxRetries: 1 }));
     registrarUso(respuesta.usage);
 
     const mensaje = respuesta.choices[0].message;
