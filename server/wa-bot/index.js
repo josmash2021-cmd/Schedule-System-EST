@@ -13,8 +13,8 @@ import path from 'node:path';
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import config from './src/config.js';
-import { responder, iaDisponible, esPrimeraVez, inactividadMs, cerrarSesion, sembrarSaludoVoz } from './src/ai.js';
-import { vozDisponible, obtenerAudioBienvenida } from './src/voz.js';
+import { responder, iaDisponible, esPrimeraVez, inactividadMs, cerrarSesion, sembrarSaludoVoz, sembrarDespedidaVoz } from './src/ai.js';
+import { vozDisponible, obtenerAudioBienvenida, obtenerAudioDespedida } from './src/voz.js';
 import { notificarDueno } from './src/notificar.js';
 import { transcribirAudio, transcripcionDisponible } from './src/transcribir.js';
 import { encolar } from './src/cola.js';
@@ -126,6 +126,15 @@ const REINICIO_RE = /(cierr\w*\s+(la\s+|esta\s+)?sesi[oó]n|cerrar\s+sesi[oó]n|
 
 function esReinicio(texto) {
   return REINICIO_RE.test(texto || '');
+}
+
+// Mensaje que es SOLO una despedida o agradecimiento, sin pregunta ni
+// contenido ("muchísimas gracias", "que pase buen día", "adiós"...).
+// Se responde con la nota de voz de despedida (sin texto repetido).
+const SOLO_DESPEDIDA_RE = /^\s*(?:(?:(?:much[íi]simas|muchas|mil|ok(?:i)?|vale|perfecto)(?:\s+(?:de\s+verdad|por\s+todo|por\s+todo\s+esto))?\s+)*gracias(?:\s+(?:de\s+verdad|por\s+todo|por\s+su\s+(?:ayuda|tiempo)|por\s+tu\s+ayuda|amigo|amiga|rey|brou))?|que\s+pase[n]?s?\s+buen[oa]?s?\s+(?:d[íi]as?|tardes?|noches?)|que\s+tenga[n]?s?\s+buen[oa]?s?\s+(?:d[íi]as?|tardes?|noches?)|adi[oó]s|hasta\s+(?:luego|pronto|mañana)|nos\s+vemos|chao|bye(?:\s+bye)?|thank\s+you(?:\s+so\s+much)?|thanks(?:\s+a\s+lot)?)[\s!¡?¿.,🙏😊👍]*$/iu;
+
+function esSoloDespedida(texto) {
+  return SOLO_DESPEDIDA_RE.test(texto || '');
 }
 
 // Inactividad mínima para repetir la bienvenida de voz ante un saludo.
@@ -285,6 +294,34 @@ async function manejarMensaje(sock, mensaje) {
         }
       } catch (err) {
         console.error(`[mensaje] No se pudo enviar la bienvenida de voz: ${err.message}`);
+      }
+    }
+
+    // Despedida por nota de voz: si el cliente SOLO se despide o agradece
+    // ("muchísimas gracias", "que pase buen día", "adiós"...), se responde
+    // con el audio "Perfecto, cualquier duda o pregunta estamos a la
+    // orden, ¡que tenga buen día!" y no se manda texto repetido.
+    // Mismo antispam de 15 min que la bienvenida.
+    if (esSoloDespedida(texto) && vozDisponible() &&
+        (Date.now() - (ultimaVozPorChat.get(jid) || 0)) >= ANTISPAM_VOZ_MS) {
+      try {
+        await presencia('recording');
+        const audioDesp = await obtenerAudioDespedida();
+        if (audioDesp) {
+          await sock.sendMessage(jid, {
+            audio: audioDesp,
+            mimetype: 'audio/ogg; codecs=opus',
+            ptt: true
+          });
+          ultimaVozPorChat.set(jid, Date.now());
+          console.log(`[mensaje] Nota de voz de despedida enviada a ${telefono}`);
+          await presencia('paused');
+          sembrarDespedidaVoz(jid);
+          marcarProcesado(jid, tsMensaje);
+          return;
+        }
+      } catch (err) {
+        console.error(`[mensaje] No se pudo enviar la despedida de voz: ${err.message}`);
       }
     }
 

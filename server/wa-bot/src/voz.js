@@ -98,20 +98,33 @@ async function generarAudios(texto, slug) {
 }
 
 /**
+ * Garantiza que exista el par de audios (ogg + m4a) de un texto cacheado.
+ */
+async function asegurarPar(slug, texto, etiqueta) {
+  const rutaOgg = path.join(CACHE_DIR, `${slug}.ogg`);
+  const rutaM4a = path.join(CACHE_DIR, `${slug}.m4a`);
+  if (!existsSync(rutaOgg) || !existsSync(rutaM4a)) {
+    console.log(`[voz] Generando audio (${etiqueta}) con ElevenLabs...`);
+    await generarAudios(texto, slug);
+  }
+  return { rutaOgg, rutaM4a };
+}
+
+/**
  * Garantiza que existan los audios cacheados de un saludo
  * ("buenos días" | "buenas tardes" | "buenas noches").
  */
 async function asegurarAudios(saludo) {
   const slug = SLUGS[saludo];
   if (!slug) throw new Error(`Saludo desconocido: ${saludo}`);
-  const rutaOgg = path.join(CACHE_DIR, `${slug}.ogg`);
-  const rutaM4a = path.join(CACHE_DIR, `${slug}.m4a`);
-  if (!existsSync(rutaOgg) || !existsSync(rutaM4a)) {
-    console.log(`[voz] Generando audio de bienvenida (${saludo}) con ElevenLabs...`);
-    await generarAudios(`Hola, ${saludo}. Mi nombre es Ángela, ¿en qué te puedo ayudar?`, slug);
-  }
-  return { rutaOgg, rutaM4a };
+  return asegurarPar(slug, `Hola, ${saludo}. Mi nombre es Ángela, ¿en qué te puedo ayudar?`, `bienvenida ${saludo}`);
 }
+
+// Despedida por nota de voz (un solo audio; el texto no depende de la hora).
+const DESPEDIDA = {
+  slug: 'despedida-v1',
+  texto: 'Perfecto, cualquier duda o pregunta estamos a la orden, ¡que tenga buen día!'
+};
 
 /**
  * Devuelve el audio de un saludo como Buffer ogg/opus (WhatsApp),
@@ -152,6 +165,36 @@ export async function obtenerAudioBienvenida() {
     return { buffer, saludo };
   } catch (err) {
     console.error(`[voz] Error al generar la bienvenida de voz: ${err.message}`);
+    return null;
+  }
+}
+
+/**
+ * Despedida por nota de voz para WhatsApp: devuelve el Buffer ogg/opus
+ * cacheado (se genera una sola vez). null si la voz no está disponible.
+ */
+export async function obtenerAudioDespedida() {
+  if (!vozDisponible()) return null;
+  try {
+    const { rutaOgg } = await asegurarPar(DESPEDIDA.slug, DESPEDIDA.texto, 'despedida');
+    return readFileSync(rutaOgg);
+  } catch (err) {
+    console.error(`[voz] Error al generar la despedida de voz: ${err.message}`);
+    return null;
+  }
+}
+
+/**
+ * Despedida por nota de voz para Instagram: devuelve la RUTA del m4a
+ * cacheado (Meta solo acepta audios por URL pública, servida en /voz/).
+ */
+export async function obtenerM4aDespedida() {
+  if (!vozDisponible()) return null;
+  try {
+    const { rutaM4a } = await asegurarPar(DESPEDIDA.slug, DESPEDIDA.texto, 'despedida');
+    return { ruta: rutaM4a };
+  } catch (err) {
+    console.error(`[voz] Error al generar la despedida de voz: ${err.message}`);
     return null;
   }
 }

@@ -554,6 +554,26 @@ export function sembrarSaludoVoz(jid, saludo) {
   persistirHistoriales();
 }
 
+// Igual pero para la despedida: el cliente solo se despidió/agradeció y
+// ya recibió la nota de voz de despedida — no se llama a la IA.
+export function sembrarDespedidaVoz(jid) {
+  let sesion = historiales.get(jid);
+  if (!sesion) {
+    sesion = {
+      mensajes: [{ role: 'system', content: construirSystemPrompt() }],
+      ultimaActividad: Date.now()
+    };
+    historiales.set(jid, sesion);
+  }
+  sesion.ultimaActividad = Date.now();
+  sesion.mensajes.push({ role: 'user', content: '(el cliente se despidió agradeciendo)' });
+  sesion.mensajes.push({
+    role: 'assistant',
+    content: 'Perfecto, cualquier duda o pregunta estamos a la orden, ¡que tenga buen día! (esto ya se envió como nota de voz, no repetirlo por texto)'
+  });
+  persistirHistoriales();
+}
+
 // Limpia el historial antes de mandarlo a la API: los recortes de
 // historial o las sesiones restauradas de disco pueden dejar mensajes
 // 'tool' huérfanos (sin su tool_call en el assistant anterior), y la

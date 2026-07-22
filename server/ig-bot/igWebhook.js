@@ -10,14 +10,14 @@
 import express from 'express';
 import path from 'node:path';
 import config from './src/config.js';
-import { responder, iaDisponible, esPrimeraVez, inactividadMs, cerrarSesion, sembrarSaludoVoz } from './src/ai.js';
+import { responder, iaDisponible, esPrimeraVez, inactividadMs, cerrarSesion, sembrarSaludoVoz, sembrarDespedidaVoz } from './src/ai.js';
 import { encolar } from './src/cola.js';
 import { transcribirAudio, transcripcionDisponible } from './src/transcribir.js';
 import { enviarTextoIG, enviarAudioIG, accionIG, verificarFirmaIG, crearCanalIG } from './src/instagram.js';
 import { notificarDuenoIG } from './src/notificar.js';
 // La voz de bienvenida la genera el módulo compartido del wa-bot
 // (mismos audios cacheados en DATA_DIR/voz, servidos públicos en /voz/).
-import { vozDisponible, obtenerM4aBienvenida } from '../wa-bot/src/voz.js';
+import { vozDisponible, obtenerM4aBienvenida, obtenerM4aDespedida } from '../wa-bot/src/voz.js';
 
 const router = express.Router();
 
@@ -43,6 +43,15 @@ const SOLO_SALUDO_RE = /^\s*(?:(?:hola+|o-la|buen[ao]s?(?:\s+(?:d[íi]as|tardes|
 
 function esSoloSaludo(texto) {
   return SOLO_SALUDO_RE.test(texto || '');
+}
+
+// Mensaje que es SOLO una despedida o agradecimiento, sin pregunta ni
+// contenido ("muchísimas gracias", "que pase buen día", "adiós"...).
+// Se responde con la nota de voz de despedida (sin texto repetido).
+const SOLO_DESPEDIDA_RE = /^\s*(?:(?:(?:much[íi]simas|muchas|mil|ok(?:i)?|vale|perfecto)(?:\s+(?:de\s+verdad|por\s+todo|por\s+todo\s+esto))?\s+)*gracias(?:\s+(?:de\s+verdad|por\s+todo|por\s+su\s+(?:ayuda|tiempo)|por\s+tu\s+ayuda|amigo|amiga|rey|brou))?|que\s+pase[n]?s?\s+buen[oa]?s?\s+(?:d[íi]as?|tardes?|noches?)|que\s+tenga[n]?s?\s+buen[oa]?s?\s+(?:d[íi]as?|tardes?|noches?)|adi[oó]s|hasta\s+(?:luego|pronto|mañana)|nos\s+vemos|chao|bye(?:\s+bye)?|thank\s+you(?:\s+so\s+much)?|thanks(?:\s+a\s+lot)?)[\s!¡?¿.,🙏😊👍]*$/iu;
+
+function esSoloDespedida(texto) {
+  return SOLO_DESPEDIDA_RE.test(texto || '');
 }
 
 // Petición de empezar de cero ("cierra esta sesión", "hablemos como una
@@ -181,6 +190,26 @@ async function manejarTexto(igsid, texto) {
         }
       } catch (err) {
         console.error(`[ig] No se pudo enviar la bienvenida de voz: ${err.message}`);
+      }
+    }
+
+    // Despedida por nota de voz (misma regla que WhatsApp): si el cliente
+    // SOLO se despide o agradece ("muchísimas gracias", "que pase buen
+    // día"...), se responde con el audio de despedida y no se manda texto.
+    if (esSoloDespedida(texto) && vozDisponible() &&
+        (Date.now() - (ultimaVozPorChat.get(igsid) || 0)) >= ANTISPAM_VOZ_MS) {
+      try {
+        const audioDesp = await obtenerM4aDespedida();
+        if (audioDesp) {
+          const url = `${BASE_PUBLICA}/voz/${path.basename(audioDesp.ruta)}`;
+          await enviarAudioIG(igsid, url);
+          ultimaVozPorChat.set(igsid, Date.now());
+          console.log(`[ig] Nota de voz de despedida enviada a ${igsid}`);
+          sembrarDespedidaVoz(`ig:${igsid}`);
+          return;
+        }
+      } catch (err) {
+        console.error(`[ig] No se pudo enviar la despedida de voz: ${err.message}`);
       }
     }
 
