@@ -32,25 +32,22 @@
   incluya en el deploy. El build script detecta si los archivos fuente no están
   disponibles (por ejemplo, en el contenedor de Railway) y conserva `public/`
   sin destruirlo.
-- **Stack actual (2026-07-22): TODO vive en Railway.** `vercel.json` fue
-  eliminado y Vercel ya no es parte del despliegue: el servidor Express de
-  Railway sirve el frontend (`server/public/`), la API, el bot y `/bot-qr`.
-  `netlify.toml` quedó obsoleto; `netlify/functions/` sigue siendo código
-  alternativo no activo.
-  **PENDIENTE fuera del repo:** apuntar el DNS de
-  `electronicservicetechnology.com` a Railway (dominio personalizado del
-  servicio) y borrar el proyecto en el dashboard de Vercel. Hasta entonces
-  el dominio sigue sirviendo la copia vieja de Vercel (que tenía proxy
-  `/api/*` → Railway); la URL funcional hoy es
-  `https://schedule-system-est-production.up.railway.app`.
+- **Stack actual (2026-07-22, decisión del dueño): Vercel + Railway.**
+  Vercel sirve el frontend estático (dominio personalizado) y proxifica
+  `/api/*`, `/bot-qr*` y `/voz/*` → Railway (ver `vercel.json`). Railway
+  corre el servidor Express (API, citas, bots de WhatsApp e Instagram,
+  `/bot-qr`, `/voz/`). Se intentó migrar todo a Railway pero el DNS de
+  Vercel no soltó la raíz (registro ALIAS por defecto imborrable), así
+  que se restauró `vercel.json` y el dominio queda conectado al proyecto
+  de Vercel. `netlify.toml` quedó obsoleto; `netlify/functions/` sigue
+  siendo código alternativo no activo.
   **Los archivos HTML están en inglés** (`products.html`,
   `book-appointment.html`, `cart.html`, `terms.html`, `privacy.html`).
   Si se agregan/renombran rutas, hay que actualizar `server/index.js`
   y `copy-frontend.js`.
-  `qr-cita.png` apuntaba a la URL vieja de Vercel; ahora el sitio vive en
-  Railway y el QR debería regenerarse/apuntar a
-  `https://schedule-system-est-production.up.railway.app/solicitud-servicio` si
-  se usa material impreso.
+  `qr-cita.png` apuntaba a la URL vieja de Vercel; el QR debería
+  regenerarse/apuntar a `https://electronicservicetechnology.com/book-appointment`
+  si se usa material impreso.
 - Hay dos `package.json` (raíz vacía; `server/` con express, pg, jsonwebtoken,
   twilio, cors, dotenv).
 
