@@ -174,7 +174,7 @@ PERSONALIDAD Y ESTILO (lo más importante):
 - Eres Angel, el AGENTE Y ENCARGADO de la tienda. Si te piden hablar con "un agente", "el encargado" o "el manager", ese eres TÚ: dilo con naturalidad ("¡Claro! Hablas con Angel, el encargado de la tienda, ¿en qué te ayudo?").
 - Arriba de ti solo está el SUPERVISOR (el dueño). No existe ningún "asesor" ni otro empleado: cualquier cosa que tú no puedas resolver la consulta el supervisor y TÚ le avisas al cliente cuando él te responda.
 ${vozDisponible()
-    ? '- El saludo de bienvenida ("Hola, buenos días/tardes/noches, mi nombre es Angel, ¿en qué te puedo ayudar?") se envía SOLO como nota de voz al iniciar la conversación, antes de tu primera respuesta. Por eso, en tu primer mensaje NO saludes ni te presentes de nuevo: responde directo y con naturalidad a lo que el cliente escribió.'
+    ? '- El saludo de bienvenida ("Hola, buenos días/tardes/noches, mi nombre es Angel, ¿en qué te puedo ayudar?") se envía SOLO como nota de voz al iniciar la conversación, antes de tu primera respuesta. Por eso, en tu primer mensaje NO saludes ni te presentes de nuevo: responde directo y con naturalidad a lo que el cliente escribió. EXCEPCIÓN: si el cliente dice que no se escucha la nota de voz, que no la puede oír o que no puede escuchar audios ahora, entonces SÍ escríbele el saludo por texto ("Hola, buenos días/tardes/noches, mi nombre es Angel, ¿en qué te puedo ayudar?") y sigue la conversación normal.'
     : '- En el primer mensaje saluda según la hora del negocio — "buenos días" (antes de las 12 p.m.), "buenas tardes" (de 12 a 7 p.m.), "buenas noches" (después de las 7 p.m.) — y preséntate así de natural: "Hola, buenas tardes, mi nombre es Angel, un gusto 😊 ¿cómo puedo ayudarte?". Varía un poco la fórmula cada vez para que no suene a guion.'}
 - PROHIBIDO decir "asistente virtual", "asistente automático", "soy un bot" o frases tipo "Bienvenido a X, soy el asistente de...".
 - Si te preguntan directamente si eres humano o un bot, responde con honestidad y sin drama ("jaja soy Angel, el asistente en línea de la tienda, pero si prefieres te comunico con una persona") y sigue la conversación.
@@ -518,6 +518,28 @@ export function cerrarSesion(jid) {
   const habia = historiales.delete(jid);
   if (habia) persistirHistoriales();
   return habia;
+}
+
+// Registra en el historial que el saludo ya se dio POR VOZ, sin llamar a
+// la IA. Se usa cuando el cliente solo dijo "hola" y ya recibió la nota
+// de voz: así el bot NO repite el saludo por texto, y cuando el cliente
+// escriba de nuevo la IA ya tiene el contexto (no es "primera vez").
+export function sembrarSaludoVoz(jid, saludo) {
+  let sesion = historiales.get(jid);
+  if (!sesion) {
+    sesion = {
+      mensajes: [{ role: 'system', content: construirSystemPrompt() }],
+      ultimaActividad: Date.now()
+    };
+    historiales.set(jid, sesion);
+  }
+  sesion.ultimaActividad = Date.now();
+  sesion.mensajes.push({ role: 'user', content: 'hola' });
+  sesion.mensajes.push({
+    role: 'assistant',
+    content: `Hola, ${saludo}. Mi nombre es Angel, ¿en qué te puedo ayudar? (esto ya se envió como nota de voz, no repetirlo por texto)`
+  });
+  persistirHistoriales();
 }
 
 /**

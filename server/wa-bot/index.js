@@ -13,7 +13,7 @@ import path from 'node:path';
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import config from './src/config.js';
-import { responder, iaDisponible, esPrimeraVez, inactividadMs, cerrarSesion } from './src/ai.js';
+import { responder, iaDisponible, esPrimeraVez, inactividadMs, cerrarSesion, sembrarSaludoVoz } from './src/ai.js';
 import { vozDisponible, obtenerAudioBienvenida } from './src/voz.js';
 import { notificarDueno } from './src/notificar.js';
 import { transcribirAudio, transcripcionDisponible } from './src/transcribir.js';
@@ -100,6 +100,15 @@ const SALUDO_RE = /^\s*(hola+|o-la|buenas?(?:\s+(d[íi]as|tardes|noches))?|buen\
 
 function esSaludo(texto) {
   return SALUDO_RE.test(texto || '');
+}
+
+// Mensaje que es SOLO un saludo, sin pregunta ni contenido ("hola",
+// "hola buenas noches!", "buenas"...). Si ya se mandó la nota de voz de
+// bienvenida, no hace falta responder nada por texto.
+const SOLO_SALUDO_RE = /^\s*(?:(?:hola+|o-la|buenas?(?:\s+(?:d[íi]as|tardes|noches|d[íi]a))?|buen\s*d[íi]a|qu[eé]\s*tal|saludos|hey|hi|hello)[\s!¡?¿.,]*)+$/i;
+
+function esSoloSaludo(texto) {
+  return SOLO_SALUDO_RE.test(texto || '');
 }
 
 // Petición de empezar de cero ("cierra esta sesión", "hablemos como una
@@ -230,6 +239,16 @@ async function manejarMensaje(sock, mensaje) {
           });
           console.log(`[mensaje] Nota de voz de bienvenida enviada a ${telefono} (${audio.saludo})`);
           await presencia('paused');
+
+          // Si el cliente SOLO saludó ("hola", "buenas noches"...), la
+          // nota de voz ya cubre el saludo: NO se manda texto repetido.
+          // Queda sembrado en el historial para que la IA tenga contexto.
+          // (Si luego dice que no la escuchó, la IA se lo escribe.)
+          if (esSoloSaludo(texto)) {
+            sembrarSaludoVoz(jid, audio.saludo);
+            console.log('[mensaje] Saludo cubierto por la nota de voz; no se envía texto.');
+            return;
+          }
         }
       } catch (err) {
         console.error(`[mensaje] No se pudo enviar la bienvenida de voz: ${err.message}`);

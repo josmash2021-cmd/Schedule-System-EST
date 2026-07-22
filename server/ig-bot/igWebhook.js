@@ -10,7 +10,7 @@
 import express from 'express';
 import path from 'node:path';
 import config from './src/config.js';
-import { responder, iaDisponible, esPrimeraVez, inactividadMs, cerrarSesion } from './src/ai.js';
+import { responder, iaDisponible, esPrimeraVez, inactividadMs, cerrarSesion, sembrarSaludoVoz } from './src/ai.js';
 import { encolar } from './src/cola.js';
 import { transcribirAudio, transcripcionDisponible } from './src/transcribir.js';
 import { enviarTextoIG, enviarAudioIG, accionIG, verificarFirmaIG, crearCanalIG } from './src/instagram.js';
@@ -34,6 +34,15 @@ const SALUDO_RE = /^\s*(hola+|o-la|buenas?(?:\s+(d[íi]as|tardes|noches))?|buen\
 
 function esSaludo(texto) {
   return SALUDO_RE.test(texto || '');
+}
+
+// Mensaje que es SOLO un saludo, sin pregunta ni contenido ("hola",
+// "hola buenas noches!", "buenas"...). Si ya se mandó la nota de voz de
+// bienvenida, no hace falta responder nada por texto.
+const SOLO_SALUDO_RE = /^\s*(?:(?:hola+|o-la|buenas?(?:\s+(?:d[íi]as|tardes|noches|d[íi]a))?|buen\s*d[íi]a|qu[eé]\s*tal|saludos|hey|hi|hello)[\s!¡?¿.,]*)+$/i;
+
+function esSoloSaludo(texto) {
+  return SOLO_SALUDO_RE.test(texto || '');
 }
 
 // Petición de empezar de cero ("cierra esta sesión", "hablemos como una
@@ -144,6 +153,16 @@ async function manejarTexto(igsid, texto) {
           const url = `${BASE_PUBLICA}/voz/${path.basename(audio.ruta)}`;
           await enviarAudioIG(igsid, url);
           console.log(`[ig] Nota de voz de bienvenida enviada a ${igsid} (${audio.saludo})`);
+
+          // Si el cliente SOLO saludó ("hola", "buenas noches"...), la
+          // nota de voz ya cubre el saludo: NO se manda texto repetido.
+          // Queda sembrado en el historial para que la IA tenga contexto.
+          // (Si luego dice que no la escuchó, la IA se lo escribe.)
+          if (esSoloSaludo(texto)) {
+            sembrarSaludoVoz(`ig:${igsid}`, audio.saludo);
+            console.log('[ig] Saludo cubierto por la nota de voz; no se envía texto.');
+            return;
+          }
         }
       } catch (err) {
         console.error(`[ig] No se pudo enviar la bienvenida de voz: ${err.message}`);
