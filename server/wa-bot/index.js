@@ -13,7 +13,8 @@ import path from 'node:path';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import config from './src/config.js';
-import { responder, iaDisponible } from './src/ai.js';
+import { responder, iaDisponible, esPrimeraVez, inactividadMs } from './src/ai.js';
+import { vozDisponible, obtenerAudioBienvenida } from './src/voz.js';
 import { notificarDueno } from './src/notificar.js';
 import { transcribirAudio, transcripcionDisponible } from './src/transcribir.js';
 import { encolar } from './src/cola.js';
@@ -80,6 +81,18 @@ function esIgnorable(mensaje) {
     jid.endsWith('@newsletter')       // canales
   );
 }
+
+// Saludos típicos de apertura ("hola", "buenas noches", "buen día", ...).
+// Si un cliente vuelve a saludar tras un rato largo sin escribir, se le
+// manda otra vez la nota de voz de bienvenida.
+const SALUDO_RE = /^\s*(hola+|o-la|buenas?(?:\s+(d[íi]as|tardes|noches))?|buen\s*d[íi]a|qu[eé]\s*tal|saludos|hey|hi|hello)\b/i;
+
+function esSaludo(texto) {
+  return SALUDO_RE.test(texto || '');
+}
+
+// Inactividad mínima para repetir la bienvenida de voz ante un saludo.
+const INACTIVIDAD_SALUDO_MS = 3 * 60 * 60 * 1000; // 3 horas
 
 async function manejarMensaje(sock, mensaje) {
   if (esIgnorable(mensaje)) return;
@@ -168,6 +181,34 @@ async function manejarMensaje(sock, mensaje) {
     await new Promise((r) => setTimeout(r, 5000));
     try { await sock.readMessages([mensaje.key]); } catch { /* best-effort */ }
     await new Promise((r) => setTimeout(r, 2000));
+
+    // Bienvenida por nota de voz. Se envía cuando:
+    //  a) es el primer mensaje de la conversación (sesión nueva), o
+    //  b) el cliente vuelve a SALUDAR ("hola", "buenas noches", etc.)
+    //     tras más de 3 horas sin escribir.
+    // Saluda según la hora del negocio ("buenos días/tardes/noches").
+    // Si falla, la IA saluda por texto.
+    const tocaVoz =
+      esPrimeraVez(jid) ||
+      (esSaludo(texto) && inactividadMs(jid) > INACTIVIDAD_SALUDO_MS);
+    if (tocaVoz && vozDisponible()) {
+      try {
+        await presencia('recording');
+        const audio = await obtenerAudioBienvenida();
+        if (audio) {
+          await sock.sendMessage(jid, {
+            audio: audio.buffer,
+            mimetype: 'audio/ogg; codecs=opus',
+            ptt: true
+          });
+          console.log(`[mensaje] Nota de voz de bienvenida enviada a ${telefono} (${audio.saludo})`);
+          await presencia('paused');
+        }
+      } catch (err) {
+        console.error(`[mensaje] No se pudo enviar la bienvenida de voz: ${err.message}`);
+      }
+    }
+
     await presencia('composing');
     await new Promise((r) => setTimeout(r, 1000 + Math.random() * 1000));
 

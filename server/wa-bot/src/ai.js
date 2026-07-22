@@ -4,6 +4,7 @@ import OpenAI from 'openai';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync } from 'node:fs';
 import path from 'node:path';
 import config from './config.js';
+import { vozDisponible } from './voz.js';
 import { guardarCita } from './citas.js';
 import { notificarDueno } from './notificar.js';
 import { consultarSlots, crearCitaWeb } from './citasApi.js';
@@ -163,7 +164,9 @@ FECHA Y HORA ACTUAL (zona del negocio, Alabama):
 PERSONALIDAD Y ESTILO (lo más importante):
 - Eres Angel, el AGENTE Y ENCARGADO de la tienda. Si te piden hablar con "un agente", "el encargado" o "el manager", ese eres TÚ: dilo con naturalidad ("¡Claro! Hablas con Angel, el encargado de la tienda, ¿en qué te ayudo?").
 - Arriba de ti solo está el SUPERVISOR (el dueño). No existe ningún "asesor" ni otro empleado: cualquier cosa que tú no puedas resolver la consulta el supervisor y TÚ le avisas al cliente cuando él te responda.
-- En el primer mensaje saluda según la hora del negocio — "buenos días" (antes de las 12 p.m.), "buenas tardes" (de 12 a 7 p.m.), "buenas noches" (después de las 7 p.m.) — y preséntate así de natural: "Hola, buenas tardes, mi nombre es Angel, un gusto 😊 ¿cómo puedo ayudarte?". Varía un poco la fórmula cada vez para que no suene a guion.
+${vozDisponible()
+    ? '- El saludo de bienvenida ("Hola, buenos días/tardes/noches, mi nombre es Angel, ¿cómo te puedo ayudar?") se envía SOLO como nota de voz al iniciar la conversación, antes de tu primera respuesta. Por eso, en tu primer mensaje NO saludes ni te presentes de nuevo: responde directo y con naturalidad a lo que el cliente escribió.'
+    : '- En el primer mensaje saluda según la hora del negocio — "buenos días" (antes de las 12 p.m.), "buenas tardes" (de 12 a 7 p.m.), "buenas noches" (después de las 7 p.m.) — y preséntate así de natural: "Hola, buenas tardes, mi nombre es Angel, un gusto 😊 ¿cómo puedo ayudarte?". Varía un poco la fórmula cada vez para que no suene a guion.'}
 - PROHIBIDO decir "asistente virtual", "asistente automático", "soy un bot" o frases tipo "Bienvenido a X, soy el asistente de...".
 - Si te preguntan directamente si eres humano o un bot, responde con honestidad y sin drama ("jaja soy Angel, el asistente en línea de la tienda, pero si prefieres te comunico con una persona") y sigue la conversación.
 - MENSAJES CORTOS Y SUELTOS: escribe como escribe la gente por WhatsApp. Nada de párrafos largos, nada de listas con viñetas, nada de bloques organizados tipo ficha (ej. NO escribas "📍 Dirección: ... Horario: ..."). Integra los datos en frases naturales ("estamos sobre Lorna Rd, el 3659 suite 157 en Hoover, y abrimos de lunes a sábado de 10 a 3").
@@ -472,6 +475,18 @@ cargarHistoriales();
 
 export function iaDisponible() {
   return cliente !== null;
+}
+
+// true si el jid aún no tiene sesión activa (primer mensaje de la
+// conversación): index.js lo usa para mandar la bienvenida de voz.
+export function esPrimeraVez(jid) {
+  return !historiales.has(jid);
+}
+
+// Milisegundos desde el último mensaje del chat (Infinity si no hay sesión).
+export function inactividadMs(jid) {
+  const sesion = historiales.get(jid);
+  return sesion ? Date.now() - sesion.ultimaActividad : Infinity;
 }
 
 /**
