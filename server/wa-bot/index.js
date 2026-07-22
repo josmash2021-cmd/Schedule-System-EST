@@ -137,7 +137,10 @@ async function manejarMensaje(sock, mensaje) {
   if (esIgnorable(mensaje)) return;
 
   const jid = mensaje.key.remoteJid;
-  marcarProcesado(jid, Number(mensaje.messageTimestamp || Math.floor(Date.now() / 1000)));
+  const tsMensaje = Number(mensaje.messageTimestamp || Math.floor(Date.now() / 1000));
+  // OJO: el mensaje se marca como procesado SOLO después de responderlo
+  // (al final de cada camino). Si el contenedor muere a mitad (deploy,
+  // reinicio), al reconectar el catch-up lo ve como pendiente y reintenta.
   let texto = extraerTexto(mensaje);
 
   // Nota de voz: descargar y transcribir para responderla como texto.
@@ -147,6 +150,7 @@ async function manejarMensaje(sock, mensaje) {
       await sock.sendMessage(jid, {
         text: '¡Hola! Por ahora no puedo escuchar notas de voz 😅 ¿me lo escribes en texto porfa?'
       });
+      marcarProcesado(jid, tsMensaje);
       return;
     }
     try {
@@ -173,6 +177,7 @@ async function manejarMensaje(sock, mensaje) {
         await sock.sendMessage(jid, {
           text: 'No alcancé a entender bien el audio 😅 ¿me lo repites por texto?'
         });
+        marcarProcesado(jid, tsMensaje);
         return;
       }
     } catch (err) {
@@ -180,6 +185,7 @@ async function manejarMensaje(sock, mensaje) {
       await sock.sendMessage(jid, {
         text: 'Tuve un problema para escuchar tu audio 😅 ¿me lo escribes en texto porfa?'
       });
+      marcarProcesado(jid, tsMensaje);
       return;
     }
   }
@@ -265,6 +271,7 @@ async function manejarMensaje(sock, mensaje) {
           if (esSoloSaludo(texto)) {
             sembrarSaludoVoz(jid, audio.saludo);
             console.log('[mensaje] Saludo cubierto por la nota de voz; no se envía texto.');
+            marcarProcesado(jid, tsMensaje);
             return;
           }
         }
@@ -314,11 +321,14 @@ async function manejarMensaje(sock, mensaje) {
       await enviar(burbuja);
     }
     console.log(`[mensaje] Respuesta enviada a ${telefono} (${burbujas.length} burbuja(s))`);
+    marcarProcesado(jid, tsMensaje);
   } catch (err) {
     console.error(`[mensaje] Error al procesar: ${err.message}`);
     try {
       await enviar('Lo siento, tuve un problema técnico. 😅 Ya le avisé al supervisor y te contactamos muy pronto. 🙏');
-    } catch { /* si falla el envío, solo queda el log */ }
+      // El fallback ya es una respuesta para el cliente; se marca.
+      marcarProcesado(jid, tsMensaje);
+    } catch { /* si falla el envío, NO se marca: el catch-up reintenta */ }
   }
 }
 
