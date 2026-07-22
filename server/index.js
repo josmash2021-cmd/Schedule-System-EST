@@ -100,6 +100,10 @@ app.use('/api/slots', slotsRouter);
 app.use('/api/appointments', appointmentsRouter);
 app.use('/api/auth', authRouter);
 
+// Audios de bienvenida por voz (wa-bot/src/voz.js los cachea en
+// DATA_DIR/voz). Instagram los necesita por URL pública para adjuntarlos.
+app.use('/voz', express.static(path.join(process.env.DATA_DIR || path.join(__dirname, 'wa-bot', 'data'), 'voz')));
+
 app.use((err, _req, res, _next) => {
   console.error('Unhandled error:', err);
   res.status(500).json({ error: 'Error interno del servidor.' });

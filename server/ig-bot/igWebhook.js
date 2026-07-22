@@ -8,16 +8,36 @@
 //   GET  /api/instagram/webhook  — verificación de Meta (hub.challenge)
 //   POST /api/instagram/webhook  — eventos de mensajería (responde 200 ya)
 import express from 'express';
+import path from 'node:path';
 import config from './src/config.js';
-import { responder, iaDisponible } from './src/ai.js';
+import { responder, iaDisponible, esPrimeraVez, inactividadMs } from './src/ai.js';
 import { encolar } from './src/cola.js';
 import { transcribirAudio, transcripcionDisponible } from './src/transcribir.js';
-import { enviarTextoIG, accionIG, verificarFirmaIG, crearCanalIG } from './src/instagram.js';
+import { enviarTextoIG, enviarAudioIG, accionIG, verificarFirmaIG, crearCanalIG } from './src/instagram.js';
 import { notificarDuenoIG } from './src/notificar.js';
+// La voz de bienvenida la genera el módulo compartido del wa-bot
+// (mismos audios cacheados en DATA_DIR/voz, servidos públicos en /voz/).
+import { vozDisponible, obtenerM4aBienvenida } from '../wa-bot/src/voz.js';
 
 const router = express.Router();
 
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// URL pública del servidor (para adjuntar el audio a Instagram: la API de
+// Meta no acepta subir archivos, solo URLs https accesibles).
+const BASE_PUBLICA = (process.env.PUBLIC_BASE_URL || 'https://schedule-system-est-production.up.railway.app').replace(/\/+$/, '');
+
+// Saludos típicos de apertura ("hola", "buenas noches", "buen día", ...).
+// Misma regla que en WhatsApp: si un cliente vuelve a saludar tras un
+// rato largo sin escribir, se le manda otra vez la bienvenida de voz.
+const SALUDO_RE = /^\s*(hola+|o-la|buenas?(?:\s+(d[íi]as|tardes|noches))?|buen\s*d[íi]a|qu[eé]\s*tal|saludos|hey|hi|hello)\b/i;
+
+function esSaludo(texto) {
+  return SALUDO_RE.test(texto || '');
+}
+
+// Inactividad mínima para repetir la bienvenida de voz ante un saludo.
+const INACTIVIDAD_SALUDO_MS = 3 * 60 * 60 * 1000; // 3 horas
 
 // Dedup por message.mid: Meta reintenta la entrega si algo falla y el mismo
 // mensaje no debe procesarse dos veces. Set con tope de 1000 entradas.
@@ -88,6 +108,27 @@ async function manejarTexto(igsid, texto) {
     await esperar(5000);
     await accionIG(igsid, 'mark_seen');
     await esperar(2000);
+
+    // Bienvenida por nota de voz (misma regla que WhatsApp): primera vez
+    // que escribe, o cuando vuelve a SALUDAR tras 3+ horas sin actividad.
+    // El saludo ("buenos días/tardes/noches") depende de la hora del
+    // negocio. Si falla, la IA saluda por texto como antes.
+    const tocaVoz =
+      esPrimeraVez(`ig:${igsid}`) ||
+      (esSaludo(texto) && inactividadMs(`ig:${igsid}`) > INACTIVIDAD_SALUDO_MS);
+    if (tocaVoz && vozDisponible()) {
+      try {
+        const audio = await obtenerM4aBienvenida();
+        if (audio) {
+          const url = `${BASE_PUBLICA}/voz/${path.basename(audio.ruta)}`;
+          await enviarAudioIG(igsid, url);
+          console.log(`[ig] Nota de voz de bienvenida enviada a ${igsid} (${audio.saludo})`);
+        }
+      } catch (err) {
+        console.error(`[ig] No se pudo enviar la bienvenida de voz: ${err.message}`);
+      }
+    }
+
     await accionIG(igsid, 'typing_on');
     await responderYEnviar(igsid, texto);
   } catch (err) {

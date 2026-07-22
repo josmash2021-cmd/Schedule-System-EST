@@ -58,10 +58,12 @@ export function saludoSegunHora() {
 }
 
 /**
- * Convierte texto a voz con ElevenLabs y lo pasa a ogg/opus (el formato
- * que WhatsApp necesita para mostrarlo como nota de voz).
+ * Convierte texto a voz con ElevenLabs y lo guarda en los formatos que
+ * usa cada canal:
+ *  - ogg/opus: WhatsApp (nota de voz con waveform).
+ *  - m4a/aac:  Instagram (adjunto de audio por URL pública).
  */
-async function generarOgg(texto, rutaOgg) {
+async function generarAudios(texto, slug) {
   const stream = await cliente.textToSpeech.convert(VOZ_ID, {
     modelId: MODELO,
     text: texto,
@@ -72,7 +74,9 @@ async function generarOgg(texto, rutaOgg) {
   const mp3 = Buffer.concat(chunks);
 
   mkdirSync(CACHE_DIR, { recursive: true });
-  const tmpMp3 = rutaOgg.replace(/\.ogg$/, '.tmp.mp3');
+  const rutaOgg = path.join(CACHE_DIR, `${slug}.ogg`);
+  const rutaM4a = path.join(CACHE_DIR, `${slug}.m4a`);
+  const tmpMp3 = path.join(CACHE_DIR, `${slug}.tmp.mp3`);
   writeFileSync(tmpMp3, mp3);
   try {
     await execFileAsync(ffmpegPath, [
@@ -80,26 +84,56 @@ async function generarOgg(texto, rutaOgg) {
       '-c:a', 'libopus', '-b:a', '48k', '-ar', '48000',
       rutaOgg
     ]);
+    await execFileAsync(ffmpegPath, [
+      '-y', '-i', tmpMp3,
+      '-c:a', 'aac', '-b:a', '96k',
+      rutaM4a
+    ]);
   } finally {
     try { unlinkSync(tmpMp3); } catch { /* best-effort */ }
   }
 }
 
 /**
- * Devuelve el audio de un saludo ("buenos días" | "buenas tardes" |
- * "buenas noches") como Buffer ogg/opus, usando caché en disco.
+ * Garantiza que existan los audios cacheados de un saludo
+ * ("buenos días" | "buenas tardes" | "buenas noches").
  */
-export async function obtenerAudioSaludo(saludo) {
+async function asegurarAudios(saludo) {
   const slug = SLUGS[saludo];
   if (!slug) throw new Error(`Saludo desconocido: ${saludo}`);
   const rutaOgg = path.join(CACHE_DIR, `${slug}.ogg`);
-
-  if (existsSync(rutaOgg)) {
-    return readFileSync(rutaOgg);
+  const rutaM4a = path.join(CACHE_DIR, `${slug}.m4a`);
+  if (!existsSync(rutaOgg) || !existsSync(rutaM4a)) {
+    console.log(`[voz] Generando audio de bienvenida (${saludo}) con ElevenLabs...`);
+    await generarAudios(`Hola, ${saludo}. Mi nombre es Ángel, ¿cómo te puedo ayudar?`, slug);
   }
-  console.log(`[voz] Generando audio de bienvenida (${saludo}) con ElevenLabs...`);
-  await generarOgg(`Hola, ${saludo}. Mi nombre es Ángel, ¿cómo te puedo ayudar?`, rutaOgg);
+  return { rutaOgg, rutaM4a };
+}
+
+/**
+ * Devuelve el audio de un saludo como Buffer ogg/opus (WhatsApp),
+ * usando caché en disco.
+ */
+export async function obtenerAudioSaludo(saludo) {
+  const { rutaOgg } = await asegurarAudios(saludo);
   return readFileSync(rutaOgg);
+}
+
+/**
+ * Audio de bienvenida para Instagram: la API de Meta solo acepta audios
+ * por URL pública, así que se devuelve la RUTA del m4a cacheado (el
+ * servidor web lo expone en /voz/). null si la voz no está disponible.
+ */
+export async function obtenerM4aBienvenida() {
+  if (!vozDisponible()) return null;
+  const saludo = saludoSegunHora();
+  try {
+    const { rutaM4a } = await asegurarAudios(saludo);
+    return { ruta: rutaM4a, saludo };
+  } catch (err) {
+    console.error(`[voz] Error al generar la bienvenida de voz: ${err.message}`);
+    return null;
+  }
 }
 
 /**

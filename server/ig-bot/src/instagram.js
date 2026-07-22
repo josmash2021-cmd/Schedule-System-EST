@@ -50,6 +50,17 @@ export async function accionIG(igsid, accion) {
 }
 
 /**
+ * Envía un audio por URL pública (la API de Meta no acepta subir el
+ * archivo directo: debe ser una URL https accesible, ej. /voz/*.m4a).
+ */
+export async function enviarAudioIG(igsid, url) {
+  return postIG({
+    recipient: { id: igsid },
+    message: { attachment: { type: 'audio', payload: { url, is_reusable: true } } }
+  });
+}
+
+/**
  * Verifica la firma X-Hub-Signature-256 del webhook (HMAC-SHA256 del body
  * crudo con el app secret). Sin IG_APP_SECRET configurada se advierte y se
  * acepta el evento (modo desarrollo).
