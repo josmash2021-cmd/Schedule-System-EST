@@ -8,7 +8,7 @@
     if (document.querySelector('.chat-widget')) return;
 
     var PHONE = '12055737840';        // línea de atención (SMS/llamadas)
-    var WA_PHONE = '13855760574';     // WhatsApp Business con el bot Angel
+    var WA_PHONE = '18018017359';     // WhatsApp Business con el bot Angela
     var LANG = window.EST_LANG || 'es';
     function T(es, en) { return LANG === 'en' ? en : es; }
 
