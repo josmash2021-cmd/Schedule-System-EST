@@ -19,16 +19,22 @@ const MODELO = 'eleven_v3';
 // Zona horaria del negocio (Hoover, Alabama) — la misma que usa src/ai.js.
 const ZONA_NEGOCIO = 'America/Chicago';
 
-// Los 3 audios posibles se generan UNA sola vez y se guardan en disco:
-// así no se gastan créditos de ElevenLabs en cada cliente nuevo.
+// Los audios se generan UNA sola vez y se guardan en disco: así no se
+// gastan créditos de ElevenLabs en cada cliente nuevo.
 const CACHE_DIR = path.join(config.dataDir, 'voz');
-// Versión de la frase de bienvenida: forma parte del nombre de archivo
-// cacheado, así que al cambiarla los audios viejos se ignoran y se
-// regeneran solos (local y en el volumen de Railway).
-const SLUGS = {
-  'buenos días': 'buenos-dias-v6',
-  'buenas tardes': 'buenas-tardes-v6',
-  'buenas noches': 'buenas-noches-v6'
+
+// Variantes de bienvenida por franja horaria (se elige una AL AZAR cada
+// vez para que no suene repetitivo). El slug lleva versión: al cambiar
+// las frases se sube y los audios viejos se ignoran.
+const VARIANTES_BIENVENIDA = [
+  (s) => `Hola, ${s}. Soy Ángela, ¿cómo te puedo ayudar?`,
+  (s) => `Hola, ${s}, habla Ángela. ¿En qué te puedo ayudar?`,
+  (s) => `${s.charAt(0).toUpperCase() + s.slice(1)}, bienvenido a Electronic Service Technology. Soy Ángela, ¿en qué te ayudo?`
+];
+const SLUG_BIENVENIDA = {
+  'buenos días': 'buenos-dias-v7',
+  'buenas tardes': 'buenas-tardes-v7',
+  'buenas noches': 'buenas-noches-v7'
 };
 
 let cliente = null;
@@ -111,37 +117,45 @@ async function asegurarPar(slug, texto, etiqueta) {
 }
 
 /**
- * Garantiza que existan los audios cacheados de un saludo
- * ("buenos días" | "buenas tardes" | "buenas noches").
+ * Garantiza que existan los audios cacheados de una variante de saludo y
+ * devuelve las rutas de UNA variante elegida al azar (para que la
+ * bienvenida no suene siempre igual).
  */
 async function asegurarAudios(saludo) {
-  const slug = SLUGS[saludo];
-  if (!slug) throw new Error(`Saludo desconocido: ${saludo}`);
-  return asegurarPar(slug, `Hola, ${saludo}. Soy Ángela, ¿cómo te puedo ayudar?`, `bienvenida ${saludo}`);
+  const base = SLUG_BIENVENIDA[saludo];
+  if (!base) throw new Error(`Saludo desconocido: ${saludo}`);
+  const i = Math.floor(Math.random() * VARIANTES_BIENVENIDA.length);
+  const slug = `${base}-${i + 1}`;
+  const texto = VARIANTES_BIENVENIDA[i](saludo);
+  return asegurarPar(slug, texto, `bienvenida ${saludo} v${i + 1}`);
 }
 
 // Despedidas por nota de voz, según la hora del negocio (como el saludo):
 // "buen día" en la mañana, "buenas tardes" de 12 a 7 p.m., "buenas
-// noches" después. Se genera cada una una sola vez (caché en disco).
-const DESPEDIDAS = {
-  'buenos días': {
-    slug: 'despedida-v3',
-    texto: 'Perfecto, cualquier duda o pregunta estamos a la orden, ¡que tenga buen día!'
-  },
-  'buenas tardes': {
-    slug: 'despedida-tardes-v3',
-    texto: 'Perfecto, cualquier duda o pregunta estamos a la orden, ¡que tenga buenas tardes!'
-  },
-  'buenas noches': {
-    slug: 'despedida-noches-v3',
-    texto: 'Perfecto, cualquier duda o pregunta estamos a la orden, ¡que tenga buenas noches!'
-  }
+// noches" después. Tres variantes por franja, elegida una AL AZAR.
+const VARIANTES_DESPEDIDA = [
+  (d) => `Perfecto, cualquier duda o pregunta estamos a la orden, ¡que tenga ${d}!`,
+  (d) => `Con gusto. Aquí estamos para lo que necesite, ¡que tenga ${d}!`,
+  (d) => `Gracias por escribirnos. Cualquier cosa me avisa, ¡que tenga ${d}!`
+];
+const SLUG_DESPEDIDA = {
+  'buenos días': { slug: 'despedida-v4', texto: 'buen día' },
+  'buenas tardes': { slug: 'despedida-tardes-v4', texto: 'buenas tardes' },
+  'buenas noches': { slug: 'despedida-noches-v4', texto: 'buenas noches' }
 };
 
 // Texto de la despedida para la hora actual del negocio (lo usan los
 // generadores de audio y el sembrado en el historial de la IA).
 export function textoDespedida() {
-  return DESPEDIDAS[saludoSegunHora()].texto;
+  return `Perfecto, cualquier duda o pregunta estamos a la orden, ¡que tenga ${SLUG_DESPEDIDA[saludoSegunHora()].texto}!`;
+}
+
+async function asegurarDespedida() {
+  const d = SLUG_DESPEDIDA[saludoSegunHora()];
+  const i = Math.floor(Math.random() * VARIANTES_DESPEDIDA.length);
+  const slug = `${d.slug}-${i + 1}`;
+  const texto = VARIANTES_DESPEDIDA[i](d.texto);
+  return asegurarPar(slug, texto, `despedida ${d.texto} v${i + 1}`);
 }
 
 /**
@@ -189,14 +203,13 @@ export async function obtenerAudioBienvenida() {
 
 /**
  * Despedida por nota de voz para WhatsApp: devuelve el Buffer ogg/opus
- * cacheado, con la despedida según la hora del negocio (buen día /
- * buenas tardes / buenas noches). null si la voz no está disponible.
+ * de una variante al azar, según la hora del negocio (buen día / buenas
+ * tardes / buenas noches). null si la voz no está disponible.
  */
 export async function obtenerAudioDespedida() {
   if (!vozDisponible()) return null;
-  const d = DESPEDIDAS[saludoSegunHora()];
   try {
-    const { rutaOgg } = await asegurarPar(d.slug, d.texto, `despedida ${saludoSegunHora()}`);
+    const { rutaOgg } = await asegurarDespedida();
     return readFileSync(rutaOgg);
   } catch (err) {
     console.error(`[voz] Error al generar la despedida de voz: ${err.message}`);
@@ -210,9 +223,8 @@ export async function obtenerAudioDespedida() {
  */
 export async function obtenerM4aDespedida() {
   if (!vozDisponible()) return null;
-  const d = DESPEDIDAS[saludoSegunHora()];
   try {
-    const { rutaM4a } = await asegurarPar(d.slug, d.texto, `despedida ${saludoSegunHora()}`);
+    const { rutaM4a } = await asegurarDespedida();
     return { ruta: rutaM4a };
   } catch (err) {
     console.error(`[voz] Error al generar la despedida de voz: ${err.message}`);
