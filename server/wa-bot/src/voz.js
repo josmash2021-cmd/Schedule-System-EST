@@ -25,7 +25,7 @@ const VOCES = [
   },
   {
     id: process.env.ELEVENLABS_VOICE_ID_2 || 'Aoh8oiCIlPke1wFxeNuK',
-    modelo: process.env.ELEVENLABS_MODEL_2 || 'eleven_v3',
+    modelo: process.env.ELEVENLABS_MODEL_2 || 'eleven_flash_v2_5',
     nombre: 'Alex', slug: 'alex'
   }
 ];
@@ -92,9 +92,9 @@ const VARIANTES_BIENVENIDA = [
   (s, n) => `${s.charAt(0).toUpperCase() + s.slice(1)}, bienvenido a Electronic Service Technology. Soy ${n}, ¿en qué te ayudo?`
 ];
 const SLUG_BIENVENIDA = {
-  'buenos días': 'buenos-dias-v9',
-  'buenas tardes': 'buenas-tardes-v9',
-  'buenas noches': 'buenas-noches-v9'
+  'buenos días': 'buenos-dias-v10',
+  'buenas tardes': 'buenas-tardes-v10',
+  'buenas noches': 'buenas-noches-v10'
 };
 
 let cliente = null;
@@ -201,9 +201,9 @@ const VARIANTES_DESPEDIDA = [
   (d) => `Gracias por escribirnos. Cualquier cosa me avisa, ¡que tenga ${d}!`
 ];
 const SLUG_DESPEDIDA = {
-  'buenos días': { slug: 'despedida-v6', texto: 'buen día' },
-  'buenas tardes': { slug: 'despedida-tardes-v6', texto: 'buenas tardes' },
-  'buenas noches': { slug: 'despedida-noches-v6', texto: 'buenas noches' }
+  'buenos días': { slug: 'despedida-v7', texto: 'buen día' },
+  'buenas tardes': { slug: 'despedida-tardes-v7', texto: 'buenas tardes' },
+  'buenas noches': { slug: 'despedida-noches-v7', texto: 'buenas noches' }
 };
 
 // Texto de la despedida para la hora actual del negocio (lo usan los
