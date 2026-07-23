@@ -13,13 +13,21 @@ import config from './config.js';
 const execFileAsync = promisify(execFile);
 
 const API_KEY = process.env.ELEVENLABS_API_KEY || '';
-const MODELO = 'eleven_v3';
 
 // Personas de voz del bot: la bienvenida y la despedida las dice Ángela o
-// Alex, elegida una al azar cada vez. Cada una se presenta con su nombre.
+// Alex, según cuál haya atendido el chat la primera vez (fija por chat).
+// Cada persona tiene su voz Y su modelo de ElevenLabs.
 const VOCES = [
-  { id: process.env.ELEVENLABS_VOICE_ID || 'NKNnfxyJilN0daSOIf11', nombre: 'Ángela', slug: 'angela' },
-  { id: process.env.ELEVENLABS_VOICE_ID_2 || 'Aoh8oiCIlPke1wFxeNuK', nombre: 'Alex', slug: 'alex' }
+  {
+    id: process.env.ELEVENLABS_VOICE_ID || 'JcWDFG8DiES2OzGhZJUJ',
+    modelo: process.env.ELEVENLABS_MODEL || 'eleven_multilingual_v2',
+    nombre: 'Ángela', slug: 'angela'
+  },
+  {
+    id: process.env.ELEVENLABS_VOICE_ID_2 || 'Aoh8oiCIlPke1wFxeNuK',
+    modelo: process.env.ELEVENLABS_MODEL_2 || 'eleven_v3',
+    nombre: 'Alex', slug: 'alex'
+  }
 ];
 
 function vozAlAzar() {
@@ -84,9 +92,9 @@ const VARIANTES_BIENVENIDA = [
   (s, n) => `${s.charAt(0).toUpperCase() + s.slice(1)}, bienvenido a Electronic Service Technology. Soy ${n}, ¿en qué te ayudo?`
 ];
 const SLUG_BIENVENIDA = {
-  'buenos días': 'buenos-dias-v8',
-  'buenas tardes': 'buenas-tardes-v8',
-  'buenas noches': 'buenas-noches-v8'
+  'buenos días': 'buenos-dias-v9',
+  'buenas tardes': 'buenas-tardes-v9',
+  'buenas noches': 'buenas-noches-v9'
 };
 
 let cliente = null;
@@ -124,9 +132,9 @@ export function saludoSegunHora() {
  *  - ogg/opus: WhatsApp (nota de voz con waveform).
  *  - m4a/aac:  Instagram (adjunto de audio por URL pública).
  */
-async function generarAudios(texto, slug, vozId) {
-  const stream = await cliente.textToSpeech.convert(vozId, {
-    modelId: MODELO,
+async function generarAudios(texto, slug, voz) {
+  const stream = await cliente.textToSpeech.convert(voz.id, {
+    modelId: voz.modelo,
     text: texto,
     outputFormat: 'mp3_44100_128'
   });
@@ -158,12 +166,12 @@ async function generarAudios(texto, slug, vozId) {
 /**
  * Garantiza que exista el par de audios (ogg + m4a) de un texto cacheado.
  */
-async function asegurarPar(slug, texto, etiqueta, vozId) {
+async function asegurarPar(slug, texto, etiqueta, voz) {
   const rutaOgg = path.join(CACHE_DIR, `${slug}.ogg`);
   const rutaM4a = path.join(CACHE_DIR, `${slug}.m4a`);
   if (!existsSync(rutaOgg) || !existsSync(rutaM4a)) {
     console.log(`[voz] Generando audio (${etiqueta}) con ElevenLabs...`);
-    await generarAudios(texto, slug, vozId);
+    await generarAudios(texto, slug, voz);
   }
   return { rutaOgg, rutaM4a };
 }
@@ -180,7 +188,7 @@ async function asegurarAudios(saludo, jid) {
   const i = Math.floor(Math.random() * VARIANTES_BIENVENIDA.length);
   const slug = `${base}-${voz.slug}-${i + 1}`;
   const texto = VARIANTES_BIENVENIDA[i](saludo, voz.nombre);
-  const par = await asegurarPar(slug, texto, `bienvenida ${saludo} ${voz.nombre} v${i + 1}`, voz.id);
+  const par = await asegurarPar(slug, texto, `bienvenida ${saludo} ${voz.nombre} v${i + 1}`, voz);
   return { ...par, saludo, nombre: voz.nombre, texto };
 }
 
@@ -193,9 +201,9 @@ const VARIANTES_DESPEDIDA = [
   (d) => `Gracias por escribirnos. Cualquier cosa me avisa, ¡que tenga ${d}!`
 ];
 const SLUG_DESPEDIDA = {
-  'buenos días': { slug: 'despedida-v5', texto: 'buen día' },
-  'buenas tardes': { slug: 'despedida-tardes-v5', texto: 'buenas tardes' },
-  'buenas noches': { slug: 'despedida-noches-v5', texto: 'buenas noches' }
+  'buenos días': { slug: 'despedida-v6', texto: 'buen día' },
+  'buenas tardes': { slug: 'despedida-tardes-v6', texto: 'buenas tardes' },
+  'buenas noches': { slug: 'despedida-noches-v6', texto: 'buenas noches' }
 };
 
 // Texto de la despedida para la hora actual del negocio (lo usan los
@@ -210,7 +218,7 @@ async function asegurarDespedida(jid) {
   const i = Math.floor(Math.random() * VARIANTES_DESPEDIDA.length);
   const slug = `${d.slug}-${voz.slug}-${i + 1}`;
   const texto = VARIANTES_DESPEDIDA[i](d.texto);
-  const par = await asegurarPar(slug, texto, `despedida ${d.texto} ${voz.nombre} v${i + 1}`, voz.id);
+  const par = await asegurarPar(slug, texto, `despedida ${d.texto} ${voz.nombre} v${i + 1}`, voz);
   return { ...par, nombre: voz.nombre, texto };
 }
 
