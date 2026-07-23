@@ -550,7 +550,7 @@ export function sembrarSaludoVoz(jid, textoBienvenida) {
   sesion.mensajes.push({ role: 'user', content: 'hola' });
   sesion.mensajes.push({
     role: 'assistant',
-    content: `${textoBienvenida} (esto ya se envió como nota de voz, no repetirlo por texto)`
+    content: `${textoBienvenida}`
   });
   persistirHistoriales();
 }
@@ -567,10 +567,10 @@ export function sembrarDespedidaVoz(jid, textoDespedidaHablada) {
     historiales.set(jid, sesion);
   }
   sesion.ultimaActividad = Date.now();
-  sesion.mensajes.push({ role: 'user', content: '(el cliente se despidió agradeciendo)' });
+  sesion.mensajes.push({ role: 'user', content: 'muchas gracias' });
   sesion.mensajes.push({
     role: 'assistant',
-    content: `${textoDespedidaHablada} (esto ya se envió como nota de voz, no repetirlo por texto)`
+    content: `${textoDespedidaHablada}`
   });
   persistirHistoriales();
 }
