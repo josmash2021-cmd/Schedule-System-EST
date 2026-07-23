@@ -31,21 +31,32 @@ export function chatsEnCola() {
 function crearSemaforo(max) {
   let activos = 0;
   const esperando = [];
-  return async function usar(fn) {
-    if (activos >= max) {
-      await new Promise((resolve) => esperando.push(resolve));
-    }
-    activos++;
-    try {
-      return await fn();
-    } finally {
-      activos--;
-      const siguiente = esperando.shift();
-      if (siguiente) siguiente();
-    }
+  return {
+    usar: async function (fn) {
+      if (activos >= max) {
+        await new Promise((resolve) => esperando.push(resolve));
+      }
+      activos++;
+      try {
+        return await fn();
+      } finally {
+        activos--;
+        const siguiente = esperando.shift();
+        if (siguiente) siguiente();
+      }
+    },
+    // Slots libres en este instante (para el modo silencioso: si no hay,
+    // el cliente no ve ni "leído" ni "escribiendo" hasta que se desocupe).
+    libres: () => Math.max(0, max - activos)
   };
 }
 
-// Llamadas concurrentes a la API de IA (Kimi). Conservador: 4 por defecto,
-// configurable con IA_CONCURRENCIA en .env.
-export const usarIA = crearSemaforo(Number(process.env.IA_CONCURRENCIA) || 4);
+// Llamadas concurrentes a la API de IA (Kimi). Configurable con
+// IA_CONCURRENCIA en .env (8 en producción).
+const semaforoIA = crearSemaforo(Number(process.env.IA_CONCURRENCIA) || 8);
+export const usarIA = semaforoIA.usar;
+
+// true si hay al menos un "agente" (slot de IA) libre ahora mismo.
+export function slotsIALibres() {
+  return semaforoIA.libres() > 0;
+}

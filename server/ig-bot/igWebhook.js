@@ -11,7 +11,7 @@ import express from 'express';
 import path from 'node:path';
 import config from './src/config.js';
 import { responder, iaDisponible, esPrimeraVez, inactividadMs, cerrarSesion, sembrarSaludoVoz, sembrarDespedidaVoz } from './src/ai.js';
-import { encolar } from './src/cola.js';
+import { encolar, slotsIALibres } from './src/cola.js';
 import { transcribirAudio, transcripcionDisponible } from './src/transcribir.js';
 import { enviarTextoIG, enviarAudioIG, accionIG, verificarFirmaIG, crearCanalIG } from './src/instagram.js';
 import { notificarDuenoIG } from './src/notificar.js';
@@ -113,8 +113,10 @@ function contextoIG(igsid) {
 // Llama al cerebro y envía la respuesta como burbujas de Instagram
 // (misma convención que WhatsApp: ||| separa mensajes, máximo 3).
 // Sin API key del LLM: fallback amable y aviso al dueño (una vez por usuario).
+// En modo silencioso (agentes ocupados), el mark_seen y el "escribiendo"
+// se muestran DESPUÉS de obtener la respuesta, no antes.
 const avisadosSinIA = new Set();
-async function responderYEnviar(igsid, texto) {
+async function responderYEnviar(igsid, texto, silencioso = false) {
   let respuesta;
   if (iaDisponible()) {
     respuesta = await responder(`ig:${igsid}`, texto, contextoIG(igsid));
@@ -129,6 +131,14 @@ async function responderYEnviar(igsid, texto) {
         `👤 IGSID: ${igsid}\n💬 Mensaje: ${texto}`
       );
     }
+  }
+
+  if (silencioso) {
+    // Su turno llegó: ahora sí leído + "escribiendo..." antes de contestar.
+    await accionIG(igsid, 'mark_seen');
+    await accionIG(igsid, 'typing_on');
+    await esperar(1000);
+    console.log(`[ig] Agente libre: ${igsid} pasa a leído y se contesta`);
   }
 
   const partes = String(respuesta)
@@ -152,6 +162,8 @@ async function responderYEnviar(igsid, texto) {
 
 // Ritmo humano igual que en WhatsApp: a los 5s marca leído, a los 7s
 // "escribiendo...", y la respuesta llega en burbujas.
+// Modo silencioso: si los agentes (slots de IA) están ocupados, el
+// cliente NO ve nada (sin leído ni "escribiendo") hasta su turno.
 async function manejarTexto(igsid, texto) {
   console.log(`[ig] ${igsid}: ${texto}`);
   try {
@@ -162,9 +174,14 @@ async function manejarTexto(igsid, texto) {
       console.log(`[ig] Sesión reiniciada a petición del cliente: ${igsid}`);
     }
 
-    await esperar(5000);
-    await accionIG(igsid, 'mark_seen');
-    await esperar(2000);
+    const silencioso = iaDisponible() && !slotsIALibres();
+    if (!silencioso) {
+      await esperar(5000);
+      await accionIG(igsid, 'mark_seen');
+      await esperar(2000);
+    } else {
+      console.log(`[ig] Agentes ocupados: ${igsid} espera en silencio`);
+    }
 
     // Despedida por nota de voz — se evalúa ANTES que la bienvenida (un
     // "gracias que tenga buen día" contiene "buen día" y dispararía el
@@ -225,14 +242,22 @@ async function manejarTexto(igsid, texto) {
       }
     }
 
-    await accionIG(igsid, 'typing_on');
-    await responderYEnviar(igsid, texto);
+    if (!silencioso) await accionIG(igsid, 'typing_on');
+    await responderYEnviar(igsid, texto, silencioso);
   } catch (err) {
     console.error(`[ig] Error al procesar texto de ${igsid}: ${err.message}`);
     await accionIG(igsid, 'typing_off').catch(() => {});
+    // Errores: aviso SOLO a los números del dueño, NADA al cliente.
     try {
-      await enviarTextoIG(igsid, 'Lo siento, tuve un problema técnico. 😅 Ya le avisé al supervisor y te contactamos muy pronto. 🙏');
-    } catch { /* si falla el envío, solo queda el log */ }
+      await notificarDuenoIG(
+        `⚠️ *Error del bot (Instagram)*\n` +
+        `👤 IGSID: ${igsid}\n` +
+        `💬 Mensaje: ${String(texto).slice(0, 200)}\n` +
+        `❗ Error: ${err.message}`
+      );
+    } catch (errNotif) {
+      console.error(`[ig] No se pudo notificar el error al dueño: ${errNotif.message}`);
+    }
   }
 }
 

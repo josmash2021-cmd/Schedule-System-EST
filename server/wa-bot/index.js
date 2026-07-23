@@ -17,7 +17,7 @@ import { responder, iaDisponible, esPrimeraVez, inactividadMs, cerrarSesion, sem
 import { vozDisponible, obtenerAudioBienvenida, obtenerAudioDespedida } from './src/voz.js';
 import { notificarDueno } from './src/notificar.js';
 import { transcribirAudio, transcripcionDisponible } from './src/transcribir.js';
-import { encolar } from './src/cola.js';
+import { encolar, slotsIALibres } from './src/cola.js';
 import { iniciarAprendizaje } from './src/aprendizaje.js';
 
 const logger = pino({ level: 'warn' });
@@ -256,11 +256,20 @@ async function manejarMensaje(sock, mensaje) {
   ]);
 
   try {
-    // Ritmo humano: a los 5s marca leído (palomitas azules) y a los 7s
-    // empieza el "escribiendo...".
-    await new Promise((r) => setTimeout(r, 5000));
-    try { await sock.readMessages([mensaje.key]); } catch { /* best-effort */ }
-    await new Promise((r) => setTimeout(r, 2000));
+    // Modo silencioso: si los "agentes" (slots de IA) están ocupados, el
+    // cliente NO ve nada — el mensaje queda en gris (sin leído, sin
+    // "escribiendo") hasta que se desocupe un agente y le toque su turno.
+    const silencioso = iaDisponible() && !slotsIALibres();
+
+    // Ritmo humano (solo si hay agente libre): a los 5s marca leído
+    // (palomitas azules) y a los 7s empieza el "escribiendo...".
+    if (!silencioso) {
+      await new Promise((r) => setTimeout(r, 5000));
+      try { await sock.readMessages([mensaje.key]); } catch { /* best-effort */ }
+      await new Promise((r) => setTimeout(r, 2000));
+    } else {
+      console.log(`[mensaje] Agentes ocupados: ${telefono} espera en gris (silencioso)`);
+    }
 
     // Despedida por nota de voz — se evalúa ANTES que la bienvenida: un
     // mensaje como "gracias que tenga buen día" contiene "buen día" y
@@ -337,11 +346,16 @@ async function manejarMensaje(sock, mensaje) {
       }
     }
 
-    await presencia('composing');
-    await new Promise((r) => setTimeout(r, 1000 + Math.random() * 1000));
+    if (!silencioso) {
+      await presencia('composing');
+      await new Promise((r) => setTimeout(r, 1000 + Math.random() * 1000));
+    }
 
     let respuesta;
     if (iaDisponible()) {
+      // En modo silencioso esta llamada espera en la cola del semáforo SIN
+      // mostrar nada al cliente (mensaje en gris). Al llegar su turno,
+      // responder() resuelve y abajo se marca leído y se contesta normal.
       respuesta = await responder(jid, texto, { telefono, sock, jid });
     } else {
       // Sin API key: fallback amable y aviso al dueño (una vez por usuario).
@@ -355,6 +369,15 @@ async function manejarMensaje(sock, mensaje) {
           `⚠️ Cliente esperando atención (IA no configurada)\n📞 Tel: ${telefono}\n💬 Mensaje: ${texto}`
         );
       }
+    }
+
+    // Si estuvo esperando en gris: AHORA se marca leído y se muestra
+    // "escribiendo..." justo antes de contestar, como pidió el dueño.
+    if (silencioso) {
+      try { await sock.readMessages([mensaje.key]); } catch { /* best-effort */ }
+      await presencia('composing');
+      await new Promise((r) => setTimeout(r, 1000));
+      console.log(`[mensaje] Agente libre: ${telefono} pasa a leído y se contesta`);
     }
 
     await presencia('paused');
@@ -381,11 +404,20 @@ async function manejarMensaje(sock, mensaje) {
     marcarProcesado(jid, tsMensaje);
   } catch (err) {
     console.error(`[mensaje] Error al procesar: ${err.message}`);
+    // Errores: aviso SOLO a los números del dueño, NADA al cliente (ni
+    // mensajes de "problema técnico"). El mensaje NO se marca procesado,
+    // así el catch-up lo reintenta tras reconexión — no se pierde.
     try {
-      await enviar('Lo siento, tuve un problema técnico. 😅 Ya le avisé al supervisor y te contactamos muy pronto. 🙏');
-      // El fallback ya es una respuesta para el cliente; se marca.
-      marcarProcesado(jid, tsMensaje);
-    } catch { /* si falla el envío, NO se marca: el catch-up reintenta */ }
+      await notificarDueno(
+        sock,
+        `⚠️ *Error del bot*\n` +
+        `📞 Cliente: ${telefono}\n` +
+        `💬 Mensaje: ${String(texto).slice(0, 200)}\n` +
+        `❗ Error: ${err.message}`
+      );
+    } catch (errNotif) {
+      console.error(`[mensaje] No se pudo notificar el error al dueño: ${errNotif.message}`);
+    }
   }
 }
 
