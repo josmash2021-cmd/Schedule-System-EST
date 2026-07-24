@@ -286,6 +286,9 @@ select option { background: #fff; color: #111; }
 .bar-chart .bar-lbl-today { fill: #111; }
 .bar-chart .bar-axis { stroke: rgba(0, 0, 0, 0.12); stroke-width: 1; }
 
+/* Dashboard sin negrillas: todo el texto y números en peso normal. */
+.dashboard, .dashboard * { font-weight: 400 !important; }
+
 /* ---------- Tabla ---------- */
 .table-wrap {
   overflow-x: auto; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: var(--radius);
