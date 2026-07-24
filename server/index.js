@@ -6,10 +6,16 @@ const { initDb } = require('./db');
 const slotsRouter = require('./routes/slots');
 const appointmentsRouter = require('./routes/appointments');
 const authRouter = require('./routes/auth');
+const { router: checkoutRouter, webhookHandler } = require('./routes/checkout');
 
 const app = express();
 
 app.use(cors({ origin: CORS_ORIGIN }));
+
+// El webhook de Stripe verifica la firma sobre el body CRUDO, por eso
+// se registra con express.raw ANTES del parser JSON global.
+app.post('/api/checkout/webhook', express.raw({ type: 'application/json' }), webhookHandler);
+
 app.use(express.json({
   // Guardar el body crudo SOLO del webhook de Instagram: la verificación de
   // firma X-Hub-Signature-256 (HMAC-SHA256) necesita los bytes exactos.
@@ -34,6 +40,7 @@ const htmlRoutes = {
   '/macbook-air-13': 'macbook-air-13.html',
   '/iphone-15-pro': 'iphone-15-pro.html',
   '/cart': 'cart.html',
+  '/success': 'success.html',
   '/book-appointment': 'book-appointment.html',
   '/admin': 'admin.html',
   '/terms': 'terms.html',
@@ -117,6 +124,7 @@ app.get('/bot-qr.png', async (req, res) => {
 app.use('/api/slots', slotsRouter);
 app.use('/api/appointments', appointmentsRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/checkout', checkoutRouter);
 
 // Audios de bienvenida por voz (wa-bot/src/voz.js los cachea en
 // DATA_DIR/voz). Instagram los necesita por URL pública para adjuntarlos.

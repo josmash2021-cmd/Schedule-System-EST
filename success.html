@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title data-en="Payment confirmed — ElectronicST">Pago confirmado — ElectronicST</title>
+    <meta name="description" content="Gracias por tu compra en ElectronicST, Hoover, AL." data-en="Thank you for your purchase at ElectronicST, Hoover, AL.">
+    <meta name="robots" content="noindex">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="assets/img/favicon.png">
+    <link rel="stylesheet" href="assets/site-v3.css">
+    <script src="assets/i18n.js"></script>
+</head>
+<body>
+    <nav class="nav">
+        <div class="container nav-inner">
+            <a href="/" class="brand">
+                <img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST" data-en-alt="ElectronicST" class="logo-desktop">
+                <img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST" data-en-alt="ElectronicST" class="logo-mobile">
+                <span data-en="ElectronicST">ElectronicST</span>
+            </a>
+            <button class="burger" aria-label="Abrir menú" data-en-aria="Open menu" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+            <div class="nav-links">
+                <a href="/" data-en="Home">Inicio</a>
+                <a href="/products" data-en="Products">Productos</a>
+                <a href="/book-appointment" class="btn btn-blue btn-sm nav-cta" data-en="Book appointment">Reservar cita</a>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="cart-section container">
+            <div class="checkout-success reveal">
+                <div class="success-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <span class="eyebrow" data-en="Payment confirmed">Pago confirmado</span>
+                <h1 data-en="Thank you for your purchase!">¡Gracias por tu compra!</h1>
+                <p data-en="We received your payment. We'll contact you shortly to coordinate the in-store pickup of your device.">Recibimos tu pago. Te contactaremos en breve para coordinar la recogida de tu equipo en tienda.</p>
+
+                <div id="orderSummary" class="success-summary hidden">
+                    <div class="cart-row"><span data-en="Amount paid">Total pagado</span><strong id="paidTotal">—</strong></div>
+                    <div class="cart-row"><span data-en="Reference">Referencia</span><strong id="orderRef">—</strong></div>
+                </div>
+
+                <div class="success-actions">
+                    <a href="/products" class="btn btn-blue" data-en="Keep shopping">Seguir comprando</a>
+                    <a href="/" class="btn btn-ghost" data-en="Back to home">Volver al inicio</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <a href="/" class="brand">
+                        <img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST" data-en-alt="ElectronicST">
+                        <span data-en="ElectronicST">ElectronicST</span>
+                    </a>
+                    <p data-en="Your trusted store for MacBook, iPhone, and specialized technical service in Hoover, Alabama.">Tu tienda de confianza para MacBook, iPhone y servicio técnico especializado en Hoover, Alabama.</p>
+                </div>
+                <div class="footer-links">
+                    <a href="/products" data-en="Products">Productos</a>
+                    <a href="/book-appointment" data-en="Book appointment">Reservar cita</a>
+                    <a href="/terms" data-en="Terms and conditions">Términos y condiciones</a>
+                    <a href="/privacy" data-en="Privacy policy">Políticas de privacidad</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span data-en="© ElectronicST. All rights reserved.">© ElectronicST. Todos los derechos reservados.</span>
+                <span><a href="#" class="map-link" data-en="3659 Lorna Rd Suite 157, Hoover, AL 35216">3659 Lorna Rd Suite 157, Hoover, AL 35216</a> · <a href="tel:+12055737840" data-en="(205) 573-7840">(205) 573-7840</a></span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    /* Pago completado: vaciar el carrito y mostrar el resumen del pago. */
+    (function () {
+        try { localStorage.removeItem('est_cart'); } catch (e) {}
+        var params = new URLSearchParams(location.search);
+        var sid = params.get('session_id');
+        if (!sid) return;
+        function money(cents, cur) {
+            var n = (Number(cents) || 0) / 100;
+            return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
+                ' ' + String(cur || 'usd').toUpperCase();
+        }
+        fetch('/api/checkout/session?id=' + encodeURIComponent(sid))
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+                if (!d || d.payment_status !== 'paid') return;
+                var tot = document.getElementById('paidTotal');
+                var ref = document.getElementById('orderRef');
+                var box = document.getElementById('orderSummary');
+                if (tot && d.amount_total != null) tot.textContent = money(d.amount_total, d.currency);
+                if (ref) ref.textContent = sid.slice(-12).toUpperCase();
+                if (box) box.classList.remove('hidden');
+            })
+            .catch(function () {});
+    })();
+    </script>
+
+    <script src="assets/security.js" defer></script>
+    <script src="assets/transitions.js" defer></script>
+    <script src="assets/cart.js" defer></script>
+    <script src="assets/chat.js" defer></script>
+    <script src="assets/site.js" defer></script>
+</body>
+</html>

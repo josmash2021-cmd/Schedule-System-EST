@@ -39,7 +39,7 @@
         var items = getCart();
         var found = null;
         items.forEach(function (i) { if (i.id === item.id) found = i; });
-        if (found) found.qty += 1;
+        if (found) found.qty = Math.min(found.qty + 1, MAX_QTY);
         else items.push({ id: item.id, name: item.name, desc: item.desc, cond: item.cond || '', price: item.price, img: item.img, qty: 1 });
         saveCart(items);
     }
@@ -62,6 +62,15 @@
         });
     }
     var TAX_RATE = 0.10;
+    var MAX_QTY = 10; // debe coincidir con MAX_QTY del backend (routes/checkout.js)
+    /* Escapa texto antes de insertarlo con innerHTML: defensa en profundidad y,
+       además, evita que caracteres como la comilla de 'MacBook Air 13"' rompan
+       atributos (src/alt/data-id). */
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
 
     /* ---------- Enlace Carrito + contador en el nav ---------- */
     var countEl = null;
@@ -292,9 +301,8 @@
         });
     }
 
-    /* ---------- Mini-carrito lateral al agregar (solo PC) ---------- */
+    /* ---------- Mini-carrito al agregar (lateral en PC, hoja inferior en móvil) ---------- */
     var drawer = null, drawerOverlay = null;
-    function isDesktop() { return window.matchMedia('(min-width: 861px)').matches; }
 
     function buildDrawer() {
         drawerOverlay = document.createElement('div');
@@ -314,10 +322,10 @@
         drawerOverlay.classList.add('closing');
         drawer.classList.remove('open');
         drawerOverlay.classList.remove('open');
+        document.body.classList.remove('cart-drawer-lock');
     }
 
     function openCartDrawer(item) {
-        if (!isDesktop()) return;
         if (!drawer) buildDrawer();
         drawer.innerHTML =
             '<div class="cd-head">' +
@@ -331,38 +339,103 @@
                 '<button type="button" class="cd-close" aria-label="' + T('Cerrar', 'Close') + '">&times;</button>' +
             '</div>' +
             '<div class="cd-item">' +
-                '<img src="' + item.img + '" alt="">' +
+                '<img src="' + esc(item.img) + '" alt="">' +
                 '<div class="cd-item-info">' +
-                    '<strong>' + item.name + '</strong>' +
-                    '<span>' + item.desc + '</span>' +
-                    (item.cond ? '<span class="cd-cond">' + T('Condición: ', 'Condition: ') + condLabel(item.cond) + '</span>' : '') +
+                    '<strong>' + esc(item.name) + '</strong>' +
+                    '<span>' + esc(item.desc) + '</span>' +
+                    (item.cond ? '<span class="cd-cond">' + T('Condición: ', 'Condition: ') + esc(condLabel(item.cond)) + '</span>' : '') +
                 '</div>' +
                 '<strong class="cd-price">' + money(item.price) + '</strong>' +
             '</div>' +
             '<div class="cd-subtotal"><span>' + T('Subtotal', 'Subtotal') + '</span><strong>' + money(cartTotal()) + '</strong></div>' +
             '<div class="cd-actions">' +
-                '<a href="/cart" class="btn btn-blue"><svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>' + T('Ir al carrito', 'Go to cart') + '</a>' +
-                '<a href="/book-appointment" class="btn btn-ghost"><svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + T('Reservar cita', 'Book appointment') + '</a>' +
+                '<button type="button" class="btn btn-blue cd-pay"><svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span>' + T('Pagar ahora', 'Pay now') + '</span></button>' +
+                '<a href="/cart" class="btn btn-ghost"><svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>' + T('Ir al carrito', 'Go to cart') + '</a>' +
             '</div>' +
+            '<p class="cd-error hidden" role="alert"></p>' +
             '<button type="button" class="cd-continue">' + T('Seguir comprando', 'Continue shopping') + '</button>';
         drawer.querySelector('.cd-close').addEventListener('click', closeDrawer);
         drawer.querySelector('.cd-continue').addEventListener('click', closeDrawer);
+        var payBtn = drawer.querySelector('.cd-pay');
+        if (payBtn) payBtn.addEventListener('click', function () {
+            startCheckout(payBtn, drawer.querySelector('.cd-error'));
+        });
         drawer.classList.remove('closing');
         drawerOverlay.classList.remove('closing');
         void drawer.offsetWidth; // reflow para animar la entrada
         drawer.classList.add('open');
         drawerOverlay.classList.add('open');
+        document.body.classList.add('cart-drawer-lock');
+    }
+
+    /* ---------- Checkout con Stripe ---------- */
+    var checkingOut = false;
+    function setBtnLoading(btn, loading, loadingText) {
+        if (!btn) return;
+        var label = btn.querySelector('span');
+        if (loading) {
+            btn._prevLabel = label ? label.textContent : '';
+            btn.disabled = true;
+            if (label) label.textContent = loadingText;
+            if (!btn.querySelector('.btn-spin')) {
+                btn.insertAdjacentHTML('afterbegin', '<span class="btn-spin" aria-hidden="true"></span>');
+            }
+        } else {
+            btn.disabled = false;
+            var spin = btn.querySelector('.btn-spin');
+            if (spin) spin.remove();
+            if (label && btn._prevLabel != null) label.textContent = btn._prevLabel;
+        }
+    }
+
+    function startCheckout(btn, errEl) {
+        if (checkingOut) return;
+        var items = getCart().map(function (i) { return { id: i.id, qty: i.qty }; });
+        if (!items.length) return;
+        checkingOut = true;
+        if (errEl) { errEl.textContent = ''; errEl.classList.add('hidden'); }
+        setBtnLoading(btn, true, T('Redirigiendo…', 'Redirecting…'));
+
+        fetch('/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items: items, lang: LANG })
+        }).then(function (r) {
+            return r.json().catch(function () { return {}; }).then(function (data) {
+                return { ok: r.ok, data: data };
+            });
+        }).then(function (res) {
+            if (res.ok && res.data && res.data.url) {
+                window.location.href = res.data.url; // a Stripe Checkout
+                return;
+            }
+            throw new Error((res.data && res.data.error) ||
+                T('No se pudo iniciar el pago. Intenta de nuevo.', 'Could not start payment. Please try again.'));
+        }).catch(function (err) {
+            checkingOut = false;
+            setBtnLoading(btn, false);
+            if (errEl) { errEl.textContent = err.message; errEl.classList.remove('hidden'); }
+            else alert(err.message);
+        });
+    }
+
+    function wireCheckout() {
+        var btn = document.getElementById('checkoutBtn');
+        if (!btn) return;
+        btn.addEventListener('click', function () {
+            startCheckout(btn, document.getElementById('checkoutError'));
+        });
     }
 
     /* ---------- Página del carrito ---------- */
     function itemHTML(item) {
         return '' +
-            '<article class="cart-item" data-id="' + item.id + '">' +
-            '<div class="cart-item-media"><img draggable="false" src="' + item.img + '" alt="' + item.name + '"></div>' +
+            '<article class="cart-item" data-id="' + esc(item.id) + '">' +
+            '<div class="cart-item-media"><img draggable="false" src="' + esc(item.img) + '" alt="' + esc(item.name) + '"></div>' +
             '<div class="cart-item-info">' +
-            '<h3>' + item.name + '</h3>' +
-            '<p>' + item.desc + '</p>' +
-            (item.cond ? '<div class="cart-item-cond">' + T('Condición: ', 'Condition: ') + condLabel(item.cond) + '</div>' : '') +
+            '<h3>' + esc(item.name) + '</h3>' +
+            '<p>' + esc(item.desc) + '</p>' +
+            (item.cond ? '<div class="cart-item-cond">' + T('Condición: ', 'Condition: ') + esc(condLabel(item.cond)) + '</div>' : '') +
             '<span class="cart-item-price">' + money(item.price) + '</span>' +
             '</div>' +
             '<div class="cart-item-actions">' +
@@ -422,7 +495,7 @@
             var id = btn.closest('.cart-item').dataset.id;
             var item = getCart().filter(function (i) { return i.id === id; })[0];
             if (!item) return;
-            if (btn.dataset.act === 'inc') setQty(id, item.qty + 1);
+            if (btn.dataset.act === 'inc') setQty(id, Math.min(item.qty + 1, MAX_QTY));
             else if (btn.dataset.act === 'dec') setQty(id, item.qty - 1);
             else if (btn.dataset.act === 'del') removeItem(id);
             renderCartPage();
@@ -434,5 +507,6 @@
     wireConditionPicker();
     wireAddButton();
     wireCartPage();
+    wireCheckout();
     renderCartPage();
 })();

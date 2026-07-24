@@ -36,6 +36,21 @@ const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 const TWILIO_SMS_FROM = process.env.TWILIO_SMS_FROM;
 
+// Stripe (pagos)
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
+// URL pública del sitio (para las redirecciones de éxito/cancelación de Stripe).
+// Importante en producción: el server corre en Railway detrás del proxy de Vercel,
+// por lo que req.host apunta a Railway, no al dominio real. Configura SITE_URL.
+const SITE_URL = process.env.SITE_URL;
+// Moneda e impuesto usados en el checkout (deben coincidir con el carrito del front).
+const CURRENCY = process.env.CURRENCY || 'usd';
+const TAX_RATE = Number(process.env.TAX_RATE || '0.10');
+
+if (STRIPE_SECRET_KEY && !SITE_URL) {
+  console.warn('WARN: STRIPE_SECRET_KEY configurada pero SITE_URL no. En producción el checkout se BLOQUEARÁ hasta configurar SITE_URL; en desarrollo se usa el Origin/Referer.');
+}
+
 module.exports = {
   PORT,
   NODE_ENV,
@@ -48,4 +63,9 @@ module.exports = {
   TWILIO_ACCOUNT_SID,
   TWILIO_AUTH_TOKEN,
   TWILIO_SMS_FROM,
+  STRIPE_SECRET_KEY,
+  STRIPE_WEBHOOK_SECRET,
+  SITE_URL,
+  CURRENCY,
+  TAX_RATE,
 };

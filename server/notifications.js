@@ -125,4 +125,59 @@ async function sendOwnerWhatsAppNotification(cita) {
   }
 }
 
-module.exports = { sendOwnerSMSNotification, sendClientSMSConfirmation, sendOwnerWhatsAppNotification };
+// Notificación al dueño cuando se completa un pago por Stripe.
+// order: { total, currency, email, items: [{ name, cond, qty, price }], reference }
+async function sendOwnerOrderNotification(order) {
+  const money = (n) => `$${Number(n || 0).toFixed(2)}`;
+  const lines = (order.items || []).map(
+    (i) => `- ${i.qty}x ${i.name}${i.cond ? ` (${i.cond})` : ''} — ${money(i.price)}`
+  );
+
+  const smsText = [
+    'Nueva compra pagada',
+    '',
+    ...lines,
+    '',
+    `Total: ${money(order.total)} ${String(order.currency || 'usd').toUpperCase()}`,
+    order.email ? `Cliente: ${order.email}` : '',
+    order.reference ? `Ref: ${order.reference}` : '',
+    '',
+    `ElectronicST - ${STORE_ADDRESS}`,
+  ]
+    .filter((l) => l !== undefined)
+    .join('\n');
+
+  const waText = [
+    '*Nueva compra pagada*',
+    '',
+    ...lines,
+    '',
+    `Total: ${money(order.total)} ${String(order.currency || 'usd').toUpperCase()}`,
+    order.email ? `Cliente: ${order.email}` : '',
+    order.reference ? `Ref: ${order.reference}` : '',
+    '',
+    `ElectronicST - ${STORE_ADDRESS}`,
+  ]
+    .filter((l) => l !== undefined)
+    .join('\n');
+
+  const tasks = [];
+  if (OWNER_PHONE) tasks.push(sendSMS(OWNER_PHONE, smsText));
+  if (OWNER_PHONE && CALLMEBOT_API_KEY) {
+    tasks.push(
+      (async () => {
+        try {
+          const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(OWNER_PHONE)}&text=${encodeURIComponent(waText)}&apikey=${encodeURIComponent(CALLMEBOT_API_KEY)}`;
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          console.log('WhatsApp de compra encolado (CallMeBot).');
+        } catch (err) {
+          console.error('Failed to send WhatsApp order notification:', err.message);
+        }
+      })()
+    );
+  }
+  await Promise.allSettled(tasks);
+}
+
+module.exports = { sendOwnerSMSNotification, sendClientSMSConfirmation, sendOwnerWhatsAppNotification, sendOwnerOrderNotification };
