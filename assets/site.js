@@ -50,7 +50,7 @@
         /* Contacto visible solo dentro del menú móvil */
         var navMeta = document.createElement('div');
         navMeta.className = 'nav-meta';
-        navMeta.innerHTML = '<a href="tel:+12055737840">(205) 573-7840</a><br><a href="#" class="map-link">3659 Lorna Rd Suite 157, Hoover, AL 35216</a><br><a href="/admin" class="nav-admin-link">Login / Register</a>';
+        navMeta.innerHTML = '<a href="tel:+12055737840">(205) 573-7840</a><br><a href="#" class="map-link">3659 Lorna Rd Suite 157, Hoover, AL 35216</a>';
         links.appendChild(navMeta);
 
         /* Entrada escalonada de los enlaces al abrir el menú móvil */

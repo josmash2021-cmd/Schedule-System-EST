@@ -241,24 +241,16 @@ Wizard de 3 pasos: (1) calendario mensual, (2) slots, (3) formulario.
   confirmar con éxito, VACÍA el carrito. Sin `?pickup=1` o sin items, la
   página funciona igual que antes (la tarjeta Pickup queda oculta).
 
-### `admin.html` — panel de citas (**tema NEGRO desde 2026-07-20**, `noindex`)
-Antes era tema claro "slate"; ahora negro con el mismo fondo de seda del sitio
-(`body::before` + `background-auth.webp`), tarjetas de vidrio oscuras, botones
-primarios blancos y acentos dorados. `color-scheme: dark` para que los controles
-nativos (input date) se vean bien. Los números de fecha (`.appt-time .day`) van
-en **blanco puro #fff** (el dueño reportó que no se veían).
-Login por contraseña → `POST /api/auth/login` → JWT guardado en
-`sessionStorage['est_admin_token']` (8h). Muestra errores con intentos restantes
-y bloqueo 429. Stats por estado, filtro por fecha (+ botón rápido **"Hoy"** en
-TZ America/Chicago, 2026-07-20), lista de tarjetas **ordenadas con las citas
-próximas primero** (ASC, orden client-side; el servidor las manda DESC).
-Acciones según estado: pendiente→Confirmar/Cancelar, confirmada→Atendida/Cancelar,
-cancelada→Reabrir. Botón "Eliminar todas" (DELETE con confirmación).
-**Las citas se identifican por (fecha, hora), no por id** — las acciones PATCH
-mandan `fecha`+`hora`. Nombre y servicio en líneas separadas (los textos largos
-de pickup no se aprietan) y badge dorado **"Pickup"** cuando el servicio
-empieza con "Pickup" (2026-07-20). Logo nuevo `logo-cruise.png` en login y
-topbar (antes `logo.jpg`).
+### ~~`admin.html`~~ — panel de citas (**ELIMINADO 2026-07-24**)
+El panel viejo de citas (login con contraseña única → `POST /api/auth/login`)
+se eliminó por completo: la gestión de citas ya vive en el back-office nuevo
+(`/api/admin/app/<slug>`, sección Citas, que usa `/api/appointments` con el JWT
+del panel). Se borró `admin.html` (raíz y `server/public/`), la ruta `/admin`
+de `htmlRoutes` en `server/index.js`, su entrada en `copy-frontend.js` y el
+enlace "Login / Register" del menú móvil en `assets/site.js` (y su copia en
+`server/public/assets/site.js`). OJO: el endpoint `POST /api/auth/login`
+(authRouter) sigue montado en `server/index.js` aunque ya no tiene frontend;
+`GET/PATCH/DELETE /api/appointments` se siguen usando (panel nuevo + bots).
 
 ### `terminos.html` / `politicas.html` — legales (tema claro, CSS inline duplicado)
 Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolsos
@@ -281,15 +273,16 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   se usa en el footer de las páginas oscuras (`index.html`, `productos.html`).
   El nav de esas páginas usa el nuevo `logo-cruise.png` tanto en PC
   (25px de alto, `.logo-desktop`) como en móvil (28px de alto,
-  `.logo-mobile`). El archivo `logo.jpg` sigue usándose en `admin.html`,
-  `solicitud-servicio.html`, `terminos.html` y `politicas.html`. Enlaces `.map-link` abren Apple Maps en iOS/iPadOS y Google
+  `.logo-mobile`). El archivo `logo.jpg` sigue usándose en
+  `solicitud-servicio.html`, `terminos.html` y `politicas.html` (y en el
+  back-office nuevo, `admin-app/public/img/logo.jpg`). Enlaces `.map-link` abren Apple Maps en iOS/iPadOS y Google
   Maps en el resto.
 - `assets/site.js` (IIFE ES5): nav (cápsula flotante con estado `.scrolled`,
   píldora deslizante `.nav-pill` que sigue al hover y descansa en el activo,
   menú móvil a pantalla completa con entrada escalonada vía `--d`, contacto
-  inyectado `.nav-meta` con teléfono, dirección como `.map-link` y enlace
-  dorado "Login / Register" → `/admin` (2026-07-20; solo en el menú móvil,
-  abajo de la dirección), cierre con
+  inyectado `.nav-meta` con teléfono y dirección como `.map-link`
+  (el enlace "Login / Register" → `/admin` se quitó el 2026-07-24 al
+  eliminar el panel viejo), cierre con
   ESC y scroll-lock del body), reveals por IntersectionObserver, parallax/fade
   del hero, filtros del catálogo, y listeners `.map-link` que abren Apple Maps
   en iOS/iPadOS y Google Maps en otros. Respeta `prefers-reduced-motion`. OJO:
@@ -346,10 +339,10 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
 ### ⚠️ Sistemas de diseño coexisten
 - Oscuro cinematográfico: `index.html`, `productos.html` y ahora
   `solicitud-servicio.html`.
-- Claro "slate": `admin.html`, `terminos.html`, `politicas.html` — cada uno con
+- Claro "slate": `terminos.html`, `politicas.html` — cada uno con
   su propio `<style>` inline que duplica los mismos tokens (`--bg #f8fafc`,
   `--accent #111827`, mismos keyframes…). Cambiar algo del tema claro implica
-  editar 3 archivos.
+  editar 2 archivos.
 - `solicitud-servicio.html` sigue teniendo todo su CSS inline (no usa
   `site-v3.css`), por lo que aunque visualmente coincide con la home, los
   cambios de estilo deben mantenerse en dos lugares: `site-v3.css` y el

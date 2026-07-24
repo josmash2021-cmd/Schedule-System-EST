@@ -50,7 +50,6 @@ const htmlRoutes = {
   '/cart': 'cart.html',
   '/success': 'success.html',
   '/book-appointment': 'book-appointment.html',
-  '/admin': 'admin.html',
   '/terms': 'terms.html',
   '/privacy': 'privacy.html',
 };

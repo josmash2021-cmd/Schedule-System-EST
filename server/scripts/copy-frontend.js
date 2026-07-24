@@ -12,7 +12,6 @@ const itemsToCopy = [
   'cart.html',
   'success.html',
   'book-appointment.html',
-  'admin.html',
   'terms.html',
   'privacy.html',
   'assets',
