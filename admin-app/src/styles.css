@@ -275,6 +275,17 @@ select option { background: #fff; color: #111; }
   border-radius: 999px; background: #fff;
 }
 
+/* ---------- Gráficos del dashboard ---------- */
+.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 26px; }
+.chart-total { float: right; font-size: 15px; font-weight: 800; letter-spacing: -0.02em; }
+.bar-chart { width: 100%; height: auto; display: block; }
+.bar-chart .bar { fill: #111; }
+.bar-chart .bar-today { fill: #4a4a52; }
+.bar-chart .bar-val { font-size: 11px; font-weight: 700; fill: #44444c; }
+.bar-chart .bar-lbl { font-size: 11px; fill: #8a8a92; font-weight: 600; }
+.bar-chart .bar-lbl-today { fill: #111; }
+.bar-chart .bar-axis { stroke: rgba(0, 0, 0, 0.12); stroke-width: 1; }
+
 /* ---------- Tabla ---------- */
 .table-wrap {
   overflow-x: auto; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: var(--radius);

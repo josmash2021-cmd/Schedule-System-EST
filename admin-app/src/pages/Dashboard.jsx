@@ -1,12 +1,33 @@
 import { useEffect, useState } from 'react';
 import { api, apiRoot } from '../api.js';
 
-function todayChicago() {
+// Fecha "de negocio": el taller opera en hora de Chicago.
+function chicagoKey(date = new Date()) {
   const p = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit',
-  }).formatToParts(new Date()).reduce((a, x) => { a[x.type] = x.value; return a; }, {});
+  }).formatToParts(date).reduce((a, x) => { a[x.type] = x.value; return a; }, {});
   return `${p.year}-${p.month}-${p.day}`;
 }
+
+// Claves YYYY-MM-DD de la semana actual (lunes a domingo), en hora de Chicago.
+// La aritmética se hace en UTC para no arrastrar el huso local del navegador.
+function currentWeekKeys() {
+  const [y, m, d] = chicagoKey().split('-').map(Number);
+  const today = new Date(Date.UTC(y, m - 1, d));
+  const monday = new Date(today);
+  monday.setUTCDate(today.getUTCDate() - ((today.getUTCDay() + 6) % 7));
+  const keys = [];
+  for (let i = 0; i < 7; i++) {
+    const day = new Date(monday);
+    day.setUTCDate(monday.getUTCDate() + i);
+    keys.push(day.toISOString().slice(0, 10));
+  }
+  return keys;
+}
+
+const DAY_LABELS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+
+const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 
 function StatIcon({ children }) {
   return (
@@ -29,21 +50,88 @@ function Stat({ k, v, icon }) {
   );
 }
 
+// Gráfico de barras SVG simple (sin dependencias): 7 días de la semana.
+function BarChart({ data, keys, format }) {
+  const W = 560;
+  const H = 190;
+  const TOP = 26;
+  const BOTTOM = 26;
+  const max = Math.max(...data, 1);
+  const slot = W / data.length;
+  const bw = Math.min(46, slot * 0.55);
+  const todayKey = chicagoKey();
+  return (
+    <svg className="bar-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Gráfico semanal">
+      {data.map((v, i) => {
+        const h = v > 0 ? Math.max(4, ((H - TOP - BOTTOM) * v) / max) : 0;
+        const x = slot * i + (slot - bw) / 2;
+        const y = H - BOTTOM - h;
+        const isToday = keys[i] === todayKey;
+        return (
+          <g key={i}>
+            {v > 0 && <rect className={'bar' + (isToday ? ' bar-today' : '')} x={x} y={y} width={bw} height={h} rx="6" />}
+            {v > 0 && <text className="bar-val" x={x + bw / 2} y={y - 7} textAnchor="middle">{format(v)}</text>}
+            <text className={'bar-lbl' + (isToday ? ' bar-lbl-today' : '')} x={slot * i + slot / 2} y={H - 8} textAnchor="middle">
+              {DAY_LABELS[i]}
+            </text>
+          </g>
+        );
+      })}
+      <line className="bar-axis" x1="0" y1={H - BOTTOM} x2={W} y2={H - BOTTOM} />
+    </svg>
+  );
+}
+
 export default function Dashboard() {
   const [users, setUsers] = useState(null);
   const [appts, setAppts] = useState(null);
+  const [weekAppts, setWeekAppts] = useState(null);
+  const [tickets, setTickets] = useState(null);
   const [err, setErr] = useState('');
 
   useEffect(() => {
     api('/users').then((d) => setUsers(d.users)).catch((e) => setErr(e.message));
-    apiRoot('/api/appointments?date=' + todayChicago())
+    apiRoot('/api/appointments?date=' + chicagoKey())
       .then((d) => setAppts(d.citas || []))
       .catch(() => setAppts([]));
+    apiRoot('/api/appointments')
+      .then((d) => setWeekAppts(d.citas || []))
+      .catch(() => setWeekAppts([]));
+    api('/repairs').then((d) => setTickets(d.tickets || [])).catch(() => setTickets([]));
   }, []);
 
+  const weekKeys = currentWeekKeys();
+  const inWeek = (key) => weekKeys.includes(key);
+
   const workers = users ? users.filter((u) => u.role === 'worker').length : null;
-  const admins = users ? users.filter((u) => u.role === 'admin').length : null;
-  const active = users ? users.filter((u) => u.active).length : null;
+
+  // Reparaciones creadas esta semana.
+  const weekRepairs = tickets ? tickets.filter((t) => inWeek(chicagoKey(new Date(t.created_at)))) : null;
+
+  // Ventas de la semana: tickets entregados, sumando final_price por día.
+  let salesByDay = null;
+  let salesTotal = null;
+  if (tickets) {
+    salesByDay = weekKeys.map(() => 0);
+    for (const t of tickets) {
+      if (t.status !== 'entregado' || !t.delivered_at) continue;
+      const idx = weekKeys.indexOf(chicagoKey(new Date(t.delivered_at)));
+      if (idx >= 0) salesByDay[idx] += Number(t.final_price) || 0;
+    }
+    salesTotal = salesByDay.reduce((a, b) => a + b, 0);
+  }
+
+  // Citas por día de la semana.
+  let apptsByDay = null;
+  let apptsTotal = null;
+  if (weekAppts) {
+    apptsByDay = weekKeys.map(() => 0);
+    for (const c of weekAppts) {
+      const idx = weekKeys.indexOf(String(c.fecha).slice(0, 10));
+      if (idx >= 0) apptsByDay[idx] += 1;
+    }
+    apptsTotal = apptsByDay.reduce((a, b) => a + b, 0);
+  }
 
   return (
     <>
@@ -52,12 +140,22 @@ export default function Dashboard() {
       <div className="stat-grid">
         <Stat k="Trabajadores" v={workers}
           icon={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>} />
-        <Stat k="Administradores" v={admins}
-          icon={<><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></>} />
-        <Stat k="Cuentas activas" v={active}
-          icon={<><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></>} />
+        <Stat k="Reparaciones esta semana" v={weekRepairs ? weekRepairs.length : null}
+          icon={<><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></>} />
         <Stat k="Citas hoy" v={appts ? appts.length : null}
           icon={<><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></>} />
+      </div>
+      <div className="chart-grid">
+        <div className="card">
+          <h3>Ventas de la semana{salesTotal != null && <span className="chart-total">{usd.format(salesTotal)}</span>}</h3>
+          {salesByDay == null ? <span className="spinner" />
+            : <BarChart data={salesByDay} keys={weekKeys} format={(v) => '$' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(0))} />}
+        </div>
+        <div className="card">
+          <h3>Citas de la semana{apptsTotal != null && <span className="chart-total">{apptsTotal}</span>}</h3>
+          {apptsByDay == null ? <span className="spinner" />
+            : <BarChart data={apptsByDay} keys={weekKeys} format={(v) => String(v)} />}
+        </div>
       </div>
       <div className="card">
         <h3>Citas de hoy</h3>
