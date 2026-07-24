@@ -8,6 +8,7 @@ import Appointments from './pages/Appointments.jsx';
 import Settings from './pages/Settings.jsx';
 import Tasks from './pages/Tasks.jsx';
 import Team from './pages/Team.jsx';
+import Repairs from './pages/Repairs.jsx';
 import WorkerApp from './pages/WorkerApp.jsx';
 
 export default function App() {
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="/trabajadores" element={<Workers />} />
         <Route path="/tareas" element={<Tasks />} />
         <Route path="/equipo" element={<Team />} />
+        <Route path="/reparaciones" element={<Repairs />} />
         <Route path="/citas" element={<Appointments />} />
         <Route path="/ajustes" element={<Settings />} />
         <Route path="*" element={<Navigate to="/" replace />} />

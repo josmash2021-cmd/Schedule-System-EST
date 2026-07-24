@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-const { PORT, CORS_ORIGIN, ADMIN_PATH } = require('./config');
+const { PORT, CORS_ORIGIN, ADMIN_PATH, REPAIRS_DIR } = require('./config');
 const { initDb } = require('./db');
 const slotsRouter = require('./routes/slots');
 const appointmentsRouter = require('./routes/appointments');
@@ -13,6 +13,7 @@ const adminUsersRouter = require('./routes/adminUsers');
 const adminTimeRouter = require('./routes/adminTime');
 const adminTasksRouter = require('./routes/adminTasks');
 const adminMonitorRouter = require('./routes/adminMonitor');
+const adminRepairsRouter = require('./routes/adminRepairs');
 
 const app = express();
 
@@ -161,6 +162,10 @@ app.use('/api/admin/users', adminUsersRouter);
 app.use('/api/admin/time', adminTimeRouter);
 app.use('/api/admin/tasks', adminTasksRouter);
 app.use('/api/admin/live', adminMonitorRouter);
+// Fotos de reparaciones (nombres UUID no adivinables). Debe ir ANTES del router
+// para que /repairs/photo/<archivo> lo sirva el static y no lo capture /repairs/:id.
+app.use('/api/admin/repairs/photo', express.static(REPAIRS_DIR, { index: false, fallthrough: true, maxAge: '7d' }));
+app.use('/api/admin/repairs', adminRepairsRouter);
 
 // Audios de bienvenida por voz (wa-bot/src/voz.js los cachea en
 // DATA_DIR/voz). Instagram los necesita por URL pública para adjuntarlos.

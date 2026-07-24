@@ -1,4 +1,5 @@
 require('dotenv').config();
+const path = require('path');
 
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -63,6 +64,11 @@ if (NODE_ENV === 'production' && !ADMIN_PATH) {
   console.warn('WARN: ADMIN_PATH no configurada; el panel de back-office quedará INALCANZABLE hasta definir un slug secreto en producción.');
 }
 
+// Carpeta de subidas (fotos de reparaciones). En producción va al volumen
+// persistente de Railway (DATA_DIR=/data/data → /data/data/uploads).
+const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(process.env.DATA_DIR || path.join(__dirname, 'data'), 'uploads');
+const REPAIRS_DIR = path.join(UPLOADS_DIR, 'repairs');
+
 module.exports = {
   PORT,
   NODE_ENV,
@@ -84,4 +90,6 @@ module.exports = {
   ADMIN_USERNAME,
   JWT_ACCESS_TTL,
   BCRYPT_COST,
+  UPLOADS_DIR,
+  REPAIRS_DIR,
 };

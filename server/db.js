@@ -139,6 +139,42 @@ async function initDb() {
     await client.query(`CREATE INDEX IF NOT EXISTS idx_tasks_assigned ON tasks(assigned_to);`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);`);
 
+    // ----- Fase 4: reparaciones (tickets) + fotos -----
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS repair_tickets (
+        id             SERIAL PRIMARY KEY,
+        device_brand   TEXT,
+        device_model   TEXT,
+        device_serial  TEXT,
+        customer_name  TEXT,
+        customer_phone TEXT,
+        problem        TEXT,
+        diagnosis      TEXT,
+        quoted_price   NUMERIC(10,2),
+        final_price    NUMERIC(10,2),
+        status         TEXT NOT NULL DEFAULT 'recibido'
+                         CHECK (status IN ('recibido','diagnostico','reparacion','listo','entregado')),
+        assigned_to    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_by     INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at     TIMESTAMP NOT NULL DEFAULT NOW(),
+        delivered_at   TIMESTAMP
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_repairs_status ON repair_tickets(status);`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_repairs_assigned ON repair_tickets(assigned_to);`);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS repair_photos (
+        id          SERIAL PRIMARY KEY,
+        ticket_id   INTEGER NOT NULL REFERENCES repair_tickets(id) ON DELETE CASCADE,
+        filename    TEXT NOT NULL,
+        uploaded_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at  TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_repair_photos_ticket ON repair_photos(ticket_id);`);
+
     // Sembrar el primer admin desde ADMIN_PASSWORD (idempotente): solo si aún
     // no existe ningún admin. Nace con must_change_password para forzar rotación.
     if (ADMIN_PASSWORD) {

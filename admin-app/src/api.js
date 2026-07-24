@@ -41,3 +41,24 @@ export function api(pathname, opts) { return request('/api/admin' + pathname, op
 // API raíz (/api/*): la usa el panel de Citas, que reutiliza /api/appointments
 // con el mismo token admin (el requireAuth legacy acepta role:'admin').
 export function apiRoot(pathname, opts) { return request(pathname, opts); }
+
+// Subida de archivos (multipart). No se fija Content-Type: el navegador pone
+// el boundary de FormData automáticamente.
+export async function apiUpload(pathname, formData) {
+  const headers = {};
+  const token = getToken();
+  if (token) headers.Authorization = 'Bearer ' + token;
+  const res = await fetch('/api/admin' + pathname, { method: 'POST', headers, body: formData });
+  let data = null;
+  try { data = await res.json(); } catch (_) { /* sin cuerpo */ }
+  if (res.status === 401) { setToken(null); if (onUnauthorized) onUnauthorized(); }
+  if (!res.ok) {
+    const err = new Error((data && data.error) || `Error ${res.status}`);
+    err.status = res.status; err.data = data;
+    throw err;
+  }
+  return data;
+}
+
+// URL pública (no adivinable) de una foto de reparación.
+export function photoUrl(filename) { return '/api/admin/repairs/photo/' + filename; }
