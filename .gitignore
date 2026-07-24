@@ -16,3 +16,4 @@ server/ig-bot/auth_info/
 server/ig-bot/data/
 server/ig-bot/logs/
 server/ig-bot/.env
+admin-app/.visual-test/
