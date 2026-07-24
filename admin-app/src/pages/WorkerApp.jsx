@@ -33,7 +33,7 @@ export default function WorkerApp() {
   return (
     <div className="wapp">
       <div className="wapp-head">
-        <img className="brand-logo" src="/api/admin/static/img/logo.jpg" alt="ElectronicST" />
+        <img className="brand-logo" src="/api/admin/static/img/logo-cruise.png" alt="ElectronicST" />
         <div><strong>ElectronicST</strong><div className="muted" style={{ fontSize: 12 }}>Hola, {user.username}</div></div>
       </div>
       <div className="wapp-body">

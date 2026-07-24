@@ -8,7 +8,7 @@ export default function Settings({ forced }) {
     return (
       <div className="login-wrap">
         <div className="login-card">
-          <div className="brand"><img className="brand-logo" src="/api/admin/static/img/logo.jpg" alt="ElectronicST" /><strong>ElectronicST</strong></div>
+          <div className="brand"><img className="brand-logo" src="/api/admin/static/img/logo-cruise.png" alt="ElectronicST" /><strong>ElectronicST</strong></div>
           <h1>Cambia tu contraseña</h1>
           <p className="sub">Tu cuenta usa una contraseña temporal. Define una nueva para continuar.</p>
           <ChangePasswordForm />
