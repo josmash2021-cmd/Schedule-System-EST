@@ -3,6 +3,7 @@ import { useAuth } from '../auth.jsx';
 import { api } from '../api.js';
 import ChangePasswordForm from '../components/ChangePasswordForm.jsx';
 import RepairDetail, { STATUS_BADGE, statusLabel } from '../components/RepairDetail.jsx';
+import InventoryDetail from '../components/InventoryDetail.jsx';
 
 function chicagoDate(d) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
@@ -39,12 +40,14 @@ export default function WorkerApp() {
         {tab === 'reloj' && <RelojTab />}
         {tab === 'tareas' && <TareasTab />}
         {tab === 'reparaciones' && <ReparacionesTab />}
+        {tab === 'stock' && <StockTab />}
         {tab === 'perfil' && <PerfilTab />}
       </div>
       <nav className="wapp-tabs">
         <TabBtn id="reloj" cur={tab} set={setTab} label="Reloj" icon={<><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>} />
         <TabBtn id="tareas" cur={tab} set={setTab} label="Tareas" icon={<><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></>} />
         <TabBtn id="reparaciones" cur={tab} set={setTab} label="Reparar" icon={<><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></>} />
+        <TabBtn id="stock" cur={tab} set={setTab} label="Stock" icon={<><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></>} />
         <TabBtn id="perfil" cur={tab} set={setTab} label="Perfil" icon={<><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a6 6 0 0 1 12 0v1" /></>} />
       </nav>
     </div>
@@ -197,6 +200,52 @@ function ReparacionesTab() {
               <span className={'badge ' + STATUS_BADGE[t.status]}>{statusLabel(t.status)}</span>
             </div>
           ))}
+    </div>
+  );
+}
+
+function StockTab() {
+  const [items, setItems] = useState(null);
+  const [search, setSearch] = useState('');
+  const [err, setErr] = useState('');
+  const [detail, setDetail] = useState(null);
+
+  const load = useCallback((q = '') => { api('/inventory' + (q ? '?search=' + encodeURIComponent(q) : '')).then((d) => setItems(d.items)).catch((e) => setErr(e.message)); }, []);
+  useEffect(() => { const t = setTimeout(() => load(search), 300); return () => clearTimeout(t); }, [search, load]);
+
+  if (detail) {
+    return (
+      <div>
+        <div className="wrepair-head">
+          <button className="btn btn-ghost btn-sm" onClick={() => { setDetail(null); load(search); }}>‹ Volver</button>
+          <strong>Producto</strong>
+        </div>
+        <div className="wsection">
+          <InventoryDetail itemId={detail.id} isAdmin={false} onClose={() => { setDetail(null); load(search); }} onSaved={() => load(search)} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="wsection">
+      <h3 style={{ marginBottom: 10 }}>Inventario</h3>
+      <input placeholder="Buscar producto…" value={search} onChange={(e) => setSearch(e.target.value)} style={{ marginBottom: 12 }} />
+      {err && <div className="alert alert-error">{err}</div>}
+      {items == null ? <div style={{ textAlign: 'center', padding: 40 }}><span className="spinner spinner-lg" /></div>
+        : items.length === 0 ? <div className="empty">{search ? 'Sin resultados.' : 'No hay productos.'}</div>
+          : items.map((i) => {
+            const low = i.stock <= i.min_stock;
+            return (
+              <div key={i.id} className="task-card" style={{ cursor: 'pointer' }} onClick={() => setDetail({ id: i.id })}>
+                <div className="task-main">
+                  <strong>{i.name}</strong>
+                  <p className="muted" style={{ margin: '2px 0 0', fontSize: 12.5 }}>{i.category || i.sku || ''}</p>
+                </div>
+                <span className={'badge ' + (low ? 'badge-pendiente' : 'badge-on')} style={{ fontSize: 14 }}>{i.stock}</span>
+              </div>
+            );
+          })}
     </div>
   );
 }

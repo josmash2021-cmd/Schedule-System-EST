@@ -175,6 +175,38 @@ async function initDb() {
     `);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_repair_photos_ticket ON repair_photos(ticket_id);`);
 
+    // ----- Fase 5: inventario (productos + movimientos de stock) -----
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS inventory_items (
+        id          SERIAL PRIMARY KEY,
+        name        TEXT NOT NULL,
+        sku         TEXT,
+        category    TEXT,
+        description TEXT,
+        price       NUMERIC(10,2),
+        cost        NUMERIC(10,2),
+        stock       INTEGER NOT NULL DEFAULT 0,
+        min_stock   INTEGER NOT NULL DEFAULT 0,
+        active      BOOLEAN NOT NULL DEFAULT true,
+        created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_inventory_active ON inventory_items(active);`);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS inventory_movements (
+        id         SERIAL PRIMARY KEY,
+        item_id    INTEGER NOT NULL REFERENCES inventory_items(id) ON DELETE CASCADE,
+        delta      INTEGER NOT NULL,
+        reason     TEXT,
+        note       TEXT,
+        user_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_inv_mov_item ON inventory_movements(item_id);`);
+
     // Sembrar el primer admin desde ADMIN_PASSWORD (idempotente): solo si aún
     // no existe ningún admin. Nace con must_change_password para forzar rotación.
     if (ADMIN_PASSWORD) {

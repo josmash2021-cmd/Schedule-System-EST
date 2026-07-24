@@ -14,6 +14,7 @@ const adminTimeRouter = require('./routes/adminTime');
 const adminTasksRouter = require('./routes/adminTasks');
 const adminMonitorRouter = require('./routes/adminMonitor');
 const adminRepairsRouter = require('./routes/adminRepairs');
+const adminInventoryRouter = require('./routes/adminInventory');
 
 const app = express();
 
@@ -166,6 +167,7 @@ app.use('/api/admin/live', adminMonitorRouter);
 // para que /repairs/photo/<archivo> lo sirva el static y no lo capture /repairs/:id.
 app.use('/api/admin/repairs/photo', express.static(REPAIRS_DIR, { index: false, fallthrough: true, maxAge: '7d' }));
 app.use('/api/admin/repairs', adminRepairsRouter);
+app.use('/api/admin/inventory', adminInventoryRouter);
 
 // Audios de bienvenida por voz (wa-bot/src/voz.js los cachea en
 // DATA_DIR/voz). Instagram los necesita por URL pública para adjuntarlos.
