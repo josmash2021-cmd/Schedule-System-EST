@@ -148,4 +148,73 @@ router.patch('/', requireAuth, async (req, res) => {
   }
 });
 
+// Editar una cita (admin). Acepta cualquier subconjunto de campos.
+router.patch('/:id', requireAuth, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'ID inválido.' });
+
+  const validStates = ['pendiente', 'confirmada', 'atendida', 'cancelada'];
+  const s = (v) => String(v ?? '').trim();
+  const fields = {};
+
+  if (req.body.nombre !== undefined) {
+    if (!s(req.body.nombre)) return res.status(400).json({ error: 'El nombre es obligatorio.' });
+    fields.nombre = s(req.body.nombre);
+  }
+  if (req.body.telefono !== undefined) {
+    if (!s(req.body.telefono)) return res.status(400).json({ error: 'El teléfono es obligatorio.' });
+    fields.telefono = s(req.body.telefono);
+  }
+  if (req.body.correo !== undefined) fields.correo = s(req.body.correo) || null;
+  if (req.body.servicio !== undefined) {
+    if (!s(req.body.servicio)) return res.status(400).json({ error: 'El servicio es obligatorio.' });
+    fields.servicio = s(req.body.servicio);
+  }
+  if (req.body.fecha !== undefined) {
+    const e = validateDate(s(req.body.fecha));
+    if (e) return res.status(400).json({ error: e });
+    fields.fecha = s(req.body.fecha);
+  }
+  if (req.body.hora !== undefined) {
+    const e = validateHora(s(req.body.hora));
+    if (e) return res.status(400).json({ error: e });
+    fields.hora = s(req.body.hora);
+  }
+  if (req.body.estado !== undefined) {
+    if (!validStates.includes(req.body.estado)) return res.status(400).json({ error: 'Estado inválido.' });
+    fields.estado = req.body.estado;
+  }
+
+  const keys = Object.keys(fields);
+  if (!keys.length) return res.status(400).json({ error: 'Nada que actualizar.' });
+
+  try {
+    const sets = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
+    const result = await pool.query(
+      `UPDATE appointments SET ${sets} WHERE id = $${keys.length + 1} RETURNING *`,
+      [...keys.map((k) => fields[k]), id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Cita no encontrada.' });
+    res.json({ ok: true, cita: result.rows[0] });
+  } catch (err) {
+    if (err.code === '23505') return res.status(409).json({ error: 'Ya hay una cita en esa fecha y hora.' });
+    console.error('Error PATCH /api/appointments/:id:', err);
+    res.status(500).json({ error: 'Error al actualizar la cita.' });
+  }
+});
+
+// Eliminar una cita (admin)
+router.delete('/:id', requireAuth, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'ID inválido.' });
+  try {
+    const result = await pool.query('DELETE FROM appointments WHERE id = $1 RETURNING id', [id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Cita no encontrada.' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error DELETE /api/appointments/:id:', err);
+    res.status(500).json({ error: 'Error al eliminar la cita.' });
+  }
+});
+
 module.exports = router;

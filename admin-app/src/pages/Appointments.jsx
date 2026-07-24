@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { apiRoot } from '../api.js';
+import Modal from '../components/Modal.jsx';
 
 const ESTADOS = ['pendiente', 'confirmada', 'atendida', 'cancelada'];
 
@@ -16,6 +17,7 @@ export default function Appointments() {
   const [citas, setCitas] = useState(null);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState('');
+  const [editing, setEditing] = useState(null);
 
   const load = useCallback(() => {
     setErr('');
@@ -39,12 +41,27 @@ export default function Appointments() {
     }
   };
 
+  const remove = async (c) => {
+    if (!window.confirm(`¿Eliminar la cita de ${c.nombre} (${c.fecha} ${String(c.hora).slice(0, 5)})?`)) return;
+    setBusy(c.id + 'del');
+    try {
+      await apiRoot('/api/appointments/' + c.id, { method: 'DELETE' });
+      setCitas((list) => list.filter((x) => x.id !== c.id));
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setBusy('');
+    }
+  };
+
   const deleteAll = async () => {
     if (!window.confirm('¿Eliminar TODAS las citas? Esta acción no se puede deshacer.')) return;
     try {
       await apiRoot('/api/appointments', { method: 'DELETE' });
       load();
-    } catch (e) { setErr(e.message); }
+    } catch (e) {
+      setErr(e.message);
+    }
   };
 
   return (
@@ -80,7 +97,7 @@ export default function Appointments() {
             <div className="table-wrap">
               <table className="data">
                 <thead>
-                  <tr><th>Fecha</th><th>Hora</th><th>Cliente</th><th>Servicio</th><th>Estado</th></tr>
+                  <tr><th>Fecha</th><th>Hora</th><th>Cliente</th><th>Servicio</th><th>Estado</th><th></th></tr>
                 </thead>
                 <tbody>
                   {citas.map((c) => (
@@ -102,12 +119,97 @@ export default function Appointments() {
                           {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
                         </select>
                       </td>
+                      <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        <button className="btn btn-secondary btn-sm" onClick={() => setEditing(c)}>Editar</button>{' '}
+                        <button className="btn btn-danger btn-sm" disabled={busy === c.id + 'del'} onClick={() => remove(c)}>
+                          {busy === c.id + 'del' ? <span className="spinner" /> : 'Eliminar'}
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           )}
+
+      {editing && (
+        <EditModal
+          cita={editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => { setEditing(null); load(); }}
+        />
+      )}
     </>
+  );
+}
+
+function EditModal({ cita, onClose, onSaved }) {
+  const [nombre, setNombre] = useState(cita.nombre || '');
+  const [telefono, setTelefono] = useState(cita.telefono || '');
+  const [correo, setCorreo] = useState(cita.correo || '');
+  const [servicio, setServicio] = useState(cita.servicio || '');
+  const [fecha, setFecha] = useState(cita.fecha || '');
+  const [hora, setHora] = useState(String(cita.hora || '').slice(0, 5));
+  const [estado, setEstado] = useState(cita.estado || 'pendiente');
+  const [err, setErr] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    setErr('');
+    setSaving(true);
+    try {
+      await apiRoot('/api/appointments/' + cita.id, {
+        method: 'PATCH',
+        body: {
+          nombre: nombre.trim(), telefono: telefono.trim(), correo: correo.trim() || null,
+          servicio: servicio.trim(), fecha, hora, estado,
+        },
+      });
+      onSaved();
+    } catch (e) {
+      setErr(e.message);
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Modal title="Editar cita" onClose={onClose}
+      footer={(
+        <>
+          <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" onClick={save} disabled={saving || !nombre.trim() || !telefono.trim() || !servicio.trim() || !fecha || !hora}>
+            {saving ? <span className="spinner" /> : 'Guardar'}
+          </button>
+        </>
+      )}>
+      {err && <div className="alert alert-error">{err}</div>}
+      <label className="field"><span>Cliente</span>
+        <input value={nombre} onChange={(e) => setNombre(e.target.value)} autoFocus />
+      </label>
+      <div className="rd-grid">
+        <label className="field"><span>Teléfono</span>
+          <input value={telefono} onChange={(e) => setTelefono(e.target.value)} />
+        </label>
+        <label className="field"><span>Correo (opcional)</span>
+          <input type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} />
+        </label>
+      </div>
+      <label className="field"><span>Servicio</span>
+        <input value={servicio} onChange={(e) => setServicio(e.target.value)} />
+      </label>
+      <div className="rd-grid">
+        <label className="field"><span>Fecha</span>
+          <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+        </label>
+        <label className="field"><span>Hora</span>
+          <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} />
+        </label>
+      </div>
+      <label className="field"><span>Estado</span>
+        <select value={estado} onChange={(e) => setEstado(e.target.value)}>
+          {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
+        </select>
+      </label>
+    </Modal>
   );
 }

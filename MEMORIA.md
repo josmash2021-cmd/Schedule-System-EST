@@ -368,6 +368,11 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   - PATCH (auth): cambia estado por (fecha,hora); estados válidos: pendiente,
     confirmada, atendida, cancelada.
   - DELETE (auth): borra TODAS las citas.
+  - PATCH `/:id` (auth, 2026-07-24): edita cualquier subconjunto de campos
+    (nombre, telefono, correo, servicio, fecha, hora, estado) con validación;
+    409 si la nueva (fecha,hora) choca con otra cita (índice único parcial).
+  - DELETE `/:id` (auth, 2026-07-24): borra una cita individual.
+    La página Citas del panel tiene Editar (modal) y Eliminar por fila.
 - `routes/auth.js` POST /login: rate limit en memoria por IP (5 intentos / 15
   min, limpieza cada 60s), compara contra `ADMIN_PASSWORD`, emite JWT
   `{role:'admin'}` 8h con `JWT_SECRET`. Responde `remainingAttempts`.
