@@ -1,12 +1,15 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { PORT, CORS_ORIGIN } = require('./config');
+const fs = require('fs');
+const { PORT, CORS_ORIGIN, ADMIN_PATH } = require('./config');
 const { initDb } = require('./db');
 const slotsRouter = require('./routes/slots');
 const appointmentsRouter = require('./routes/appointments');
 const authRouter = require('./routes/auth');
 const { router: checkoutRouter, webhookHandler } = require('./routes/checkout');
+const adminAuthRouter = require('./routes/adminAuth');
+const adminUsersRouter = require('./routes/adminUsers');
 
 const app = express();
 
@@ -125,6 +128,33 @@ app.use('/api/slots', slotsRouter);
 app.use('/api/appointments', appointmentsRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/checkout', checkoutRouter);
+
+// ===== Panel de back-office (/api/admin/*) =====
+// Assets compilados del panel (JS/CSS). Sin índice de directorio.
+const ADMIN_DIST = path.join(__dirname, 'admin-dist');
+app.use('/api/admin/static', express.static(ADMIN_DIST, { index: false }));
+
+// Entrada del panel tras el slug secreto. Slug incorrecto → next() → 404 por
+// defecto, idéntico a cualquier ruta desconocida (sin pistas). El bundle es
+// solo obscuridad; la seguridad real es el login (cuentas con hash + roles).
+function slugOk(slug) {
+  if (!ADMIN_PATH) return false;
+  const a = Buffer.from(String(slug || ''));
+  const b = Buffer.from(String(ADMIN_PATH));
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+app.get('/api/admin/app/:slug', (req, res, next) => {
+  if (!slugOk(req.params.slug)) return next();
+  res.set('X-Robots-Tag', 'noindex, nofollow');
+  const indexFile = path.join(ADMIN_DIST, 'index.html');
+  if (!fs.existsSync(indexFile)) {
+    return res.status(503).type('text/plain').send('Panel no disponible (build pendiente).');
+  }
+  return res.sendFile(indexFile);
+});
+
+app.use('/api/admin/auth', adminAuthRouter);
+app.use('/api/admin/users', adminUsersRouter);
 
 // Audios de bienvenida por voz (wa-bot/src/voz.js los cachea en
 // DATA_DIR/voz). Instagram los necesita por URL pública para adjuntarlos.

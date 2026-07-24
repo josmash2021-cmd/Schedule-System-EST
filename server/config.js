@@ -51,6 +51,18 @@ if (STRIPE_SECRET_KEY && !SITE_URL) {
   console.warn('WARN: STRIPE_SECRET_KEY configurada pero SITE_URL no. En producción el checkout se BLOQUEARÁ hasta configurar SITE_URL; en desarrollo se usa el Origin/Referer.');
 }
 
+// ===== Panel de back-office (/api/admin/*) =====
+// Slug secreto bajo el que se sirve el panel. Es obscuridad, NO seguridad real
+// (eso lo dan las cuentas con hash + roles). En dev hay un default cómodo.
+const ADMIN_PATH = process.env.ADMIN_PATH || (NODE_ENV === 'production' ? undefined : 'dev-panel');
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const JWT_ACCESS_TTL = process.env.JWT_ACCESS_TTL || '12h';
+const BCRYPT_COST = Number(process.env.BCRYPT_COST || '12');
+
+if (NODE_ENV === 'production' && !ADMIN_PATH) {
+  console.warn('WARN: ADMIN_PATH no configurada; el panel de back-office quedará INALCANZABLE hasta definir un slug secreto en producción.');
+}
+
 module.exports = {
   PORT,
   NODE_ENV,
@@ -68,4 +80,8 @@ module.exports = {
   SITE_URL,
   CURRENCY,
   TAX_RATE,
+  ADMIN_PATH,
+  ADMIN_USERNAME,
+  JWT_ACCESS_TTL,
+  BCRYPT_COST,
 };
