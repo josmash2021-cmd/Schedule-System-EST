@@ -168,7 +168,6 @@ select option { background: var(--panel-2); color: var(--text); }
 .login-card .brand-dot, .sidebar .brand-dot, .wapp-head .brand-dot {
   border-radius: 10px; background: #fff; border: none; color: #000;
   display: grid; place-items: center; font-weight: 900;
-  box-shadow: 0 6px 18px rgba(255, 255, 255, 0.18);
 }
 .login-card .brand-dot { width: 32px; height: 32px; }
 .login-card h1 { font-size: 22px; margin: 16px 0 4px; }
@@ -178,10 +177,8 @@ select option { background: var(--panel-2); color: var(--text); }
 .shell { display: grid; grid-template-columns: 256px 1fr; min-height: 100vh; }
 .sidebar {
   margin: 14px 0 14px 14px; height: calc(100vh - 28px);
-  background: var(--glass);
-  backdrop-filter: blur(22px) saturate(1.5); -webkit-backdrop-filter: blur(22px) saturate(1.5);
-  border: 1px solid var(--line); border-radius: 24px;
-  box-shadow: var(--shadow-soft);
+  background: #0b0b0e;
+  border: 1px solid var(--line); border-radius: 20px;
   display: flex; flex-direction: column; padding: 20px 14px;
   position: sticky; top: 14px;
 }
@@ -202,7 +199,6 @@ select option { background: var(--panel-2); color: var(--text); }
 .nav-item:hover { background: rgba(255, 255, 255, 0.08); color: var(--text); transform: translateX(2px); }
 .nav-item.active {
   background: #fff; color: #000; font-weight: 700;
-  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.16);
 }
 .nav-item.active:hover { transform: none; }
 .nav-item.disabled { opacity: 0.4; cursor: default; }
@@ -215,15 +211,15 @@ select option { background: var(--panel-2); color: var(--text); }
 .topbar {
   display: flex; align-items: center; gap: 14px; padding: 18px 28px 14px;
   position: sticky; top: 0; z-index: 5;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.85) 55%, rgba(0, 0, 0, 0));
+  background: rgba(0, 0, 0, 0.78);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line-2);
 }
 .topbar h2 { font-size: 19px; letter-spacing: -0.02em; }
 .userchip { display: flex; align-items: center; gap: 10px; animation: fadeIn 0.5s var(--ease) backwards 0.1s; }
 .avatar {
   width: 34px; height: 34px; border-radius: 999px; background: #fff; color: #000;
   display: grid; place-items: center; font-weight: 800;
-  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.18);
 }
 .content { padding: 12px 28px 30px; max-width: 1140px; width: 100%; }
 
