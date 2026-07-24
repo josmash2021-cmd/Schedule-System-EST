@@ -133,10 +133,21 @@ app.use('/api/appointments', appointmentsRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/checkout', checkoutRouter);
 
-// ===== Panel de back-office (/api/admin/*) =====
+// ===== Panel de back-office (rutas ofuscadas bajo /x/*) =====
 // Assets compilados del panel (JS/CSS). Sin índice de directorio.
 const ADMIN_DIST = path.join(__dirname, 'admin-dist');
-app.use('/api/admin/static', express.static(ADMIN_DIST, { index: false }));
+app.use('/x/static', express.static(ADMIN_DIST, { index: false }));
+
+app.use('/x/s/auth', adminAuthRouter);
+app.use('/x/s/users', adminUsersRouter);
+app.use('/x/s/time', adminTimeRouter);
+app.use('/x/s/tasks', adminTasksRouter);
+app.use('/x/s/live', adminMonitorRouter);
+// Fotos de reparaciones (nombres UUID no adivinables). Debe ir ANTES del router
+// para que /repairs/photo/<archivo> lo sirva el static y no lo capture /repairs/:id.
+app.use('/x/s/repairs/photo', express.static(REPAIRS_DIR, { index: false, fallthrough: true, maxAge: '7d' }));
+app.use('/x/s/repairs', adminRepairsRouter);
+app.use('/x/s/inventory', adminInventoryRouter);
 
 // Entrada del panel tras el slug secreto. Slug incorrecto → next() → 404 por
 // defecto, idéntico a cualquier ruta desconocida (sin pistas). El bundle es
@@ -147,7 +158,7 @@ function slugOk(slug) {
   const b = Buffer.from(String(ADMIN_PATH));
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
-app.get('/api/admin/app/:slug', (req, res, next) => {
+app.get('/x/:slug', (req, res, next) => {
   if (!slugOk(req.params.slug)) return next();
   res.set('X-Robots-Tag', 'noindex, nofollow');
   const indexFile = path.join(ADMIN_DIST, 'index.html');
@@ -156,17 +167,6 @@ app.get('/api/admin/app/:slug', (req, res, next) => {
   }
   return res.sendFile(indexFile);
 });
-
-app.use('/api/admin/auth', adminAuthRouter);
-app.use('/api/admin/users', adminUsersRouter);
-app.use('/api/admin/time', adminTimeRouter);
-app.use('/api/admin/tasks', adminTasksRouter);
-app.use('/api/admin/live', adminMonitorRouter);
-// Fotos de reparaciones (nombres UUID no adivinables). Debe ir ANTES del router
-// para que /repairs/photo/<archivo> lo sirva el static y no lo capture /repairs/:id.
-app.use('/api/admin/repairs/photo', express.static(REPAIRS_DIR, { index: false, fallthrough: true, maxAge: '7d' }));
-app.use('/api/admin/repairs', adminRepairsRouter);
-app.use('/api/admin/inventory', adminInventoryRouter);
 
 // Audios de bienvenida por voz (wa-bot/src/voz.js los cachea en
 // DATA_DIR/voz). Instagram los necesita por URL pública para adjuntarlos.

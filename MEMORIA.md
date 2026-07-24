@@ -244,13 +244,21 @@ Wizard de 3 pasos: (1) calendario mensual, (2) slots, (3) formulario.
 ### ~~`admin.html`~~ — panel de citas (**ELIMINADO 2026-07-24**)
 El panel viejo de citas (login con contraseña única → `POST /api/auth/login`)
 se eliminó por completo: la gestión de citas ya vive en el back-office nuevo
-(`/api/admin/app/<slug>`, sección Citas, que usa `/api/appointments` con el JWT
+(`/x/<slug>`, sección Citas, que usa `/api/appointments` con el JWT
 del panel). Se borró `admin.html` (raíz y `server/public/`), la ruta `/admin`
 de `htmlRoutes` en `server/index.js`, su entrada en `copy-frontend.js` y el
 enlace "Login / Register" del menú móvil en `assets/site.js` (y su copia en
 `server/public/assets/site.js`). OJO: el endpoint `POST /api/auth/login`
 (authRouter) sigue montado en `server/index.js` aunque ya no tiene frontend;
 `GET/PATCH/DELETE /api/appointments` se siguen usando (panel nuevo + bots).
+
+**Rutas del panel ofuscadas (2026-07-24):** todo lo del back-office dejó
+`/api/admin/*` y ahora vive bajo `/x/*` para que el enlace no diga "admin" ni
+"api": página en `/x/<slug>` (slug en env `ADMIN_PATH`, timingSafeEqual, slug
+incorrecto → 404 genérico), assets en `/x/static/` (base de Vite) y API del
+panel en `/x/s/*` (auth, users, time, tasks, live, repairs, inventory). El
+proxy de Vercel reenvía `/x/:path*` a Railway igual que `/api/*`. La API
+pública del sitio (`/api/appointments`, `/api/slots`, etc.) NO cambió.
 
 ### `terminos.html` / `politicas.html` — legales (tema claro, CSS inline duplicado)
 Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolsos

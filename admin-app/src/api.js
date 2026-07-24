@@ -35,8 +35,8 @@ async function request(url, { method = 'GET', body, auth = true } = {}) {
   return data;
 }
 
-// API del panel (/api/admin/*)
-export function api(pathname, opts) { return request('/api/admin' + pathname, opts); }
+// API del panel (montada bajo /x/s/*, ruta ofuscada)
+export function api(pathname, opts) { return request('/x/s' + pathname, opts); }
 
 // API raíz (/api/*): la usa el panel de Citas, que reutiliza /api/appointments
 // con el mismo token admin (el requireAuth legacy acepta role:'admin').
@@ -48,7 +48,7 @@ export async function apiUpload(pathname, formData) {
   const headers = {};
   const token = getToken();
   if (token) headers.Authorization = 'Bearer ' + token;
-  const res = await fetch('/api/admin' + pathname, { method: 'POST', headers, body: formData });
+  const res = await fetch('/x/s' + pathname, { method: 'POST', headers, body: formData });
   let data = null;
   try { data = await res.json(); } catch (_) { /* sin cuerpo */ }
   if (res.status === 401) { setToken(null); if (onUnauthorized) onUnauthorized(); }
@@ -61,4 +61,4 @@ export async function apiUpload(pathname, formData) {
 }
 
 // URL pública (no adivinable) de una foto de reparación.
-export function photoUrl(filename) { return '/api/admin/repairs/photo/' + filename; }
+export function photoUrl(filename) { return '/x/s/repairs/photo/' + filename; }
