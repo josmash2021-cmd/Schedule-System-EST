@@ -171,14 +171,20 @@ router.patch('/:id', requireAuth, async (req, res) => {
     fields.servicio = s(req.body.servicio);
   }
   if (req.body.fecha !== undefined) {
-    const e = validateDate(s(req.body.fecha));
-    if (e) return res.status(400).json({ error: e });
-    fields.fecha = s(req.body.fecha);
+    // Edición admin: solo se exige formato (no reglas de reserva como
+    // "no pasado" o "no domingo", la cita ya existe).
+    const f = s(req.body.fecha);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(f) || isNaN(Date.parse(f))) {
+      return res.status(400).json({ error: 'Fecha inválida.' });
+    }
+    fields.fecha = f;
   }
   if (req.body.hora !== undefined) {
-    const e = validateHora(s(req.body.hora));
-    if (e) return res.status(400).json({ error: e });
-    fields.hora = s(req.body.hora);
+    const h = s(req.body.hora).slice(0, 5);
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(h)) {
+      return res.status(400).json({ error: 'Hora inválida.' });
+    }
+    fields.hora = h;
   }
   if (req.body.estado !== undefined) {
     if (!validStates.includes(req.body.estado)) return res.status(400).json({ error: 'Estado inválido.' });

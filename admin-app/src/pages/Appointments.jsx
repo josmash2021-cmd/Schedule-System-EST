@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
 import { apiRoot } from '../api.js';
-import Modal from '../components/Modal.jsx';
 
 const ESTADOS = ['pendiente', 'confirmada', 'atendida', 'cancelada'];
 
@@ -63,6 +62,16 @@ export default function Appointments() {
       setErr(e.message);
     }
   };
+
+  if (editing) {
+    return (
+      <EditPage
+        cita={editing}
+        onBack={() => setEditing(null)}
+        onSaved={() => { setEditing(null); load(); }}
+      />
+    );
+  }
 
   return (
     <>
@@ -132,18 +141,11 @@ export default function Appointments() {
             </div>
           )}
 
-      {editing && (
-        <EditModal
-          cita={editing}
-          onClose={() => setEditing(null)}
-          onSaved={() => { setEditing(null); load(); }}
-        />
-      )}
     </>
   );
 }
 
-function EditModal({ cita, onClose, onSaved }) {
+function EditPage({ cita, onBack, onSaved }) {
   const [nombre, setNombre] = useState(cita.nombre || '');
   const [telefono, setTelefono] = useState(cita.telefono || '');
   const [correo, setCorreo] = useState(cita.correo || '');
@@ -173,43 +175,50 @@ function EditModal({ cita, onClose, onSaved }) {
   };
 
   return (
-    <Modal title="Editar cita" onClose={onClose}
-      footer={(
-        <>
-          <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-primary" onClick={save} disabled={saving || !nombre.trim() || !telefono.trim() || !servicio.trim() || !fecha || !hora}>
-            {saving ? <span className="spinner" /> : 'Guardar'}
-          </button>
-        </>
-      )}>
+    <>
+      <div className="section-head">
+        <h1>Editar cita</h1>
+        <div className="spacer" />
+        <button className="btn btn-secondary btn-sm" onClick={onBack}>← Volver</button>
+      </div>
       {err && <div className="alert alert-error">{err}</div>}
-      <label className="field"><span>Cliente</span>
-        <input value={nombre} onChange={(e) => setNombre(e.target.value)} autoFocus />
-      </label>
-      <div className="rd-grid">
-        <label className="field"><span>Teléfono</span>
-          <input value={telefono} onChange={(e) => setTelefono(e.target.value)} />
+      <div className="card" style={{ maxWidth: 640 }}>
+        <h3>Datos de la cita</h3>
+        <label className="field"><span>Cliente</span>
+          <input value={nombre} onChange={(e) => setNombre(e.target.value)} autoFocus />
         </label>
-        <label className="field"><span>Correo (opcional)</span>
-          <input type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} />
+        <div className="rd-grid">
+          <label className="field"><span>Teléfono</span>
+            <input value={telefono} onChange={(e) => setTelefono(e.target.value)} />
+          </label>
+          <label className="field"><span>Correo (opcional)</span>
+            <input type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} />
+          </label>
+        </div>
+        <label className="field"><span>Servicio</span>
+          <input value={servicio} onChange={(e) => setServicio(e.target.value)} />
         </label>
+        <div className="rd-grid">
+          <label className="field"><span>Fecha</span>
+            <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+          </label>
+          <label className="field"><span>Hora</span>
+            <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} />
+          </label>
+        </div>
+        <label className="field"><span>Estado</span>
+          <select value={estado} onChange={(e) => setEstado(e.target.value)}>
+            {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
+          </select>
+        </label>
+        <div className="row" style={{ marginTop: 4 }}>
+          <button className="btn btn-primary" onClick={save}
+            disabled={saving || !nombre.trim() || !telefono.trim() || !servicio.trim() || !fecha || !hora}>
+            {saving ? <span className="spinner" /> : 'Guardar cambios'}
+          </button>
+          <button className="btn btn-ghost" onClick={onBack}>Cancelar</button>
+        </div>
       </div>
-      <label className="field"><span>Servicio</span>
-        <input value={servicio} onChange={(e) => setServicio(e.target.value)} />
-      </label>
-      <div className="rd-grid">
-        <label className="field"><span>Fecha</span>
-          <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
-        </label>
-        <label className="field"><span>Hora</span>
-          <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} />
-        </label>
-      </div>
-      <label className="field"><span>Estado</span>
-        <select value={estado} onChange={(e) => setEstado(e.target.value)}>
-          {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
-        </select>
-      </label>
-    </Modal>
+    </>
   );
 }
