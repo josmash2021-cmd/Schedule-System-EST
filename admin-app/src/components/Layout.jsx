@@ -42,6 +42,7 @@ export default function Layout({ children }) {
           <div className="brand-dot">E</div>
           <div><strong>ElectronicST</strong><span>Panel de gestión</span></div>
         </div>
+        <div className="nav-label">Menú</div>
         {NAV.map((n) => (
           <NavLink key={n.to} to={n.to} end={n.end} onClick={() => setOpen(false)}
             className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}>
@@ -49,6 +50,7 @@ export default function Layout({ children }) {
           </NavLink>
         ))}
         <div className="nav-sep" />
+        <div className="nav-label">Próximamente</div>
         {SOON.map((n) => (
           <div key={n.label} className="nav-item disabled" title="Próximamente">
             <Ico>{n.icon}</Ico>{n.label}<span className="soon">PRONTO</span>

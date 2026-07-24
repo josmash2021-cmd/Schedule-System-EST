@@ -8,10 +8,22 @@ function todayChicago() {
   return `${p.year}-${p.month}-${p.day}`;
 }
 
-function Stat({ k, v }) {
+function StatIcon({ children }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {children}
+    </svg>
+  );
+}
+
+function Stat({ k, v, icon }) {
   return (
     <div className="stat-card">
-      <div className="k">{k}</div>
+      <div className="stat-top">
+        <div className="k">{k}</div>
+        <div className="stat-ico"><StatIcon>{icon}</StatIcon></div>
+      </div>
       <div className="v">{v == null ? <span className="spinner" /> : v}</div>
     </div>
   );
@@ -38,10 +50,14 @@ export default function Dashboard() {
       <div className="section-head"><h1>Resumen</h1></div>
       {err && <div className="alert alert-error">{err}</div>}
       <div className="stat-grid">
-        <Stat k="Trabajadores" v={workers} />
-        <Stat k="Administradores" v={admins} />
-        <Stat k="Cuentas activas" v={active} />
-        <Stat k="Citas hoy" v={appts ? appts.length : null} />
+        <Stat k="Trabajadores" v={workers}
+          icon={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>} />
+        <Stat k="Administradores" v={admins}
+          icon={<><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></>} />
+        <Stat k="Cuentas activas" v={active}
+          icon={<><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></>} />
+        <Stat k="Citas hoy" v={appts ? appts.length : null}
+          icon={<><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></>} />
       </div>
       <div className="card">
         <h3>Citas de hoy</h3>
