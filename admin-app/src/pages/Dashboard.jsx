@@ -139,47 +139,51 @@ export default function Dashboard() {
     <div className="dashboard">
       <div className="section-head"><h1>Resumen</h1></div>
       {err && <div className="alert alert-error">{err}</div>}
-      <div className="stat-grid">
-        <Stat k="Trabajadores" v={workers}
-          icon={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>} />
-        <Stat k="Reparaciones esta semana" v={weekRepairs ? weekRepairs.length : null}
-          icon={<><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></>} />
-        <Stat k="Total de inventario" v={inventory ? inventory.reduce((a, i) => a + (i.stock || 0), 0) : null}
-          icon={<><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></>} />
-      </div>
-      <div className="chart-grid">
-        <div className="card">
-          <h3>Ventas de la semana{salesTotal != null && <span className="chart-total">{usd.format(salesTotal)}</span>}</h3>
-          {salesByDay == null ? <span className="spinner" />
-            : <BarChart data={salesByDay} keys={weekKeys} format={(v) => '$' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(0))} />}
+      <div className="dash-layout">
+        <div className="stat-grid">
+          <Stat k="Trabajadores" v={workers}
+            icon={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>} />
+          <Stat k="Reparaciones esta semana" v={weekRepairs ? weekRepairs.length : null}
+            icon={<><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></>} />
+          <Stat k="Total de inventario" v={inventory ? inventory.reduce((a, i) => a + (i.stock || 0), 0) : null}
+            icon={<><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></>} />
         </div>
-        <div className="card">
-          <h3>Citas de la semana{apptsTotal != null && <span className="chart-total">{apptsTotal}</span>}</h3>
-          {apptsByDay == null ? <span className="spinner" />
-            : <BarChart data={apptsByDay} keys={weekKeys} format={(v) => String(v)} />}
+        <div className="dash-main">
+          <div className="chart-grid">
+            <div className="card">
+              <h3>Ventas de la semana{salesTotal != null && <span className="chart-total">{usd.format(salesTotal)}</span>}</h3>
+              {salesByDay == null ? <span className="spinner" />
+                : <BarChart data={salesByDay} keys={weekKeys} format={(v) => '$' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(0))} />}
+            </div>
+            <div className="card">
+              <h3>Citas de la semana{apptsTotal != null && <span className="chart-total">{apptsTotal}</span>}</h3>
+              {apptsByDay == null ? <span className="spinner" />
+                : <BarChart data={apptsByDay} keys={weekKeys} format={(v) => String(v)} />}
+            </div>
+          </div>
+          <div className="card">
+            <h3>Citas de hoy</h3>
+            {appts == null ? <span className="spinner" />
+              : appts.length === 0 ? <div className="empty">No hay citas para hoy.</div>
+                : (
+                  <div className="table-wrap">
+                    <table className="data">
+                      <thead><tr><th>Hora</th><th>Cliente</th><th>Servicio</th><th>Estado</th></tr></thead>
+                      <tbody>
+                        {[...appts].sort((a, b) => (a.hora > b.hora ? 1 : -1)).map((c, i) => (
+                          <tr key={i}>
+                            <td>{String(c.hora).slice(0, 5)}</td>
+                            <td>{c.nombre}</td>
+                            <td className="muted">{c.servicio}</td>
+                            <td><span className={'badge badge-' + c.estado}>{c.estado}</span></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+          </div>
         </div>
-      </div>
-      <div className="card">
-        <h3>Citas de hoy</h3>
-        {appts == null ? <span className="spinner" />
-          : appts.length === 0 ? <div className="empty">No hay citas para hoy.</div>
-            : (
-              <div className="table-wrap">
-                <table className="data">
-                  <thead><tr><th>Hora</th><th>Cliente</th><th>Servicio</th><th>Estado</th></tr></thead>
-                  <tbody>
-                    {[...appts].sort((a, b) => (a.hora > b.hora ? 1 : -1)).map((c, i) => (
-                      <tr key={i}>
-                        <td>{String(c.hora).slice(0, 5)}</td>
-                        <td>{c.nombre}</td>
-                        <td className="muted">{c.servicio}</td>
-                        <td><span className={'badge badge-' + c.estado}>{c.estado}</span></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
       </div>
     </div>
   );
