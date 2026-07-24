@@ -14,6 +14,31 @@ export const STATUS_BADGE = {
 };
 export const statusLabel = (v) => (REPAIR_STATUS.find((s) => s.v === v) || {}).l || v;
 
+// Comprime/redimensiona la imagen en el navegador antes de subir: máx 1600px,
+// JPEG calidad 0.85. Reduce ~10-20x el tamaño y convierte HEIC de iPhone a JPG.
+// Si algo falla, devuelve el archivo original (fallback seguro).
+async function compressImage(file, maxDim = 1600, quality = 0.85) {
+  if (!file || !file.type || !file.type.startsWith('image/')) return file;
+  try {
+    let bitmap;
+    try { bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' }); }
+    catch (_) { bitmap = await createImageBitmap(file); }
+    const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+    const w = Math.max(1, Math.round(bitmap.width * scale));
+    const h = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, w, h);
+    if (bitmap.close) bitmap.close();
+    const blob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', quality));
+    if (!blob || blob.size >= file.size) return file; // no quedó más chica → original
+    const name = (file.name || 'foto').replace(/\.[^.]+$/, '') + '.jpg';
+    return new File([blob], name, { type: 'image/jpeg' });
+  } catch (_) {
+    return file;
+  }
+}
+
 const EMPTY = {
   device_brand: '', device_model: '', device_serial: '', customer_name: '', customer_phone: '',
   problem: '', diagnosis: '', quoted_price: '', final_price: '', status: 'recibido', assigned_to: '',
@@ -70,8 +95,9 @@ export default function RepairDetail({ ticketId, workers = [], isAdmin, onClose,
     if (!file || !id) return;
     setErr(''); setUploading(true);
     try {
+      const img = await compressImage(file);
       const fd = new FormData();
-      fd.append('photo', file);
+      fd.append('photo', img);
       const { photo } = await apiUpload('/repairs/' + id + '/photos', fd);
       setPhotos((p) => [...p, photo]);
     } catch (e2) { setErr(e2.message); }
