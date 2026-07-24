@@ -10,18 +10,27 @@ const router = express.Router();
 router.use(verifyToken, loadUser);
 
 function parseId(req, res) {
-  const id = Number(req.params.id);
+  const raw = String(req.params.id);
+  if (!/^\d+$/.test(raw)) { res.status(404).json({ error: 'Tarea no encontrada.' }); return null; }
+  const id = Number(raw);
   if (!Number.isInteger(id) || id < 1) { res.status(404).json({ error: 'Tarea no encontrada.' }); return null; }
   return id;
 }
 
+// El asignado debe existir Y estar activo (no asignar trabajo a cuentas
+// desactivadas: no podrían verlo).
 async function validAssignee(value) {
   if (value === null || value === undefined || value === '') return { ok: true, id: null };
-  const id = Number(value);
-  if (!Number.isInteger(id)) return { ok: false };
-  const u = await users.findById(id);
-  if (!u) return { ok: false };
-  return { ok: true, id };
+  if (!/^\d+$/.test(String(value))) return { ok: false };
+  const u = await users.findById(Number(value));
+  if (!u || !u.active) return { ok: false };
+  return { ok: true, id: u.id };
+}
+
+// due_date llega como texto; validar formato antes de pasarlo a una columna DATE
+// (si no, Postgres lanza y se convierte en un 500).
+function validDate(s) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s));
 }
 
 // Mis tareas (cualquier usuario autenticado)
@@ -69,6 +78,7 @@ router.post('/', requireRole('admin'), async (req, res) => {
   const title = String(b.title || '').trim();
   if (!title) return res.status(400).json({ error: 'El título es obligatorio.' });
   if (title.length > 200) return res.status(400).json({ error: 'El título es demasiado largo.' });
+  if (b.due_date && !validDate(String(b.due_date))) return res.status(400).json({ error: 'Fecha límite inválida.' });
   const asg = await validAssignee(b.assigned_to);
   if (!asg.ok) return res.status(400).json({ error: 'El trabajador asignado no es válido.' });
   try {
@@ -91,9 +101,17 @@ router.patch('/:id', requireRole('admin'), async (req, res) => {
   const id = parseId(req, res); if (id === null) return;
   const b = req.body || {};
   const fields = {};
-  if (b.title !== undefined) { const t = String(b.title).trim(); if (!t) return res.status(400).json({ error: 'El título es obligatorio.' }); fields.title = t; }
+  if (b.title !== undefined) {
+    const t = String(b.title).trim();
+    if (!t) return res.status(400).json({ error: 'El título es obligatorio.' });
+    if (t.length > 200) return res.status(400).json({ error: 'El título es demasiado largo.' });
+    fields.title = t;
+  }
   if (b.description !== undefined) fields.description = b.description ? String(b.description) : null;
-  if (b.due_date !== undefined) fields.due_date = b.due_date || null;
+  if (b.due_date !== undefined) {
+    if (b.due_date && !validDate(String(b.due_date))) return res.status(400).json({ error: 'Fecha límite inválida.' });
+    fields.due_date = b.due_date || null;
+  }
   if (b.status !== undefined) { if (!tasks.STATUSES.includes(b.status)) return res.status(400).json({ error: 'Estado inválido.' }); fields.status = b.status; }
   if (b.assigned_to !== undefined) {
     const asg = await validAssignee(b.assigned_to);

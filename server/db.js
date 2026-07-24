@@ -1,6 +1,11 @@
-const { Pool } = require('pg');
+const { Pool, types } = require('pg');
 const { DATABASE_URL, NODE_ENV, ADMIN_PASSWORD, ADMIN_USERNAME } = require('./config');
 const { hashPassword } = require('./lib/passwords');
+
+// Interpretar TIMESTAMP (sin zona) SIEMPRE como UTC, sin depender de la TZ del
+// proceso Node. Todo el sistema guarda UTC (NOW()); así, aunque alguien ponga
+// TZ=America/Chicago en el contenedor, las horas de fichaje no se desvían.
+types.setTypeParser(1114, (v) => (v == null ? null : new Date(v.replace(' ', 'T') + 'Z')));
 
 if (!DATABASE_URL) {
   console.error('ERROR: DATABASE_URL no está definida.');

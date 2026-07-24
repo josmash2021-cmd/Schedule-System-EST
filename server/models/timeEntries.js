@@ -21,11 +21,14 @@ async function clockOut(userId) {
 }
 
 async function recentForUser(userId, days = 14) {
+  // Corte calculado en JS: evita aritmética de intervalos en SQL. Es un filtro
+  // de recencia (para mostrar), no un cálculo exacto de duración.
+  const cutoff = new Date(Date.now() - days * 86400000);
   const r = await pool.query(
     `SELECT * FROM time_entries
-     WHERE user_id = $1 AND clock_in >= NOW() - make_interval(days => $2::int)
+     WHERE user_id = $1 AND clock_in >= $2
      ORDER BY clock_in DESC`,
-    [userId, days]
+    [userId, cutoff]
   );
   return r.rows;
 }
@@ -43,12 +46,13 @@ async function openNow() {
 
 // Admin: turnos recientes de todos, con nombre.
 async function recentAll(days = 7) {
+  const cutoff = new Date(Date.now() - days * 86400000);
   const r = await pool.query(
     `SELECT t.id, t.user_id, t.clock_in, t.clock_out, u.username
      FROM time_entries t JOIN users u ON u.id = t.user_id
-     WHERE t.clock_in >= NOW() - make_interval(days => $1::int)
+     WHERE t.clock_in >= $1
      ORDER BY t.clock_in DESC`,
-    [days]
+    [cutoff]
   );
   return r.rows;
 }

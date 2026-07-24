@@ -16,9 +16,9 @@ router.post('/clock-in', async (req, res) => {
     audit.logAction(req.user.id, 'time.clock_in', { ip: getClientIp(req) });
     res.status(201).json({ entry });
   } catch (err) {
+    // Índice único parcial: perdió la carrera → ya hay un turno abierto.
     if (err.code === '23505') {
-      const open = await time.getOpen(req.user.id);
-      return res.status(409).json({ error: 'Ya tienes un turno abierto.', entry: open });
+      return res.status(409).json({ error: 'Ya tienes un turno abierto.' });
     }
     console.error('clock-in error:', err.message);
     res.status(500).json({ error: 'No se pudo fichar entrada.' });
