@@ -173,8 +173,11 @@ select option { background: var(--panel-2); color: var(--text); }
 /* ---------- Shell (sidebar de cristal + topbar) ---------- */
 .shell { display: grid; grid-template-columns: 256px 1fr; min-height: 100vh; }
 .sidebar {
-  background: #0b0b0e; color: var(--text);
-  border-right: 1px solid var(--line-2);
+  background: #ffffff;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.14) 1px, transparent 1.4px);
+  background-size: 20px 20px;
+  color: #111;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
   display: flex; flex-direction: column; padding: 20px 14px;
   position: sticky; top: 0; height: 100vh;
 }
@@ -188,20 +191,21 @@ select option { background: var(--panel-2); color: var(--text); }
 }
 .nav-item {
   display: flex; align-items: center; gap: 11px; padding: 10px 14px; border-radius: 999px;
-  color: var(--muted-2); font-weight: 600; font-size: 14px; text-decoration: none; cursor: pointer;
+  color: #55555c; font-weight: 600; font-size: 14px; text-decoration: none; cursor: pointer;
   transition: background 0.22s var(--ease), color 0.22s var(--ease), transform 0.22s var(--ease), box-shadow 0.22s;
   margin-bottom: 3px;
 }
-.nav-item:hover { background: rgba(255, 255, 255, 0.08); color: var(--text); transform: translateX(2px); }
+.nav-item:hover { background: rgba(0, 0, 0, 0.06); color: #111; transform: translateX(2px); }
 .nav-item.active {
-  background: #fff; color: #000; font-weight: 700;
+  background: #111; color: #fff; font-weight: 700;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
 }
 .nav-item.active:hover { transform: none; }
 .nav-item.disabled { opacity: 0.4; cursor: default; }
 .nav-item.disabled:hover { transform: none; background: none; }
 .nav-item .ico { width: 18px; height: 18px; flex: none; }
-.nav-item .soon { margin-left: auto; font-size: 9.5px; background: rgba(255, 255, 255, 0.08); color: var(--muted-2); padding: 2px 7px; border-radius: 999px; font-weight: 700; letter-spacing: .04em; border: 1px solid var(--line-2); }
-.nav-sep { height: 1px; background: var(--line-2); margin: 10px 8px; }
+.nav-item .soon { margin-left: auto; font-size: 9.5px; background: rgba(0, 0, 0, 0.06); color: #777; padding: 2px 7px; border-radius: 999px; font-weight: 700; letter-spacing: .04em; border: 1px solid rgba(0, 0, 0, 0.08); }
+.nav-sep { height: 1px; background: rgba(0, 0, 0, 0.08); margin: 10px 8px; }
 
 .main { display: flex; flex-direction: column; min-width: 0; }
 .topbar {
