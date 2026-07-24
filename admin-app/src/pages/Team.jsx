@@ -13,7 +13,7 @@ function hace(atISO, now) {
   return `hace ${Math.floor(s / 3600)}h`;
 }
 const SCREEN_LABEL = { reloj: 'Reloj', tareas: 'Tareas', perfil: 'Perfil' };
-const ACT_ICON = { clock_in: '🟢', clock_out: '⚪', task: '✅' };
+const ACT_ICON = { clock_in: '●', clock_out: '○', task: '✓' };
 
 export default function Team() {
   const [mon, setMon] = useState(null);       // { working, online, activity }
