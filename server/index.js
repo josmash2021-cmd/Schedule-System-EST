@@ -10,6 +10,8 @@ const authRouter = require('./routes/auth');
 const { router: checkoutRouter, webhookHandler } = require('./routes/checkout');
 const adminAuthRouter = require('./routes/adminAuth');
 const adminUsersRouter = require('./routes/adminUsers');
+const adminTimeRouter = require('./routes/adminTime');
+const adminTasksRouter = require('./routes/adminTasks');
 
 const app = express();
 
@@ -155,6 +157,8 @@ app.get('/api/admin/app/:slug', (req, res, next) => {
 
 app.use('/api/admin/auth', adminAuthRouter);
 app.use('/api/admin/users', adminUsersRouter);
+app.use('/api/admin/time', adminTimeRouter);
+app.use('/api/admin/tasks', adminTasksRouter);
 
 // Audios de bienvenida por voz (wa-bot/src/voz.js los cachea en
 // DATA_DIR/voz). Instagram los necesita por URL pública para adjuntarlos.

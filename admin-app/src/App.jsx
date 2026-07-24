@@ -6,7 +6,9 @@ import Dashboard from './pages/Dashboard.jsx';
 import Workers from './pages/Workers.jsx';
 import Appointments from './pages/Appointments.jsx';
 import Settings from './pages/Settings.jsx';
-import WorkerHome from './pages/WorkerHome.jsx';
+import Tasks from './pages/Tasks.jsx';
+import Team from './pages/Team.jsx';
+import WorkerApp from './pages/WorkerApp.jsx';
 
 export default function App() {
   const { user, loading } = useAuth();
@@ -20,14 +22,16 @@ export default function App() {
   // Contraseña temporal: forzar el cambio antes de cualquier otra cosa.
   if (user.must_change_password) return <Settings forced />;
 
-  // Los trabajadores todavía no tienen su app (fase futura): pantalla mínima.
-  if (user.role !== 'admin') return <WorkerHome />;
+  // Los trabajadores tienen su propia app móvil (reloj + tareas).
+  if (user.role !== 'admin') return <WorkerApp />;
 
   return (
     <Layout>
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/trabajadores" element={<Workers />} />
+        <Route path="/tareas" element={<Tasks />} />
+        <Route path="/equipo" element={<Team />} />
         <Route path="/citas" element={<Appointments />} />
         <Route path="/ajustes" element={<Settings />} />
         <Route path="*" element={<Navigate to="/" replace />} />

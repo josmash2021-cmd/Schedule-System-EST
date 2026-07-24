@@ -101,6 +101,39 @@ async function initDb() {
       );
     `);
 
+    // ----- Fase 2: fichaje de horas y tareas -----
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS time_entries (
+        id         SERIAL PRIMARY KEY,
+        user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        clock_in   TIMESTAMP NOT NULL DEFAULT NOW(),
+        clock_out  TIMESTAMP,
+        note       TEXT,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_time_user ON time_entries(user_id);`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_time_clockin ON time_entries(clock_in);`);
+    // Un solo turno abierto por trabajador (no puede fichar entrada dos veces).
+    await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_time_open ON time_entries(user_id) WHERE clock_out IS NULL;`);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS tasks (
+        id           SERIAL PRIMARY KEY,
+        title        TEXT NOT NULL,
+        description  TEXT,
+        assigned_to  INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_by   INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        status       TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','in_progress','done')),
+        due_date     DATE,
+        created_at   TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at   TIMESTAMP NOT NULL DEFAULT NOW(),
+        completed_at TIMESTAMP
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_tasks_assigned ON tasks(assigned_to);`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);`);
+
     // Sembrar el primer admin desde ADMIN_PASSWORD (idempotente): solo si aún
     // no existe ningún admin. Nace con must_change_password para forzar rotación.
     if (ADMIN_PASSWORD) {
