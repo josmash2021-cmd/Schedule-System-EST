@@ -3,6 +3,7 @@ const express = require('express');
 const tasks = require('../models/tasks');
 const users = require('../models/users');
 const audit = require('../models/audit');
+const live = require('../lib/live');
 const { verifyToken, loadUser, requireRole } = require('../middleware/auth');
 const { getClientIp } = require('../lib/rateLimit');
 
@@ -56,6 +57,8 @@ router.patch('/:id/status', async (req, res) => {
     }
     const updated = await tasks.setStatus(id, status);
     audit.logAction(req.user.id, 'task.status', { targetType: 'task', targetId: id, ip: getClientIp(req), metadata: { status } });
+    const verb = status === 'done' ? 'completó' : status === 'in_progress' ? 'empezó' : 'reabrió';
+    live.activity({ type: 'task', username: req.user.username, text: `${verb}: ${t.title}` });
     res.json({ task: updated });
   } catch (err) {
     console.error('task status error:', err.message);

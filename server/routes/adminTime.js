@@ -2,6 +2,7 @@
 const express = require('express');
 const time = require('../models/timeEntries');
 const audit = require('../models/audit');
+const live = require('../lib/live');
 const { verifyToken, loadUser, requireRole } = require('../middleware/auth');
 const { getClientIp } = require('../lib/rateLimit');
 
@@ -14,6 +15,7 @@ router.post('/clock-in', async (req, res) => {
     if (open) return res.status(409).json({ error: 'Ya tienes un turno abierto.', entry: open });
     const entry = await time.clockIn(req.user.id);
     audit.logAction(req.user.id, 'time.clock_in', { ip: getClientIp(req) });
+    live.activity({ type: 'clock_in', username: req.user.username, text: 'fichó entrada' });
     res.status(201).json({ entry });
   } catch (err) {
     // Índice único parcial: perdió la carrera → ya hay un turno abierto.
@@ -30,6 +32,7 @@ router.post('/clock-out', async (req, res) => {
     const entry = await time.clockOut(req.user.id);
     if (!entry) return res.status(400).json({ error: 'No tienes un turno abierto.' });
     audit.logAction(req.user.id, 'time.clock_out', { ip: getClientIp(req) });
+    live.activity({ type: 'clock_out', username: req.user.username, text: 'fichó salida' });
     res.json({ entry });
   } catch (err) {
     console.error('clock-out error:', err.message);

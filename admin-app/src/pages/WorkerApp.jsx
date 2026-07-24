@@ -19,6 +19,15 @@ function fmtHm(sec) {
 export default function WorkerApp() {
   const { user } = useAuth();
   const [tab, setTab] = useState('reloj');
+
+  // Heartbeat de presencia: avisa al admin qué pestaña ve, cada 45s y al cambiar.
+  useEffect(() => {
+    const ping = () => { api('/live/presence', { method: 'POST', body: { screen: tab } }).catch(() => {}); };
+    ping();
+    const iv = setInterval(ping, 45000);
+    return () => clearInterval(iv);
+  }, [tab]);
+
   return (
     <div className="wapp">
       <div className="wapp-head">
