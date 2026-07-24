@@ -9,7 +9,7 @@ export default function WorkerHome() {
   return (
     <div className="login-wrap">
       <div className="login-card">
-        <div className="brand"><img className="brand-logo" src="/api/admin/static/img/logo-cruise.png" alt="ElectronicST" /><strong>ElectronicST</strong></div>
+        <div className="brand"><img className="brand-logo" src="/api/admin/static/img/logo-dark.png" alt="ElectronicST" /><strong>ElectronicST</strong></div>
         <h1>Hola, {user.username}</h1>
         <p className="sub">Tu app de trabajador estará disponible muy pronto. Por ahora puedes gestionar tu cuenta.</p>
         {showPw

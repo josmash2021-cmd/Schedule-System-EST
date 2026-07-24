@@ -39,7 +39,7 @@ export default function Layout({ children }) {
       {open && <div className="sidebar-backdrop" onClick={() => setOpen(false)} />}
       <aside className={'sidebar' + (open ? ' open' : '')}>
         <div className="brand">
-          <img className="brand-logo" src="/api/admin/static/img/logo-cruise.png" alt="ElectronicST" />
+          <img className="brand-logo" src="/api/admin/static/img/logo-dark.png" alt="ElectronicST" />
           <div><strong>ElectronicST</strong><span>Panel de gestión</span></div>
         </div>
         <div className="nav-label">Menú</div>
