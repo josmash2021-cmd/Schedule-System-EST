@@ -22,7 +22,8 @@
   --radius: 18px;
   --shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
   --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.4);
-  --glass: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 45%, rgba(255, 255, 255, 0) 100%), rgba(10, 10, 13, 0.78);
+  /* Superficie plana (2D): color uniforme, sin gradiente brillante */
+  --glass: rgba(13, 13, 17, 0.82);
 }
 
 * { box-sizing: border-box; }
@@ -301,7 +302,7 @@ table.data tbody tr:hover td { background: rgba(255, 255, 255, 0.05); }
 }
 .modal {
   width: 100%; max-width: 480px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)), #101014;
+  background: #101014;
   border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow);
   animation: popIn 0.34s var(--ease); overflow: hidden;
 }
