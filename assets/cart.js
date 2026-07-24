@@ -349,7 +349,7 @@
             '</div>' +
             '<div class="cd-subtotal"><span>' + T('Subtotal', 'Subtotal') + '</span><strong>' + money(cartTotal()) + '</strong></div>' +
             '<div class="cd-actions">' +
-                '<button type="button" class="btn btn-blue cd-pay"><svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span>' + T('Pagar ahora', 'Pay now') + '</span></button>' +
+                '<button type="button" class="btn btn-blue cd-pay"><svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span>' + T('Finalizar compra', 'Checkout') + '</span></button>' +
                 '<a href="/cart" class="btn btn-ghost"><svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>' + T('Ir al carrito', 'Go to cart') + '</a>' +
             '</div>' +
             '<p class="cd-error hidden" role="alert"></p>' +
