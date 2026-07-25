@@ -10,11 +10,15 @@ export default function BarChart({ data, keys, labels, format, onDay, highlight 
   const slot = W / data.length;
   // Velas delgadas: la gráfica ocupa todo el ancho sin verse gigante.
   const bw = Math.min(26, slot * 0.4);
+  // Radio proporcional: las velas delgadas (vista de mes) quedan casi
+  // cuadradas, no redondas como píldoras.
+  const rx = Math.min(6, Math.max(2, bw * 0.28));
   // Con muchas barras las etiquetas chocan: los valores por barra solo se
-  // muestran si hay espacio suficiente (si no, el tooltip <title> los da),
-  // y las etiquetas del eje se saltan para que no se amontonen.
+  // muestran si hay espacio suficiente (si no, el tooltip <title> los da).
   const showVals = slot >= 44;
-  const lblEvery = Math.max(1, Math.ceil(data.length / 14));
+  // Los números del eje caben todos (máx. 31 días); solo se saltan si hay
+  // una cantidad extrema de barras.
+  const lblEvery = data.length > 40 ? 2 : 1;
   return (
     <svg className="bar-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Gráfico de barras">
       {data.map((v, i) => {
@@ -26,7 +30,7 @@ export default function BarChart({ data, keys, labels, format, onDay, highlight 
           <g key={i} className="bar-col" onClick={() => onDay && onDay(keys[i])}>
             <title>{`${labels[i]}: ${format(v)}`}</title>
             {v > 0 && (
-              <rect className={'bar' + (isHi ? ' bar-today' : '')} x={x} y={y} width={bw} height={h} rx="6"
+              <rect className={'bar' + (isHi ? ' bar-today' : '')} x={x} y={y} width={bw} height={h} rx={rx}
                 style={{ animationDelay: `${i * 45}ms` }} />
             )}
             {v > 0 && showVals && (
