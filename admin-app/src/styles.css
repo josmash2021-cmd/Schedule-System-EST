@@ -289,8 +289,8 @@ select option { background: #fff; color: #111; }
 /* Dashboard sin negrillas: todo el texto y números en peso normal. */
 .dashboard, .dashboard * { font-weight: 400 !important; }
 
-/* Layout del dashboard: tarjetas en columna vertical a la izquierda. */
-.dash-layout { display: grid; grid-template-columns: 240px 1fr; gap: 16px; align-items: start; }
+/* Layout del dashboard: tarjetas en columna vertical a la derecha. */
+.dash-layout { display: grid; grid-template-columns: 1fr 240px; gap: 16px; align-items: start; }
 .dash-layout .stat-grid { grid-template-columns: 1fr; margin-bottom: 0; }
 .dash-main { min-width: 0; }
 .stat-link { display: block; text-decoration: none; cursor: pointer; }
