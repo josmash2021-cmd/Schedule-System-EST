@@ -60,34 +60,39 @@ router.post('/', async (req, res) => {
     }
 
     // 2) Reparaciones: ~140 en el último año; la mayoría entregadas (ventas).
-    for (let i = 0; i < 140; i++) {
-      const createdDays = randInt(0, 365);
-      const delivered = Math.random() < 0.8;
-      const [brand, model] = pick(DEVICES);
-      const quoted = randInt(30, 400);
-      const createdAt = ago(createdDays);
-      let status = pick(ACTIVE_STATUS);
-      let finalPrice = null;
-      let deliveredAt = null;
-      if (delivered) {
-        status = 'entregado';
-        finalPrice = quoted + randInt(-10, 30);
-        deliveredAt = ago(Math.max(0, createdDays - randInt(0, 3)));
+    // Guardia anti-duplicados: si ya hay reparaciones demo (de una corrida
+    // anterior, aunque haya fallado a medias), no se vuelven a crear.
+    const demoRepairs = await pool.query("SELECT COUNT(*)::int AS n FROM repair_tickets WHERE customer_phone LIKE '(205) 555-%'");
+    if (demoRepairs.rows[0].n < 100) {
+      for (let i = 0; i < 140; i++) {
+        const createdDays = randInt(0, 365);
+        const delivered = Math.random() < 0.8;
+        const [brand, model] = pick(DEVICES);
+        const quoted = randInt(30, 400);
+        const createdAt = ago(createdDays);
+        let status = pick(ACTIVE_STATUS);
+        let finalPrice = null;
+        let deliveredAt = null;
+        if (delivered) {
+          status = 'entregado';
+          finalPrice = quoted + randInt(-10, 30);
+          deliveredAt = ago(Math.max(0, createdDays - randInt(0, 3)));
+        }
+        await pool.query(
+          `INSERT INTO repair_tickets
+             (device_brand, device_model, customer_name, customer_phone, problem, diagnosis,
+              quoted_price, final_price, status, assigned_to, created_by, created_at, updated_at, delivered_at)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+          [
+            brand, model,
+            `${pick(FIRST)} ${pick(LAST)}`, `(205) 555-${String(randInt(1000, 9999))}`,
+            pick(PROBLEMS), delivered ? pick(PROBLEMS) : null,
+            quoted, finalPrice, status,
+            pick(workerIds), req.user.id, createdAt, deliveredAt || createdAt, deliveredAt,
+          ]
+        );
+        created.repairs += 1;
       }
-      await pool.query(
-        `INSERT INTO repair_tickets
-           (device_brand, device_model, customer_name, customer_phone, problem, diagnosis,
-            quoted_price, final_price, status, assigned_to, created_by, created_at, updated_at, delivered_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
-        [
-          brand, model,
-          `${pick(FIRST)} ${pick(LAST)}`, `(205) 555-${String(randInt(1000, 9999))}`,
-          pick(PROBLEMS), delivered ? pick(PROBLEMS) : null,
-          quoted, finalPrice, status,
-          pick(workerIds), req.user.id, createdAt, deliveredAt || createdAt, deliveredAt,
-        ]
-      );
-      created.repairs += 1;
     }
 
     // 3) Citas: ~40 entre 30 días atrás y 10 adelante (hora en slots de 30 min).
@@ -97,10 +102,12 @@ router.post('/', async (req, res) => {
       if (fecha.slice(8, 10) && new Date(fecha + 'T12:00:00Z').getUTCDay() === 0) continue; // domingo
       const hora = `${String(randInt(10, 14)).padStart(2, '0')}:${pick(['00', '30'])}`;
       const estado = offset < 0 ? 'atendida' : pick(['pendiente', 'confirmada']);
+      // OJO: la unicidad es un índice PARCIAL (estado <> 'cancelada'), así
+      // que el ON CONFLICT debe repetir el predicado para coincidir con él.
       const r = await pool.query(
         `INSERT INTO appointments (nombre, telefono, correo, servicio, fecha, hora, estado)
          VALUES ($1,$2,$3,$4,$5,$6,$7)
-         ON CONFLICT (fecha, hora) DO NOTHING`,
+         ON CONFLICT (fecha, hora) WHERE estado <> 'cancelada' DO NOTHING`,
         [`${pick(FIRST)} ${pick(LAST)}`, `(205) 555-${String(randInt(1000, 9999))}`, null, pick(SERVICES), fecha, hora, estado]
       );
       created.citas += r.rowCount;
