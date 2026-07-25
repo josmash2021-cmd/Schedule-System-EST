@@ -76,9 +76,14 @@ export default function Layout({ children }) {
             <div className="avatar">{initial}</div>
             <div style={{ lineHeight: 1.2 }}>
               <div style={{ fontWeight: 700, fontSize: 13.5 }}>{user.username}</div>
-              <span className={'badge badge-' + user.role} style={{ fontSize: 10 }}>{user.role === 'admin' ? 'Admin' : 'Trabajador'}</span>
             </div>
-            <button className="btn btn-ghost btn-sm" onClick={() => logout()} title="Cerrar sesión">Salir</button>
+            <button className="btn btn-ghost btn-sm" onClick={() => logout()} title="Cerrar sesión">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+                strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              Salir
+            </button>
           </div>
         </div>
         <div className="content">{children}</div>
