@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
-import Modal from '../components/Modal.jsx';
+import FormPage from '../components/FormPage.jsx';
 import RepairDetail, { STATUS_BADGE, statusLabel, REPAIR_STATUS } from '../components/RepairDetail.jsx';
 
 const money = (n) => (n == null ? '—' : '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }));
@@ -46,6 +46,16 @@ export default function Repairs() {
     return t.status === filter;
   }) : [];
 
+  // Formulario a página completa (sin modal).
+  if (detail) {
+    const back = () => { setDetail(null); load(); };
+    return (
+      <FormPage title={detail.id ? 'Reparación' : 'Nueva reparación'} onBack={back}>
+        <RepairDetail ticketId={detail.id} workers={workers} isAdmin onClose={back} onSaved={load} />
+      </FormPage>
+    );
+  }
+
   return (
     <>
       <div className="section-head">
@@ -88,12 +98,6 @@ export default function Repairs() {
               </table>
             </div>
           )}
-
-      {detail && (
-        <Modal wide title={detail.id ? 'Reparación' : 'Nueva reparación'} onClose={() => { setDetail(null); load(); }}>
-          <RepairDetail ticketId={detail.id} workers={workers} isAdmin onClose={() => { setDetail(null); load(); }} onSaved={load} />
-        </Modal>
-      )}
     </>
   );
 }

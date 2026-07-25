@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { api } from '../api.js';
-import Modal from '../components/Modal.jsx';
+import FormPage from '../components/FormPage.jsx';
 
 const STATUS_LABEL = { pending: 'Pendiente', in_progress: 'En progreso', done: 'Hecha' };
 const STATUS_BADGE = { pending: 'badge-pendiente', in_progress: 'badge-confirmada', done: 'badge-atendida' };
@@ -25,6 +25,13 @@ export default function Tasks() {
     if (!window.confirm('¿Eliminar esta tarea?')) return;
     try { await api('/tasks/' + t.id, { method: 'DELETE' }); load(); } catch (e) { setErr(e.message); }
   };
+
+  // Formulario a página completa (sin modal).
+  if (modal) {
+    return (
+      <TaskForm modal={modal} users={users} onBack={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />
+    );
+  }
 
   return (
     <>
@@ -56,12 +63,11 @@ export default function Tasks() {
               </table>
             </div>
           )}
-      {modal && <TaskModal modal={modal} users={users} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />}
     </>
   );
 }
 
-function TaskModal({ modal, users, onClose, onSaved }) {
+function TaskForm({ modal, users, onBack, onSaved }) {
   const editing = modal.mode === 'edit';
   const t = modal.task;
   const [title, setTitle] = useState(t ? t.title : '');
@@ -84,13 +90,7 @@ function TaskModal({ modal, users, onClose, onSaved }) {
   };
 
   return (
-    <Modal title={editing ? 'Editar tarea' : 'Nueva tarea'} onClose={onClose}
-      footer={(
-        <>
-          <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-primary" onClick={save} disabled={loading || !title.trim()}>{loading ? <span className="spinner" /> : 'Guardar'}</button>
-        </>
-      )}>
+    <FormPage title={editing ? 'Editar tarea' : 'Nueva tarea'} onBack={onBack} max={480}>
       {err && <div className="alert alert-error">{err}</div>}
       <label className="field"><span>Título</span>
         <input value={title} onChange={(e) => setTitle(e.target.value)} autoFocus placeholder="ej. Revisar inventario de iPhones" />
@@ -116,6 +116,10 @@ function TaskModal({ modal, users, onClose, onSaved }) {
           </select>
         </label>
       )}
-    </Modal>
+      <div className="row" style={{ marginTop: 4, justifyContent: 'flex-end' }}>
+        <button className="btn btn-secondary" onClick={onBack}>Cancelar</button>
+        <button className="btn btn-primary" onClick={save} disabled={loading || !title.trim()}>{loading ? <span className="spinner" /> : 'Guardar'}</button>
+      </div>
+    </FormPage>
   );
 }

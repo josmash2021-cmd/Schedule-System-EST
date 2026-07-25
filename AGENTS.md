@@ -34,8 +34,10 @@ cambies estructura, flujos o convenciones.
   `Tasks.jsx`, `Team.jsx`, `Repairs.jsx`, `Inventory.jsx`, `Appointments.jsx`,
   `Settings.jsx`, `Login.jsx`, `WorkerHome.jsx`/`WorkerApp.jsx` (app móvil del
   trabajador).
-- Componentes: `admin-app/src/components/` (`Layout.jsx`, `Modal.jsx`,
+- Componentes: `admin-app/src/components/` (`Layout.jsx`, `FormPage.jsx`,
   `RepairDetail.jsx`, `InventoryDetail.jsx`, `ChangePasswordForm.jsx`).
+  Los formularios van a **página completa centrada** con `FormPage`
+  (botón ← Volver + tarjeta centrada); ya no se usan modales.
 - Cliente HTTP: `admin-app/src/api.js` — `api(path)` → `/x/s/*` (API del
   panel); `apiRoot(path)` → `/api/*` (pública, p. ej. citas). Token JWT en
   `sessionStorage['est_office_token']`.

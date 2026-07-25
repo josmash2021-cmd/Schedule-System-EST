@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { api } from '../api.js';
-import Modal from '../components/Modal.jsx';
+import FormPage from '../components/FormPage.jsx';
 
 const ROLE_LABEL = { admin: 'Admin', worker: 'Trabajador' };
 
@@ -15,6 +15,32 @@ export default function Workers() {
     api('/users').then((d) => setUsers(d.users)).catch((e) => setErr(e.message));
   }, []);
   useEffect(() => { load(); }, [load]);
+
+  // Formulario a página completa (sin modal).
+  if (modal) {
+    return (
+      <WorkerForm
+        modal={modal}
+        onBack={() => setModal(null)}
+        onSaved={(t) => { setModal(null); if (t) setTemp(t); load(); }}
+      />
+    );
+  }
+
+  // Contraseña temporal: también a página completa centrada.
+  if (temp) {
+    return (
+      <FormPage title="Contraseña temporal" onBack={() => setTemp(null)} max={440}>
+        <p className="muted" style={{ marginTop: 0 }}>
+          Comparte esta contraseña con <strong>{temp.username}</strong>. No se volverá a mostrar; la cambiará al entrar.
+        </p>
+        <div className="temp-pass">{temp.password}</div>
+        <div className="row" style={{ marginTop: 14, justifyContent: 'flex-end' }}>
+          <button className="btn btn-primary" onClick={() => setTemp(null)}>Entendido</button>
+        </div>
+      </FormPage>
+    );
+  }
 
   return (
     <>
@@ -49,29 +75,11 @@ export default function Workers() {
               </table>
             </div>
           )}
-
-      {modal && (
-        <WorkerModal
-          modal={modal}
-          onClose={() => setModal(null)}
-          onSaved={(t) => { setModal(null); if (t) setTemp(t); load(); }}
-        />
-      )}
-
-      {temp && (
-        <Modal title="Contraseña temporal" onClose={() => setTemp(null)}
-          footer={<button className="btn btn-primary" onClick={() => setTemp(null)}>Entendido</button>}>
-          <p className="muted" style={{ marginTop: 0 }}>
-            Comparte esta contraseña con <strong style={{ color: 'var(--text)' }}>{temp.username}</strong>. No se volverá a mostrar; la cambiará al entrar.
-          </p>
-          <div className="temp-pass">{temp.password}</div>
-        </Modal>
-      )}
     </>
   );
 }
 
-function WorkerModal({ modal, onClose, onSaved }) {
+function WorkerForm({ modal, onBack, onSaved }) {
   const editing = modal.mode === 'edit';
   const u = modal.user;
   const [username, setUsername] = useState(u ? u.username : '');
@@ -115,24 +123,13 @@ function WorkerModal({ modal, onClose, onSaved }) {
   };
 
   return (
-    <Modal
-      title={editing ? 'Gestionar trabajador' : 'Nuevo trabajador'}
-      onClose={onClose}
-      footer={(
-        <>
-          <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-primary" onClick={save} disabled={loading || (!editing && !username.trim())}>
-            {loading ? <span className="spinner" /> : 'Guardar'}
-          </button>
-        </>
-      )}
-    >
+    <FormPage title={editing ? 'Gestionar trabajador' : 'Nuevo trabajador'} onBack={onBack} max={480}>
       {err && <div className="alert alert-error">{err}</div>}
       {!editing
         ? <label className="field"><span>Usuario</span>
             <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="ej. juan.perez" autoFocus />
           </label>
-        : <p className="muted" style={{ marginTop: 0 }}>Usuario: <strong style={{ color: 'var(--text)' }}>{u.username}</strong></p>}
+        : <p className="muted" style={{ marginTop: 0 }}>Usuario: <strong>{u.username}</strong></p>}
 
       <label className="field"><span>Email (opcional)</span>
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -167,10 +164,17 @@ function WorkerModal({ modal, onClose, onSaved }) {
       )}
 
       {editing && (
-        <div style={{ marginTop: 8, paddingTop: 14, borderTop: '1px solid var(--line)' }}>
+        <div style={{ marginTop: 8, paddingTop: 14, borderTop: '1px solid rgba(0, 0, 0, 0.1)' }}>
           <button className="btn btn-danger btn-sm" onClick={resetPw} disabled={loading}>Restablecer contraseña</button>
         </div>
       )}
-    </Modal>
+
+      <div className="row" style={{ marginTop: 14, justifyContent: 'flex-end' }}>
+        <button className="btn btn-secondary" onClick={onBack}>Cancelar</button>
+        <button className="btn btn-primary" onClick={save} disabled={loading || (!editing && !username.trim())}>
+          {loading ? <span className="spinner" /> : 'Guardar'}
+        </button>
+      </div>
+    </FormPage>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { api } from '../api.js';
-import Modal from '../components/Modal.jsx';
+import FormPage from '../components/FormPage.jsx';
 import InventoryDetail, { money } from '../components/InventoryDetail.jsx';
 
 export default function Inventory() {
@@ -17,6 +17,16 @@ export default function Inventory() {
   useEffect(() => { const t = setTimeout(() => load(search), 300); return () => clearTimeout(t); }, [search, load]);
 
   const shown = items ? items.filter((i) => !lowOnly || i.stock <= i.min_stock) : [];
+
+  // Formulario a página completa (sin modal).
+  if (detail) {
+    const back = () => { setDetail(null); load(search); };
+    return (
+      <FormPage title={detail.id ? 'Producto' : 'Nuevo producto'} onBack={back}>
+        <InventoryDetail itemId={detail.id} isAdmin onClose={back} onSaved={() => load(search)} />
+      </FormPage>
+    );
+  }
 
   return (
     <>
@@ -53,12 +63,6 @@ export default function Inventory() {
               </table>
             </div>
           )}
-
-      {detail && (
-        <Modal wide title={detail.id ? 'Producto' : 'Nuevo producto'} onClose={() => { setDetail(null); load(search); }}>
-          <InventoryDetail itemId={detail.id} isAdmin onClose={() => { setDetail(null); load(search); }} onSaved={() => load(search)} />
-        </Modal>
-      )}
     </>
   );
 }
