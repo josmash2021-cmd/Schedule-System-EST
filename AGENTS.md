@@ -31,11 +31,13 @@ cambies estructura, flujos o convenciones.
 
 ### Panel de gestión (`admin-app/`)
 - Páginas: `admin-app/src/pages/` — `Dashboard.jsx`, `Workers.jsx`,
-  `Tasks.jsx`, `Team.jsx`, `Repairs.jsx`, `Inventory.jsx`, `Appointments.jsx`,
-  `Settings.jsx`, `Login.jsx`, `WorkerHome.jsx`/`WorkerApp.jsx` (app móvil del
-  trabajador).
+  `Tasks.jsx`, `Team.jsx`, `Repairs.jsx`, `Sales.jsx` (Ventas: KPIs
+  hoy/semana/mes/año con count-up, gráfica por período, tabla detalle),
+  `Inventory.jsx`, `Appointments.jsx`, `Settings.jsx`,
+  `Login.jsx`, `WorkerHome.jsx`/`WorkerApp.jsx` (app móvil del trabajador).
 - Componentes: `admin-app/src/components/` (`Layout.jsx`, `FormPage.jsx`,
-  `RepairDetail.jsx`, `InventoryDetail.jsx`, `ChangePasswordForm.jsx`).
+  `BarChart.jsx` compartido, `RepairDetail.jsx`, `InventoryDetail.jsx`,
+  `ChangePasswordForm.jsx`).
   Los formularios van a **página completa centrada** con `FormPage`
   (botón ← Volver + tarjeta centrada); ya no se usan modales.
 - Cliente HTTP: `admin-app/src/api.js` — `api(path)` → `/x/s/*` (API del
@@ -72,14 +74,14 @@ izquierda, 3 tarjetas verticales a la derecha; <900px se apila).
 - Tarjetas (enlaces a su página): Trabajadores (`role='worker'`),
   Reparaciones esta semana (tickets por `created_at`), Total de inventario
   (suma de `stock`).
-- Gráficos de barras SVG propios (sin dependencias): Ventas de la semana
-  (tickets `entregado`, suma `final_price` por `delivered_at`) y Citas de la
-  semana (por `fecha`). Semana **lunes–domingo en America/Chicago**
-  (`currentWeekKeys`). El día actual se resalta. **Las barras son clicables:**
-  ventas → `/reparaciones?entregado=YYYY-MM-DD`, citas →
-  `/citas?fecha=YYYY-MM-DD`; ambas páginas respetan el parámetro y muestran
-  solo ese día (Reparaciones muestra chip "Entregadas el …" con opción de
-  quitar el filtro).
+- Gráficos de barras SVG propios (`components/BarChart.jsx`, animación de
+  crecimiento escalonada): Ventas de la semana (tickets `entregado`, suma
+  `final_price` por `delivered_at`) y Citas de la semana (por `fecha`).
+  Semana **lunes–domingo en America/Chicago** (`currentWeekKeys`). El día
+  actual se resalta. **Las barras son clicables:** ventas →
+  `/ventas?fecha=YYYY-MM-DD` (página Ventas en vista de día), citas →
+  `/citas?fecha=YYYY-MM-DD`. El título "Ventas de la semana →" enlaza a
+  `/ventas`.
 - Tabla "Citas de hoy". Todo el dashboard sin negrillas
   (`.dashboard * { font-weight: 400 !important }`, petición del dueño).
 
