@@ -19,7 +19,6 @@ export default function Workers() {
   return (
     <>
       <div className="section-head">
-        <h1>Trabajadores</h1>
         <div className="spacer" />
         <button className="btn btn-primary" onClick={() => setModal({ mode: 'create' })}>+ Nuevo trabajador</button>
       </div>

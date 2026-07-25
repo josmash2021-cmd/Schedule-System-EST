@@ -49,7 +49,6 @@ export default function Repairs() {
   return (
     <>
       <div className="section-head">
-        <h1>Reparaciones</h1>
         <div className="spacer" />
         <button className="btn btn-primary" onClick={() => setDetail({ id: null })}>+ Nueva reparación</button>
       </div>

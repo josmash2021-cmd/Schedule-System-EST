@@ -29,7 +29,6 @@ export default function Tasks() {
   return (
     <>
       <div className="section-head">
-        <h1>Tareas</h1>
         <div className="spacer" />
         <button className="btn btn-primary" onClick={() => setModal({ mode: 'create' })}>+ Nueva tarea</button>
       </div>

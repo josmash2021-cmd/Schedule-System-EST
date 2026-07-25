@@ -218,11 +218,10 @@ select option { background: #fff; color: #111; }
 .topbar {
   display: flex; align-items: center; gap: 14px; padding: 18px 28px 14px;
   position: sticky; top: 0; z-index: 5; color: var(--text);
-  background: rgba(0, 0, 0, 0.78);
-  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  background: #000;
   border-bottom: 1px solid var(--line-2);
 }
-.topbar h2 { font-size: 19px; letter-spacing: -0.02em; }
+.topbar h2 { font-size: 19px; letter-spacing: -0.02em; font-weight: 400; }
 .userchip { display: flex; align-items: center; gap: 10px; animation: fadeIn 0.5s var(--ease) backwards 0.1s; }
 .avatar {
   width: 34px; height: 34px; border-radius: 999px; background: #fff; color: #000;
@@ -260,11 +259,6 @@ select option { background: #fff; color: #111; }
 .card:hover { border-color: rgba(0, 0, 0, 0.2); box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12); }
 .card h3 { font-size: 15px; margin-bottom: 14px; }
 .section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-.section-head h1 { font-size: 26px; letter-spacing: -0.03em; position: relative; padding-bottom: 8px; }
-.section-head h1::after {
-  content: ''; position: absolute; left: 2px; bottom: 0; width: 40px; height: 3px;
-  border-radius: 999px; background: #111;
-}
 
 /* ---------- Gráficos del dashboard ---------- */
 .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 26px; }

@@ -144,7 +144,6 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard">
-      <div className="section-head"><h1>Resumen</h1></div>
       {err && <div className="alert alert-error">{err}</div>}
       <div className="dash-layout">
         <div className="dash-main">

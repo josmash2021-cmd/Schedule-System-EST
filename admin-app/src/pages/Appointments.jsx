@@ -80,7 +80,6 @@ export default function Appointments() {
   return (
     <>
       <div className="section-head">
-        <h1>Citas</h1>
         <div className="spacer" />
         {citas && citas.length > 0 && (
           <button className="btn btn-danger btn-sm" onClick={deleteAll}>Eliminar todas</button>
@@ -181,7 +180,6 @@ function EditPage({ cita, onBack, onSaved }) {
   return (
     <>
       <div className="section-head">
-        <h1>Editar cita</h1>
         <div className="spacer" />
         <button className="btn btn-secondary btn-sm" onClick={onBack}>← Volver</button>
       </div>

@@ -22,7 +22,6 @@ export default function Settings({ forced }) {
 
   return (
     <>
-      <div className="section-head"><h1>Ajustes</h1></div>
       <div className="card" style={{ maxWidth: 440 }}>
         <h3>Cambiar mi contraseña</h3>
         <ChangePasswordForm />

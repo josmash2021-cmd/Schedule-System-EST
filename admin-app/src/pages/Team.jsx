@@ -43,7 +43,6 @@ export default function Team() {
   return (
     <>
       <div className="section-head">
-        <h1>Equipo</h1>
         <span className="live-dot" title="Actualiza cada 4s">● En vivo</span>
         <div className="spacer" />
         <button className="btn btn-secondary btn-sm" onClick={() => { loadMonitor(); loadRecent(); }}>Actualizar</button>

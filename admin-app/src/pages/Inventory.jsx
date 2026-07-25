@@ -21,7 +21,6 @@ export default function Inventory() {
   return (
     <>
       <div className="section-head">
-        <h1>Inventario</h1>
         <div className="spacer" />
         <button className="btn btn-primary" onClick={() => setDetail({ id: null })}>+ Nuevo producto</button>
       </div>
