@@ -1,9 +1,9 @@
 // Gráfico de barras SVG simple (sin dependencias). Las barras crecen con
 // animación escalonada. Cada columna puede ser clicable (onDay recibe la
 // clave del punto, p. ej. YYYY-MM-DD). `highlight` resalta una clave (hoy).
-export default function BarChart({ data, keys, labels, format, onDay, highlight }) {
+export default function BarChart({ data, keys, labels, format, onDay, highlight, height }) {
   const W = 560;
-  const H = 150;
+  const H = height || 150;
   const TOP = 24;
   const BOTTOM = 24;
   const max = Math.max(...data, 1);

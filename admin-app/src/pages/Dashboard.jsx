@@ -199,14 +199,14 @@ export default function Dashboard() {
             <div className="card">
               <h3><Link to="/ventas" className="chart-link">Ventas de la semana →</Link>{salesTotal != null && <span className="chart-total">{usd.format(salesTotal)}</span>}</h3>
               {salesByDay == null ? <span className="spinner" />
-                : <BarChart data={salesByDay} keys={weekKeys} labels={DAY_LABELS} highlight={chicagoKey()}
+                : <BarChart data={salesByDay} keys={weekKeys} labels={DAY_LABELS} highlight={chicagoKey()} height={210}
                     format={(v) => '$' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(0))}
                     onDay={(key) => navigate('/ventas?fecha=' + key)} />}
             </div>
             <div className="card">
               <h3>Citas de la semana{apptsTotal != null && <span className="chart-total">{apptsTotal}</span>}</h3>
               {apptsByDay == null ? <span className="spinner" />
-                : <BarChart data={apptsByDay} keys={weekKeys} labels={DAY_LABELS} highlight={chicagoKey()}
+                : <BarChart data={apptsByDay} keys={weekKeys} labels={DAY_LABELS} highlight={chicagoKey()} height={210}
                     format={(v) => String(v)}
                     onDay={(key) => navigate('/citas?fecha=' + key)} />}
             </div>
