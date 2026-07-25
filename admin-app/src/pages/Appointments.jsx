@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { apiRoot } from '../api.js';
 
 const ESTADOS = ['pendiente', 'confirmada', 'atendida', 'cancelada'];
@@ -11,7 +12,10 @@ function todayChicago() {
 }
 
 export default function Appointments() {
-  const [date, setDate] = useState(todayChicago());
+  // Permite llegar con ?fecha=YYYY-MM-DD (p. ej. desde el gráfico del Dashboard).
+  const [searchParams] = useSearchParams();
+  const paramFecha = searchParams.get('fecha');
+  const [date, setDate] = useState(/^\d{4}-\d{2}-\d{2}$/.test(paramFecha || '') ? paramFecha : todayChicago());
   const [all, setAll] = useState(false);
   const [citas, setCitas] = useState(null);
   const [err, setErr] = useState('');

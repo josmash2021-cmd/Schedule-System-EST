@@ -274,7 +274,10 @@ de barras SVG propios, sin dependencias (`BarChart`): Ventas de la semana
 (tickets `entregado`, suma de `final_price` — llega como string, convertir
 con `Number()` — por `delivered_at`) y Citas de la semana (por `fecha`).
 Semana lunes–domingo en `America/Chicago` (`currentWeekKeys`, aritmética en
-UTC); el día actual se resalta. Tabla "Citas de hoy" conservada. Todo el
+UTC); el día actual se resalta. Barras clicables (2026-07-24): ventas →
+`/reparaciones?entregado=YYYY-MM-DD` (chip "Entregadas el …" + botón para
+quitar el filtro) y citas → `/citas?fecha=YYYY-MM-DD`; ambas páginas leen el
+query param con `useSearchParams`. Tabla "Citas de hoy" conservada. Todo el
 dashboard SIN negrillas (`.dashboard * { font-weight: 400 !important }`,
 petición del dueño). OJO: al convertir tarjetas en `<Link>`, la regla global
 `a { color: inherit }` dejó los números blancos sobre blanco — no poner

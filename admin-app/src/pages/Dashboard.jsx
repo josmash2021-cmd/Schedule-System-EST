@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api, apiRoot } from '../api.js';
 
 // Fecha "de negocio": el taller opera en hora de Chicago.
@@ -54,7 +54,8 @@ function Stat({ k, v, icon, to }) {
 }
 
 // Gráfico de barras SVG simple (sin dependencias): 7 días de la semana.
-function BarChart({ data, keys, format }) {
+// Cada columna es clicable (onDay recibe la clave YYYY-MM-DD del día).
+function BarChart({ data, keys, format, onDay }) {
   const W = 560;
   const H = 190;
   const TOP = 26;
@@ -71,12 +72,14 @@ function BarChart({ data, keys, format }) {
         const y = H - BOTTOM - h;
         const isToday = keys[i] === todayKey;
         return (
-          <g key={i}>
+          <g key={i} className="bar-col" onClick={() => onDay && onDay(keys[i])}>
+            <title>{`${DAY_LABELS[i]} ${keys[i]}: ${format(v)}`}</title>
             {v > 0 && <rect className={'bar' + (isToday ? ' bar-today' : '')} x={x} y={y} width={bw} height={h} rx="6" />}
             {v > 0 && <text className="bar-val" x={x + bw / 2} y={y - 7} textAnchor="middle">{format(v)}</text>}
             <text className={'bar-lbl' + (isToday ? ' bar-lbl-today' : '')} x={slot * i + slot / 2} y={H - 8} textAnchor="middle">
               {DAY_LABELS[i]}
             </text>
+            {onDay && <rect className="bar-hit" x={slot * i} y={0} width={slot} height={H} />}
           </g>
         );
       })}
@@ -86,6 +89,7 @@ function BarChart({ data, keys, format }) {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState(null);
   const [appts, setAppts] = useState(null);
   const [weekAppts, setWeekAppts] = useState(null);
@@ -148,12 +152,14 @@ export default function Dashboard() {
             <div className="card">
               <h3>Ventas de la semana{salesTotal != null && <span className="chart-total">{usd.format(salesTotal)}</span>}</h3>
               {salesByDay == null ? <span className="spinner" />
-                : <BarChart data={salesByDay} keys={weekKeys} format={(v) => '$' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(0))} />}
+                : <BarChart data={salesByDay} keys={weekKeys} format={(v) => '$' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(0))}
+                    onDay={(key) => navigate('/reparaciones?entregado=' + key)} />}
             </div>
             <div className="card">
               <h3>Citas de la semana{apptsTotal != null && <span className="chart-total">{apptsTotal}</span>}</h3>
               {apptsByDay == null ? <span className="spinner" />
-                : <BarChart data={apptsByDay} keys={weekKeys} format={(v) => String(v)} />}
+                : <BarChart data={apptsByDay} keys={weekKeys} format={(v) => String(v)}
+                    onDay={(key) => navigate('/citas?fecha=' + key)} />}
             </div>
           </div>
           <div className="card">

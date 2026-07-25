@@ -1,19 +1,33 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import Modal from '../components/Modal.jsx';
 import RepairDetail, { STATUS_BADGE, statusLabel, REPAIR_STATUS } from '../components/RepairDetail.jsx';
 
 const money = (n) => (n == null ? '—' : '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }));
 
+// Fecha de negocio (America/Chicago) como clave YYYY-MM-DD.
+function chicagoKey(date) {
+  const p = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(date).reduce((a, x) => { a[x.type] = x.value; return a; }, {});
+  return `${p.year}-${p.month}-${p.day}`;
+}
+
 function FilterPill({ v, cur, set, label }) {
   return <button className={'btn btn-sm ' + (cur === v ? 'btn-primary' : 'btn-secondary')} onClick={() => set(v)}>{label}</button>;
 }
 
 export default function Repairs() {
+  const navigate = useNavigate();
+  // Permite llegar con ?entregado=YYYY-MM-DD (desde el gráfico de ventas del Dashboard).
+  const [searchParams] = useSearchParams();
+  const dayParam = searchParams.get('entregado');
+  const dayFilter = /^\d{4}-\d{2}-\d{2}$/.test(dayParam || '') ? dayParam : null;
   const [tickets, setTickets] = useState(null);
   const [workers, setWorkers] = useState([]);
   const [err, setErr] = useState('');
-  const [filter, setFilter] = useState('activos');
+  const [filter, setFilter] = useState(dayFilter ? 'entregado' : 'activos');
   const [detail, setDetail] = useState(null); // { id } | { id: null }
 
   const load = useCallback(() => {
@@ -26,6 +40,7 @@ export default function Repairs() {
   }, [load]);
 
   const shown = tickets ? tickets.filter((t) => {
+    if (dayFilter && chicagoKey(new Date(t.delivered_at || 0)) !== dayFilter) return false;
     if (filter === 'todos') return true;
     if (filter === 'activos') return t.status !== 'entregado';
     return t.status === filter;
@@ -45,6 +60,13 @@ export default function Repairs() {
         {REPAIR_STATUS.map((s) => <FilterPill key={s.v} v={s.v} cur={filter} set={setFilter} label={s.l} />)}
         <FilterPill v="todos" cur={filter} set={setFilter} label="Todas" />
       </div>
+
+      {dayFilter && (
+        <div className="row" style={{ gap: 10, marginBottom: 16 }}>
+          <span className="badge badge-on">Entregadas el {dayFilter}</span>
+          <button className="btn btn-ghost btn-sm" onClick={() => navigate('/reparaciones')}>Quitar filtro de fecha</button>
+        </div>
+      )}
 
       {tickets == null ? <span className="spinner spinner-lg" />
         : shown.length === 0 ? <div className="card"><div className="empty">No hay reparaciones{filter !== 'todos' ? ' en este filtro' : ''}.</div></div>

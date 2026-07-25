@@ -72,7 +72,11 @@ izquierda, 3 tarjetas verticales a la derecha; <900px se apila).
 - Gráficos de barras SVG propios (sin dependencias): Ventas de la semana
   (tickets `entregado`, suma `final_price` por `delivered_at`) y Citas de la
   semana (por `fecha`). Semana **lunes–domingo en America/Chicago**
-  (`currentWeekKeys`). El día actual se resalta.
+  (`currentWeekKeys`). El día actual se resalta. **Las barras son clicables:**
+  ventas → `/reparaciones?entregado=YYYY-MM-DD`, citas →
+  `/citas?fecha=YYYY-MM-DD`; ambas páginas respetan el parámetro y muestran
+  solo ese día (Reparaciones muestra chip "Entregadas el …" con opción de
+  quitar el filtro).
 - Tabla "Citas de hoy". Todo el dashboard sin negrillas
   (`.dashboard * { font-weight: 400 !important }`, petición del dueño).
 
