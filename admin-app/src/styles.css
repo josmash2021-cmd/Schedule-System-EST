@@ -395,7 +395,7 @@ table.data tbody tr:hover td { background: #f5f5f6; }
 /* ---------- Citas: filas horizontales + detalle ---------- */
 /* Filtro de fecha: el campo no cubre el checkbox "Ver todas" */
 .citas-filtro { flex-wrap: wrap; align-items: flex-end; }
-.citas-fecha { margin: 0; flex: 1 1 160px; max-width: 240px; }
+.citas-fecha { margin: 0; flex: 1 1 160px; max-width: 240px; min-width: 0; }
 .citas-todas { gap: 8px; cursor: pointer; flex: none; margin-bottom: 12px; }
 .cita-list { display: flex; flex-direction: column; gap: 10px; }
 .cita-row {
@@ -420,6 +420,12 @@ table.data tbody tr:hover td { background: #f5f5f6; }
   .cita-grid { grid-template-columns: repeat(2, 1fr); }
   .citas-fecha { flex: 1 1 100%; max-width: none; }
   .citas-todas { margin-bottom: 0; }
+  /* iOS: los campos de fecha nativos ignoran el ancho y se salen del cuadro.
+     Sin apariencia nativa respetan el 100% y el selector sigue abriendo al tocar. */
+  input[type="date"], input[type="month"], input[type="time"] {
+    -webkit-appearance: none; appearance: none;
+    min-width: 0; max-width: 100%;
+  }
 }
 
 /* Monitoreo en vivo */
