@@ -13,9 +13,9 @@ export default function BarChart({ data, keys, labels, format, onDay, highlight 
   // Radio proporcional: las velas delgadas (vista de mes) quedan casi
   // cuadradas, no redondas como píldoras.
   const rx = Math.min(6, Math.max(2, bw * 0.28));
-  // Con muchas barras las etiquetas chocan: los valores por barra solo se
-  // muestran si hay espacio suficiente (si no, el tooltip <title> los da).
-  const showVals = slot >= 44;
+  // Con muchas barras (vista de mes) el valor va con letra más chica para
+  // que no se amontone; el tooltip <title> siempre está disponible.
+  const valSize = slot >= 44 ? 11 : 9.5;
   // Los números del eje caben todos (máx. 31 días); solo se saltan si hay
   // una cantidad extrema de barras.
   const lblEvery = data.length > 40 ? 2 : 1;
@@ -33,9 +33,9 @@ export default function BarChart({ data, keys, labels, format, onDay, highlight 
               <rect className={'bar' + (isHi ? ' bar-today' : '')} x={x} y={y} width={bw} height={h} rx={rx}
                 style={{ animationDelay: `${i * 45}ms` }} />
             )}
-            {v > 0 && showVals && (
+            {v > 0 && (
               <text className="bar-val" x={x + bw / 2} y={y - 7} textAnchor="middle"
-                style={{ animationDelay: `${i * 45 + 200}ms` }}>{format(v)}</text>
+                style={{ fontSize: valSize, animationDelay: `${i * 45 + 200}ms` }}>{format(v)}</text>
             )}
             {i % lblEvery === 0 && (
               <text className={'bar-lbl' + (isHi ? ' bar-lbl-today' : '')} x={slot * i + slot / 2} y={H - 8} textAnchor="middle">

@@ -271,7 +271,7 @@ select option { background: #fff; color: #111; }
 .chart-link:hover { text-decoration: underline; }
 .bar-chart .bar { fill: #111; }
 .bar-chart .bar-today { fill: #4a4a52; }
-.bar-chart .bar-val { font-size: 11px; font-weight: 700; fill: #44444c; }
+.bar-chart .bar-val { font-weight: 700; fill: #44444c; }
 .bar-chart .bar-lbl { font-size: 11px; fill: #8a8a92; font-weight: 600; }
 .bar-chart .bar-lbl-today { fill: #111; }
 .bar-chart .bar-axis { stroke: rgba(0, 0, 0, 0.12); stroke-width: 1; }
