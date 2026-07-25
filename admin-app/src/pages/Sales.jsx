@@ -154,7 +154,7 @@ export default function Sales() {
   };
 
   return (
-    <>
+    <div className="sales-page">
       {err && <div className="alert alert-error">{err}</div>}
 
       <div className="stat-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
@@ -229,6 +229,6 @@ export default function Sales() {
               </div>
             )}
       </div>
-    </>
+    </div>
   );
 }

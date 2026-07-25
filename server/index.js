@@ -15,6 +15,7 @@ const adminTasksRouter = require('./routes/adminTasks');
 const adminMonitorRouter = require('./routes/adminMonitor');
 const adminRepairsRouter = require('./routes/adminRepairs');
 const adminInventoryRouter = require('./routes/adminInventory');
+const adminSimulateRouter = require('./routes/adminSimulate'); // TEMPORAL: datos demo
 
 const app = express();
 
@@ -148,6 +149,7 @@ app.use('/x/s/live', adminMonitorRouter);
 app.use('/x/s/repairs/photo', express.static(REPAIRS_DIR, { index: false, fallthrough: true, maxAge: '7d' }));
 app.use('/x/s/repairs', adminRepairsRouter);
 app.use('/x/s/inventory', adminInventoryRouter);
+app.use('/x/s/simulate', adminSimulateRouter); // TEMPORAL: quitar tras la prueba
 
 // Entrada del panel tras el slug secreto. Slug incorrecto → next() → 404 por
 // defecto, idéntico a cualquier ruta desconocida (sin pistas). El bundle es

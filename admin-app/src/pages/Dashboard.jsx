@@ -62,6 +62,22 @@ export default function Dashboard() {
   const [tickets, setTickets] = useState(null);
   const [inventory, setInventory] = useState(null);
   const [err, setErr] = useState('');
+  const [simBusy, setSimBusy] = useState(false);
+
+  // TEMPORAL: botón de simulación (quitar cuando el dueño termine la prueba).
+  const simulate = async () => {
+    if (!window.confirm('¿Cargar datos de demostración? Crea trabajadores, reparaciones, ventas, citas e inventario de prueba.')) return;
+    setSimBusy(true);
+    try {
+      const d = await api('/simulate', { method: 'POST' });
+      const c = d.created || {};
+      window.alert(`Datos creados: ${c.repairs || 0} reparaciones, ${c.citas || 0} citas, ${c.items || 0} productos, ${c.workers || 0} trabajadores nuevos.`);
+      window.location.reload();
+    } catch (e) {
+      setErr(e.message);
+      setSimBusy(false);
+    }
+  };
 
   useEffect(() => {
     api('/users').then((d) => setUsers(d.users)).catch((e) => setErr(e.message));
@@ -111,6 +127,11 @@ export default function Dashboard() {
   return (
     <div className="dashboard">
       {err && <div className="alert alert-error">{err}</div>}
+      <div className="row" style={{ justifyContent: 'flex-end', marginBottom: 16 }}>
+        <button className="btn btn-secondary btn-sm" onClick={simulate} disabled={simBusy}>
+          {simBusy ? <span className="spinner" /> : 'Simulación (demo)'}
+        </button>
+      </div>
       <div className="dash-layout">
         <div className="dash-main">
           <div className="chart-grid">
