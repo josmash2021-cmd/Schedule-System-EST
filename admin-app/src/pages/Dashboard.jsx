@@ -54,11 +54,14 @@ function Stat({ k, v, icon, to }) {
   return <div className="stat-card">{body}</div>;
 }
 
-// Pastel (dona) SVG simple: compara dos o más valores con leyenda.
+// Pastel (dona) SVG interactivo: al pasar el mouse sobre un pedazo (o su
+// leyenda) se resalta y el centro muestra su valor y porcentaje.
 function Donut({ slices }) {
+  const [hover, setHover] = useState(null);
   const total = slices.reduce((a, s) => a + s.value, 0);
   const R = 54;
   const C = 2 * Math.PI * R;
+  const shown = hover != null ? slices[hover] : null;
   let acc = 0;
   return (
     <div className="pie-wrap">
@@ -68,20 +71,29 @@ function Donut({ slices }) {
           {total > 0 && slices.map((s, i) => {
             const frac = s.value / total;
             const el = (
-              <circle key={i} cx="70" cy="70" r={R} fill="none" stroke={s.color} strokeWidth="20"
+              <circle key={i} cx="70" cy="70" r={R} fill="none" stroke={s.color}
+                className="donut-slice"
                 strokeDasharray={`${Math.max(0, frac * C - 2)} ${C}`} strokeDashoffset={-acc * C}
-                className="donut-slice" style={{ animationDelay: `${i * 160}ms` }} />
+                style={{
+                  strokeWidth: hover === i ? 27 : 20,
+                  opacity: hover == null || hover === i ? 1 : 0.28,
+                  animationDelay: `${i * 160}ms`,
+                }}
+                onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} />
             );
             acc += frac;
             return el;
           })}
         </g>
-        <text x="70" y="68" textAnchor="middle" className="donut-total">{total}</text>
-        <text x="70" y="84" textAnchor="middle" className="donut-lbl">esta semana</text>
+        <text x="70" y="66" textAnchor="middle" className="donut-total">{shown ? shown.value : total}</text>
+        <text x="70" y="84" textAnchor="middle" className="donut-lbl">
+          {shown ? `${shown.label} · ${total ? Math.round((shown.value / total) * 100) : 0}%` : 'esta semana'}
+        </text>
       </svg>
       <div className="pie-legend">
         {slices.map((s, i) => (
-          <div key={i} className="pie-row">
+          <div key={i} className={'pie-row' + (hover === i ? ' pie-row-hover' : '')}
+            onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
             <span className="pie-dot" style={{ background: s.color }} />
             <span className="pie-name">{s.label}</span>
             <span className="pie-val">{s.value}</span>
