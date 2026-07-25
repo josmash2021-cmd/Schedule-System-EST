@@ -3,16 +3,17 @@
 // clave del punto, p. ej. YYYY-MM-DD). `highlight` resalta una clave (hoy).
 export default function BarChart({ data, keys, labels, format, onDay, highlight }) {
   const W = 560;
-  const H = 190;
-  const TOP = 26;
-  const BOTTOM = 26;
+  const H = 150;
+  const TOP = 24;
+  const BOTTOM = 24;
   const max = Math.max(...data, 1);
   const slot = W / data.length;
-  const bw = Math.min(46, slot * 0.55);
+  // Velas delgadas: la gráfica ocupa todo el ancho sin verse gigante.
+  const bw = Math.min(26, slot * 0.4);
   // Con muchas barras las etiquetas chocan: los valores por barra solo se
   // muestran si hay espacio suficiente (si no, el tooltip <title> los da),
   // y las etiquetas del eje se saltan para que no se amontonen.
-  const showVals = slot >= 34;
+  const showVals = slot >= 44;
   const lblEvery = Math.max(1, Math.ceil(data.length / 14));
   return (
     <svg className="bar-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Gráfico de barras">
