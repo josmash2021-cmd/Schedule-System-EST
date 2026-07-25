@@ -29,11 +29,10 @@ const SOON = [
 const TITLES = { '/': 'Dashboard', '/trabajadores': 'Trabajadores', '/tareas': 'Tareas', '/equipo': 'Equipo', '/reparaciones': 'Reparaciones', '/ventas': 'Ventas', '/inventario': 'Inventario', '/citas': 'Citas', '/ajustes': 'Ajustes' };
 
 export default function Layout({ children }) {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const [open, setOpen] = useState(false);
   const loc = useLocation();
   const title = TITLES[loc.pathname] || 'Panel';
-  const initial = (user?.username || '?').charAt(0).toUpperCase();
 
   return (
     <div className="shell">
@@ -73,10 +72,6 @@ export default function Layout({ children }) {
           <h2>{title}</h2>
           <div className="spacer" />
           <div className="userchip">
-            <div className="avatar">{initial}</div>
-            <div style={{ lineHeight: 1.2 }}>
-              <div style={{ fontWeight: 700, fontSize: 13.5 }}>{user.username}</div>
-            </div>
             <button className="btn btn-ghost btn-sm" onClick={() => logout()} title="Cerrar sesión">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
                 strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
