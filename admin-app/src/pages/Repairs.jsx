@@ -82,16 +82,16 @@ export default function Repairs() {
           : (
             <div className="table-wrap">
               <table className="data">
-                <thead><tr><th>Equipo</th><th>Cliente</th><th>Estado</th><th>Técnico</th><th>Precio</th><th>Fotos</th></tr></thead>
+                <thead><tr><th>Equipo</th><th>Cliente</th><th>Estado</th><th className="hide-sm">Técnico</th><th>Precio</th><th className="hide-sm">Fotos</th></tr></thead>
                 <tbody>
                   {shown.map((t) => (
                     <tr key={t.id} style={{ cursor: 'pointer' }} onClick={() => setDetail({ id: t.id })}>
                       <td><strong>{[t.device_brand, t.device_model].filter(Boolean).join(' ') || '—'}</strong>{t.device_serial && <div className="muted" style={{ fontSize: 12 }}>{t.device_serial}</div>}</td>
                       <td>{t.customer_name || '—'}{t.customer_phone && <div className="muted" style={{ fontSize: 12 }}>{t.customer_phone}</div>}</td>
                       <td><span className={'badge ' + STATUS_BADGE[t.status]}>{statusLabel(t.status)}</span></td>
-                      <td className="muted">{t.assignee_username || '—'}</td>
+                      <td className="muted hide-sm">{t.assignee_username || '—'}</td>
                       <td>{money(t.final_price != null ? t.final_price : t.quoted_price)}</td>
-                      <td className="muted">{t.photo_count > 0 ? `📷 ${t.photo_count}` : '—'}</td>
+                      <td className="muted hide-sm">{t.photo_count > 0 ? `📷 ${t.photo_count}` : '—'}</td>
                     </tr>
                   ))}
                 </tbody>

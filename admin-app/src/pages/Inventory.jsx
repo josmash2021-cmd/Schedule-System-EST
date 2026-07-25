@@ -46,14 +46,14 @@ export default function Inventory() {
           : (
             <div className="table-wrap">
               <table className="data">
-                <thead><tr><th>Producto</th><th>Categoría</th><th>Precio</th><th>Stock</th></tr></thead>
+                <thead><tr><th>Producto</th><th className="hide-sm">Categoría</th><th>Precio</th><th>Stock</th></tr></thead>
                 <tbody>
                   {shown.map((i) => {
                     const low = i.stock <= i.min_stock;
                     return (
                       <tr key={i.id} style={{ cursor: 'pointer' }} onClick={() => setDetail({ id: i.id })}>
                         <td><strong>{i.name}</strong>{i.sku && <div className="muted" style={{ fontSize: 12 }}>{i.sku}</div>}</td>
-                        <td className="muted">{i.category || '—'}</td>
+                        <td className="muted hide-sm">{i.category || '—'}</td>
                         <td>{money(i.price)}</td>
                         <td><span className={'badge ' + (low ? 'badge-pendiente' : 'badge-on')}>{i.stock}</span></td>
                       </tr>

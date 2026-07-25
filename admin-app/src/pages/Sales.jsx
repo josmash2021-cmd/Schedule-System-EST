@@ -217,14 +217,14 @@ export default function Sales() {
             : (
               <div className="table-wrap">
                 <table className="data">
-                  <thead><tr><th>Fecha</th><th>Cliente</th><th>Equipo</th><th>Técnico</th><th style={{ textAlign: 'right' }}>Precio</th></tr></thead>
+                  <thead><tr><th>Fecha</th><th>Cliente</th><th>Equipo</th><th className="hide-sm">Técnico</th><th style={{ textAlign: 'right' }}>Precio</th></tr></thead>
                   <tbody>
                     {shown.map((s) => (
                       <tr key={s.id}>
                         <td className="muted">{fmtDay(s.delivered_at)}</td>
                         <td><strong>{s.customer_name || '—'}</strong>{s.customer_phone && <div className="muted" style={{ fontSize: 12 }}>{s.customer_phone}</div>}</td>
                         <td className="muted">{[s.device_brand, s.device_model].filter(Boolean).join(' ') || '—'}</td>
-                        <td className="muted">{s.assignee_username || '—'}</td>
+                        <td className="muted hide-sm">{s.assignee_username || '—'}</td>
                         <td style={{ textAlign: 'right' }}><strong>{usd.format(s.price)}</strong></td>
                       </tr>
                     ))}

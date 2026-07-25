@@ -56,16 +56,16 @@ export default function Workers() {
             <div className="table-wrap">
               <table className="data">
                 <thead>
-                  <tr><th>Usuario</th><th>Email</th><th>Rol</th><th>Estado</th><th>Último acceso</th><th></th></tr>
+                  <tr><th>Usuario</th><th className="hide-sm">Email</th><th>Rol</th><th>Estado</th><th className="hide-sm">Último acceso</th><th></th></tr>
                 </thead>
                 <tbody>
                   {users.map((u) => (
                     <tr key={u.id}>
                       <td><strong>{u.username}</strong>{u.must_change_password && <span className="badge badge-pendiente" style={{ marginLeft: 8, fontSize: 10 }}>pendiente</span>}</td>
-                      <td className="muted">{u.email || '—'}</td>
+                      <td className="muted hide-sm">{u.email || '—'}</td>
                       <td><span className={'badge badge-' + u.role}>{ROLE_LABEL[u.role]}</span></td>
                       <td><span className={'badge ' + (u.active ? 'badge-on' : 'badge-off')}>{u.active ? 'Activo' : 'Inactivo'}</span></td>
-                      <td className="muted">{u.last_login ? new Date(u.last_login).toLocaleString('es') : 'Nunca'}</td>
+                      <td className="muted hide-sm">{u.last_login ? new Date(u.last_login).toLocaleString('es') : 'Nunca'}</td>
                       <td style={{ textAlign: 'right' }}>
                         <button className="btn btn-secondary btn-sm" onClick={() => setModal({ mode: 'edit', user: u })}>Gestionar</button>
                       </td>

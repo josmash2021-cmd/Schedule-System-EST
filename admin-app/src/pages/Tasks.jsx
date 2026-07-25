@@ -45,14 +45,14 @@ export default function Tasks() {
           : (
             <div className="table-wrap">
               <table className="data">
-                <thead><tr><th>Tarea</th><th>Asignada a</th><th>Estado</th><th>Para</th><th></th></tr></thead>
+                <thead><tr><th>Tarea</th><th>Asignada a</th><th>Estado</th><th className="hide-sm">Para</th><th></th></tr></thead>
                 <tbody>
                   {tasks.map((t) => (
                     <tr key={t.id}>
                       <td><strong>{t.title}</strong>{t.description && <div className="muted" style={{ fontSize: 12.5 }}>{t.description}</div>}</td>
                       <td>{t.assignee_username ? <span className="badge badge-worker">{t.assignee_username}</span> : <span className="muted">Sin asignar</span>}</td>
                       <td><span className={'badge ' + STATUS_BADGE[t.status]}>{STATUS_LABEL[t.status]}</span></td>
-                      <td className="muted">{dstr(t.due_date) || '—'}</td>
+                      <td className="muted hide-sm">{dstr(t.due_date) || '—'}</td>
                       <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                         <button className="btn btn-secondary btn-sm" onClick={() => setModal({ mode: 'edit', task: t })}>Editar</button>{' '}
                         <button className="btn btn-danger btn-sm" onClick={() => remove(t)}>Eliminar</button>
