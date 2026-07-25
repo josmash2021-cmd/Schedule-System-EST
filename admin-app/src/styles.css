@@ -218,7 +218,7 @@ select option { background: #fff; color: #111; }
 .topbar {
   display: flex; align-items: center; gap: 14px; padding: 18px 28px 14px;
   position: sticky; top: 0; z-index: 5; color: var(--text);
-  background: #000;
+  background: #0b0b0e;
   border-bottom: 1px solid var(--line-2);
 }
 .topbar h2 { font-size: 19px; letter-spacing: -0.02em; font-weight: 400; }
