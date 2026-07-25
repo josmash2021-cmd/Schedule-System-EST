@@ -77,6 +77,7 @@ export default function Sales() {
   const [err, setErr] = useState('');
   const [period, setPeriod] = useState(/^\d{4}-\d{2}-\d{2}$/.test(paramFecha || '') ? 'dia' : 'semana');
   const [day, setDay] = useState(/^\d{4}-\d{2}-\d{2}$/.test(paramFecha || '') ? paramFecha : chicagoParts().key);
+  const [month, setMonth] = useState(chicagoParts().key.slice(0, 7));
 
   useEffect(() => {
     api('/repairs').then((d) => setTickets(d.tickets || [])).catch((e) => setErr(e.message));
@@ -90,12 +91,15 @@ export default function Sales() {
 
   const now = chicagoParts();
   const wk = weekKeys();
-  const monthKey = now.key.slice(0, 7);
+  const curMonthKey = now.key.slice(0, 7);
+  // Mes seleccionado (la vista Mes permite elegir meses pasados).
+  const [selY, selM] = month.split('-').map(Number);
+  const monthLabel = `${MONTH_LABELS[selM - 1]} ${selY}`;
 
   const inPeriod = (s, p) => {
     if (p === 'dia') return s.cp.key === day;
     if (p === 'semana') return wk.includes(s.cp.key);
-    if (p === 'mes') return s.cp.key.slice(0, 7) === monthKey;
+    if (p === 'mes') return s.cp.key.slice(0, 7) === month;
     return s.cp.y === now.y;
   };
 
@@ -103,7 +107,7 @@ export default function Sales() {
   const kpis = tickets ? {
     dia: { total: sum(sales.filter((s) => s.cp.key === now.key)), count: sales.filter((s) => s.cp.key === now.key).length },
     semana: { total: sum(sales.filter((s) => wk.includes(s.cp.key))), count: sales.filter((s) => wk.includes(s.cp.key)).length },
-    mes: { total: sum(sales.filter((s) => s.cp.key.slice(0, 7) === monthKey)), count: sales.filter((s) => s.cp.key.slice(0, 7) === monthKey).length },
+    mes: { total: sum(sales.filter((s) => s.cp.key.slice(0, 7) === curMonthKey)), count: sales.filter((s) => s.cp.key.slice(0, 7) === curMonthKey).length },
     ano: { total: sum(sales.filter((s) => s.cp.y === now.y)), count: sales.filter((s) => s.cp.y === now.y).length },
   } : null;
 
@@ -124,12 +128,12 @@ export default function Sales() {
       for (const s of sales.filter((x) => inPeriod(x, 'semana'))) data[wk.indexOf(s.cp.key)] += s.price;
       chart = { data, keys: wk, labels: DAY_LABELS, highlight: now.key };
     } else if (period === 'mes') {
-      const days = new Date(Date.UTC(now.y, now.m, 0)).getUTCDate();
+      const days = new Date(Date.UTC(selY, selM, 0)).getUTCDate();
       const keys = []; const labels = [];
       for (let d = 1; d <= days; d++) { keys.push(String(d)); labels.push(String(d)); }
       const data = keys.map(() => 0);
       for (const s of sales.filter((x) => inPeriod(x, 'mes'))) data[Number(s.cp.key.slice(8, 10)) - 1] += s.price;
-      chart = { data, keys, labels, highlight: String(Number(now.key.slice(8, 10))) };
+      chart = { data, keys, labels, highlight: month === curMonthKey ? String(Number(now.key.slice(8, 10))) : null };
     } else {
       const keys = []; const labels = MONTH_LABELS.slice();
       for (let m = 1; m <= 12; m++) keys.push(String(m));
@@ -149,8 +153,8 @@ export default function Sales() {
 
   const onBar = (k) => {
     if (period === 'semana') { setPeriod('dia'); setDay(k); }
-    else if (period === 'mes') { setPeriod('dia'); setDay(`${monthKey}-${k.padStart(2, '0')}`); }
-    else if (period === 'ano') { setPeriod('mes'); }
+    else if (period === 'mes') { setPeriod('dia'); setDay(`${month}-${k.padStart(2, '0')}`); }
+    else if (period === 'ano') { setPeriod('mes'); setMonth(`${now.y}-${k.padStart(2, '0')}`); }
   };
 
   return (
@@ -181,6 +185,10 @@ export default function Sales() {
           <input type="date" value={day} onChange={(e) => e.target.value && setDay(e.target.value)}
             style={{ width: 'auto', marginLeft: 6 }} />
         )}
+        {period === 'mes' && (
+          <input type="month" value={month} max={curMonthKey} onChange={(e) => e.target.value && setMonth(e.target.value)}
+            style={{ width: 'auto', marginLeft: 6 }} />
+        )}
         <div className="spacer" />
         {tickets != null && (
           <strong style={{ fontSize: 15 }}>
@@ -193,7 +201,7 @@ export default function Sales() {
         <h3>
           {period === 'dia' ? `Ventas del ${day.split('-').reverse().join('/')}`
             : period === 'semana' ? 'Ventas por día (esta semana)'
-              : period === 'mes' ? `Ventas por día (${MONTH_LABELS[now.m - 1]} ${now.y})`
+              : period === 'mes' ? `Ventas por día (${monthLabel})`
                 : `Ventas por mes (${now.y})`}
         </h3>
         {chart == null ? <span className="spinner" />
