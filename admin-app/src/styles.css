@@ -293,7 +293,7 @@ select option { background: #fff; color: #111; }
 .dash-layout { display: grid; grid-template-columns: 240px 1fr; gap: 16px; align-items: start; }
 .dash-layout .stat-grid { grid-template-columns: 1fr; margin-bottom: 0; }
 .dash-main { min-width: 0; }
-.stat-link { display: block; color: inherit; text-decoration: none; cursor: pointer; }
+.stat-link { display: block; text-decoration: none; cursor: pointer; }
 @media (max-width: 900px) {
   .dash-layout { grid-template-columns: 1fr; }
 }
