@@ -1,6 +1,6 @@
 # MEMORIA DEL PROYECTO — Schedule-System-EST (ElectronicST)
 
-> Auditoría creada el 2026-07-18, actualizada el 2026-07-19. Memoria de trabajo
+> Auditoría creada el 2026-07-18, actualizada el 2026-07-24. Memoria de trabajo
 > NO genérica: describe lo que existe HOY en el código, con ubicaciones exactas.
 > Actualizarla cuando cambie estructura, flujos o configuración.
 
@@ -259,6 +259,31 @@ incorrecto → 404 genérico), assets en `/x/static/` (base de Vite) y API del
 panel en `/x/s/*` (auth, users, time, tasks, live, repairs, inventory). El
 proxy de Vercel reenvía `/x/:path*` a Railway igual que `/api/*`. La API
 pública del sitio (`/api/appointments`, `/api/slots`, etc.) NO cambió.
+
+### Back-office (`admin-app/`, React + Vite) — composición interna
+Build: `cd admin-app && npm run build` → `server/admin-dist/` (commiteado;
+obligatorio tras cada cambio). Páginas en `admin-app/src/pages/`, hoja única
+de estilos `admin-app/src/styles.css` (tema oscuro, tarjetas blancas).
+Cliente HTTP en `src/api.js`: `api()` → `/x/s/*`, `apiRoot()` → `/api/*`.
+**Dashboard (2026-07-24):** layout `.dash-layout` — contenido a la izquierda
+y 3 tarjetas verticales a la derecha (<900px apila). Tarjetas = enlaces a su
+página: Trabajadores (rol `worker`), Reparaciones esta semana (tickets por
+`created_at`), Total de inventario (suma de `stock`). Se eliminaron las
+tarjetas de Administradores y Cuentas activas (petición del dueño). Gráficos
+de barras SVG propios, sin dependencias (`BarChart`): Ventas de la semana
+(tickets `entregado`, suma de `final_price` — llega como string, convertir
+con `Number()` — por `delivered_at`) y Citas de la semana (por `fecha`).
+Semana lunes–domingo en `America/Chicago` (`currentWeekKeys`, aritmética en
+UTC); el día actual se resalta. Tabla "Citas de hoy" conservada. Todo el
+dashboard SIN negrillas (`.dashboard * { font-weight: 400 !important }`,
+petición del dueño). OJO: al convertir tarjetas en `<Link>`, la regla global
+`a { color: inherit }` dejó los números blancos sobre blanco — no poner
+`color: inherit` en la clase del enlace (bug resuelto 2026-07-24).
+**QA visual:** `admin-app/.visual-test/run.cjs` (local, gitignored) sirve
+`admin-dist`, mockea toda la API y captura todas las vistas con Chrome real
+(puppeteer-core del `node_modules` raíz); shots en `.visual-test/shots/`.
+Los mocks usan fechas relativas (`iso()`/`dayKey()`). Verificar con captura
+todo cambio de UI antes de commit.
 
 ### `terminos.html` / `politicas.html` — legales (tema claro, CSS inline duplicado)
 Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolsos

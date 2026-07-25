@@ -1,0 +1,111 @@
+# ElectronicST — Mapa del proyecto (Schedule-System-EST)
+
+Tienda Apple + servicio técnico en Hoover, AL. Sitio 100% en español (rutas en
+inglés). Este archivo es el mapa rápido: **lee aquí primero, no explores el
+repo para ubicar cosas**. Para detalle profundo (historial de decisiones,
+bugs resueltos, advertencias) consulta `MEMORIA.md` — y actualízalo cuando
+cambies estructura, flujos o convenciones.
+
+## Arquitectura y despliegue
+
+- **Sitio público:** HTML/CSS/JS estático en la raíz, sin bundler ni framework.
+- **Panel de gestión (back-office):** React 18 + Vite en `admin-app/`.
+- **Backend:** Express + PostgreSQL en `server/` → despliega en **Railway**.
+- **Vercel** sirve el frontend estático (dominio `electronicservicetechnology.com`)
+  y proxifica `/api/*` y `/x/*` → Railway (`vercel.json`).
+- `netlify/` y `netlify.toml` son **legado inactivo**: no tocar salvo limpieza.
+- Rama de trabajo: `master`.
+
+## Mapa de ubicaciones exactas
+
+### Sitio público (raíz)
+- Páginas: `index.html`, `products.html`, `macbook-air-13.html`,
+  `iphone-15-pro.html`, `book-appointment.html`, `cart.html`, `success.html`,
+  `terms.html`, `privacy.html`.
+- JS/CSS compartido: `assets/` (`site.js`, `cart.js`, `site-v3.css`,
+  `transitions.js`, `i18n.js`, `security.js`).
+- **Tras editar cualquier página/asset del sitio:** `node server/scripts/copy-frontend.js`
+  (copia a `server/public/`, que va commiteada para Railway). Si agregas o
+  renombras una página, actualiza también `htmlRoutes` en `server/index.js` y
+  la lista de `copy-frontend.js`.
+
+### Panel de gestión (`admin-app/`)
+- Páginas: `admin-app/src/pages/` — `Dashboard.jsx`, `Workers.jsx`,
+  `Tasks.jsx`, `Team.jsx`, `Repairs.jsx`, `Inventory.jsx`, `Appointments.jsx`,
+  `Settings.jsx`, `Login.jsx`, `WorkerHome.jsx`/`WorkerApp.jsx` (app móvil del
+  trabajador).
+- Componentes: `admin-app/src/components/` (`Layout.jsx`, `Modal.jsx`,
+  `RepairDetail.jsx`, `InventoryDetail.jsx`, `ChangePasswordForm.jsx`).
+- Cliente HTTP: `admin-app/src/api.js` — `api(path)` → `/x/s/*` (API del
+  panel); `apiRoot(path)` → `/api/*` (pública, p. ej. citas). Token JWT en
+  `sessionStorage['est_office_token']`.
+- Estilos: `admin-app/src/styles.css` (tema oscuro con tarjetas blancas).
+- Rutas internas del panel: `admin-app/src/App.jsx` (`/`, `/trabajadores`,
+  `/tareas`, `/equipo`, `/reparaciones`, `/inventario`, `/citas`, `/ajustes`).
+- **Build obligatorio tras cualquier cambio:** `cd admin-app && npm run build`
+  → genera `server/admin-dist/` (commiteado; Railway solo despliega `server/`).
+- URL en producción: `/x/<slug>` (slug en env `ADMIN_PATH`); assets en
+  `/x/static/` (base de Vite); API en `/x/s/*`.
+
+### Backend (`server/`)
+- Entrada: `server/index.js` — monta routers y sirve estáticos.
+- Rutas del panel (`/x/s/*`): `server/routes/adminAuth.js`, `adminUsers.js`,
+  `adminTime.js`, `adminTasks.js`, `adminMonitor.js`, `adminRepairs.js`,
+  `adminInventory.js`.
+- Rutas públicas (`/api/*`): `appointments.js`, `slots.js`, `checkout.js`
+  (Stripe), `auth.js` (login viejo, sin frontend).
+- Modelos (SQL directo con `pg`): `server/models/` — `users.js`,
+  `repairs.js`, `inventory.js`, `tasks.js`, `timeEntries.js`, `audit.js`.
+- `server/db.js`: Pool + `CREATE TABLE IF NOT EXISTS` (las tablas se
+  autocrean al arrancar). `repair_tickets` tiene `final_price`,
+  `quoted_price`, `status` (recibido→diagnostico→reparacion→listo→entregado),
+  `created_at`, `delivered_at`.
+- Bots: `server/wa-bot/` (WhatsApp), `server/ig-bot/` (Instagram) —
+  artefactos locales gitignored.
+
+### Dashboard del panel (composición actual, 2026-07-24)
+`admin-app/src/pages/Dashboard.jsx`: layout `.dash-layout` (contenido a la
+izquierda, 3 tarjetas verticales a la derecha; <900px se apila).
+- Tarjetas (enlaces a su página): Trabajadores (`role='worker'`),
+  Reparaciones esta semana (tickets por `created_at`), Total de inventario
+  (suma de `stock`).
+- Gráficos de barras SVG propios (sin dependencias): Ventas de la semana
+  (tickets `entregado`, suma `final_price` por `delivered_at`) y Citas de la
+  semana (por `fecha`). Semana **lunes–domingo en America/Chicago**
+  (`currentWeekKeys`). El día actual se resalta.
+- Tabla "Citas de hoy". Todo el dashboard sin negrillas
+  (`.dashboard * { font-weight: 400 !important }`, petición del dueño).
+
+## Verificación visual del panel (úsala SIEMPRE en cambios de UI)
+
+`admin-app/.visual-test/run.cjs` (local, gitignored): sirve `server/admin-dist`,
+mockea toda la API (datos al inicio del archivo) y captura todas las vistas con
+Chrome real (puppeteer-core del `node_modules` raíz).
+
+```bash
+node admin-app/.visual-test/run.cjs   # shots en admin-app/.visual-test/shots/
+```
+
+Flujo: editar → build → correr arnés → **leer la captura afectada** antes de
+commit. Si una vista necesita datos nuevos, ajusta los mocks de `run.cjs`.
+
+## Flujo de trabajo y convenciones
+
+- **Commit + push a `master` al terminar cada tarea** (petición expresa del
+  dueño). Commits en español, estilo `feat(panel): ...` / `fix(panel): ...` /
+  `style(panel): ...`.
+- Nunca commitear: `.vercel/`, `admin-app/.visual-test/`, `.env`,
+  `server/wa-bot|ig-bot` artefactos (ya en `.gitignore`).
+- Sin tests ni CI: la verificación es el build + el arnés visual.
+- No agregar dependencias nuevas al panel sin confirmarlo (las gráficas son
+  SVG hechas a mano por eso).
+- Texto visible en español; código/comentarios en español en el panel.
+- Zona horaria del negocio: `America/Chicago` (citas, semanas, slots).
+- Tema del sitio público: oscuro **monocromo** (blanco/negro/dorado del logo);
+  no reintroducir acentos de color sin pedirlo (`MEMORIA.md` §3).
+
+## Skills y agentes del proyecto
+
+- `/skill:panel-admin` — workflow completo para cambios en el back-office.
+- `/skill:sitio-web` — workflow para cambios en el sitio público.
+- Agente `visual-qa` — subagente que corre el arnés visual y revisa capturas.
