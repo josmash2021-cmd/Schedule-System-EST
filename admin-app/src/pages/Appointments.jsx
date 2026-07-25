@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { apiRoot } from '../api.js';
+import FormPage from '../components/FormPage.jsx';
 
 const ESTADOS = ['pendiente', 'confirmada', 'atendida', 'cancelada'];
 
@@ -9,6 +10,27 @@ function todayChicago() {
     timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit',
   }).formatToParts(new Date()).reduce((a, x) => { a[x.type] = x.value; return a; }, {});
   return `${p.year}-${p.month}-${p.day}`;
+}
+
+// "10:30:00" → "10:30 am"; "15:15:00" → "3:15 pm"
+function fmtHora(h) {
+  const [hh = 0, mm = 0] = String(h).split(':').map(Number);
+  const am = hh < 12;
+  const h12 = hh % 12 === 0 ? 12 : hh % 12;
+  return `${h12}:${String(mm).padStart(2, '0')} ${am ? 'am' : 'pm'}`;
+}
+
+// "2026-07-25" → "25/07/2026"
+const fmtFecha = (f) => String(f).slice(0, 10).split('-').reverse().join('/');
+
+// Dato del detalle: etiqueta arriba, valor abajo (rejilla horizontal).
+function Info({ k, v }) {
+  return (
+    <div className="cita-info">
+      <div className="cita-info-k">{k}</div>
+      <div className="cita-info-v">{v}</div>
+    </div>
+  );
 }
 
 export default function Appointments() {
@@ -21,6 +43,7 @@ export default function Appointments() {
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState('');
   const [editing, setEditing] = useState(null);
+  const [selected, setSelected] = useState(null); // cita abierta en detalle
 
   const load = useCallback(() => {
     setErr('');
@@ -45,11 +68,12 @@ export default function Appointments() {
   };
 
   const remove = async (c) => {
-    if (!window.confirm(`¿Eliminar la cita de ${c.nombre} (${c.fecha} ${String(c.hora).slice(0, 5)})?`)) return;
+    if (!window.confirm(`¿Eliminar la cita de ${c.nombre} (${fmtFecha(c.fecha)} ${fmtHora(c.hora)})?`)) return;
     setBusy(c.id + 'del');
     try {
       await apiRoot('/api/appointments/' + c.id, { method: 'DELETE' });
       setCitas((list) => list.filter((x) => x.id !== c.id));
+      setSelected(null);
     } catch (e) {
       setErr(e.message);
     } finally {
@@ -74,6 +98,34 @@ export default function Appointments() {
         onBack={() => setEditing(null)}
         onSaved={() => { setEditing(null); load(); }}
       />
+    );
+  }
+
+  // Detalle de la cita (página completa, info en rejilla horizontal).
+  if (selected) {
+    const c = (citas && citas.find((x) => x.id === selected.id)) || selected;
+    return (
+      <FormPage title="Detalle de la cita" onBack={() => setSelected(null)} max={760}>
+        <div className="cita-grid">
+          <Info k="Fecha" v={fmtFecha(c.fecha)} />
+          <Info k="Hora" v={fmtHora(c.hora)} />
+          <Info k="Estado" v={<span className={'badge badge-' + c.estado}>{c.estado}</span>} />
+          <Info k="Cliente" v={c.nombre} />
+          <Info k="Teléfono" v={c.telefono || '—'} />
+          <Info k="Correo" v={c.correo || '—'} />
+          <Info k="Servicio" v={c.servicio} />
+        </div>
+        <div className="row" style={{ marginTop: 20, flexWrap: 'wrap' }}>
+          <select value={c.estado} disabled={!!busy} onChange={(e) => changeEstado(c, e.target.value)} style={{ width: 'auto' }}>
+            {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
+          </select>
+          <div className="spacer" />
+          <button className="btn btn-secondary btn-sm" onClick={() => setEditing(c)}>Editar</button>
+          <button className="btn btn-danger btn-sm" disabled={busy === c.id + 'del'} onClick={() => remove(c)}>
+            {busy === c.id + 'del' ? <span className="spinner" /> : 'Eliminar'}
+          </button>
+        </div>
+      </FormPage>
     );
   }
 
@@ -106,41 +158,21 @@ export default function Appointments() {
       {citas == null ? <span className="spinner spinner-lg" />
         : citas.length === 0 ? <div className="card"><div className="empty">No hay citas {all ? 'registradas' : 'para esta fecha'}.</div></div>
           : (
-            <div className="table-wrap">
-              <table className="data">
-                <thead>
-                  <tr><th>Fecha</th><th>Hora</th><th>Cliente</th><th>Servicio</th><th>Estado</th><th></th></tr>
-                </thead>
-                <tbody>
-                  {citas.map((c) => (
-                    <tr key={c.id}>
-                      <td className="muted">{c.fecha}</td>
-                      <td>{String(c.hora).slice(0, 5)}</td>
-                      <td>
-                        <strong>{c.nombre}</strong>
-                        {c.telefono && <div className="muted" style={{ fontSize: 12.5 }}>{c.telefono}</div>}
-                      </td>
-                      <td className="muted">{c.servicio}</td>
-                      <td>
-                        <select
-                          value={c.estado}
-                          disabled={!!busy}
-                          onChange={(e) => changeEstado(c, e.target.value)}
-                          style={{ width: 'auto', padding: '6px 10px', fontSize: 13 }}
-                        >
-                          {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
-                        </select>
-                      </td>
-                      <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        <button className="btn btn-secondary btn-sm" onClick={() => setEditing(c)}>Editar</button>{' '}
-                        <button className="btn btn-danger btn-sm" disabled={busy === c.id + 'del'} onClick={() => remove(c)}>
-                          {busy === c.id + 'del' ? <span className="spinner" /> : 'Eliminar'}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="cita-list">
+              {citas.map((c) => (
+                <div key={c.id} className="cita-row" onClick={() => setSelected(c)}>
+                  <div className="cita-hora">{fmtHora(c.hora)}</div>
+                  {all && <div className="cita-fecha muted">{fmtFecha(c.fecha)}</div>}
+                  <div className="cita-cliente">{c.nombre}</div>
+                  <div className="cita-tel muted">{c.telefono || '—'}</div>
+                  <div className="cita-servicio muted">{c.servicio}</div>
+                  <span className={'badge badge-' + c.estado}>{c.estado}</span>
+                  <svg className="cita-go" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </div>
+              ))}
             </div>
           )}
 
