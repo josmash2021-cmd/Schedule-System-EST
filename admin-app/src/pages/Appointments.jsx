@@ -139,17 +139,17 @@ export default function Appointments() {
       </div>
 
       <div className="card" style={{ marginBottom: 18 }}>
-        <div className="row" style={{ flexWrap: 'wrap' }}>
-          <label className="field" style={{ margin: 0 }}>
+        <div className="row citas-filtro">
+          <label className="field citas-fecha">
             <span>Fecha</span>
             <input type="date" value={date} disabled={all} onChange={(e) => setDate(e.target.value)} />
           </label>
-          <label className="row" style={{ gap: 8, marginTop: 18, cursor: 'pointer' }}>
+          <label className="row citas-todas">
             <input type="checkbox" style={{ width: 'auto' }} checked={all} onChange={(e) => setAll(e.target.checked)} />
             <span className="muted">Ver todas</span>
           </label>
           <div className="spacer" />
-          <button className="btn btn-secondary btn-sm" style={{ marginTop: 12 }} onClick={load}>Actualizar</button>
+          <button className="btn btn-secondary btn-sm" onClick={load}>Actualizar</button>
         </div>
       </div>
 
