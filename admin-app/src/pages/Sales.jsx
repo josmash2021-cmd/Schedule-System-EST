@@ -157,7 +157,7 @@ export default function Sales() {
     <div className="sales-page">
       {err && <div className="alert alert-error">{err}</div>}
 
-      <div className="stat-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+      <div className="stat-grid">
         {kpis == null
           ? PERIODS.map((p) => <div key={p.v} className="stat-card"><div className="stat-top"><div className="k">{p.l}</div></div><div className="v"><span className="spinner" /></div></div>)
           : (
