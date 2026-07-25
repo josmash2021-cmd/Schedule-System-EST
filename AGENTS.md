@@ -69,11 +69,11 @@ cambies estructura, flujos o convenciones.
   artefactos locales gitignored.
 
 ### Dashboard del panel (composición actual, 2026-07-24)
-`admin-app/src/pages/Dashboard.jsx`: layout `.dash-layout` (contenido a la
-izquierda, 3 tarjetas verticales a la derecha; <900px se apila).
-- Tarjetas (enlaces a su página): Trabajadores (`role='worker'`),
-  Reparaciones esta semana (tickets por `created_at`), Total de inventario
-  (suma de `stock`).
+`admin-app/src/pages/Dashboard.jsx`: fila superior de 4 tarjetas (enlaces):
+Ventas de hoy ($ de entregados hoy), Trabajadores, Reparaciones esta semana
+y Total de inventario. Abajo, layout `.dash-layout` (contenido a la
+izquierda; a la derecha una dona "Ventas vs reparaciones (semana)" —
+entregadas vs creadas no entregadas, componente `Donut` en el mismo archivo).
 - Gráficos de barras SVG propios (`components/BarChart.jsx`, animación de
   crecimiento escalonada): Ventas de la semana (tickets `entregado`, suma
   `final_price` por `delivered_at`) y Citas de la semana (por `fecha`).
