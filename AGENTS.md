@@ -39,7 +39,8 @@ cambies estructura, flujos o convenciones.
 - Cliente HTTP: `admin-app/src/api.js` — `api(path)` → `/x/s/*` (API del
   panel); `apiRoot(path)` → `/api/*` (pública, p. ej. citas). Token JWT en
   `sessionStorage['est_office_token']`.
-- Estilos: `admin-app/src/styles.css` (tema oscuro con tarjetas blancas).
+- Estilos: `admin-app/src/styles.css` (páginas blancas con pelotitas sutiles,
+  tarjetas blancas con sombras 3D; shell y modales/login oscuros).
 - Rutas internas del panel: `admin-app/src/App.jsx` (`/`, `/trabajadores`,
   `/tareas`, `/equipo`, `/reparaciones`, `/inventario`, `/citas`, `/ajustes`).
 - **Build obligatorio tras cualquier cambio:** `cd admin-app && npm run build`

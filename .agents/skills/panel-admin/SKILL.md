@@ -25,8 +25,10 @@ mapa está en `AGENTS.md` (raíz) y la composición del Dashboard también.
 ## Workflow obligatorio
 
 1. **Edita** en `admin-app/src/`. Comentarios y texto visible en español.
-   Respeta el estilo del archivo (tema oscuro, tarjetas blancas, sin
-   negrillas en el Dashboard: `.dashboard * { font-weight: 400 !important }`).
+   Respeta el estilo del archivo (páginas blancas, tarjetas blancas con
+   sombras 3D, shell/modales oscuros, texto claro `--text` solo sobre
+   superficies oscuras; sin negrillas en el Dashboard:
+   `.dashboard * { font-weight: 400 !important }`).
 2. **Sin dependencias nuevas** sin confirmar con el usuario. Las gráficas se
    hacen con SVG a mano (ver `BarChart` en `Dashboard.jsx`).
 3. **Fechas de negocio en `America/Chicago`**: usa `chicagoKey()` /
