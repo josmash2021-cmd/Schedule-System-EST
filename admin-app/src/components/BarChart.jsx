@@ -9,7 +9,10 @@ export default function BarChart({ data, keys, labels, format, onDay, highlight 
   const max = Math.max(...data, 1);
   const slot = W / data.length;
   const bw = Math.min(46, slot * 0.55);
-  // Con muchas barras, muestra solo algunas etiquetas para que no se amontonen.
+  // Con muchas barras las etiquetas chocan: los valores por barra solo se
+  // muestran si hay espacio suficiente (si no, el tooltip <title> los da),
+  // y las etiquetas del eje se saltan para que no se amontonen.
+  const showVals = slot >= 34;
   const lblEvery = Math.max(1, Math.ceil(data.length / 14));
   return (
     <svg className="bar-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Gráfico de barras">
@@ -25,7 +28,7 @@ export default function BarChart({ data, keys, labels, format, onDay, highlight 
               <rect className={'bar' + (isHi ? ' bar-today' : '')} x={x} y={y} width={bw} height={h} rx="6"
                 style={{ animationDelay: `${i * 45}ms` }} />
             )}
-            {v > 0 && (
+            {v > 0 && showVals && (
               <text className="bar-val" x={x + bw / 2} y={y - 7} textAnchor="middle"
                 style={{ animationDelay: `${i * 45 + 200}ms` }}>{format(v)}</text>
             )}

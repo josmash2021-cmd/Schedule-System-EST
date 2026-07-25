@@ -263,7 +263,7 @@ select option { background: #fff; color: #111; }
 /* ---------- Gráficos del dashboard ---------- */
 .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 26px; }
 .chart-total { float: right; font-size: 15px; font-weight: 800; letter-spacing: -0.02em; }
-.bar-chart { width: 100%; height: auto; display: block; }
+.bar-chart { width: 100%; max-width: 620px; margin: 0 auto; height: auto; display: block; }
 .bar-chart .bar { fill: #111; transform-box: fill-box; transform-origin: 50% 100%; animation: barGrow 0.55s var(--ease) backwards; }
 @keyframes barGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 .bar-chart .bar-val { animation: fadeIn 0.4s var(--ease) backwards; }
