@@ -15,9 +15,10 @@ import { encolar, slotsIALibres } from './src/cola.js';
 import { transcribirAudio, transcripcionDisponible } from './src/transcribir.js';
 import { enviarTextoIG, enviarAudioIG, accionIG, verificarFirmaIG, crearCanalIG } from './src/instagram.js';
 import { notificarDuenoIG } from './src/notificar.js';
-// La voz de bienvenida la genera el módulo compartido del wa-bot
-// (mismos audios cacheados en DATA_DIR/voz, servidos públicos en /voz/).
-import { vozDisponible, obtenerM4aDespedida } from '../wa-bot/src/voz.js';
+// La voz la genera el módulo compartido del wa-bot (audios en
+// DATA_DIR/voz, servidos públicos en /voz/).
+import { vozDisponible, obtenerM4aDespedida, generarVozTextoM4a } from '../wa-bot/src/voz.js';
+import { unlinkSync } from 'node:fs';
 
 const router = express.Router();
 
@@ -96,7 +97,7 @@ function contextoIG(igsid) {
 // En modo silencioso (agentes ocupados), el mark_seen y el "escribiendo"
 // se muestran DESPUÉS de obtener la respuesta, no antes.
 const avisadosSinIA = new Set();
-async function responderYEnviar(igsid, texto, silencioso = false) {
+async function responderYEnviar(igsid, texto, silencioso = false, fueNotaVoz = false) {
   let respuesta;
   if (iaDisponible()) {
     respuesta = await responder(`ig:${igsid}`, texto, contextoIG(igsid));
@@ -131,6 +132,43 @@ async function responderYEnviar(igsid, texto, silencioso = false) {
   const burbujas = partes.length <= 3
     ? partes
     : [...partes.slice(0, 2), partes.slice(2).join('\n')];
+
+  // El cliente HABLÓ (nota de voz): se le responde HABLANDO, con la voz
+  // humana de la persona asignada al chat (Ángela/Alex). EXCEPCIONES que
+  // van por TEXTO (datos que se copian/guardan): enlaces/fotos, números
+  // de teléfono y la dirección de la tienda. Si el texto es muy largo o
+  // la voz falla, cae a texto siempre.
+  if (fueNotaVoz && vozDisponible()) {
+    const textoPlano = burbujas.join(' ... ')
+      .replace(/\*+/g, '')
+      .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B50}\u{FE0F}\u{200D}]/gu, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+    const traeTelefono = /\(?\d{3}\)?[\s.\-]\d{3}[\s.\-]\d{4}|\+\d[\d\s.\-]{6,}\d/.test(textoPlano);
+    const traeDireccion = /lorna|suite\s*\d|35216|hoover\s*,?\s*al\b/i.test(textoPlano);
+    const debeSerTexto = textoPlano.includes('http') || traeTelefono || traeDireccion;
+    if (textoPlano && textoPlano.length <= 800 && !debeSerTexto) {
+      try {
+        const vozResp = await generarVozTextoM4a(textoPlano, `ig:${igsid}`);
+        if (vozResp) {
+          const url = `${BASE_PUBLICA}/voz/${path.basename(vozResp.ruta)}`;
+          await accionIG(igsid, 'typing_off').catch(() => {});
+          await enviarAudioIG(igsid, url);
+          // El m4a se sirve por URL pública: se borra a los 10 min (Meta ya
+          // lo descargó) para no llenar el disco de audios temporales.
+          const timer = setTimeout(() => {
+            try { unlinkSync(vozResp.ruta); } catch { /* best-effort */ }
+          }, 10 * 60 * 1000);
+          timer.unref?.();
+          console.log(`[ig] Respuesta HABLADA enviada a ${igsid} (${vozResp.nombre}, ${textoPlano.length} caracteres)`);
+          return;
+        }
+      } catch (err) {
+        console.error(`[ig] No se pudo enviar la respuesta hablada, va por texto: ${err.message}`);
+      }
+    }
+  }
+
   for (const burbuja of burbujas) {
     await accionIG(igsid, 'typing_on');
     await esperar(800 + Math.min(burbuja.length * 25, 2500));
@@ -237,7 +275,7 @@ async function manejarAudio(igsid, audio) {
       await enviarTextoIG(igsid, 'No alcancé a entender bien el audio 😅 ¿me lo repites por texto?');
       return;
     }
-    await responderYEnviar(igsid, texto);
+    await responderYEnviar(igsid, texto, false, true);
   } catch (err) {
     console.error(`[ig] Error al transcribir nota de voz de ${igsid}: ${err.message}`);
     await accionIG(igsid, 'typing_off').catch(() => {});

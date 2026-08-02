@@ -286,7 +286,7 @@ export async function generarVozTexto(texto, jid) {
 }
 
 // Aviso de llamada rechazada por nota de voz: frase FIJA por persona, así
-// que se cachea como las bienvenidas (no gasta créditos en cada llamada).
+// que se cachea (no gasta créditos en cada llamada).
 const TEXTO_LLAMADA = (n) =>
   `Hola, vi que nos llamaste. Por aquí no puedo contestar llamadas, pero mándame una nota de voz o escríbeme por este mismo chat y te ayudo enseguida.`;
 
@@ -300,5 +300,41 @@ export async function obtenerAudioLlamada(jid) {
   } catch (err) {
     console.error(`[voz] Error al generar el aviso de llamada: ${err.message}`);
     return null;
+  }
+}
+
+// Respuesta hablada para INSTAGRAM: igual que generarVozTexto pero en m4a
+// guardado en CACHE_DIR (la API de Meta solo acepta audios por URL
+// pública; el servidor expone /voz/). Devuelve { ruta, nombre }; el
+// llamador borra el archivo cuando ya no lo necesita.
+export async function generarVozTextoM4a(texto, jid) {
+  if (!vozDisponible()) return null;
+  const voz = vozParaChat(jid);
+  const base = `respuesta-ig-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const tmpMp3 = path.join(CACHE_DIR, `${base}.tmp.mp3`);
+  const rutaM4a = path.join(CACHE_DIR, `${base}.m4a`);
+  try {
+    const stream = await cliente.textToSpeech.convert(voz.id, {
+      modelId: voz.modelo,
+      text: texto,
+      outputFormat: 'mp3_44100_128',
+      voiceSettings: voz.ajustes
+    });
+    const chunks = [];
+    for await (const chunk of stream) chunks.push(chunk);
+    mkdirSync(CACHE_DIR, { recursive: true });
+    writeFileSync(tmpMp3, Buffer.concat(chunks));
+    await execFileAsync(ffmpegPath, [
+      '-y', '-i', tmpMp3, ...ENTRADA_RUIDO,
+      '-filter_complex', FILTRO_AMBIENTE, '-map', '[out]',
+      '-c:a', 'aac', '-b:a', '96k',
+      rutaM4a
+    ]);
+    return { ruta: rutaM4a, nombre: voz.nombre };
+  } catch (err) {
+    console.error(`[voz] Error al generar respuesta hablada (IG): ${err.message}`);
+    return null;
+  } finally {
+    try { unlinkSync(tmpMp3); } catch { /* best-effort */ }
   }
 }
