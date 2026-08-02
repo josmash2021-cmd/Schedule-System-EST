@@ -10,14 +10,14 @@
 import express from 'express';
 import path from 'node:path';
 import config from './src/config.js';
-import { responder, iaDisponible, esPrimeraVez, inactividadMs, cerrarSesion, sembrarSaludoVoz, sembrarDespedidaVoz } from './src/ai.js';
+import { responder, iaDisponible, cerrarSesion, sembrarDespedidaVoz } from './src/ai.js';
 import { encolar, slotsIALibres } from './src/cola.js';
 import { transcribirAudio, transcripcionDisponible } from './src/transcribir.js';
 import { enviarTextoIG, enviarAudioIG, accionIG, verificarFirmaIG, crearCanalIG } from './src/instagram.js';
 import { notificarDuenoIG } from './src/notificar.js';
 // La voz de bienvenida la genera el módulo compartido del wa-bot
 // (mismos audios cacheados en DATA_DIR/voz, servidos públicos en /voz/).
-import { vozDisponible, obtenerM4aBienvenida, obtenerM4aDespedida } from '../wa-bot/src/voz.js';
+import { vozDisponible, obtenerM4aDespedida } from '../wa-bot/src/voz.js';
 
 const router = express.Router();
 
@@ -26,24 +26,6 @@ const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
 // URL pública del servidor (para adjuntar el audio a Instagram: la API de
 // Meta no acepta subir archivos, solo URLs https accesibles).
 const BASE_PUBLICA = (process.env.PUBLIC_BASE_URL || 'https://www.electronicservicetechnology.com').replace(/\/+$/, '');
-
-// Saludos típicos de apertura ("hola", "buenas noches", "buen día", ...).
-// Misma regla que en WhatsApp: si un cliente vuelve a saludar tras un
-// rato largo sin escribir, se le manda otra vez la bienvenida de voz.
-const SALUDO_RE = /^\s*(hola+|o-la|buen[ao]s?(?:\s+(d[íi]as|tardes|noches))?|buen\s*d[íi]a|qu[eé]\s*tal|saludos|hey|hi|hello)\b/i;
-
-function esSaludo(texto) {
-  return SALUDO_RE.test(texto || '');
-}
-
-// Mensaje que es SOLO un saludo, sin pregunta ni contenido ("hola",
-// "hola buenas noches!", "buenas"...). Si ya se mandó la nota de voz de
-// bienvenida, no hace falta responder nada por texto.
-const SOLO_SALUDO_RE = /^\s*(?:(?:hola+|o-la|buen[ao]s?(?:\s+(?:d[íi]as|tardes|noches|d[íi]a))?|buen\s*d[íi]a|qu[eé]\s*tal|saludos|hey|hi|hello)[\s!¡?¿.,]*)+$/i;
-
-function esSoloSaludo(texto) {
-  return SOLO_SALUDO_RE.test(texto || '');
-}
 
 // Mensaje que es SOLO una despedida o agradecimiento, sin pregunta ni
 // contenido ("muchísimas gracias", "gracias que tenga buen día", "está
@@ -63,16 +45,6 @@ function esSoloDespedida(texto) {
   return SOLO_DESPEDIDA_RE.test(texto || '');
 }
 
-// El mensaje CONTIENE despedida aunque traiga otras palabras ("gracias,
-// pasaré cuando pueda, que pases buen día"). Se usa para BLOQUEAR la
-// bienvenida por "buen día/tardes/noches": esa frase en una despedida no
-// es un saludo.
-const CONTIENE_DESPEDIDA_RE = /(gracias|que\s+(?:pase[n]?s?|tenga[n]?s?)\s+buen|adi[óo]s|hasta\s+(?:luego|pronto|mañana)|nos\s+vemos|chao|cuando\s+pueda)/i;
-
-function contieneDespedida(texto) {
-  return CONTIENE_DESPEDIDA_RE.test(texto || '');
-}
-
 // Petición de empezar de cero ("cierra esta sesión", "hablemos como una
 // nueva conversación", "empezar de cero", "reinicia la sesión"...).
 // OJO: "reiniciar" solo cuenta con contexto (sesión/conversación/chat) —
@@ -84,13 +56,8 @@ function esReinicio(texto) {
   return REINICIO_RE.test(texto || '');
 }
 
-// Inactividad mínima para repetir la bienvenida de voz ante un saludo.
-const INACTIVIDAD_SALUDO_MS = 3 * 60 * 60 * 1000; // 3 horas
-
-// Antispam de la nota de voz: aunque el cliente salude varias veces
-// seguidas, máximo 1 audio de bienvenida cada 15 min por chat.
+// Antispam de la despedida por voz: máximo 1 audio cada 15 min por chat.
 const ANTISPAM_VOZ_MS = 15 * 60 * 1000;
-const ultimaVozPorChat = new Map();
 
 // Antispam de la despedida, INDEPENDIENTE del de bienvenida: que el
 // cliente reciba el saludo por voz no debe impedir que su despedida unos
@@ -196,10 +163,9 @@ async function manejarTexto(igsid, texto) {
       console.log(`[ig] Agentes ocupados: ${igsid} espera en silencio`);
     }
 
-    // Despedida por nota de voz — se evalúa ANTES que la bienvenida (un
-    // "gracias que tenga buen día" contiene "buen día" y dispararía el
-    // saludo por error). Misma regla que WhatsApp: si el cliente SOLO se
-    // despide o agradece, se responde con el audio y no se manda texto.
+    // Despedida por nota de voz: si el cliente SOLO se despide o agradece
+    // ("gracias que tenga buen día", "pasaré cuando pueda"...), se
+    // responde con el audio de despedida y no se manda texto repetido.
     if (esSoloDespedida(texto) && vozDisponible() &&
         (Date.now() - (ultimaDespedidaPorChat.get(igsid) || 0)) >= ANTISPAM_VOZ_MS) {
       try {
@@ -217,48 +183,9 @@ async function manejarTexto(igsid, texto) {
       }
     }
 
-    // Bienvenida por nota de voz (misma regla que WhatsApp): primera vez
-    // que escribe, cuando vuelve a SALUDAR tras 3+ horas sin actividad,
-    // o cuando el saludo incluye la hora del día ("hola buenas tardes",
-    // "buenos días"...) aunque la sesión siga activa.
-    // Antispam: máximo 1 nota de voz cada 15 min por chat.
-    // El saludo ("buenos días/tardes/noches") depende de la hora del
-    // negocio. Si falla, la IA saluda por texto como antes.
-    // OJO: "buen día/tardes/noches" dentro de una DESPEDIDA ("gracias, que
-    // pases buen día") NO es saludo — antes disparaba la bienvenida por
-    // error aunque el cliente se estaba yendo.
-    const saludoConHora =
-      !contieneDespedida(texto) &&
-      /(buenos\s+d[íi]as|buenas\s+tardes|buenas\s+noches|buen\s+d[íi]a)/i.test(texto);
-    const vozReciente = (Date.now() - (ultimaVozPorChat.get(igsid) || 0)) < ANTISPAM_VOZ_MS;
-    const tocaVoz =
-      !vozReciente &&
-      (esPrimeraVez(`ig:${igsid}`) ||
-        (esSaludo(texto) && inactividadMs(`ig:${igsid}`) > INACTIVIDAD_SALUDO_MS) ||
-        saludoConHora);
-    if (tocaVoz && vozDisponible()) {
-      try {
-        const audio = await obtenerM4aBienvenida(`ig:${igsid}`);
-        if (audio) {
-          const url = `${BASE_PUBLICA}/voz/${path.basename(audio.ruta)}`;
-          await enviarAudioIG(igsid, url);
-          ultimaVozPorChat.set(igsid, Date.now());
-          console.log(`[ig] Nota de voz de bienvenida enviada a ${igsid} (${audio.saludo}, ${audio.nombre})`);
-
-          // Si el cliente SOLO saludó ("hola", "buenas noches"...), la
-          // nota de voz ya cubre el saludo: NO se manda texto repetido.
-          // Queda sembrado en el historial para que la IA tenga contexto.
-          // (Si luego dice que no la escuchó, la IA se lo escribe.)
-          if (esSoloSaludo(texto)) {
-            sembrarSaludoVoz(`ig:${igsid}`, audio.texto);
-            console.log('[ig] Saludo cubierto por la nota de voz; no se envía texto.');
-            return;
-          }
-        }
-      } catch (err) {
-        console.error(`[ig] No se pudo enviar la bienvenida de voz: ${err.message}`);
-      }
-    }
+    // NO hay bienvenida guionizada: la IA responde según lo que el cliente
+    // escribió (saludo, pregunta directa, despedida...). Nada de audios
+    // fijos de "Hola, soy Ángela, ¿cómo te puedo ayudar?".
 
     if (!silencioso) await accionIG(igsid, 'typing_on');
     await responderYEnviar(igsid, texto, silencioso);

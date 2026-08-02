@@ -13,8 +13,8 @@ import path from 'node:path';
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import config from './src/config.js';
-import { responder, iaDisponible, esPrimeraVez, inactividadMs, cerrarSesion, sembrarSaludoVoz, sembrarDespedidaVoz } from './src/ai.js';
-import { vozDisponible, obtenerAudioBienvenida, obtenerAudioDespedida, generarVozTexto, obtenerAudioLlamada } from './src/voz.js';
+import { responder, iaDisponible, cerrarSesion, sembrarDespedidaVoz } from './src/ai.js';
+import { vozDisponible, obtenerAudioDespedida, generarVozTexto, obtenerAudioLlamada } from './src/voz.js';
 import { notificarDueno } from './src/notificar.js';
 import { transcribirAudio, transcripcionDisponible } from './src/transcribir.js';
 import { encolar, slotsIALibres } from './src/cola.js';
@@ -102,24 +102,6 @@ function esIgnorable(mensaje) {
   );
 }
 
-// Saludos típicos de apertura ("hola", "buenas noches", "buen día", ...).
-// Si un cliente vuelve a saludar tras un rato largo sin escribir, se le
-// manda otra vez la nota de voz de bienvenida.
-const SALUDO_RE = /^\s*(hola+|o-la|buen[ao]s?(?:\s+(d[íi]as|tardes|noches))?|buen\s*d[íi]a|qu[eé]\s*tal|saludos|hey|hi|hello)\b/i;
-
-function esSaludo(texto) {
-  return SALUDO_RE.test(texto || '');
-}
-
-// Mensaje que es SOLO un saludo, sin pregunta ni contenido ("hola",
-// "hola buenas noches!", "buenas"...). Si ya se mandó la nota de voz de
-// bienvenida, no hace falta responder nada por texto.
-const SOLO_SALUDO_RE = /^\s*(?:(?:hola+|o-la|buen[ao]s?(?:\s+(?:d[íi]as|tardes|noches|d[íi]a))?|buen\s*d[íi]a|qu[eé]\s*tal|saludos|hey|hi|hello)[\s!¡?¿.,]*)+$/i;
-
-function esSoloSaludo(texto) {
-  return SOLO_SALUDO_RE.test(texto || '');
-}
-
 // Petición de empezar de cero ("cierra esta sesión", "hablemos como una
 // nueva conversación", "empezar de cero", "reinicia la sesión"...).
 // OJO: "reiniciar" solo cuenta con contexto (sesión/conversación/chat) —
@@ -149,27 +131,8 @@ function esSoloDespedida(texto) {
   return SOLO_DESPEDIDA_RE.test(texto || '');
 }
 
-// El mensaje CONTIENE despedida aunque traiga otras palabras ("gracias,
-// pasaré cuando pueda, que pases buen día"). Se usa para BLOQUEAR la
-// bienvenida por "buen día/tardes/noches": esa frase en una despedida no
-// es un saludo.
-const CONTIENE_DESPEDIDA_RE = /(gracias|que\s+(?:pase[n]?s?|tenga[n]?s?)\s+buen|adi[óo]s|hasta\s+(?:luego|pronto|mañana)|nos\s+vemos|chao|cuando\s+pueda)/i;
-
-function contieneDespedida(texto) {
-  return CONTIENE_DESPEDIDA_RE.test(texto || '');
-}
-
-// Inactividad mínima para repetir la bienvenida de voz ante un saludo.
-const INACTIVIDAD_SALUDO_MS = 3 * 60 * 60 * 1000; // 3 horas
-
-// Antispam de la nota de voz: aunque el cliente salude varias veces
-// seguidas, máximo 1 audio de bienvenida cada 15 min por chat.
+// Antispam de la despedida por voz: máximo 1 audio cada 15 min por chat.
 const ANTISPAM_VOZ_MS = 15 * 60 * 1000;
-const ultimaVozPorChat = new Map();
-
-// Antispam de la despedida, INDEPENDIENTE del de bienvenida: que el
-// cliente reciba el saludo por voz no debe impedir que su despedida unos
-// minutos después también salga por voz.
 const ultimaDespedidaPorChat = new Map();
 
 // Antispam de llamadas rechazadas: máximo 1 mensaje + aviso cada hora
@@ -318,56 +281,9 @@ async function manejarMensaje(sock, mensaje) {
       }
     }
 
-    // Bienvenida por nota de voz. Se envía cuando:
-    //  a) es el primer mensaje de la conversación (sesión nueva),
-    //  b) el cliente vuelve a SALUDAR ("hola", "buenas noches", etc.)
-    //     tras más de 3 horas sin escribir, o
-    //  c) el saludo incluye la hora del día ("hola buenas tardes",
-    //     "buenos días"...) — aunque la sesión siga activa.
-    // Saluda según la hora del negocio ("buenos días/tardes/noches").
-    // Antispam: máximo 1 nota de voz cada 15 min por chat.
-    // Si falla, la IA saluda por texto.
-    // OJO: "buen día/tardes/noches" dentro de una DESPEDIDA ("gracias, que
-    // pases buen día") NO es saludo — antes disparaba la bienvenida por
-    // error aunque el cliente se estaba yendo.
-    const saludoConHora =
-      !contieneDespedida(texto) &&
-      /(buenos\s+d[íi]as|buenas\s+tardes|buenas\s+noches|buen\s+d[íi]a)/i.test(texto);
-    const vozReciente = (Date.now() - (ultimaVozPorChat.get(jid) || 0)) < ANTISPAM_VOZ_MS;
-    const tocaVoz =
-      !vozReciente &&
-      (esPrimeraVez(jid) ||
-        (esSaludo(texto) && inactividadMs(jid) > INACTIVIDAD_SALUDO_MS) ||
-        saludoConHora);
-    if (tocaVoz && vozDisponible()) {
-      try {
-        await presencia('recording');
-        const audio = await obtenerAudioBienvenida(jid);
-        if (audio) {
-          await sock.sendMessage(jid, {
-            audio: audio.buffer,
-            mimetype: 'audio/ogg; codecs=opus',
-            ptt: true
-          });
-          ultimaVozPorChat.set(jid, Date.now());
-          console.log(`[mensaje] Nota de voz de bienvenida enviada a ${telefono} (${audio.saludo}, ${audio.nombre})`);
-          await presencia('paused');
-
-          // Si el cliente SOLO saludó ("hola", "buenas noches"...), la
-          // nota de voz ya cubre el saludo: NO se manda texto repetido.
-          // Queda sembrado en el historial para que la IA tenga contexto.
-          // (Si luego dice que no la escuchó, la IA se lo escribe.)
-          if (esSoloSaludo(texto)) {
-            sembrarSaludoVoz(jid, audio.texto);
-            console.log('[mensaje] Saludo cubierto por la nota de voz; no se envía texto.');
-            marcarProcesado(jid, tsMensaje);
-            return;
-          }
-        }
-      } catch (err) {
-        console.error(`[mensaje] No se pudo enviar la bienvenida de voz: ${err.message}`);
-      }
-    }
+    // NO hay bienvenida guionizada: la IA responde según lo que el cliente
+    // escribió o dijo (saludo, pregunta directa, despedida...). Nada de
+    // audios fijos de "Hola, soy Ángela, ¿cómo te puedo ayudar?".
 
     if (!silencioso) {
       await presencia(fueNotaVoz ? 'recording' : 'composing');

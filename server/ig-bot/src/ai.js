@@ -6,7 +6,7 @@ import path from 'node:path';
 import config from './config.js';
 // La voz de bienvenida la genera el módulo compartido del wa-bot
 // (mismos audios cacheados, mismo ELEVENLABS_API_KEY).
-import { vozDisponible, personaParaChat } from '../../wa-bot/src/voz.js';
+import { personaParaChat } from '../../wa-bot/src/voz.js';
 import { guardarCita } from './citas.js';
 import { notificarDuenoIG } from './notificar.js';
 import { consultarSlots, crearCitaWeb } from './citasApi.js';
@@ -181,9 +181,7 @@ FECHA Y HORA ACTUAL (zona del negocio, Alabama):
 PERSONALIDAD Y ESTILO (lo más importante):
 - Eres ${nombrePersona}, ${ENCARGADE} de la tienda. Si te piden hablar con "un agente", "el encargado" o "el manager", ese eres TÚ: dilo con naturalidad ("¡Claro! Hablas con ${nombrePersona}, ${encargade} de la tienda, ¿en qué te ayudo?").
 - Arriba de ti solo está el SUPERVISOR (el dueño). No existe ningún "asesor" ni otro empleado: cualquier cosa que tú no puedas resolver la consulta el supervisor y TÚ le avisas al cliente cuando él te responda.
-${vozDisponible()
-    ? `- El saludo de bienvenida ("Hola, buenos días/tardes/noches, soy ${nombrePersona}, ¿cómo te puedo ayudar?") se envía SOLO como nota de voz al iniciar la conversación, antes de tu primera respuesta. Por eso, en tu primer mensaje NO saludes ni te presentes de nuevo: responde directo y con naturalidad a lo que el cliente escribió. EXCEPCIÓN: si el cliente dice que no se escucha la nota de voz, que no la puede oír o que no puede escuchar audios ahora, entonces SÍ escríbele el saludo por texto ("Hola, buenos días/tardes/noches, soy ${nombrePersona}, ¿cómo te puedo ayudar?") y sigue la conversación normal.`
-    : `- En el primer mensaje saluda según la hora del negocio — "buenos días" (antes de las 12 p.m.), "buenas tardes" (de 12 a 7 p.m.), "buenas noches" (después de las 7 p.m.) — y preséntate así de natural: "Hola, buenas tardes, soy ${nombrePersona}, un gusto 😊 ¿cómo puedo ayudarte?". Varía un poco la fórmula cada vez para que no suene a guion.`}
+- SALUDOS: no hay saludo guionizado — respondes según lo que el cliente escribió. Si el cliente saluda ("hola", "buenas noches"...), contéstale el saludo según la hora del negocio ("buenos días" antes de las 12 p.m., "buenas tardes" de 12 a 7 p.m., "buenas noches" después) y preséntate con tu nombre de forma relajada la PRIMERA vez ("Hola, buenas tardes, soy ${nombrePersona} 😊 ¿en qué te ayudo?"). Si el cliente entra directo al punto ("¿cuánto vale arreglar una pantalla?"), NO lo saludes con ceremonia ni te presentes de largo: respóndele directo, con un saludo cortito a lo sumo. NUNCA repitas la misma fórmula de saludo dos veces en la conversación.
 - PROHIBIDO decir "asistente virtual", "asistente automático", "soy un bot" o frases tipo "Bienvenido a X, soy el asistente de...".
 - Si te preguntan directamente si eres humano o un bot, responde con honestidad y sin drama ("jaja soy ${nombrePersona}, ${el} asistente en línea de la tienda, pero si prefieres te comunico con una persona") y sigue la conversación.
 - MENSAJES CORTOS Y SUELTOS: escribe como escribe la gente por ${nombreCanal}. Nada de párrafos largos, nada de listas con viñetas, nada de bloques organizados tipo ficha (ej. NO escribas "📍 Dirección: ... Horario: ..."). Integra los datos en frases naturales ("estamos sobre Lorna Rd, el 3659 suite 157 en Hoover, y abrimos de lunes a sábado de 10 a 3").
@@ -515,52 +513,18 @@ export function iaDisponible() {
   return cliente !== null;
 }
 
-// true si el jid aún no tiene sesión activa (primer mensaje de la
-// conversación): el webhook lo usa para mandar la bienvenida de voz.
-export function esPrimeraVez(jid) {
-  return !historiales.has(jid);
-}
-
-// Milisegundos desde el último mensaje del chat (Infinity si no hay sesión).
-export function inactividadMs(jid) {
-  const sesion = historiales.get(jid);
-  return sesion ? Date.now() - sesion.ultimaActividad : Infinity;
-}
-
 // Cierra la sesión de un chat a petición del cliente ("cerrar sesión",
 // "empezar de cero"...): el siguiente mensaje arranca una conversación
-// nueva, con bienvenida de voz si está activa.
+// nueva.
 export function cerrarSesion(jid) {
   const habia = historiales.delete(jid);
   if (habia) persistirHistoriales();
   return habia;
 }
 
-// Registra en el historial que el saludo ya se dio POR VOZ, sin llamar a
-// la IA. Se usa cuando el cliente solo dijo "hola" y ya recibió la nota
-// de voz: así el bot NO repite el saludo por texto, y cuando el cliente
-// escriba de nuevo la IA ya tiene el contexto (no es "primera vez").
-// Recibe el texto EXACTO que dijo la voz (Ángela o Alex, por turnos alternados).
-export function sembrarSaludoVoz(jid, textoBienvenida) {
-  let sesion = historiales.get(jid);
-  if (!sesion) {
-    sesion = {
-      mensajes: [{ role: 'system', content: construirSystemPrompt(undefined, personaParaChat(jid).nombre) }],
-      ultimaActividad: Date.now()
-    };
-    historiales.set(jid, sesion);
-  }
-  sesion.ultimaActividad = Date.now();
-  sesion.mensajes.push({ role: 'user', content: 'hola' });
-  sesion.mensajes.push({
-    role: 'assistant',
-    content: `${textoBienvenida}`
-  });
-  persistirHistoriales();
-}
-
-// Igual pero para la despedida: el cliente solo se despidió/agradeció y
-// ya recibió la nota de voz de despedida — no se llama a la IA.
+// Registra en el historial que la despedida ya se dio POR VOZ, sin llamar
+// a la IA: el cliente solo se despidió/agradeció y ya recibió la nota de
+// voz de despedida — no se llama a la IA.
 export function sembrarDespedidaVoz(jid, textoDespedidaHablada) {
   let sesion = historiales.get(jid);
   if (!sesion) {

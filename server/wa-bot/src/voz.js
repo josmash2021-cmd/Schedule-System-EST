@@ -1,7 +1,5 @@
-// Nota de voz de bienvenida: texto a voz con ElevenLabs.
-// Solo se usa para el saludo inicial de cada conversación ("Hola, buenos
-// días/tardes/noches, mi nombre es Ángela..."). El resto de las respuestas
-// del bot siguen siendo texto.
+// Texto a voz con ElevenLabs: despedidas y aviso de llamada (cacheados),
+// y respuestas habladas generadas al vuelo con la voz de la persona del chat.
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { execFile } from 'node:child_process';
@@ -100,26 +98,18 @@ const ZONA_NEGOCIO = 'America/Chicago';
 // gastan créditos de ElevenLabs en cada cliente nuevo.
 const CACHE_DIR = path.join(config.dataDir, 'voz');
 
-// Variantes de bienvenida por franja horaria (se elige una AL AZAR cada
-// vez para que no suene repetitivo). Cada persona se presenta con su
-// nombre. El slug lleva versión: al cambiar frases se sube y los audios
-// viejos se ignoran.
-const VARIANTES_BIENVENIDA = [
-  (s, n) => `Hola, ${s}. Soy ${n}, ¿cómo te puedo ayudar?`,
-  (s, n) => `Hola, ${s}, habla ${n}. ¿En qué te puedo ayudar?`,
-  (s, n) => `${s.charAt(0).toUpperCase() + s.slice(1)}, bienvenido a Electronic Service Technology. Soy ${n}, ¿en qué te ayudo?`
-];
-const SLUG_BIENVENIDA = {
-  'buenos días': 'buenos-dias-v12',
-  'buenas tardes': 'buenas-tardes-v12',
-  'buenas noches': 'buenas-noches-v12'
-};
+// Filtro de AMBIENTE: mezcla un ruido rosa muy bajito bajo la voz para que
+// el audio no suene "seco" (estudio con aislamiento) sino como una nota de
+// voz normal grabada en una tienda. Se aplica en TODOS los audios.
+const FILTRO_AMBIENTE =
+  '[1:a]volume=0.02[n];[0:a][n]amix=inputs=2:duration=first:normalize=0[out]';
+const ENTRADA_RUIDO = ['-f', 'lavfi', '-i', 'anoisesrc=color=pink:amplitude=0.4'];
 
 let cliente = null;
 if (API_KEY) {
   cliente = new ElevenLabsClient({ apiKey: API_KEY });
 } else {
-  console.warn('[voz] ELEVENLABS_API_KEY no configurada. La bienvenida se enviará como texto.');
+  console.warn('[voz] ELEVENLABS_API_KEY no configurada. Las respuestas se enviarán como texto.');
 }
 
 export function vozDisponible() {
@@ -146,7 +136,7 @@ export function saludoSegunHora() {
 
 /**
  * Convierte texto a voz con ElevenLabs y lo guarda en los formatos que
- * usa cada canal:
+ * usa cada canal, con el ambiente mezclado:
  *  - ogg/opus: WhatsApp (nota de voz con waveform).
  *  - m4a/aac:  Instagram (adjunto de audio por URL pública).
  */
@@ -168,12 +158,14 @@ async function generarAudios(texto, slug, voz) {
   writeFileSync(tmpMp3, mp3);
   try {
     await execFileAsync(ffmpegPath, [
-      '-y', '-i', tmpMp3,
+      '-y', '-i', tmpMp3, ...ENTRADA_RUIDO,
+      '-filter_complex', FILTRO_AMBIENTE, '-map', '[out]',
       '-c:a', 'libopus', '-b:a', '48k', '-ar', '48000',
       rutaOgg
     ]);
     await execFileAsync(ffmpegPath, [
-      '-y', '-i', tmpMp3,
+      '-y', '-i', tmpMp3, ...ENTRADA_RUIDO,
+      '-filter_complex', FILTRO_AMBIENTE, '-map', '[out]',
       '-c:a', 'aac', '-b:a', '96k',
       rutaM4a
     ]);
@@ -195,22 +187,6 @@ async function asegurarPar(slug, texto, etiqueta, voz) {
   return { rutaOgg, rutaM4a };
 }
 
-/**
- * Bienvenida: garantiza los audios de una variante al azar dicha por una
- * persona al azar (Ángela o Alex). Devuelve rutas + metadatos (saludo,
- * nombre y texto exacto hablado, para sembrar el historial).
- */
-async function asegurarAudios(saludo, jid) {
-  const base = SLUG_BIENVENIDA[saludo];
-  if (!base) throw new Error(`Saludo desconocido: ${saludo}`);
-  const voz = vozParaChat(jid);
-  const i = Math.floor(Math.random() * VARIANTES_BIENVENIDA.length);
-  const slug = `${base}-${voz.slug}-${i + 1}`;
-  const texto = VARIANTES_BIENVENIDA[i](saludo, voz.nombre);
-  const par = await asegurarPar(slug, texto, `bienvenida ${saludo} ${voz.nombre} v${i + 1}`, voz);
-  return { ...par, saludo, nombre: voz.nombre, texto };
-}
-
 // Despedidas por nota de voz, según la hora del negocio (como el saludo):
 // "buen día" en la mañana, "buenas tardes" de 12 a 7 p.m., "buenas
 // noches" después. Tres variantes por franja, elegida una AL AZAR.
@@ -220,9 +196,9 @@ const VARIANTES_DESPEDIDA = [
   (d) => `Gracias por escribirnos. Cualquier cosa me avisa, ¡que tenga ${d}!`
 ];
 const SLUG_DESPEDIDA = {
-  'buenos días': { slug: 'despedida-v9', texto: 'buen día' },
-  'buenas tardes': { slug: 'despedida-tardes-v9', texto: 'buenas tardes' },
-  'buenas noches': { slug: 'despedida-noches-v9', texto: 'buenas noches' }
+  'buenos días': { slug: 'despedida-v10', texto: 'buen día' },
+  'buenas tardes': { slug: 'despedida-tardes-v10', texto: 'buenas tardes' },
+  'buenas noches': { slug: 'despedida-noches-v10', texto: 'buenas noches' }
 };
 
 // Texto de la despedida para la hora actual del negocio (lo usan los
@@ -239,48 +215,6 @@ async function asegurarDespedida(jid) {
   const texto = VARIANTES_DESPEDIDA[i](d.texto);
   const par = await asegurarPar(slug, texto, `despedida ${d.texto} ${voz.nombre} v${i + 1}`, voz);
   return { ...par, nombre: voz.nombre, texto };
-}
-
-/**
- * Devuelve el audio de un saludo como Buffer ogg/opus (WhatsApp),
- * con la persona asignada al chat y una variante al azar.
- */
-export async function obtenerAudioSaludo(saludo, jid) {
-  const { rutaOgg, ...meta } = await asegurarAudios(saludo, jid);
-  return { buffer: readFileSync(rutaOgg), ...meta };
-}
-
-/**
- * Audio de bienvenida para Instagram: la API de Meta solo acepta audios
- * por URL pública, así que se devuelve la RUTA del m4a cacheado (el
- * servidor web lo expone en /voz/). null si la voz no está disponible.
- */
-export async function obtenerM4aBienvenida(jid) {
-  if (!vozDisponible()) return null;
-  const saludo = saludoSegunHora();
-  try {
-    const { rutaM4a, ...meta } = await asegurarAudios(saludo, jid);
-    return { ruta: rutaM4a, ...meta };
-  } catch (err) {
-    console.error(`[voz] Error al generar la bienvenida de voz: ${err.message}`);
-    return null;
-  }
-}
-
-/**
- * Audio de bienvenida según la hora del negocio.
- * Devuelve { buffer, saludo, nombre, texto } o null si la voz no está
- * disponible o falla (en ese caso el bot saluda por texto como antes).
- */
-export async function obtenerAudioBienvenida(jid) {
-  if (!vozDisponible()) return null;
-  const saludo = saludoSegunHora();
-  try {
-    return await obtenerAudioSaludo(saludo, jid);
-  } catch (err) {
-    console.error(`[voz] Error al generar la bienvenida de voz: ${err.message}`);
-    return null;
-  }
 }
 
 /**
@@ -336,7 +270,8 @@ export async function generarVozTexto(texto, jid) {
     mkdirSync(CACHE_DIR, { recursive: true });
     writeFileSync(tmpMp3, Buffer.concat(chunks));
     await execFileAsync(ffmpegPath, [
-      '-y', '-i', tmpMp3,
+      '-y', '-i', tmpMp3, ...ENTRADA_RUIDO,
+      '-filter_complex', FILTRO_AMBIENTE, '-map', '[out]',
       '-c:a', 'libopus', '-b:a', '48k', '-ar', '48000',
       tmpOgg
     ]);
@@ -358,7 +293,7 @@ const TEXTO_LLAMADA = (n) =>
 export async function obtenerAudioLlamada(jid) {
   if (!vozDisponible()) return null;
   const voz = vozParaChat(jid);
-  const slug = `llamada-v3-${voz.slug}`;
+  const slug = `llamada-v4-${voz.slug}`;
   try {
     const { rutaOgg } = await asegurarPar(slug, TEXTO_LLAMADA(voz.nombre), `llamada ${voz.nombre}`, voz);
     return { buffer: readFileSync(rutaOgg), nombre: voz.nombre };
