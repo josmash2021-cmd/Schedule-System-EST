@@ -53,11 +53,24 @@ function esSoloSaludo(texto) {
 const FRASE_GRACIAS = /(?:(?:much[íi]simas|muchas|mil|ok(?:i)?|vale|perfecto|est[áa]\s+bien|de\s+nada|no)[\s,]+)*gracias(?:\s+(?:de\s+verdad|por\s+todo|por\s+su\s+(?:ayuda|tiempo)|por\s+tu\s+ayuda|mi\s+rey|amigo|amiga|rey|brou))?/;
 const FRASE_QUE_TENGA = /que\s+(?:pase[n]?s?|tenga[n]?s?)\s+buen[oa]?s?\s+(?:d[íi]as?|tardes?|noches?)/;
 const FRASE_ADIOS = /(?:adi[oó]s|hasta\s+(?:luego|pronto|mañana)|nos\s+vemos|chao|bye(?:\s+bye)?|thank\s+you(?:\s+so\s+much)?|thanks(?:\s+a\s+lot)?|igualmente|est[áa]\s+bien(?:\s+(?:mi\s+rey|brou|amigo|amiga))?)/;
+// "Pasaré cuando pueda", "luego paso", "ahí caigo cuando tenga tiempo":
+// promesas de visita que cierran la conversación (despedida, NO saludo).
+const FRASE_PASARE = /(?:(?:pasar[eé]|paso|voy|caigo|regreso|vuelvo)\s+(?:por\s+(?:aca|aqu[ií]|all[aá])\s+)?cuando\s+(?:pueda|tenga\s+(?:tiempo|chance))|cuando\s+(?:pueda|tenga\s+(?:tiempo|chance))|ah[ií]\s+(?:paso|caigo|voy)|luego\s+(?:paso|voy|caigo))/;
 const SOLO_DESPEDIDA_RE = new RegExp(
-  '^\\s*(?:(?:' + FRASE_GRACIAS.source + '|' + FRASE_QUE_TENGA.source + '|' + FRASE_ADIOS.source + ')[\\s!¡?¿.,🙏😊👍]*)+$', 'iu');
+  '^\\s*(?:(?:' + FRASE_GRACIAS.source + '|' + FRASE_QUE_TENGA.source + '|' + FRASE_ADIOS.source + '|' + FRASE_PASARE.source + ')[\\s!¡?¿.,🙏😊👍]*)+$', 'iu');
 
 function esSoloDespedida(texto) {
   return SOLO_DESPEDIDA_RE.test(texto || '');
+}
+
+// El mensaje CONTIENE despedida aunque traiga otras palabras ("gracias,
+// pasaré cuando pueda, que pases buen día"). Se usa para BLOQUEAR la
+// bienvenida por "buen día/tardes/noches": esa frase en una despedida no
+// es un saludo.
+const CONTIENE_DESPEDIDA_RE = /(gracias|que\s+(?:pase[n]?s?|tenga[n]?s?)\s+buen|adi[óo]s|hasta\s+(?:luego|pronto|mañana)|nos\s+vemos|chao|cuando\s+pueda)/i;
+
+function contieneDespedida(texto) {
+  return CONTIENE_DESPEDIDA_RE.test(texto || '');
 }
 
 // Petición de empezar de cero ("cierra esta sesión", "hablemos como una
@@ -211,7 +224,12 @@ async function manejarTexto(igsid, texto) {
     // Antispam: máximo 1 nota de voz cada 15 min por chat.
     // El saludo ("buenos días/tardes/noches") depende de la hora del
     // negocio. Si falla, la IA saluda por texto como antes.
-    const saludoConHora = /(buenos\s+d[íi]as|buenas\s+tardes|buenas\s+noches|buen\s+d[íi]a)/i.test(texto);
+    // OJO: "buen día/tardes/noches" dentro de una DESPEDIDA ("gracias, que
+    // pases buen día") NO es saludo — antes disparaba la bienvenida por
+    // error aunque el cliente se estaba yendo.
+    const saludoConHora =
+      !contieneDespedida(texto) &&
+      /(buenos\s+d[íi]as|buenas\s+tardes|buenas\s+noches|buen\s+d[íi]a)/i.test(texto);
     const vozReciente = (Date.now() - (ultimaVozPorChat.get(igsid) || 0)) < ANTISPAM_VOZ_MS;
     const tocaVoz =
       !vozReciente &&
