@@ -34,9 +34,9 @@ function vozAlAzar() {
   return VOCES[Math.floor(Math.random() * VOCES.length)];
 }
 
-// Persona fija POR CHAT: el que atienda la primera vez (Ángela o Alex, al
-// azar) atiende esa conversación para siempre. Se persiste en disco para
-// que sobreviva a los redeploys (volumen de Railway).
+// Persona fija POR CHAT: el que atienda la primera vez (Ángela o Alex, por
+// turnos alternados) atiende esa conversación para siempre. Se persiste en
+// disco para que sobreviva a los redeploys (volumen de Railway).
 const PERSONAS_PATH = path.join(config.dataDir, 'personas.json');
 let personasPorChat = {};
 try {
@@ -68,11 +68,24 @@ function vozParaChat(jid) {
     const voz = VOCES.find((v) => v.slug === asignada);
     if (voz) return voz;
   }
-  const nueva = vozAlAzar();
+  // Reparto por turnos (round-robin): un chat nuevo lo atiende Ángela, el
+  // siguiente Alex, el siguiente Ángela... El contador se persiste en el
+  // mismo personas.json (clave "__contador") para que el turno sobreviva a
+  // los redeploys y lo compartan WhatsApp e Instagram (mapa compartido).
+  const turno = Number(personasPorChat.__contador || 0);
+  const nueva = VOCES[turno % VOCES.length];
+  personasPorChat.__contador = turno + 1;
   personasPorChat[clave] = nueva.slug;
   guardarPersonas();
-  console.log(`[voz] Chat ${clave.slice(-10)} asignado a ${nueva.nombre} (lo atiende siempre)`);
+  console.log(`[voz] Chat ${clave.slice(-10)} asignado a ${nueva.nombre} (turno ${turno + 1}; lo atiende siempre)`);
   return nueva;
+}
+
+// Persona asignada a un chat: la IA la usa para presentarse POR TEXTO con
+// el mismo nombre que dice la nota de voz de ese chat (Ángela o Alex).
+// Si el chat aún no tiene persona, la asigna por turnos.
+export function personaParaChat(jid) {
+  return vozParaChat(jid);
 }
 
 // Zona horaria del negocio (Hoover, Alabama) — la misma que usa src/ai.js.

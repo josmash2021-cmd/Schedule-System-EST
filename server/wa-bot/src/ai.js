@@ -4,7 +4,7 @@ import OpenAI from 'openai';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync } from 'node:fs';
 import path from 'node:path';
 import config from './config.js';
-import { vozDisponible } from './voz.js';
+import { vozDisponible, personaParaChat } from './voz.js';
 import { guardarCita } from './citas.js';
 import { notificarDueno } from './notificar.js';
 import { consultarSlots, crearCitaWeb } from './citasApi.js';
@@ -62,7 +62,7 @@ function cargarHistoriales() {
       if (ahora - (sesion.ultimaActividad || 0) > SESION_EXPIRA_MS) continue;
       // Refrescar el system prompt (lleva la fecha y hora actual).
       if (sesion.mensajes[0]?.role === 'system') {
-        sesion.mensajes[0] = { role: 'system', content: construirSystemPrompt() };
+        sesion.mensajes[0] = { role: 'system', content: construirSystemPrompt(personaParaChat(jid).nombre) };
       }
       historiales.set(jid, sesion);
     }
@@ -132,8 +132,14 @@ function fechaActualNegocio() {
 
 /**
  * Construye el system prompt inyectando los datos del negocio y el catálogo.
+ * nombrePersona: nombre de quien atiende este chat ("Ángela" o "Alex",
+ * asignado por turnos en voz.js) — el bot se presenta con ESE nombre.
  */
-export function construirSystemPrompt() {
+export function construirSystemPrompt(nombrePersona = 'Ángela') {
+  const esAlex = /alex/i.test(nombrePersona);
+  const el = esAlex ? 'el' : 'la';
+  const encargade = esAlex ? 'el encargado' : 'la encargada';
+  const ENCARGADE = esAlex ? 'EL ENCARGADO' : 'LA ENCARGADA';
   const n = config.negocio;
   const { texto: fechaTexto, iso: fechaISO } = fechaActualNegocio();
   const horarios = Object.entries(n.horarios || {})
@@ -159,20 +165,20 @@ export function construirSystemPrompt() {
     }
   } catch { /* sin notas aún */ }
 
-  return `Eres Angela, la agente y encargada de "${n.nombre}", un negocio que repara y da mantenimiento a computadoras, PCs, laptops, tablets, teléfonos y iPhones de cualquier marca y modelo, y que vende laptops, tablets y iPhones.
+  return `Eres ${nombrePersona}, ${encargade} de "${n.nombre}", un negocio que repara y da mantenimiento a computadoras, PCs, laptops, tablets, teléfonos y iPhones de cualquier marca y modelo, y que vende laptops, tablets y iPhones.
 
 FECHA Y HORA ACTUAL (zona del negocio, Alabama):
 - Hoy es ${fechaTexto} (${fechaISO}).
 - Usa esta fecha como referencia cuando el cliente diga "mañana", "el sábado", etc., y conviértela a formato YYYY-MM-DD.
 
 PERSONALIDAD Y ESTILO (lo más importante):
-- Eres Angela, LA ENCARGADA de la tienda. Si te piden hablar con "un agente", "el encargado" o "el manager", ese eres TÚ: dilo con naturalidad ("¡Claro! Hablas con Angela, la encargada de la tienda, ¿en qué te ayudo?").
+- Eres ${nombrePersona}, ${ENCARGADE} de la tienda. Si te piden hablar con "un agente", "el encargado" o "el manager", ese eres TÚ: dilo con naturalidad ("¡Claro! Hablas con ${nombrePersona}, ${encargade} de la tienda, ¿en qué te ayudo?").
 - Arriba de ti solo está el SUPERVISOR (el dueño). No existe ningún "asesor" ni otro empleado: cualquier cosa que tú no puedas resolver la consulta el supervisor y TÚ le avisas al cliente cuando él te responda.
 ${vozDisponible()
-    ? '- El saludo de bienvenida ("Hola, buenos días/tardes/noches, soy Angela/Alex, ¿cómo te puedo ayudar?") se envía SOLO como nota de voz al iniciar la conversación, antes de tu primera respuesta (la dice Angela o Alex; el historial te dice cuál). Por eso, en tu primer mensaje NO saludes ni te presentes de nuevo: responde directo y con naturalidad a lo que el cliente escribió. EXCEPCIÓN: si el cliente dice que no se escucha la nota de voz, que no la puede oír o que no puede escuchar audios ahora, entonces SÍ escríbele el saludo por texto ("Hola, buenos días/tardes/noches, soy Angela, ¿cómo te puedo ayudar?") y sigue la conversación normal.'
-    : '- En el primer mensaje saluda según la hora del negocio — "buenos días" (antes de las 12 p.m.), "buenas tardes" (de 12 a 7 p.m.), "buenas noches" (después de las 7 p.m.) — y preséntate así de natural: "Hola, buenas tardes, soy Angela, un gusto 😊 ¿cómo puedo ayudarte?". Varía un poco la fórmula cada vez para que no suene a guion.'}
+    ? `- El saludo de bienvenida ("Hola, buenos días/tardes/noches, soy ${nombrePersona}, ¿cómo te puedo ayudar?") se envía SOLO como nota de voz al iniciar la conversación, antes de tu primera respuesta. Por eso, en tu primer mensaje NO saludes ni te presentes de nuevo: responde directo y con naturalidad a lo que el cliente escribió. EXCEPCIÓN: si el cliente dice que no se escucha la nota de voz, que no la puede oír o que no puede escuchar audios ahora, entonces SÍ escríbele el saludo por texto ("Hola, buenos días/tardes/noches, soy ${nombrePersona}, ¿cómo te puedo ayudar?") y sigue la conversación normal.`
+    : `- En el primer mensaje saluda según la hora del negocio — "buenos días" (antes de las 12 p.m.), "buenas tardes" (de 12 a 7 p.m.), "buenas noches" (después de las 7 p.m.) — y preséntate así de natural: "Hola, buenas tardes, soy ${nombrePersona}, un gusto 😊 ¿cómo puedo ayudarte?". Varía un poco la fórmula cada vez para que no suene a guion.`}
 - PROHIBIDO decir "asistente virtual", "asistente automático", "soy un bot" o frases tipo "Bienvenido a X, soy el asistente de...".
-- Si te preguntan directamente si eres humano o un bot, responde con honestidad y sin drama ("jaja soy Angela, la asistente en línea de la tienda, pero si prefieres te comunico con una persona") y sigue la conversación.
+- Si te preguntan directamente si eres humano o un bot, responde con honestidad y sin drama ("jaja soy ${nombrePersona}, ${el} asistente en línea de la tienda, pero si prefieres te comunico con una persona") y sigue la conversación.
 - MENSAJES CORTOS Y SUELTOS: escribe como escribe la gente por WhatsApp. Nada de párrafos largos, nada de listas con viñetas, nada de bloques organizados tipo ficha (ej. NO escribas "📍 Dirección: ... Horario: ..."). Integra los datos en frases naturales ("estamos sobre Lorna Rd, el 3659 suite 157 en Hoover, y abrimos de lunes a sábado de 10 a 3").
 - Responde SOLO lo que el cliente preguntó. No vuelques toda la información de una vez ni repitas datos que ya diste en la conversación.
 - Tono cálido, cercano y profesional, pero relajado. Varía tus frases: no uses siempre las mismas fórmulas de saludo o despedida.
@@ -523,12 +529,12 @@ export function cerrarSesion(jid) {
 // la IA. Se usa cuando el cliente solo dijo "hola" y ya recibió la nota
 // de voz: así el bot NO repite el saludo por texto, y cuando el cliente
 // escriba de nuevo la IA ya tiene el contexto (no es "primera vez").
-// Recibe el texto EXACTO que dijo la voz (Ángela o Alex, variante al azar).
+// Recibe el texto EXACTO que dijo la voz (Ángela o Alex, por turnos alternados).
 export function sembrarSaludoVoz(jid, textoBienvenida) {
   let sesion = historiales.get(jid);
   if (!sesion) {
     sesion = {
-      mensajes: [{ role: 'system', content: construirSystemPrompt() }],
+      mensajes: [{ role: 'system', content: construirSystemPrompt(personaParaChat(jid).nombre) }],
       ultimaActividad: Date.now()
     };
     historiales.set(jid, sesion);
@@ -548,7 +554,7 @@ export function sembrarDespedidaVoz(jid, textoDespedidaHablada) {
   let sesion = historiales.get(jid);
   if (!sesion) {
     sesion = {
-      mensajes: [{ role: 'system', content: construirSystemPrompt() }],
+      mensajes: [{ role: 'system', content: construirSystemPrompt(personaParaChat(jid).nombre) }],
       ultimaActividad: Date.now()
     };
     historiales.set(jid, sesion);
@@ -596,7 +602,7 @@ export async function responder(jid, textoUsuario, contexto) {
   let sesion = historiales.get(jid);
   if (!sesion) {
     sesion = {
-      mensajes: [{ role: 'system', content: construirSystemPrompt() }],
+      mensajes: [{ role: 'system', content: construirSystemPrompt(personaParaChat(jid).nombre) }],
       ultimaActividad: Date.now()
     };
     historiales.set(jid, sesion);
