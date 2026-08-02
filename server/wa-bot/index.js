@@ -407,22 +407,47 @@ async function manejarMensaje(sock, mensaje) {
     marcarProcesado(jid, tsMensaje);
   } catch (err) {
     console.error(`[mensaje] Error al procesar: ${err.message}`);
-    // Errores: aviso SOLO a los números del dueño, NADA al cliente (ni
-    // mensajes de "problema técnico"). El mensaje NO se marca procesado,
-    // así el catch-up lo reintenta tras reconexión — no se pierde.
-    try {
-      await notificarDueno(
-        sock,
-        `⚠️ *Error del bot*\n` +
-        `📞 Cliente: ${telefono}\n` +
-        `💬 Mensaje: ${String(texto).slice(0, 200)}\n` +
-        `❗ Error: ${err.message}`
-      );
-    } catch (errNotif) {
-      console.error(`[mensaje] No se pudo notificar el error al dueño: ${errNotif.message}`);
+    // El mensaje NO se marca procesado: no se pierde. Además del catch-up
+    // tras reconexión, se reintenta EN CALIENTE (a los 2, 4 y 6 min) por si
+    // el fallo fue temporal (API de IA caída, timeout de red, etc.) y la
+    // conexión de WhatsApp sigue viva — antes quedaba sin respuesta hasta
+    // el próximo deploy/reinicio.
+    const idMsg = mensaje.key.id || `${jid}:${tsMensaje}`;
+    const intento = (reintentos.get(idMsg) || 0) + 1;
+    reintentos.set(idMsg, intento);
+    if (intento <= 3) {
+      const espera = intento * 2 * 60 * 1000;
+      console.log(`[mensaje] Reintento ${intento}/3 programado en ${espera / 60000} min para ${telefono}`);
+      const timer = setTimeout(() => {
+        if ((estadoChats[jid] || 0) >= tsMensaje) return; // ya respondido por otra vía
+        console.log(`[mensaje] Reintentando mensaje pendiente de ${telefono} (intento ${intento}/3)...`);
+        encolar(jid, () => manejarMensaje(sock, mensaje));
+      }, espera);
+      timer.unref?.();
+    } else {
+      // Ya se intentó 3 veces: se da por perdido y se avisa al dueño para
+      // que atienda al cliente manualmente. Errores: aviso SOLO a los
+      // números del dueño, NADA al cliente (ni mensajes de "problema técnico").
+      reintentos.delete(idMsg);
+      marcarProcesado(jid, tsMensaje);
+      try {
+        await notificarDueno(
+          sock,
+          `⚠️ *Mensaje sin poder responder* (3 reintentos fallidos)\n` +
+          `📞 Cliente: ${telefono}\n` +
+          `💬 Mensaje: ${String(texto).slice(0, 200)}\n` +
+          `❗ Último error: ${err.message}\n` +
+          `👉 Respóndele manualmente, porfa.`
+        );
+      } catch (errNotif) {
+        console.error(`[mensaje] No se pudo notificar el error al dueño: ${errNotif.message}`);
+      }
     }
   }
 }
+
+// Reintentos en caliente por mensaje fallido: id de mensaje -> nº de intentos.
+const reintentos = new Map();
 
 // Reconexión con backoff exponencial (2s → 4s → ... → tope 60s) y SIEMPRE
 // con .catch: un rejection sin manejar tumba el proceso entero, y aquí el
