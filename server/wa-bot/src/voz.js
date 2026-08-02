@@ -24,13 +24,13 @@ const VOCES = [
   {
     id: process.env.ELEVENLABS_VOICE_ID || 'JcWDFG8DiES2OzGhZJUJ',
     modelo: process.env.ELEVENLABS_MODEL || 'eleven_multilingual_v2',
-    ajustes: { stability: 0.35, similarityBoost: 0.8, style: 0.55, useSpeakerBoost: true },
+    ajustes: { stability: 0.25, similarityBoost: 0.8, style: 0.65, useSpeakerBoost: true },
     nombre: 'Ángela', slug: 'angela'
   },
   {
     id: process.env.ELEVENLABS_VOICE_ID_2 || 'Aoh8oiCIlPke1wFxeNuK',
     modelo: process.env.ELEVENLABS_MODEL_2 || 'eleven_turbo_v2_5',
-    ajustes: { stability: 0.4, similarityBoost: 0.8, style: 0.5, useSpeakerBoost: true },
+    ajustes: { stability: 0.3, similarityBoost: 0.8, style: 0.6, useSpeakerBoost: true },
     nombre: 'Alex', slug: 'alex'
   }
 ];
@@ -110,9 +110,9 @@ const VARIANTES_BIENVENIDA = [
   (s, n) => `${s.charAt(0).toUpperCase() + s.slice(1)}, bienvenido a Electronic Service Technology. Soy ${n}, ¿en qué te ayudo?`
 ];
 const SLUG_BIENVENIDA = {
-  'buenos días': 'buenos-dias-v11',
-  'buenas tardes': 'buenas-tardes-v11',
-  'buenas noches': 'buenas-noches-v11'
+  'buenos días': 'buenos-dias-v12',
+  'buenas tardes': 'buenas-tardes-v12',
+  'buenas noches': 'buenas-noches-v12'
 };
 
 let cliente = null;
@@ -220,9 +220,9 @@ const VARIANTES_DESPEDIDA = [
   (d) => `Gracias por escribirnos. Cualquier cosa me avisa, ¡que tenga ${d}!`
 ];
 const SLUG_DESPEDIDA = {
-  'buenos días': { slug: 'despedida-v8', texto: 'buen día' },
-  'buenas tardes': { slug: 'despedida-tardes-v8', texto: 'buenas tardes' },
-  'buenas noches': { slug: 'despedida-noches-v8', texto: 'buenas noches' }
+  'buenos días': { slug: 'despedida-v9', texto: 'buen día' },
+  'buenas tardes': { slug: 'despedida-tardes-v9', texto: 'buenas tardes' },
+  'buenas noches': { slug: 'despedida-noches-v9', texto: 'buenas noches' }
 };
 
 // Texto de la despedida para la hora actual del negocio (lo usan los
@@ -358,7 +358,7 @@ const TEXTO_LLAMADA = (n) =>
 export async function obtenerAudioLlamada(jid) {
   if (!vozDisponible()) return null;
   const voz = vozParaChat(jid);
-  const slug = `llamada-v2-${voz.slug}`;
+  const slug = `llamada-v3-${voz.slug}`;
   try {
     const { rutaOgg } = await asegurarPar(slug, TEXTO_LLAMADA(voz.nombre), `llamada ${voz.nombre}`, voz);
     return { buffer: readFileSync(rutaOgg), nombre: voz.nombre };

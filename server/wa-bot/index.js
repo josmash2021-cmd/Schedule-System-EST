@@ -201,7 +201,7 @@ async function manejarMensaje(sock, mensaje) {
         await new Promise((r) => setTimeout(r, duracionSeg * 1000));
       }
       await new Promise((r) => setTimeout(r, 3000));
-      await sock.sendPresenceUpdate('composing', jid).catch(() => {});
+      await sock.sendPresenceUpdate('recording', jid).catch(() => {});
       const buffer = await downloadMediaMessage(mensaje, 'buffer', {});
       texto = await transcribirAudio(buffer, mensaje.message.audioMessage.mimetype);
       console.log(`[mensaje] Nota de voz de ${remitente} transcrita: "${texto}"`);
@@ -352,7 +352,7 @@ async function manejarMensaje(sock, mensaje) {
     }
 
     if (!silencioso) {
-      await presencia('composing');
+      await presencia(fueNotaVoz ? 'recording' : 'composing');
       await new Promise((r) => setTimeout(r, 1000 + Math.random() * 1000));
     }
 
@@ -377,10 +377,11 @@ async function manejarMensaje(sock, mensaje) {
     }
 
     // Si estuvo esperando en gris: AHORA se marca leído y se muestra
-    // "escribiendo..." justo antes de contestar, como pidió el dueño.
+    // "escribiendo..." (o "grabando audio" si la respuesta será de voz)
+    // justo antes de contestar, como pidió el dueño.
     if (silencioso) {
       try { await sock.readMessages([mensaje.key]); } catch { /* best-effort */ }
-      await presencia('composing');
+      await presencia(fueNotaVoz ? 'recording' : 'composing');
       await new Promise((r) => setTimeout(r, 1000));
       console.log(`[mensaje] Agente libre: ${telefono} pasa a leído y se contesta`);
     }
@@ -405,7 +406,7 @@ async function manejarMensaje(sock, mensaje) {
     // voz con la respuesta completa. Si el texto es muy largo o la voz
     // falla, se responde por texto como siempre (nada se pierde).
     if (fueNotaVoz && vozDisponible()) {
-      const textoPlano = burbujas.join('. ')
+      const textoPlano = burbujas.join(' ... ')
         .replace(/\*+/g, '')
         .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B50}\u{FE0F}\u{200D}]/gu, '')
         .replace(/\s{2,}/g, ' ')
