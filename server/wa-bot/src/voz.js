@@ -16,16 +16,21 @@ const API_KEY = process.env.ELEVENLABS_API_KEY || '';
 
 // Personas de voz del bot: la bienvenida y la despedida las dice Ángela o
 // Alex, según cuál haya atendido el chat la primera vez (fija por chat).
-// Cada persona tiene su voz Y su modelo de ElevenLabs.
+// Cada persona tiene su voz, su modelo de ElevenLabs y sus AJUSTES de voz.
+// Ajustes pensados para que suene HUMANA, no robótica: estabilidad baja
+// (más expresividad y variación natural), estilo alto (entonación) y
+// speaker boost (claridad de voz real).
 const VOCES = [
   {
     id: process.env.ELEVENLABS_VOICE_ID || 'JcWDFG8DiES2OzGhZJUJ',
     modelo: process.env.ELEVENLABS_MODEL || 'eleven_multilingual_v2',
+    ajustes: { stability: 0.35, similarityBoost: 0.8, style: 0.55, useSpeakerBoost: true },
     nombre: 'Ángela', slug: 'angela'
   },
   {
     id: process.env.ELEVENLABS_VOICE_ID_2 || 'Aoh8oiCIlPke1wFxeNuK',
-    modelo: process.env.ELEVENLABS_MODEL_2 || 'eleven_flash_v2_5',
+    modelo: process.env.ELEVENLABS_MODEL_2 || 'eleven_turbo_v2_5',
+    ajustes: { stability: 0.4, similarityBoost: 0.8, style: 0.5, useSpeakerBoost: true },
     nombre: 'Alex', slug: 'alex'
   }
 ];
@@ -105,9 +110,9 @@ const VARIANTES_BIENVENIDA = [
   (s, n) => `${s.charAt(0).toUpperCase() + s.slice(1)}, bienvenido a Electronic Service Technology. Soy ${n}, ¿en qué te ayudo?`
 ];
 const SLUG_BIENVENIDA = {
-  'buenos días': 'buenos-dias-v10',
-  'buenas tardes': 'buenas-tardes-v10',
-  'buenas noches': 'buenas-noches-v10'
+  'buenos días': 'buenos-dias-v11',
+  'buenas tardes': 'buenas-tardes-v11',
+  'buenas noches': 'buenas-noches-v11'
 };
 
 let cliente = null;
@@ -149,7 +154,8 @@ async function generarAudios(texto, slug, voz) {
   const stream = await cliente.textToSpeech.convert(voz.id, {
     modelId: voz.modelo,
     text: texto,
-    outputFormat: 'mp3_44100_128'
+    outputFormat: 'mp3_44100_128',
+    voiceSettings: voz.ajustes
   });
   const chunks = [];
   for await (const chunk of stream) chunks.push(chunk);
@@ -214,9 +220,9 @@ const VARIANTES_DESPEDIDA = [
   (d) => `Gracias por escribirnos. Cualquier cosa me avisa, ¡que tenga ${d}!`
 ];
 const SLUG_DESPEDIDA = {
-  'buenos días': { slug: 'despedida-v7', texto: 'buen día' },
-  'buenas tardes': { slug: 'despedida-tardes-v7', texto: 'buenas tardes' },
-  'buenas noches': { slug: 'despedida-noches-v7', texto: 'buenas noches' }
+  'buenos días': { slug: 'despedida-v8', texto: 'buen día' },
+  'buenas tardes': { slug: 'despedida-tardes-v8', texto: 'buenas tardes' },
+  'buenas noches': { slug: 'despedida-noches-v8', texto: 'buenas noches' }
 };
 
 // Texto de la despedida para la hora actual del negocio (lo usan los
@@ -322,7 +328,8 @@ export async function generarVozTexto(texto, jid) {
     const stream = await cliente.textToSpeech.convert(voz.id, {
       modelId: voz.modelo,
       text: texto,
-      outputFormat: 'mp3_44100_128'
+      outputFormat: 'mp3_44100_128',
+      voiceSettings: voz.ajustes
     });
     const chunks = [];
     for await (const chunk of stream) chunks.push(chunk);
@@ -351,7 +358,7 @@ const TEXTO_LLAMADA = (n) =>
 export async function obtenerAudioLlamada(jid) {
   if (!vozDisponible()) return null;
   const voz = vozParaChat(jid);
-  const slug = `llamada-v1-${voz.slug}`;
+  const slug = `llamada-v2-${voz.slug}`;
   try {
     const { rutaOgg } = await asegurarPar(slug, TEXTO_LLAMADA(voz.nombre), `llamada ${voz.nombre}`, voz);
     return { buffer: readFileSync(rutaOgg), nombre: voz.nombre };
