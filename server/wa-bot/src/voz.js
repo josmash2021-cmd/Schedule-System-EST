@@ -307,3 +307,56 @@ export async function obtenerM4aDespedida(jid) {
     return null;
   }
 }
+
+// --- Respuestas habladas (conversación por notas de voz) ---
+
+// Convierte un texto dinámico (la respuesta de la IA) a nota de voz ogg
+// con la voz y el modelo de la persona asignada al chat — la MISMA voz
+// humana de las bienvenidas. No se cachea: cada respuesta es distinta.
+export async function generarVozTexto(texto, jid) {
+  if (!vozDisponible()) return null;
+  const voz = vozParaChat(jid);
+  const tmpMp3 = path.join(CACHE_DIR, `respuesta-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.tmp.mp3`);
+  const tmpOgg = tmpMp3.replace(/\.tmp\.mp3$/, '.tmp.ogg');
+  try {
+    const stream = await cliente.textToSpeech.convert(voz.id, {
+      modelId: voz.modelo,
+      text: texto,
+      outputFormat: 'mp3_44100_128'
+    });
+    const chunks = [];
+    for await (const chunk of stream) chunks.push(chunk);
+    mkdirSync(CACHE_DIR, { recursive: true });
+    writeFileSync(tmpMp3, Buffer.concat(chunks));
+    await execFileAsync(ffmpegPath, [
+      '-y', '-i', tmpMp3,
+      '-c:a', 'libopus', '-b:a', '48k', '-ar', '48000',
+      tmpOgg
+    ]);
+    return { buffer: readFileSync(tmpOgg), nombre: voz.nombre };
+  } catch (err) {
+    console.error(`[voz] Error al generar respuesta hablada: ${err.message}`);
+    return null;
+  } finally {
+    try { unlinkSync(tmpMp3); } catch { /* best-effort */ }
+    try { unlinkSync(tmpOgg); } catch { /* best-effort */ }
+  }
+}
+
+// Aviso de llamada rechazada por nota de voz: frase FIJA por persona, así
+// que se cachea como las bienvenidas (no gasta créditos en cada llamada).
+const TEXTO_LLAMADA = (n) =>
+  `Hola, vi que nos llamaste. Por aquí no puedo contestar llamadas, pero mándame una nota de voz o escríbeme por este mismo chat y te ayudo enseguida.`;
+
+export async function obtenerAudioLlamada(jid) {
+  if (!vozDisponible()) return null;
+  const voz = vozParaChat(jid);
+  const slug = `llamada-v1-${voz.slug}`;
+  try {
+    const { rutaOgg } = await asegurarPar(slug, TEXTO_LLAMADA(voz.nombre), `llamada ${voz.nombre}`, voz);
+    return { buffer: readFileSync(rutaOgg), nombre: voz.nombre };
+  } catch (err) {
+    console.error(`[voz] Error al generar el aviso de llamada: ${err.message}`);
+    return null;
+  }
+}

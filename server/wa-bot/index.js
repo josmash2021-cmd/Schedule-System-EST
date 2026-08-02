@@ -14,7 +14,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync 
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import config from './src/config.js';
 import { responder, iaDisponible, esPrimeraVez, inactividadMs, cerrarSesion, sembrarSaludoVoz, sembrarDespedidaVoz } from './src/ai.js';
-import { vozDisponible, obtenerAudioBienvenida, obtenerAudioDespedida } from './src/voz.js';
+import { vozDisponible, obtenerAudioBienvenida, obtenerAudioDespedida, generarVozTexto, obtenerAudioLlamada } from './src/voz.js';
 import { notificarDueno } from './src/notificar.js';
 import { transcribirAudio, transcripcionDisponible } from './src/transcribir.js';
 import { encolar, slotsIALibres } from './src/cola.js';
@@ -173,6 +173,7 @@ async function manejarMensaje(sock, mensaje) {
   // (al final de cada camino). Si el contenedor muere a mitad (deploy,
   // reinicio), al reconectar el catch-up lo ve como pendiente y reintenta.
   let texto = extraerTexto(mensaje);
+  let fueNotaVoz = false; // el cliente HABLÓ: se le responde hablando (nota de voz)
 
   // Nota de voz: descargar y transcribir para responderla como texto.
   if (!texto && mensaje.message?.audioMessage) {
@@ -211,6 +212,7 @@ async function manejarMensaje(sock, mensaje) {
         marcarProcesado(jid, tsMensaje);
         return;
       }
+      fueNotaVoz = true;
     } catch (err) {
       console.error(`[mensaje] Error al transcribir nota de voz: ${err.message}`);
       await sock.sendMessage(jid, {
@@ -397,6 +399,38 @@ async function manejarMensaje(sock, mensaje) {
     const burbujas = partes.length <= 3
       ? partes
       : [...partes.slice(0, 2), partes.slice(2).join('\n')];
+
+    // El cliente HABLÓ (nota de voz): se le responde HABLANDO, con la voz
+    // humana de la persona asignada al chat (Ángela/Alex). Una sola nota de
+    // voz con la respuesta completa. Si el texto es muy largo o la voz
+    // falla, se responde por texto como siempre (nada se pierde).
+    if (fueNotaVoz && vozDisponible()) {
+      const textoPlano = burbujas.join('. ')
+        .replace(/\*+/g, '')
+        .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B50}\u{FE0F}\u{200D}]/gu, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+      if (textoPlano && textoPlano.length <= 800 && !textoPlano.includes('http')) {
+        try {
+          await presencia('recording');
+          const vozResp = await generarVozTexto(textoPlano, jid);
+          await presencia('paused');
+          if (vozResp) {
+            await sock.sendMessage(jid, {
+              audio: vozResp.buffer,
+              mimetype: 'audio/ogg; codecs=opus',
+              ptt: true
+            });
+            console.log(`[mensaje] Respuesta HABLADA enviada a ${telefono} (${vozResp.nombre}, ${textoPlano.length} caracteres)`);
+            marcarProcesado(jid, tsMensaje);
+            return;
+          }
+        } catch (err) {
+          console.error(`[mensaje] No se pudo enviar la respuesta hablada, va por texto: ${err.message}`);
+        }
+      }
+    }
+
     for (const burbuja of burbujas) {
       await presencia('composing');
       await new Promise((r) => setTimeout(r, 800 + Math.min(burbuja.length * 25, 2500)));
@@ -596,12 +630,29 @@ async function iniciarBot() {
       // Pausa humana de 5s tras colgar: el mensaje no llega "de inmediato",
       // como si uno hubiera visto la llamada perdida y escrito enseguida.
       await new Promise((r) => setTimeout(r, 5000));
+      // Se responde con NOTA DE VOZ de la persona asignada al chat (Ángela
+      // o Alex): más humano que un texto frío tras colgar. Si la voz falla,
+      // cae al texto de siempre.
       try {
-        await sock.sendMessage(jid, {
-          text: '¡Hola! Vi que nos llamaste 😊 Por aquí no puedo contestar llamadas, pero cuéntame por mensaje (texto o nota de voz) y te ayudo enseguida.'
-        });
-      } catch (err) {
-        console.error(`[llamada] No se pudo enviar el mensaje a ${telefono}: ${err.message}`);
+        const audioLlamada = await obtenerAudioLlamada(jid);
+        if (audioLlamada) {
+          await sock.sendMessage(jid, {
+            audio: audioLlamada.buffer,
+            mimetype: 'audio/ogg; codecs=opus',
+            ptt: true
+          });
+          console.log(`[llamada] Aviso de voz enviado a ${telefono} (${audioLlamada.nombre})`);
+        } else {
+          throw new Error('voz no disponible');
+        }
+      } catch {
+        try {
+          await sock.sendMessage(jid, {
+            text: '¡Hola! Vi que nos llamaste 😊 Por aquí no puedo contestar llamadas, pero cuéntame por mensaje (texto o nota de voz) y te ayudo enseguida.'
+          });
+        } catch (err) {
+          console.error(`[llamada] No se pudo enviar el mensaje a ${telefono}: ${err.message}`);
+        }
       }
       try {
         await notificarDueno(
