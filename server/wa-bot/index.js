@@ -421,15 +421,20 @@ async function manejarMensaje(sock, mensaje) {
 
     // El cliente HABLÓ (nota de voz): se le responde HABLANDO, con la voz
     // humana de la persona asignada al chat (Ángela/Alex). Una sola nota de
-    // voz con la respuesta completa. Si el texto es muy largo o la voz
-    // falla, se responde por texto como siempre (nada se pierde).
+    // voz con la respuesta completa. EXCEPCIONES que van por TEXTO aunque
+    // el cliente hable (datos que se copian/guardan, no se dictan):
+    // enlaces/fotos, números de teléfono y la dirección de la tienda.
+    // Igual si el texto es muy largo o la voz falla: cae a texto siempre.
     if (fueNotaVoz && vozDisponible()) {
       const textoPlano = burbujas.join(' ... ')
         .replace(/\*+/g, '')
         .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B50}\u{FE0F}\u{200D}]/gu, '')
         .replace(/\s{2,}/g, ' ')
         .trim();
-      if (textoPlano && textoPlano.length <= 800 && !textoPlano.includes('http')) {
+      const traeTelefono = /\(?\d{3}\)?[\s.\-]\d{3}[\s.\-]\d{4}|\+\d[\d\s.\-]{6,}\d/.test(textoPlano);
+      const traeDireccion = /lorna|suite\s*\d|35216|hoover\s*,?\s*al\b/i.test(textoPlano);
+      const debeSerTexto = textoPlano.includes('http') || traeTelefono || traeDireccion;
+      if (textoPlano && textoPlano.length <= 800 && !debeSerTexto) {
         try {
           await presencia('recording');
           const vozResp = await generarVozTexto(textoPlano, jid);
