@@ -12,23 +12,23 @@ const execFileAsync = promisify(execFile);
 
 const API_KEY = process.env.ELEVENLABS_API_KEY || '';
 
-// Personas de voz del bot: la bienvenida y la despedida las dice Ángela o
-// Alex, según cuál haya atendido el chat la primera vez (fija por chat).
-// Cada persona tiene su voz, su modelo de ElevenLabs y sus AJUSTES de voz.
-// Ajustes pensados para que suene HUMANA, no robótica: estabilidad baja
-// (más expresividad y variación natural), estilo alto (entonación) y
-// speaker boost (claridad de voz real).
+// Personas de voz del bot: la despedida y las respuestas habladas las dice
+// Ángela o Alex, según la persona asignada al chat (fija por turnos).
+// Ambas usan eleven_v3: el modelo MÁS expresivo de ElevenLabs (entonación
+// actoral, pausas y matices de voz real). Estabilidad 0.0 ("Creative"):
+// máxima naturalidad y variación — con más estabilidad suena a locutora
+// leyendo un guion.
 const VOCES = [
   {
     id: process.env.ELEVENLABS_VOICE_ID || 'JcWDFG8DiES2OzGhZJUJ',
-    modelo: process.env.ELEVENLABS_MODEL || 'eleven_multilingual_v2',
-    ajustes: { stability: 0.25, similarityBoost: 0.8, style: 0.65, useSpeakerBoost: true },
+    modelo: process.env.ELEVENLABS_MODEL || 'eleven_v3',
+    ajustes: { stability: 0.0, similarityBoost: 0.75, style: 0.0, useSpeakerBoost: true },
     nombre: 'Ángela', slug: 'angela'
   },
   {
     id: process.env.ELEVENLABS_VOICE_ID_2 || 'Aoh8oiCIlPke1wFxeNuK',
-    modelo: process.env.ELEVENLABS_MODEL_2 || 'eleven_turbo_v2_5',
-    ajustes: { stability: 0.3, similarityBoost: 0.8, style: 0.6, useSpeakerBoost: true },
+    modelo: process.env.ELEVENLABS_MODEL_2 || 'eleven_v3',
+    ajustes: { stability: 0.0, similarityBoost: 0.75, style: 0.0, useSpeakerBoost: true },
     nombre: 'Alex', slug: 'alex'
   }
 ];
@@ -196,9 +196,9 @@ const VARIANTES_DESPEDIDA = [
   (d) => `Gracias por escribirnos. Cualquier cosa me avisa, ¡que tenga ${d}!`
 ];
 const SLUG_DESPEDIDA = {
-  'buenos días': { slug: 'despedida-v10', texto: 'buen día' },
-  'buenas tardes': { slug: 'despedida-tardes-v10', texto: 'buenas tardes' },
-  'buenas noches': { slug: 'despedida-noches-v10', texto: 'buenas noches' }
+  'buenos días': { slug: 'despedida-v11', texto: 'buen día' },
+  'buenas tardes': { slug: 'despedida-tardes-v11', texto: 'buenas tardes' },
+  'buenas noches': { slug: 'despedida-noches-v11', texto: 'buenas noches' }
 };
 
 // Texto de la despedida para la hora actual del negocio (lo usan los
@@ -293,7 +293,7 @@ const TEXTO_LLAMADA = (n) =>
 export async function obtenerAudioLlamada(jid) {
   if (!vozDisponible()) return null;
   const voz = vozParaChat(jid);
-  const slug = `llamada-v4-${voz.slug}`;
+  const slug = `llamada-v5-${voz.slug}`;
   try {
     const { rutaOgg } = await asegurarPar(slug, TEXTO_LLAMADA(voz.nombre), `llamada ${voz.nombre}`, voz);
     return { buffer: readFileSync(rutaOgg), nombre: voz.nombre };
