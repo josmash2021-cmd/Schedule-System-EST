@@ -27,6 +27,9 @@ const logger = pino({ level: 'warn' });
 process.on('unhandledRejection', (err) => {
   console.error(`[bot] unhandledRejection capturado (el proceso sigue): ${err?.message || err}`);
 });
+process.on('uncaughtException', (err) => {
+  console.error(`[bot] uncaughtException capturado (el proceso sigue): ${err?.message || err}`);
+});
 
 // Usuarios a los que ya se les avisó que el LLM no está disponible
 // (para no spamear al dueño con el mismo aviso en cada mensaje).
@@ -425,18 +428,37 @@ async function manejarMensaje(sock, mensaje) {
 // con .catch: un rejection sin manejar tumba el proceso entero, y aquí el
 // bot comparte proceso con el servidor web y el webhook de Instagram.
 let intentosReconexion = 0;
+// Estado para el watchdog: si el bot alguna vez conectó y ahora no hay
+// conexión NI reconexión programada NI QR pendiente de escanear, algo se
+// quedó colgado — el watchdog lo levanta solo.
+let conexionAbierta = false;
+let reconexionPendiente = false;
+let huboConexion = false;
 
 function reconectarConBackoff() {
+  if (reconexionPendiente) return; // ya hay un intento en camino
+  reconexionPendiente = true;
   intentosReconexion += 1;
   const espera = Math.min(2000 * 2 ** (intentosReconexion - 1), 60000);
   console.log(`[bot] Reconectando en ${espera / 1000}s (intento ${intentosReconexion})...`);
   setTimeout(() => {
+    reconexionPendiente = false;
     iniciarBot().catch((err) => {
       console.error(`[bot] Error al reiniciar (intento ${intentosReconexion}): ${err.message}`);
       reconectarConBackoff();
     });
   }, espera);
 }
+
+// Watchdog: cada 2 min verifica que el bot siga vivo. Cubre el caso de una
+// desconexión silenciosa (socket muerto sin evento 'close') o un arranque
+// fallido que dejó al bot apagado sin QR ni reconexión en curso.
+setInterval(() => {
+  if (conexionAbierta || reconexionPendiente || ultimoQR) return;
+  if (!huboConexion) return; // nunca se ha vinculado en este arranque: esperando QR manual
+  console.warn('[bot] Watchdog: sin conexión y sin reconexión en curso. Forzando reconexión...');
+  reconectarConBackoff();
+}, 2 * 60 * 1000).unref();
 
 async function iniciarBot() {
   const { state, saveCreds } = await useMultiFileAuthState(config.authDir);  const { version } = await fetchLatestBaileysVersion();
@@ -464,6 +486,7 @@ async function iniciarBot() {
     }
 
     if (connection === 'close') {
+      conexionAbierta = false;
       const codigo = lastDisconnect?.error?.output?.statusCode;
       const fueLogout = codigo === DisconnectReason.loggedOut;
       console.log(`[bot] Conexión cerrada (código ${codigo}). ¿Reconectar? ${!fueLogout}`);
@@ -478,7 +501,19 @@ async function iniciarBot() {
         const ahora = Date.now();
         reseteosLogout = reseteosLogout.filter((t) => ahora - t < 10 * 60 * 1000);
         if (reseteosLogout.length >= 3) {
-          console.error('[bot] Sesión cerrada (logout) por 3ª vez en 10 min. No se reintenta: revisa la vinculación manualmente.');
+          // Antes el bot se rendía aquí hasta el próximo deploy. Ahora
+          // espera 30 min (por si la restricción de WhatsApp es temporal)
+          // y vuelve a intentar: el bot NUNCA se queda apagado para siempre.
+          console.error('[bot] Sesión cerrada (logout) por 3ª vez en 10 min. Reintento automático en 30 min (revisa la vinculación en /bot-qr).');
+          reconexionPendiente = true;
+          setTimeout(() => {
+            reconexionPendiente = false;
+            reseteosLogout = [];
+            iniciarBot().catch((err) => {
+              console.error(`[bot] Error al reintentar tras pausa de logout: ${err.message}`);
+              reconectarConBackoff();
+            });
+          }, 30 * 60 * 1000).unref();
           return;
         }
         reseteosLogout.push(ahora);
@@ -489,8 +524,13 @@ async function iniciarBot() {
         } catch (err) {
           console.error(`[bot] No se pudo borrar auth_info: ${err.message}`);
         }
+        reconexionPendiente = true;
         setTimeout(() => {
-          iniciarBot().catch((err) => console.error(`[bot] Error al reiniciar tras reseteo: ${err.message}`));
+          reconexionPendiente = false;
+          iniciarBot().catch((err) => {
+            console.error(`[bot] Error al reiniciar tras reseteo: ${err.message}`);
+            reconectarConBackoff();
+          });
         }, 10000);
       }
     }
@@ -498,6 +538,8 @@ async function iniciarBot() {
     if (connection === 'open') {
       ultimoQR = null; // ya vinculado: no hay QR que mostrar
       intentosReconexion = 0; // conectado: se resetea el backoff
+      conexionAbierta = true;
+      huboConexion = true;
       console.log(`[bot] ✅ Conectado a WhatsApp como "${config.negocio.nombre}". Listo para atender clientes.`);
       iniciarAprendizaje(sock);
       if (!iaDisponible()) {
@@ -593,11 +635,21 @@ async function iniciarBot() {
 
 // Arranque protegido: el servidor web (website-est/server/index.js) importa
 // este módulo y llama iniciarBotSeguro(); un fallo del bot no tumba la web.
+// Si el primer arranque falla (p. ej. fetchLatestBaileysVersion sin red en
+// un deploy), antes el bot quedaba APAGADO hasta el próximo deploy. Ahora
+// reintenta solo con backoff (30s → tope 5 min) hasta lograrlo.
 export async function iniciarBotSeguro() {
-  try {
-    await iniciarBot();
-  } catch (err) {
-    console.error(`[bot] Error al iniciar: ${err.message}`);
+  let intentos = 0;
+  for (;;) {
+    try {
+      await iniciarBot();
+      return;
+    } catch (err) {
+      intentos += 1;
+      const espera = Math.min(30000 * intentos, 5 * 60 * 1000);
+      console.error(`[bot] Error al iniciar (intento ${intentos}): ${err.message}. Reintento en ${espera / 1000}s...`);
+      await new Promise((r) => setTimeout(r, espera));
+    }
   }
 }
 
