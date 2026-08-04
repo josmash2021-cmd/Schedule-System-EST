@@ -260,6 +260,7 @@ function CitasTab({ desk }) {
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState('');
   const [creating, setCreating] = useState(false);
+  const [tick, setTick] = useState(0); // fuerza recarga aunque no cambie el filtro
 
   const load = useCallback(() => {
     setErr('');
@@ -267,7 +268,7 @@ function CitasTab({ desk }) {
     api('/appointments' + (all ? '' : '?date=' + date))
       .then((d) => setCitas(d.citas || []))
       .catch((e) => { setErr(e.message); setCitas([]); });
-  }, [date, all]);
+  }, [date, all, tick]);
   useEffect(() => { load(); }, [load]);
 
   const setEstado = async (c, estado) => {
@@ -283,9 +284,12 @@ function CitasTab({ desk }) {
     const back = () => setCreating(false);
     const saved = (cita) => {
       setCreating(false);
-      // Saltar al día de la cita recién creada para verla en la lista.
+      // Saltar al día de la cita recién creada para verla en la lista. OJO:
+      // si la cita es para el día que ya estaba puesto, setDate() no cambia
+      // nada y el efecto no se dispararía; por eso el tick recarga siempre
+      // (era el motivo de que la cita recién creada no apareciera).
       if (cita && cita.fecha) { setAll(false); setDate(String(cita.fecha).slice(0, 10)); }
-      else load();
+      setTick((t) => t + 1);
     };
     if (desk) {
       return (

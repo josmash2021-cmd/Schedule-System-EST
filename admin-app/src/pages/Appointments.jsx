@@ -46,6 +46,7 @@ export default function Appointments() {
   const [editing, setEditing] = useState(null);
   const [creating, setCreating] = useState(false);
   const [selected, setSelected] = useState(null); // cita abierta en detalle
+  const [tick, setTick] = useState(0); // fuerza recarga aunque no cambie el filtro
 
   const load = useCallback(() => {
     setErr('');
@@ -54,7 +55,7 @@ export default function Appointments() {
     apiRoot('/api/appointments' + q)
       .then((d) => setCitas(d.citas || []))
       .catch((e) => setErr(e.message));
-  }, [date, all]);
+  }, [date, all, tick]);
   useEffect(() => { load(); }, [load]);
 
   const changeEstado = async (c, estado) => {
@@ -101,8 +102,11 @@ export default function Appointments() {
           onCancel={() => setCreating(false)}
           onSaved={(cita) => {
             setCreating(false);
+            // Saltar al día de la cita nueva. El tick fuerza la recarga aunque
+            // la cita sea para el día ya seleccionado (setDate con el mismo
+            // valor no re-dispara el efecto y la cita no aparecía).
             if (cita && cita.fecha) { setAll(false); setDate(String(cita.fecha).slice(0, 10)); }
-            else load();
+            setTick((t) => t + 1);
           }}
         />
       </FormPage>
