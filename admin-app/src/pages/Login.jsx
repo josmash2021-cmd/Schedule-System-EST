@@ -16,7 +16,12 @@ export default function Login() {
     try {
       await login(username.trim(), password);
     } catch (err) {
-      setError(err.message || 'No se pudo iniciar sesión.');
+      // Con solo 3 intentos, avisar cuántos quedan evita el bloqueo por sorpresa.
+      const left = err.data && err.data.remainingAttempts;
+      const aviso = typeof left === 'number' && left > 0
+        ? ` Te ${left === 1 ? 'queda 1 intento' : `quedan ${left} intentos`} antes de bloquear el acceso 15 minutos.`
+        : '';
+      setError((err.message || 'No se pudo iniciar sesión.') + aviso);
       setShake(true);
       setTimeout(() => setShake(false), 400);
     } finally {

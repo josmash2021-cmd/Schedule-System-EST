@@ -10,10 +10,12 @@ const { verifyToken, loadUser } = require('../middleware/auth');
 const router = express.Router();
 
 // Doble rate-limit: por IP y por usuario (para que rotar IPs no baste para
-// atacar una cuenta concreta). Cuentan solo intentos fallidos.
+// atacar una cuenta concreta). Cuentan solo intentos fallidos. Al 3.º fallido
+// se bloquea 15 minutos; un login correcto pone el contador a cero.
 const WINDOW = 15 * 60 * 1000;
-const ipLimiter = createLimiter({ windowMs: WINDOW, max: 5 });
-const userLimiter = createLimiter({ windowMs: WINDOW, max: 10 });
+const MAX_FAILS = 3;
+const ipLimiter = createLimiter({ windowMs: WINDOW, max: MAX_FAILS });
+const userLimiter = createLimiter({ windowMs: WINDOW, max: MAX_FAILS });
 
 router.post('/login', async (req, res) => {
   const ip = getClientIp(req);
