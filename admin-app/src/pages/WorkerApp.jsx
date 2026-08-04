@@ -19,6 +19,15 @@ function fmtHm(sec) {
   sec = Math.max(0, Math.floor(sec)); const h = Math.floor(sec / 3600); const m = Math.floor((sec % 3600) / 60);
   return `${h}h ${String(m).padStart(2, '0')}m`;
 }
+// Duración de un turno: con segundos si duró menos de una hora, para que un
+// turno corto no salga como "0h 00m" (parecía que no se había registrado).
+function fmtTurno(sec) {
+  sec = Math.max(0, Math.floor(sec)); const h = Math.floor(sec / 3600); const m = Math.floor((sec % 3600) / 60);
+  return h > 0 ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m ${String(sec % 60).padStart(2, '0')}s`;
+}
+// Horas SIEMPRE en la zona del negocio (Chicago), igual que el resto del panel.
+const horaChi = (d) => new Date(d).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Chicago' });
+const diaChi = (d) => new Date(d).toLocaleDateString('es', { day: '2-digit', month: 'short', timeZone: 'America/Chicago' });
 
 // En el teléfono manda la app de pestañas abajo; en pantalla de ordenador se
 // usa el MISMO shell del admin (sidebar + topbar + tarjetas). 821px es el mismo
@@ -187,6 +196,34 @@ function RelojTab() {
             <strong style={{ fontSize: 20 }}>{fmtHm(todaySec)}</strong>
           </div>
         </div>
+      </div>
+
+      {/* Registro visible de turnos: antes solo lo veía el admin en Equipo y
+          parecía que fichar no registraba nada. */}
+      <div className="card" style={{ marginTop: 16 }}>
+        <h3>Mis turnos (últimos 14 días)</h3>
+        {data.entries.length === 0
+          ? <div className="muted">Aún no tienes turnos registrados. Ficha tu entrada para empezar.</div>
+          : (
+            <div className="table-wrap">
+              <table className="data">
+                <thead><tr><th>Día</th><th>Entrada</th><th>Salida</th><th>Duración</th></tr></thead>
+                <tbody>
+                  {data.entries.map((e) => {
+                    const end = e.clock_out ? new Date(e.clock_out).getTime() : now;
+                    return (
+                      <tr key={e.id}>
+                        <td className="muted">{diaChi(e.clock_in)}</td>
+                        <td>{horaChi(e.clock_in)}</td>
+                        <td>{e.clock_out ? horaChi(e.clock_out) : <span className="badge badge-on">en curso</span>}</td>
+                        <td><strong>{fmtTurno((end - new Date(e.clock_in).getTime()) / 1000)}</strong></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
       </div>
     </div>
   );
