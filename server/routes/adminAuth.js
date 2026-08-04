@@ -36,7 +36,7 @@ router.post('/login', async (req, res) => {
   }
 
   try {
-    const user = await users.findByUsername(uname);
+    const user = await users.findByUsernameOrEmail(uname);
     // Siempre verificar (contra un hash dummy si el usuario no existe) para no
     // filtrar la existencia de la cuenta por diferencia de tiempo.
     const ok = await verifyPassword(password, user ? user.password_hash : null);

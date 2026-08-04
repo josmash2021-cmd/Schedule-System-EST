@@ -31,7 +31,7 @@ export default function Login() {
         <h1>Panel de gestión</h1>
         <p className="sub">Ingresa con tu cuenta.</p>
         {error && <div className="alert alert-error">{error}</div>}
-        <label className="field"><span>Usuario</span>
+        <label className="field"><span>Usuario o email</span>
           <input autoFocus value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" />
         </label>
         <label className="field"><span>Contraseña</span>

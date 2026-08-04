@@ -33,6 +33,23 @@ async function findByEmail(email) {
   return r.rows[0] || null;
 }
 
+// El login acepta usuario O email: el trabajador casi siempre escribe su
+// correo. Si un valor coincidiera con el usuario de una cuenta y con el email
+// de otra, gana el usuario (el identificador principal).
+async function findByUsernameOrEmail(value) {
+  const v = String(value || '').trim();
+  if (!v) return null;
+  const r = await pool.query(
+    `SELECT * FROM users
+     WHERE LOWER(username) = LOWER($1)
+        OR (email IS NOT NULL AND LOWER(email) = LOWER($1))
+     ORDER BY (LOWER(username) = LOWER($1)) DESC
+     LIMIT 1`,
+    [v]
+  );
+  return r.rows[0] || null;
+}
+
 async function list() {
   const r = await pool.query(
     `SELECT id, username, email, role, active, must_change_password, last_login, created_at
@@ -103,6 +120,6 @@ async function countActiveAdmins() {
 }
 
 module.exports = {
-  toPublic, findById, findByUsername, findByEmail, list,
+  toPublic, findById, findByUsername, findByEmail, findByUsernameOrEmail, list,
   create, update, setPassword, bumpTokenVersion, touchLastLogin, countActiveAdmins, remove,
 };
