@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../auth.jsx';
 import { api } from '../api.js';
 import ChangePasswordForm from '../components/ChangePasswordForm.jsx';
+import FormPage from '../components/FormPage.jsx';
 import RepairDetail, { STATUS_BADGE, statusLabel } from '../components/RepairDetail.jsx';
 import InventoryDetail from '../components/InventoryDetail.jsx';
 
@@ -18,9 +19,41 @@ function fmtHm(sec) {
   return `${h}h ${String(m).padStart(2, '0')}m`;
 }
 
+// En el teléfono manda la app de pestañas abajo; en pantalla de ordenador se
+// usa el MISMO shell del admin (sidebar + topbar + tarjetas). 821px es el mismo
+// punto de corte donde el panel de admin colapsa su sidebar.
+function useIsDesktop() {
+  const QUERY = '(min-width: 821px)';
+  const [is, setIs] = useState(() => (typeof window === 'undefined' ? false : window.matchMedia(QUERY).matches));
+  useEffect(() => {
+    const mq = window.matchMedia(QUERY);
+    const onChange = (e) => setIs(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+  return is;
+}
+
+function Ico({ children }) {
+  return (
+    <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>
+  );
+}
+
+// Un solo listado de secciones para las dos vistas (pestañas y sidebar).
+const TABS = [
+  { id: 'reloj', label: 'Reloj', title: 'Mi reloj', icon: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></> },
+  { id: 'tareas', label: 'Tareas', title: 'Mis tareas', icon: <><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></> },
+  { id: 'reparaciones', label: 'Reparar', deskLabel: 'Reparaciones', title: 'Reparaciones', icon: <><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></> },
+  { id: 'stock', label: 'Stock', deskLabel: 'Inventario', title: 'Inventario', icon: <><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></> },
+  { id: 'perfil', label: 'Perfil', title: 'Mi cuenta', icon: <><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a6 6 0 0 1 12 0v1" /></> },
+];
+
 export default function WorkerApp() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [tab, setTab] = useState('reloj');
+  const desk = useIsDesktop();
 
   // Heartbeat de presencia: avisa al admin qué pestaña ve, cada 45s y al cambiar.
   useEffect(() => {
@@ -30,36 +63,75 @@ export default function WorkerApp() {
     return () => clearInterval(iv);
   }, [tab]);
 
+  const body = (
+    <>
+      {tab === 'reloj' && <RelojTab />}
+      {tab === 'tareas' && <TareasTab />}
+      {tab === 'reparaciones' && <ReparacionesTab desk={desk} />}
+      {tab === 'stock' && <StockTab desk={desk} />}
+      {tab === 'perfil' && <PerfilTab />}
+    </>
+  );
+
+  if (desk) {
+    const current = TABS.find((t) => t.id === tab);
+    return (
+      <div className="shell">
+        <aside className="sidebar">
+          <div className="brand">
+            <img className="brand-logo" src="/x/static/img/logo-cruise.png" alt="ElectronicST" />
+            <div><strong>ElectronicST</strong><span>Panel de trabajador</span></div>
+          </div>
+          <div className="nav-label">Menú</div>
+          {TABS.map((t) => (
+            <button key={t.id} type="button" onClick={() => setTab(t.id)}
+              className={'nav-item' + (tab === t.id ? ' active' : '')}>
+              <Ico>{t.icon}</Ico>{t.deskLabel || t.label}
+            </button>
+          ))}
+          <div className="spacer" />
+          <div className="nav-sep" />
+          <div className="nav-item disabled" style={{ opacity: 0.75 }}>
+            <Ico><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a6 6 0 0 1 12 0v1" /></Ico>{user.username}
+          </div>
+        </aside>
+
+        <div className="main">
+          <div className="topbar">
+            <h2>{current ? current.title : 'Panel'}</h2>
+            <div className="spacer" />
+            <div className="userchip">
+              <button className="btn btn-ghost btn-sm" onClick={() => logout()} title="Cerrar sesión">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+                  strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                Salir
+              </button>
+            </div>
+          </div>
+          <div className="content wdesk">{body}</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="wapp">
       <div className="wapp-head">
         <img className="brand-logo" src="/x/static/img/logo-cruise.png" alt="ElectronicST" />
         <div><strong>ElectronicST</strong><div className="muted" style={{ fontSize: 12 }}>Hola, {user.username}</div></div>
       </div>
-      <div className="wapp-body">
-        {tab === 'reloj' && <RelojTab />}
-        {tab === 'tareas' && <TareasTab />}
-        {tab === 'reparaciones' && <ReparacionesTab />}
-        {tab === 'stock' && <StockTab />}
-        {tab === 'perfil' && <PerfilTab />}
-      </div>
+      <div className="wapp-body">{body}</div>
       <nav className="wapp-tabs">
-        <TabBtn id="reloj" cur={tab} set={setTab} label="Reloj" icon={<><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>} />
-        <TabBtn id="tareas" cur={tab} set={setTab} label="Tareas" icon={<><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></>} />
-        <TabBtn id="reparaciones" cur={tab} set={setTab} label="Reparar" icon={<><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></>} />
-        <TabBtn id="stock" cur={tab} set={setTab} label="Stock" icon={<><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></>} />
-        <TabBtn id="perfil" cur={tab} set={setTab} label="Perfil" icon={<><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a6 6 0 0 1 12 0v1" /></>} />
+        {TABS.map((t) => (
+          <button key={t.id} className={'wtab' + (tab === t.id ? ' active' : '')} onClick={() => setTab(t.id)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">{t.icon}</svg>
+            <span>{t.label}</span>
+          </button>
+        ))}
       </nav>
     </div>
-  );
-}
-
-function TabBtn({ id, cur, set, label, icon }) {
-  return (
-    <button className={'wtab' + (cur === id ? ' active' : '')} onClick={() => set(id)}>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">{icon}</svg>
-      <span>{label}</span>
-    </button>
   );
 }
 
@@ -98,17 +170,19 @@ function RelojTab() {
   return (
     <div className="wsection">
       {err && <div className="alert alert-error">{err}</div>}
-      <div className={'clock-card' + (on ? ' on' : '')}>
-        <div className="clock-status">{on ? '● Trabajando' : 'Fuera de turno'}</div>
-        <div className="clock-timer">{on ? fmtDur((now - openIn) / 1000) : '00:00:00'}</div>
-        <button className={'clock-btn ' + (on ? 'out' : 'in')} disabled={busy} onClick={() => action(on ? 'clock-out' : 'clock-in')}>
-          {busy ? <span className="spinner" /> : (on ? 'Fichar salida' : 'Fichar entrada')}
-        </button>
-      </div>
-      <div className="card">
-        <div className="row" style={{ justifyContent: 'space-between' }}>
-          <span className="muted">Horas de hoy</span>
-          <strong style={{ fontSize: 20 }}>{fmtHm(todaySec)}</strong>
+      <div className="wclock-grid">
+        <div className={'clock-card' + (on ? ' on' : '')}>
+          <div className="clock-status">{on ? '● Trabajando' : 'Fuera de turno'}</div>
+          <div className="clock-timer">{on ? fmtDur((now - openIn) / 1000) : '00:00:00'}</div>
+          <button className={'clock-btn ' + (on ? 'out' : 'in')} disabled={busy} onClick={() => action(on ? 'clock-out' : 'clock-in')}>
+            {busy ? <span className="spinner" /> : (on ? 'Fichar salida' : 'Fichar entrada')}
+          </button>
+        </div>
+        <div className="card">
+          <div className="row" style={{ justifyContent: 'space-between' }}>
+            <span className="muted">Horas de hoy</span>
+            <strong style={{ fontSize: 20 }}>{fmtHm(todaySec)}</strong>
+          </div>
         </div>
       </div>
     </div>
@@ -134,11 +208,15 @@ function TareasTab() {
   return (
     <div className="wsection">
       {err && <div className="alert alert-error">{err}</div>}
-      <h3 style={{ marginBottom: 12 }}>Mis tareas</h3>
-      {active.length === 0 && done.length === 0 && <div className="empty">No tienes tareas asignadas.</div>}
-      {active.map((t) => <TaskCard key={t.id} t={t} onStatus={setStatus} />)}
+      <h3 className="wtitle" style={{ marginBottom: 12 }}>Mis tareas</h3>
+      {active.length === 0 && done.length === 0 && <div className="card"><div className="empty">No tienes tareas asignadas.</div></div>}
+      <div className="wlist">
+        {active.map((t) => <TaskCard key={t.id} t={t} onStatus={setStatus} />)}
+      </div>
       {done.length > 0 && <div className="muted" style={{ margin: '18px 0 8px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '.04em' }}>Completadas</div>}
-      {done.map((t) => <TaskCard key={t.id} t={t} onStatus={setStatus} />)}
+      <div className="wlist">
+        {done.map((t) => <TaskCard key={t.id} t={t} onStatus={setStatus} />)}
+      </div>
     </div>
   );
 }
@@ -160,7 +238,7 @@ function TaskCard({ t, onStatus }) {
   );
 }
 
-function ReparacionesTab() {
+function ReparacionesTab({ desk }) {
   const [tickets, setTickets] = useState(null);
   const [err, setErr] = useState('');
   const [detail, setDetail] = useState(null); // { id } | { id: null }
@@ -169,14 +247,26 @@ function ReparacionesTab() {
   useEffect(() => { load(); }, [load]);
 
   if (detail) {
+    const back = () => { setDetail(null); load(); };
+    const title = detail.id ? 'Reparación' : 'Nueva reparación';
+    // En web, la misma ficha a página completa que usa el admin.
+    if (desk) {
+      return (
+        <div className="wsection">
+          <FormPage title={title} onBack={back}>
+            <RepairDetail ticketId={detail.id} workers={[]} isAdmin={false} onClose={back} onSaved={load} />
+          </FormPage>
+        </div>
+      );
+    }
     return (
       <div>
         <div className="wrepair-head">
-          <button className="btn btn-ghost btn-sm" onClick={() => { setDetail(null); load(); }}>‹ Volver</button>
-          <strong>{detail.id ? 'Reparación' : 'Nueva reparación'}</strong>
+          <button className="btn btn-ghost btn-sm" onClick={back}>‹ Volver</button>
+          <strong>{title}</strong>
         </div>
         <div className="wsection">
-          <RepairDetail ticketId={detail.id} workers={[]} isAdmin={false} onClose={() => { setDetail(null); load(); }} onSaved={load} />
+          <RepairDetail ticketId={detail.id} workers={[]} isAdmin={false} onClose={back} onSaved={load} />
         </div>
       </div>
     );
@@ -184,27 +274,31 @@ function ReparacionesTab() {
 
   return (
     <div className="wsection">
-      <div className="row" style={{ justifyContent: 'space-between', marginBottom: 12 }}>
-        <h3>Reparaciones</h3>
+      <div className="row whead">
+        <h3 className="wtitle">Reparaciones</h3>
         <button className="btn btn-primary btn-sm" onClick={() => setDetail({ id: null })}>+ Nueva</button>
       </div>
       {err && <div className="alert alert-error">{err}</div>}
       {tickets == null ? <div style={{ textAlign: 'center', padding: 40 }}><span className="spinner spinner-lg" /></div>
-        : tickets.length === 0 ? <div className="empty">No hay reparaciones.</div>
-          : tickets.map((t) => (
-            <div key={t.id} className="task-card" style={{ cursor: 'pointer' }} onClick={() => setDetail({ id: t.id })}>
-              <div className="task-main">
-                <strong>{[t.device_brand, t.device_model].filter(Boolean).join(' ') || 'Equipo'}</strong>
-                <p className="muted" style={{ margin: '2px 0 0', fontSize: 12.5 }}>{t.customer_name || '—'}{t.photo_count > 0 ? ` · 📷 ${t.photo_count}` : ''}</p>
-              </div>
-              <span className={'badge ' + STATUS_BADGE[t.status]}>{statusLabel(t.status)}</span>
+        : tickets.length === 0 ? <div className="card"><div className="empty">No hay reparaciones.</div></div>
+          : (
+            <div className="wlist">
+              {tickets.map((t) => (
+                <div key={t.id} className="task-card" style={{ cursor: 'pointer' }} onClick={() => setDetail({ id: t.id })}>
+                  <div className="task-main">
+                    <strong>{[t.device_brand, t.device_model].filter(Boolean).join(' ') || 'Equipo'}</strong>
+                    <p className="muted" style={{ margin: '2px 0 0', fontSize: 12.5 }}>{t.customer_name || '—'}{t.photo_count > 0 ? ` · 📷 ${t.photo_count}` : ''}</p>
+                  </div>
+                  <span className={'badge ' + STATUS_BADGE[t.status]}>{statusLabel(t.status)}</span>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
     </div>
   );
 }
 
-function StockTab() {
+function StockTab({ desk }) {
   const [items, setItems] = useState(null);
   const [search, setSearch] = useState('');
   const [err, setErr] = useState('');
@@ -214,14 +308,24 @@ function StockTab() {
   useEffect(() => { const t = setTimeout(() => load(search), 300); return () => clearTimeout(t); }, [search, load]);
 
   if (detail) {
+    const back = () => { setDetail(null); load(search); };
+    if (desk) {
+      return (
+        <div className="wsection">
+          <FormPage title="Producto" onBack={back}>
+            <InventoryDetail itemId={detail.id} isAdmin={false} onClose={back} onSaved={() => load(search)} />
+          </FormPage>
+        </div>
+      );
+    }
     return (
       <div>
         <div className="wrepair-head">
-          <button className="btn btn-ghost btn-sm" onClick={() => { setDetail(null); load(search); }}>‹ Volver</button>
+          <button className="btn btn-ghost btn-sm" onClick={back}>‹ Volver</button>
           <strong>Producto</strong>
         </div>
         <div className="wsection">
-          <InventoryDetail itemId={detail.id} isAdmin={false} onClose={() => { setDetail(null); load(search); }} onSaved={() => load(search)} />
+          <InventoryDetail itemId={detail.id} isAdmin={false} onClose={back} onSaved={() => load(search)} />
         </div>
       </div>
     );
@@ -229,23 +333,27 @@ function StockTab() {
 
   return (
     <div className="wsection">
-      <h3 style={{ marginBottom: 10 }}>Inventario</h3>
-      <input placeholder="Buscar producto…" value={search} onChange={(e) => setSearch(e.target.value)} style={{ marginBottom: 12 }} />
+      <h3 className="wtitle" style={{ marginBottom: 10 }}>Inventario</h3>
+      <input className="wsearch" placeholder="Buscar producto…" value={search} onChange={(e) => setSearch(e.target.value)} style={{ marginBottom: 12 }} />
       {err && <div className="alert alert-error">{err}</div>}
       {items == null ? <div style={{ textAlign: 'center', padding: 40 }}><span className="spinner spinner-lg" /></div>
-        : items.length === 0 ? <div className="empty">{search ? 'Sin resultados.' : 'No hay productos.'}</div>
-          : items.map((i) => {
-            const low = i.stock <= i.min_stock;
-            return (
-              <div key={i.id} className="task-card" style={{ cursor: 'pointer' }} onClick={() => setDetail({ id: i.id })}>
-                <div className="task-main">
-                  <strong>{i.name}</strong>
-                  <p className="muted" style={{ margin: '2px 0 0', fontSize: 12.5 }}>{i.category || i.sku || ''}</p>
-                </div>
-                <span className={'badge ' + (low ? 'badge-pendiente' : 'badge-on')} style={{ fontSize: 14 }}>{i.stock}</span>
-              </div>
-            );
-          })}
+        : items.length === 0 ? <div className="card"><div className="empty">{search ? 'Sin resultados.' : 'No hay productos.'}</div></div>
+          : (
+            <div className="wlist">
+              {items.map((i) => {
+                const low = i.stock <= i.min_stock;
+                return (
+                  <div key={i.id} className="task-card" style={{ cursor: 'pointer' }} onClick={() => setDetail({ id: i.id })}>
+                    <div className="task-main">
+                      <strong>{i.name}</strong>
+                      <p className="muted" style={{ margin: '2px 0 0', fontSize: 12.5 }}>{i.category || i.sku || ''}</p>
+                    </div>
+                    <span className={'badge ' + (low ? 'badge-pendiente' : 'badge-on')} style={{ fontSize: 14 }}>{i.stock}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
     </div>
   );
 }
@@ -254,10 +362,10 @@ function PerfilTab() {
   const { user, logout } = useAuth();
   const [showPw, setShowPw] = useState(false);
   return (
-    <div className="wsection">
+    <div className="wsection wperfil">
       <div className="card">
         <h3>Mi cuenta</h3>
-        <p className="muted" style={{ margin: '0 0 4px' }}>Usuario: <strong style={{ color: 'var(--text)' }}>{user.username}</strong></p>
+        <p className="muted" style={{ margin: '0 0 4px' }}>Usuario: <strong style={{ color: '#111' }}>{user.username}</strong></p>
         <p className="muted" style={{ margin: 0 }}>Rol: Trabajador</p>
       </div>
       <div className="card" style={{ marginTop: 14 }}>

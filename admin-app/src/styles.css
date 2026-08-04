@@ -589,6 +589,34 @@ table.data tbody tr:hover td { background: #f5f5f6; }
   .wapp { border-left: 1px solid var(--line-2); border-right: 1px solid var(--line-2); }
 }
 
+/* ============================================================
+   Trabajador en web (≥821px): mismo shell, mismas tarjetas y la
+   misma tipografía que el panel del admin. El JSX cambia a
+   .shell + .topbar + .content y aquí solo se adapta lo que venía
+   pensado para el móvil (paddings del .wsection, títulos que ya
+   están en el topbar y listas que ahora caben en varias columnas).
+   ============================================================ */
+/* Los enlaces del sidebar del admin son <a>; aquí son <button>. */
+button.nav-item { background: none; border: none; width: 100%; font-family: inherit; font-size: 14px; text-align: left; }
+.wdesk .wsection { padding: 0; }
+/* El título ya lo muestra el topbar: no repetirlo dentro del contenido. */
+.wdesk .wtitle { display: none; }
+/* En móvil el título va a la izquierda y el botón a la derecha; en web el
+   título lo pone el topbar, así que el botón se queda solo, alineado a la
+   derecha como el "+ Nuevo" del admin. */
+.whead { justify-content: space-between; margin-bottom: 12px; }
+.wdesk .whead { justify-content: flex-end; margin-bottom: 20px; }
+.wdesk .wsearch { max-width: 360px; }
+/* Reloj: fichaje a la izquierda y horas del día al lado, no apilados. */
+.wdesk .wclock-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.wdesk .wclock-grid .clock-card { margin-bottom: 0; }
+/* Listas (tareas, reparaciones, stock): rejilla en vez de una tira estrecha. */
+.wdesk .wlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
+.wdesk .wlist .task-card { margin-bottom: 0; }
+.wdesk .wlist:empty { display: none; }
+/* Perfil: formularios estrechos, como en Ajustes del admin. */
+.wdesk .wperfil .card, .wdesk .wperfil .btn-block { max-width: 440px; }
+
 /* ---------- Accesibilidad: menos movimiento ---------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

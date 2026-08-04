@@ -74,7 +74,7 @@ export default function Settings({ forced }) {
       </div>
       <div className="card" style={{ maxWidth: 440, marginTop: 18 }}>
         <h3>Mi cuenta</h3>
-        <p className="muted" style={{ margin: '0 0 6px' }}>Usuario: <strong style={{ color: 'var(--text)' }}>{user.username}</strong></p>
+        <p className="muted" style={{ margin: '0 0 6px' }}>Usuario: <strong style={{ color: '#111' }}>{user.username}</strong></p>
         <p className="muted" style={{ margin: 0 }}>Rol: {user.role === 'admin' ? 'Administrador' : 'Trabajador'}</p>
       </div>
       {user.role === 'admin' && <DemoDataCard />}
