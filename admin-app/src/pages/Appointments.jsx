@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { apiRoot } from '../api.js';
+import CitaForm from '../components/CitaForm.jsx';
 import FormPage from '../components/FormPage.jsx';
 
 const ESTADOS = ['pendiente', 'confirmada', 'atendida', 'cancelada'];
@@ -43,6 +44,7 @@ export default function Appointments() {
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState('');
   const [editing, setEditing] = useState(null);
+  const [creating, setCreating] = useState(false);
   const [selected, setSelected] = useState(null); // cita abierta en detalle
 
   const load = useCallback(() => {
@@ -91,6 +93,22 @@ export default function Appointments() {
     }
   };
 
+  // Alta de cita desde el mostrador (mismo formulario que usa el trabajador).
+  if (creating) {
+    return (
+      <FormPage title="Nueva cita" onBack={() => setCreating(false)} max={640}>
+        <CitaForm
+          onCancel={() => setCreating(false)}
+          onSaved={(cita) => {
+            setCreating(false);
+            if (cita && cita.fecha) { setAll(false); setDate(String(cita.fecha).slice(0, 10)); }
+            else load();
+          }}
+        />
+      </FormPage>
+    );
+  }
+
   if (editing) {
     return (
       <EditPage
@@ -136,6 +154,7 @@ export default function Appointments() {
         {citas && citas.length > 0 && (
           <button className="btn btn-danger btn-sm" onClick={deleteAll}>Eliminar todas</button>
         )}
+        <button className="btn btn-primary" onClick={() => setCreating(true)}>+ Nueva cita</button>
       </div>
 
       <div className="card" style={{ marginBottom: 18 }}>

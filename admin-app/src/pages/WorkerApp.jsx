@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../auth.jsx';
 import { api } from '../api.js';
 import ChangePasswordForm from '../components/ChangePasswordForm.jsx';
+import CitaForm from '../components/CitaForm.jsx';
 import FormPage from '../components/FormPage.jsx';
 import RepairDetail, { STATUS_BADGE, statusLabel } from '../components/RepairDetail.jsx';
 import InventoryDetail from '../components/InventoryDetail.jsx';
@@ -45,6 +46,7 @@ function Ico({ children }) {
 const TABS = [
   { id: 'reloj', label: 'Reloj', title: 'Mi reloj', icon: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></> },
   { id: 'tareas', label: 'Tareas', title: 'Mis tareas', icon: <><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></> },
+  { id: 'citas', label: 'Citas', title: 'Citas', icon: <><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></> },
   { id: 'reparaciones', label: 'Reparar', deskLabel: 'Reparaciones', title: 'Reparaciones', icon: <><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></> },
   { id: 'stock', label: 'Stock', deskLabel: 'Inventario', title: 'Inventario', icon: <><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></> },
   { id: 'perfil', label: 'Perfil', title: 'Mi cuenta', icon: <><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a6 6 0 0 1 12 0v1" /></> },
@@ -67,6 +69,7 @@ export default function WorkerApp() {
     <>
       {tab === 'reloj' && <RelojTab />}
       {tab === 'tareas' && <TareasTab />}
+      {tab === 'citas' && <CitasTab desk={desk} />}
       {tab === 'reparaciones' && <ReparacionesTab desk={desk} />}
       {tab === 'stock' && <StockTab desk={desk} />}
       {tab === 'perfil' && <PerfilTab />}
@@ -234,6 +237,121 @@ function TaskCard({ t, onStatus }) {
         {t.status === 'in_progress' && <button className="btn btn-primary btn-sm" onClick={() => onStatus(t, 'done')}>Completar</button>}
         {t.status === 'done' && <button className="btn btn-ghost btn-sm" onClick={() => onStatus(t, 'pending')}>Reabrir</button>}
       </div>
+    </div>
+  );
+}
+
+// Citas del taller: el trabajador ve la agenda del día, puede crear una cita
+// nueva (cliente que llama o entra) y mover su estado. Editar y borrar siguen
+// siendo cosa del admin.
+const CITA_ESTADOS = ['pendiente', 'confirmada', 'atendida', 'cancelada'];
+
+function citaHora(h) {
+  const [hh = 0, mm = 0] = String(h).split(':').map(Number);
+  const am = hh < 12;
+  return `${hh % 12 === 0 ? 12 : hh % 12}:${String(mm).padStart(2, '0')} ${am ? 'am' : 'pm'}`;
+}
+const citaFecha = (f) => String(f).slice(0, 10).split('-').reverse().join('/');
+
+function CitasTab({ desk }) {
+  const [date, setDate] = useState(() => chicagoDate(new Date()));
+  const [all, setAll] = useState(false);
+  const [citas, setCitas] = useState(null);
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState('');
+  const [creating, setCreating] = useState(false);
+
+  const load = useCallback(() => {
+    setErr('');
+    setCitas(null);
+    api('/appointments' + (all ? '' : '?date=' + date))
+      .then((d) => setCitas(d.citas || []))
+      .catch((e) => { setErr(e.message); setCitas([]); });
+  }, [date, all]);
+  useEffect(() => { load(); }, [load]);
+
+  const setEstado = async (c, estado) => {
+    setBusy(c.id + estado);
+    try {
+      await api('/appointments/' + c.id + '/estado', { method: 'PATCH', body: { estado } });
+      setCitas((list) => list.map((x) => (x.id === c.id ? { ...x, estado } : x)));
+    } catch (e) { setErr(e.message); }
+    finally { setBusy(''); }
+  };
+
+  if (creating) {
+    const back = () => setCreating(false);
+    const saved = (cita) => {
+      setCreating(false);
+      // Saltar al día de la cita recién creada para verla en la lista.
+      if (cita && cita.fecha) { setAll(false); setDate(String(cita.fecha).slice(0, 10)); }
+      else load();
+    };
+    if (desk) {
+      return (
+        <div className="wsection">
+          <FormPage title="Nueva cita" onBack={back} max={640}>
+            <CitaForm onSaved={saved} onCancel={back} />
+          </FormPage>
+        </div>
+      );
+    }
+    return (
+      <div>
+        <div className="wrepair-head">
+          <button className="btn btn-ghost btn-sm" onClick={back}>‹ Volver</button>
+          <strong>Nueva cita</strong>
+        </div>
+        <div className="wsection"><CitaForm onSaved={saved} onCancel={back} /></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="wsection">
+      <div className="row whead">
+        <h3 className="wtitle">Citas</h3>
+        <button className="btn btn-primary btn-sm" onClick={() => setCreating(true)}>+ Nueva cita</button>
+      </div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="row citas-filtro">
+          <label className="field citas-fecha" style={{ marginBottom: 0 }}>
+            <span>Fecha</span>
+            <input type="date" value={date} disabled={all} onChange={(e) => e.target.value && setDate(e.target.value)} />
+          </label>
+          <label className="row citas-todas">
+            <input type="checkbox" style={{ width: 'auto' }} checked={all} onChange={(e) => setAll(e.target.checked)} />
+            <span className="muted">Ver todas</span>
+          </label>
+          <div className="spacer" />
+          <button className="btn btn-secondary btn-sm" onClick={load}>Actualizar</button>
+        </div>
+      </div>
+      {err && <div className="alert alert-error">{err}</div>}
+      {citas == null ? <div style={{ textAlign: 'center', padding: 40 }}><span className="spinner spinner-lg" /></div>
+        : citas.length === 0 ? <div className="card"><div className="empty">No hay citas {all ? 'registradas' : 'para este día'}.</div></div>
+          : (
+            <div className="wlist">
+              {citas.map((c) => (
+                // El desplegable ya muestra el estado actual: poner además la
+                // etiqueta de color sería el mismo dato dos veces.
+                <div key={c.id} className={'task-card cita-card estado-' + c.estado}>
+                  <div className="task-main">
+                    <strong>{citaHora(c.hora)} · {c.nombre}</strong>
+                    <p className="muted" style={{ margin: '2px 0 0', fontSize: 12.5 }}>
+                      {all ? `${citaFecha(c.fecha)} · ` : ''}{c.servicio}{c.telefono ? ` · ${c.telefono}` : ''}
+                    </p>
+                  </div>
+                  <div className="task-actions">
+                    <select value={c.estado} disabled={!!busy} style={{ width: 'auto' }}
+                      onChange={(e) => setEstado(c, e.target.value)}>
+                      {CITA_ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
+                    </select>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
     </div>
   );
 }

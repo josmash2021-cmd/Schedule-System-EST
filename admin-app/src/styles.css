@@ -617,6 +617,15 @@ button.nav-item { background: none; border: none; width: 100%; font-family: inhe
 /* Perfil: formularios estrechos, como en Ajustes del admin. */
 .wdesk .wperfil .card, .wdesk .wperfil .btn-block { max-width: 440px; }
 
+/* Citas del trabajador: el borde izquierdo de la tarjeta lleva el estado
+   (mismo lenguaje que las tareas), y la cancelada se apaga. */
+.cita-card { border-left-color: #9a9aa2; }
+.cita-card.estado-confirmada { border-left-color: #111; }
+.cita-card.estado-atendida { border-left-color: #d4d4d8; }
+.cita-card.estado-cancelada { border-left-color: #d4d4d8; opacity: 0.6; }
+.cita-card.estado-cancelada .task-main strong { text-decoration: line-through; color: #9a9aa2; }
+.cita-card select { font-size: 12.5px; padding: 7px 10px; }
+
 /* ---------- Accesibilidad: menos movimiento ---------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
