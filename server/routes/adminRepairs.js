@@ -145,6 +145,36 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
+// Borrado masivo. Solo admin. Tres formas:
+//   { ids: [...] }        → las seleccionadas
+//   { all: true }         → TODAS
+//   { delivered: true }   → solo las entregadas (reinicia la página de Ventas)
+router.delete('/', requireRole('admin'), async (req, res) => {
+  const b = req.body || {};
+  const opts = {};
+  if (b.all) { /* todas */ }
+  else if (b.delivered) opts.delivered = true;
+  else {
+    if (!Array.isArray(b.ids) || b.ids.length === 0) {
+      return res.status(400).json({ error: 'Selecciona al menos una reparación.' });
+    }
+    opts.ids = b.ids.map(Number).filter((n) => Number.isInteger(n) && n > 0);
+    if (!opts.ids.length) return res.status(400).json({ error: 'Selección inválida.' });
+  }
+  try {
+    const { deleted, files } = await repairs.removeMany(opts);
+    for (const f of files) fs.unlink(path.join(REPAIRS_DIR, path.basename(f)), () => {});
+    audit.logAction(req.user.id, 'repair.delete_bulk', {
+      targetType: 'repair', ip: getClientIp(req),
+      metadata: { mode: opts.ids ? 'seleccion' : opts.delivered ? 'entregadas' : 'todas', count: deleted },
+    });
+    res.json({ ok: true, deleted });
+  } catch (err) {
+    console.error('repair bulk delete error:', err.message);
+    res.status(500).json({ error: 'No se pudieron eliminar las reparaciones.' });
+  }
+});
+
 // Eliminar reparación: solo admin. Borra también sus fotos del disco.
 router.delete('/:id', requireRole('admin'), async (req, res) => {
   const id = parseId(req, res); if (id === null) return;

@@ -89,6 +89,14 @@ async function touchLastLogin(id) {
   await pool.query('UPDATE users SET last_login = NOW() WHERE id = $1', [id]);
 }
 
+// Borrado definitivo. El historial NO se pierde: fichajes y perfil caen por
+// CASCADE, pero tareas, reparaciones, fotos y movimientos de inventario tienen
+// ON DELETE SET NULL, así que las filas siguen ahí, solo sin trabajador.
+async function remove(id) {
+  const r = await pool.query('DELETE FROM users WHERE id = $1 RETURNING id, username, role', [id]);
+  return r.rows[0] || null;
+}
+
 async function countActiveAdmins() {
   const r = await pool.query("SELECT COUNT(*)::int AS n FROM users WHERE role = 'admin' AND active = true");
   return r.rows[0].n;
@@ -96,5 +104,5 @@ async function countActiveAdmins() {
 
 module.exports = {
   toPublic, findById, findByUsername, findByEmail, list,
-  create, update, setPassword, bumpTokenVersion, touchLastLogin, countActiveAdmins,
+  create, update, setPassword, bumpTokenVersion, touchLastLogin, countActiveAdmins, remove,
 };

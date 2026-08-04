@@ -75,6 +75,21 @@ async function remove(id) {
   await pool.query('DELETE FROM repair_tickets WHERE id = $1', [id]);
 }
 
+// Borrado masivo. Tres modos: `ids` (las seleccionadas), `delivered` (solo las
+// entregadas = las ventas) o nada (TODAS). Devuelve los archivos de foto que
+// quedaron huérfanos para que la ruta los borre del disco (las filas de
+// repair_photos caen solas por ON DELETE CASCADE).
+async function removeMany({ ids = null, delivered = false } = {}) {
+  if (ids && !ids.length) return { deleted: 0, files: [] };
+  const params = ids ? [ids] : [];
+  const ticketWhere = ids ? ' WHERE id = ANY($1)' : delivered ? " WHERE status = 'entregado'" : '';
+  const photoWhere = ids ? ' WHERE ticket_id = ANY($1)'
+    : delivered ? " WHERE ticket_id IN (SELECT id FROM repair_tickets WHERE status = 'entregado')" : '';
+  const p = await pool.query(`SELECT filename FROM repair_photos${photoWhere}`, params);
+  const r = await pool.query(`DELETE FROM repair_tickets${ticketWhere}`, params);
+  return { deleted: r.rowCount, files: p.rows.map((x) => x.filename) };
+}
+
 async function listPhotoFilenames(ticketId) {
   const r = await pool.query('SELECT filename FROM repair_photos WHERE ticket_id = $1', [ticketId]);
   return r.rows.map((x) => x.filename);
@@ -98,6 +113,6 @@ async function removePhoto(photoId) {
 }
 
 module.exports = {
-  STATUSES, FIELDS, listAll, findById, getWithPhotos, create, update, remove,
+  STATUSES, FIELDS, listAll, findById, getWithPhotos, create, update, remove, removeMany,
   listPhotoFilenames, addPhoto, getPhoto, removePhoto,
 };

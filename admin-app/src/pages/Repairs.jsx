@@ -29,6 +29,8 @@ export default function Repairs() {
   const [err, setErr] = useState('');
   const [filter, setFilter] = useState(dayFilter ? 'entregado' : 'activos');
   const [detail, setDetail] = useState(null); // { id } | { id: null }
+  const [sel, setSel] = useState(() => new Set()); // ids marcados para borrar
+  const [busy, setBusy] = useState(false);
 
   const load = useCallback(() => {
     setErr('');
@@ -46,6 +48,49 @@ export default function Repairs() {
     return t.status === filter;
   }) : [];
 
+  // Al cambiar de filtro se limpia la selección: así nunca se borra algo que
+  // ya no está a la vista.
+  useEffect(() => { setSel(new Set()); }, [filter, dayFilter]);
+
+  const toggle = (id) => setSel((prev) => {
+    const n = new Set(prev);
+    if (n.has(id)) n.delete(id); else n.add(id);
+    return n;
+  });
+  const allShownSelected = shown.length > 0 && shown.every((t) => sel.has(t.id));
+  const toggleAllShown = () => setSel((prev) => {
+    const n = new Set(prev);
+    for (const t of shown) { if (allShownSelected) n.delete(t.id); else n.add(t.id); }
+    return n;
+  });
+
+  const removeSelected = async () => {
+    const ids = [...sel];
+    if (!ids.length) return;
+    if (!window.confirm(`¿Eliminar ${ids.length} reparación${ids.length === 1 ? '' : 'es'}? También se borran sus fotos. No se puede deshacer.`)) return;
+    setBusy(true); setErr('');
+    try {
+      await api('/repairs', { method: 'DELETE', body: { ids } });
+      setSel(new Set());
+      load();
+    } catch (e) { setErr(e.message); }
+    setBusy(false);
+  };
+
+  const removeAll = async () => {
+    const n = tickets ? tickets.length : 0;
+    if (!n) return;
+    if (!window.confirm(`¿Eliminar TODAS las reparaciones (${n})?\n\nSe borran también sus fotos y las ventas de la página de Ventas, que salen de las reparaciones entregadas. No se puede deshacer.`)) return;
+    if (!window.confirm('Última confirmación: se van a borrar TODAS las reparaciones.')) return;
+    setBusy(true); setErr('');
+    try {
+      await api('/repairs', { method: 'DELETE', body: { all: true } });
+      setSel(new Set());
+      load();
+    } catch (e) { setErr(e.message); }
+    setBusy(false);
+  };
+
   // Formulario a página completa (sin modal).
   if (detail) {
     const back = () => { setDetail(null); load(); };
@@ -60,6 +105,9 @@ export default function Repairs() {
     <>
       <div className="section-head">
         <div className="spacer" />
+        {tickets != null && tickets.length > 0 && (
+          <button className="btn btn-danger btn-sm" onClick={removeAll} disabled={busy}>Eliminar todas</button>
+        )}
         <button className="btn btn-primary" onClick={() => setDetail({ id: null })}>+ Nueva reparación</button>
       </div>
       {err && <div className="alert alert-error">{err}</div>}
@@ -77,15 +125,34 @@ export default function Repairs() {
         </div>
       )}
 
+      {sel.size > 0 && (
+        <div className="row" style={{ gap: 10, marginBottom: 16, alignItems: 'center' }}>
+          <strong style={{ fontSize: 14 }}>{sel.size} seleccionada{sel.size === 1 ? '' : 's'}</strong>
+          <button className="btn btn-danger btn-sm" onClick={removeSelected} disabled={busy}>
+            {busy ? <span className="spinner" /> : 'Eliminar seleccionadas'}
+          </button>
+          <button className="btn btn-ghost btn-sm" onClick={() => setSel(new Set())} disabled={busy}>Quitar selección</button>
+        </div>
+      )}
+
       {tickets == null ? <span className="spinner spinner-lg" />
         : shown.length === 0 ? <div className="card"><div className="empty">No hay reparaciones{filter !== 'todos' ? ' en este filtro' : ''}.</div></div>
           : (
             <div className="table-wrap">
               <table className="data">
-                <thead><tr><th>Equipo</th><th>Cliente</th><th>Estado</th><th className="hide-sm">Técnico</th><th>Precio</th><th className="hide-sm">Fotos</th></tr></thead>
+                <thead><tr>
+                  <th style={{ width: 34 }}>
+                    <input type="checkbox" checked={allShownSelected} onChange={toggleAllShown}
+                      title="Seleccionar todas las de la lista" style={{ cursor: 'pointer' }} />
+                  </th>
+                  <th>Equipo</th><th>Cliente</th><th>Estado</th><th className="hide-sm">Técnico</th><th>Precio</th><th className="hide-sm">Fotos</th>
+                </tr></thead>
                 <tbody>
                   {shown.map((t) => (
                     <tr key={t.id} style={{ cursor: 'pointer' }} onClick={() => setDetail({ id: t.id })}>
+                      <td onClick={(e) => e.stopPropagation()} style={{ cursor: 'default' }}>
+                        <input type="checkbox" checked={sel.has(t.id)} onChange={() => toggle(t.id)} style={{ cursor: 'pointer' }} />
+                      </td>
                       <td><strong>{[t.device_brand, t.device_model].filter(Boolean).join(' ') || '—'}</strong>{t.device_serial && <div className="muted" style={{ fontSize: 12 }}>{t.device_serial}</div>}</td>
                       <td>{t.customer_name || '—'}{t.customer_phone && <div className="muted" style={{ fontSize: 12 }}>{t.customer_phone}</div>}</td>
                       <td><span className={'badge ' + STATUS_BADGE[t.status]}>{statusLabel(t.status)}</span></td>

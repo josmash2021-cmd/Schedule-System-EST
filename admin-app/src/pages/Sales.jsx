@@ -75,13 +75,13 @@ export default function Sales() {
   const paramFecha = searchParams.get('fecha');
   const [tickets, setTickets] = useState(null);
   const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
   const [period, setPeriod] = useState(/^\d{4}-\d{2}-\d{2}$/.test(paramFecha || '') ? 'dia' : 'semana');
   const [day, setDay] = useState(/^\d{4}-\d{2}-\d{2}$/.test(paramFecha || '') ? paramFecha : chicagoParts().key);
   const [month, setMonth] = useState(chicagoParts().key.slice(0, 7));
 
-  useEffect(() => {
-    api('/repairs').then((d) => setTickets(d.tickets || [])).catch((e) => setErr(e.message));
-  }, []);
+  const load = () => api('/repairs').then((d) => setTickets(d.tickets || [])).catch((e) => setErr(e.message));
+  useEffect(() => { load(); }, []);
 
   // Ventas = tickets entregados con precio final, con su fecha/hora de Chicago.
   const sales = useMemo(() => (tickets || [])
@@ -151,6 +151,21 @@ export default function Sales() {
     return `${d}/${m}/${y} ${String(cp.hour).padStart(2, '0')}:${String(new Date(iso).getUTCMinutes()).padStart(2, '0')}`;
   };
 
+  // Reiniciar Ventas. Esta página no guarda nada propio: cada venta es una
+  // reparación con estado "entregado", así que vaciarla es borrar esas
+  // reparaciones. Las activas (recibido/diagnóstico/reparación/listo) no se tocan.
+  const resetSales = async () => {
+    if (!sales.length) return;
+    if (!window.confirm(`¿Borrar TODAS las ventas (${sales.length})?\n\nCada venta es una reparación entregada, así que esas reparaciones también desaparecen de la página de Reparaciones. Las reparaciones en curso no se tocan. No se puede deshacer.`)) return;
+    if (!window.confirm('Última confirmación: la página de Ventas quedará en blanco.')) return;
+    setBusy(true); setErr('');
+    try {
+      await api('/repairs', { method: 'DELETE', body: { delivered: true } });
+      await load();
+    } catch (e) { setErr(e.message); }
+    setBusy(false);
+  };
+
   const onBar = (k) => {
     if (period === 'semana') { setPeriod('dia'); setDay(k); }
     else if (period === 'mes') { setPeriod('dia'); setDay(`${month}-${k.padStart(2, '0')}`); }
@@ -160,6 +175,14 @@ export default function Sales() {
   return (
     <div className="sales-page">
       {err && <div className="alert alert-error">{err}</div>}
+
+      {sales.length > 0 && (
+        <div className="row" style={{ justifyContent: 'flex-end', marginBottom: 16 }}>
+          <button className="btn btn-danger btn-sm" onClick={resetSales} disabled={busy}>
+            {busy ? <span className="spinner" /> : 'Borrar todas las ventas'}
+          </button>
+        </div>
+      )}
 
       <div className="stat-grid">
         {kpis == null

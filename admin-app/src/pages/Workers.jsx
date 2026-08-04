@@ -122,6 +122,21 @@ function WorkerForm({ modal, onBack, onSaved }) {
     }
   };
 
+  // Borrado definitivo. El historial (reparaciones, tareas, ventas) no se
+  // borra: esas filas quedan sin trabajador asignado.
+  const removeUser = async () => {
+    if (!window.confirm(`¿Eliminar a "${u.username}" definitivamente?\n\nPierde el acceso al panel y sus fichajes se borran. Las reparaciones, tareas y ventas que hizo NO se borran: quedan sin trabajador asignado.\n\nSi solo quieres quitarle el acceso, ponlo como Inactivo.`)) return;
+    setErr('');
+    setLoading(true);
+    try {
+      await api('/users/' + u.id, { method: 'DELETE' });
+      onSaved();
+    } catch (e) {
+      setErr(e.message);
+      setLoading(false);
+    }
+  };
+
   return (
     <FormPage title={editing ? 'Gestionar trabajador' : 'Nuevo trabajador'} onBack={onBack} max={480}>
       {err && <div className="alert alert-error">{err}</div>}
@@ -165,7 +180,13 @@ function WorkerForm({ modal, onBack, onSaved }) {
 
       {editing && (
         <div style={{ marginTop: 8, paddingTop: 14, borderTop: '1px solid rgba(0, 0, 0, 0.1)' }}>
-          <button className="btn btn-danger btn-sm" onClick={resetPw} disabled={loading}>Restablecer contraseña</button>
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+            <button className="btn btn-danger btn-sm" onClick={resetPw} disabled={loading}>Restablecer contraseña</button>
+            <button className="btn btn-danger btn-sm" onClick={removeUser} disabled={loading}>Eliminar trabajador</button>
+          </div>
+          <p className="muted" style={{ fontSize: 12, margin: '8px 0 0' }}>
+            Eliminar es definitivo. Para quitarle el acceso sin borrarlo, ponlo como Inactivo.
+          </p>
         </div>
       )}
 

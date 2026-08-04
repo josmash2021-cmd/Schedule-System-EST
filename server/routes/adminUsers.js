@@ -121,6 +121,34 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
+router.delete('/:id', async (req, res) => {
+  const id = parseId(req, res); if (id === null) return;
+  try {
+    const target = await users.findById(id);
+    if (!target) return res.status(404).json({ error: 'Usuario no encontrado.' });
+
+    // Mismas salvaguardas que al desactivar: ni borrarse a sí mismo ni dejar
+    // el sistema sin ningún administrador activo.
+    if (target.id === req.user.id) {
+      return res.status(409).json({ error: 'No puedes eliminar tu propia cuenta.' });
+    }
+    if (target.role === 'admin' && target.active) {
+      const n = await users.countActiveAdmins();
+      if (n <= 1) return res.status(409).json({ error: 'No puedes dejar el sistema sin administradores activos.' });
+    }
+
+    await users.remove(id);
+    audit.logAction(req.user.id, 'user.delete', {
+      targetType: 'user', targetId: id, ip: getClientIp(req),
+      metadata: { username: target.username, role: target.role },
+    });
+    res.json({ ok: true, deleted: { id, username: target.username } });
+  } catch (err) {
+    console.error('DELETE /users/:id error:', err.message);
+    res.status(500).json({ error: 'No se pudo eliminar el usuario.' });
+  }
+});
+
 router.post('/:id/reset-password', async (req, res) => {
   const id = parseId(req, res); if (id === null) return;
   try {
