@@ -617,6 +617,20 @@ button.nav-item { background: none; border: none; width: 100%; font-family: inhe
 /* Perfil: formularios estrechos, como en Ajustes del admin. */
 .wdesk .wperfil .card, .wdesk .wperfil .btn-block { max-width: 440px; }
 
+/* Salida animada de un formulario a página completa: se desvanece hacia abajo
+   (el inverso del fadeUp con el que entra todo) y luego se desmonta. */
+@keyframes fadeOutDown {
+  to { opacity: 0; transform: translateY(14px); }
+}
+.page-exit { animation: fadeOutDown 0.26s var(--ease) forwards; pointer-events: none; }
+
+/* Selector de estado dentro de listas (reparaciones, citas, tareas):
+   compacto, con pinta de píldora como los badges que reemplaza. */
+.estado-select {
+  width: auto; font-size: 12.5px; font-weight: 600; padding: 6px 26px 6px 12px;
+  border-radius: 999px; cursor: pointer;
+}
+
 /* Registrar venta: cada línea es una rejilla producto/concepto + cantidad +
    precio + quitar. En teléfono, el producto ocupa toda la fila. */
 .venta-linea { display: grid; grid-template-columns: 1fr 84px 110px 34px; gap: 0 10px; align-items: end; }

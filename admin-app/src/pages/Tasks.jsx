@@ -3,7 +3,6 @@ import { api } from '../api.js';
 import FormPage from '../components/FormPage.jsx';
 
 const STATUS_LABEL = { pending: 'Pendiente', in_progress: 'En progreso', done: 'Hecha' };
-const STATUS_BADGE = { pending: 'badge-pendiente', in_progress: 'badge-confirmada', done: 'badge-atendida' };
 const dstr = (d) => (d ? String(d).slice(0, 10) : '');
 
 export default function Tasks() {
@@ -24,6 +23,15 @@ export default function Tasks() {
   const remove = async (t) => {
     if (!window.confirm('¿Eliminar esta tarea?')) return;
     try { await api('/tasks/' + t.id, { method: 'DELETE' }); load(); } catch (e) { setErr(e.message); }
+  };
+
+  // Cambiar el estado directo desde la lista.
+  const setEstado = async (t, status) => {
+    setErr('');
+    try {
+      await api('/tasks/' + t.id, { method: 'PATCH', body: { status } });
+      setTasks((list) => list.map((x) => (x.id === t.id ? { ...x, status } : x)));
+    } catch (e) { setErr(e.message); }
   };
 
   // Formulario a página completa (sin modal).
@@ -51,7 +59,11 @@ export default function Tasks() {
                     <tr key={t.id}>
                       <td><strong>{t.title}</strong>{t.description && <div className="muted" style={{ fontSize: 12.5 }}>{t.description}</div>}</td>
                       <td>{t.assignee_username ? <span className="badge badge-worker">{t.assignee_username}</span> : <span className="muted">Sin asignar</span>}</td>
-                      <td><span className={'badge ' + STATUS_BADGE[t.status]}>{STATUS_LABEL[t.status]}</span></td>
+                      <td>
+                        <select className="estado-select" value={t.status} onChange={(e) => setEstado(t, e.target.value)}>
+                          {Object.entries(STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                        </select>
+                      </td>
                       <td className="muted hide-sm">{dstr(t.due_date) || '—'}</td>
                       <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                         <button className="btn btn-secondary btn-sm" onClick={() => setModal({ mode: 'edit', task: t })}>Editar</button>{' '}

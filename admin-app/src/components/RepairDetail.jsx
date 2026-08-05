@@ -44,7 +44,7 @@ const EMPTY = {
   problem: '', diagnosis: '', quoted_price: '', final_price: '', status: 'recibido', assigned_to: '',
 };
 
-export default function RepairDetail({ ticketId, workers = [], isAdmin, onClose, onSaved }) {
+export default function RepairDetail({ ticketId, workers = [], isAdmin, onClose, onSaved, onCreated }) {
   const [id, setId] = useState(ticketId || null);
   const [f, setF] = useState(EMPTY);
   const [photos, setPhotos] = useState([]);
@@ -81,6 +81,9 @@ export default function RepairDetail({ ticketId, workers = [], isAdmin, onClose,
         setOk('Cambios guardados.');
       } else {
         const { ticket } = await api('/repairs', { method: 'POST', body });
+        // Con onCreated: volver a la lista (las fotos se agregan reabriendo la
+        // reparación). Sin él: quedarse para subir fotos de una vez.
+        if (onCreated) { if (onSaved) onSaved(); onCreated(ticket); return; }
         setId(ticket.id); // ahora se pueden agregar fotos
         setOk('Reparación creada. Ya puedes agregar fotos.');
       }

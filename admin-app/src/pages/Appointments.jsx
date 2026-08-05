@@ -189,7 +189,11 @@ export default function Appointments() {
                   <div className="cita-cliente">{c.nombre}</div>
                   <div className="cita-tel muted">{c.telefono || '—'}</div>
                   <div className="cita-servicio muted">{c.servicio}</div>
-                  <span className={'badge badge-' + c.estado}>{c.estado}</span>
+                  <select className="estado-select" value={c.estado} disabled={!!busy}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => changeEstado(c, e.target.value)}>
+                    {ESTADOS.map((e2) => <option key={e2} value={e2}>{e2}</option>)}
+                  </select>
                   <svg className="cita-go" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
                     strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <polyline points="9 18 15 12 9 6" />

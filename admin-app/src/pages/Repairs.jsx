@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import FormPage from '../components/FormPage.jsx';
-import RepairDetail, { STATUS_BADGE, statusLabel, REPAIR_STATUS } from '../components/RepairDetail.jsx';
+import RepairDetail, { REPAIR_STATUS } from '../components/RepairDetail.jsx';
 
 const money = (n) => (n == null ? '—' : '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }));
 
@@ -31,6 +31,7 @@ export default function Repairs() {
   const [detail, setDetail] = useState(null); // { id } | { id: null }
   const [sel, setSel] = useState(() => new Set()); // ids marcados para borrar
   const [busy, setBusy] = useState(false);
+  const [exiting, setExiting] = useState(false); // el formulario se despide animado
 
   const load = useCallback(() => {
     setErr('');
@@ -77,6 +78,17 @@ export default function Repairs() {
     setBusy(false);
   };
 
+  // Cambiar el estado directo desde la lista (mismas opciones que la ficha).
+  const setEstado = async (t, status) => {
+    setErr('');
+    try {
+      await api('/repairs/' + t.id, { method: 'PATCH', body: { status } });
+      setTickets((list) => list.map((x) => (x.id === t.id
+        ? { ...x, status, delivered_at: status === 'entregado' ? new Date().toISOString() : null }
+        : x)));
+    } catch (e) { setErr(e.message); }
+  };
+
   const removeAll = async () => {
     const n = tickets ? tickets.length : 0;
     if (!n) return;
@@ -91,13 +103,18 @@ export default function Repairs() {
     setBusy(false);
   };
 
-  // Formulario a página completa (sin modal).
+  // Formulario a página completa (sin modal). Al guardar o cerrar, la página
+  // del formulario se desvanece y la lista entra con su animación de siempre.
   if (detail) {
-    const back = () => { setDetail(null); load(); };
+    const back = () => { setDetail(null); setExiting(false); load(); };
+    const animBack = () => { setExiting(true); setTimeout(back, 260); };
     return (
-      <FormPage title={detail.id ? 'Reparación' : 'Nueva reparación'} onBack={back}>
-        <RepairDetail ticketId={detail.id} workers={workers} isAdmin onClose={back} onSaved={load} />
-      </FormPage>
+      <div className={exiting ? 'page-exit' : undefined}>
+        <FormPage title={detail.id ? 'Reparación' : 'Nueva reparación'} onBack={animBack}>
+          <RepairDetail ticketId={detail.id} workers={workers} isAdmin
+            onClose={animBack} onSaved={load} onCreated={animBack} />
+        </FormPage>
+      </div>
     );
   }
 
@@ -155,7 +172,11 @@ export default function Repairs() {
                       </td>
                       <td><strong>{[t.device_brand, t.device_model].filter(Boolean).join(' ') || '—'}</strong>{t.device_serial && <div className="muted" style={{ fontSize: 12 }}>{t.device_serial}</div>}</td>
                       <td>{t.customer_name || '—'}{t.customer_phone && <div className="muted" style={{ fontSize: 12 }}>{t.customer_phone}</div>}</td>
-                      <td><span className={'badge ' + STATUS_BADGE[t.status]}>{statusLabel(t.status)}</span></td>
+                      <td onClick={(e) => e.stopPropagation()} style={{ cursor: 'default' }}>
+                        <select className="estado-select" value={t.status} onChange={(e) => setEstado(t, e.target.value)}>
+                          {REPAIR_STATUS.map((s) => <option key={s.v} value={s.v}>{s.l}</option>)}
+                        </select>
+                      </td>
                       <td className="muted hide-sm">{t.assignee_username || '—'}</td>
                       <td>{money(t.final_price != null ? t.final_price : t.quoted_price)}</td>
                       <td className="muted hide-sm">{t.photo_count > 0 ? `📷 ${t.photo_count}` : '—'}</td>

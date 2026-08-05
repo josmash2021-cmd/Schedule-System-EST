@@ -110,6 +110,7 @@ export default function Dashboard() {
   const [appts, setAppts] = useState(null);
   const [weekAppts, setWeekAppts] = useState(null);
   const [tickets, setTickets] = useState(null);
+  const [directas, setDirectas] = useState(null); // ventas de mostrador
   const [inventory, setInventory] = useState(null);
   const [err, setErr] = useState('');
 
@@ -122,6 +123,7 @@ export default function Dashboard() {
       .then((d) => setWeekAppts(d.citas || []))
       .catch(() => setWeekAppts([]));
     api('/repairs').then((d) => setTickets(d.tickets || [])).catch(() => setTickets([]));
+    api('/sales').then((d) => setDirectas(d.sales || [])).catch(() => setDirectas([]));
     api('/inventory').then((d) => setInventory(d.items || [])).catch(() => setInventory([]));
   }, []);
 
@@ -133,15 +135,25 @@ export default function Dashboard() {
   // Reparaciones creadas esta semana.
   const weekRepairs = tickets ? tickets.filter((t) => inWeek(chicagoKey(new Date(t.created_at)))) : null;
 
-  // Ventas de la semana: tickets entregados, sumando final_price por día.
+  // Toda venta = reparación entregada O venta de mostrador, como {fecha, monto}.
+  // Es la MISMA definición que usa la página de Ventas; si difieren, los números
+  // del Dashboard no cuadran con los de esa página.
+  const ventasTodas = (tickets && directas) ? [
+    ...tickets
+      .filter((t) => t.status === 'entregado' && t.delivered_at)
+      .map((t) => ({ key: chicagoKey(new Date(t.delivered_at)), monto: Number(t.final_price) || 0 })),
+    ...directas
+      .map((v) => ({ key: chicagoKey(new Date(v.created_at)), monto: Number(v.total) || 0 })),
+  ] : null;
+
+  // Ventas de la semana por día (reparaciones + mostrador).
   let salesByDay = null;
   let salesTotal = null;
-  if (tickets) {
+  if (ventasTodas) {
     salesByDay = weekKeys.map(() => 0);
-    for (const t of tickets) {
-      if (t.status !== 'entregado' || !t.delivered_at) continue;
-      const idx = weekKeys.indexOf(chicagoKey(new Date(t.delivered_at)));
-      if (idx >= 0) salesByDay[idx] += Number(t.final_price) || 0;
+    for (const v of ventasTodas) {
+      const idx = weekKeys.indexOf(v.key);
+      if (idx >= 0) salesByDay[idx] += v.monto;
     }
     salesTotal = salesByDay.reduce((a, b) => a + b, 0);
   }
@@ -151,11 +163,9 @@ export default function Dashboard() {
   let salesToday = null;
   let weekSalesCount = null;
   let weekOpenCount = null;
-  if (tickets) {
-    salesToday = tickets
-      .filter((t) => t.status === 'entregado' && t.delivered_at && chicagoKey(new Date(t.delivered_at)) === todayKey)
-      .reduce((a, t) => a + (Number(t.final_price) || 0), 0);
-    weekSalesCount = tickets.filter((t) => t.status === 'entregado' && t.delivered_at && inWeek(chicagoKey(new Date(t.delivered_at)))).length;
+  if (ventasTodas) {
+    salesToday = ventasTodas.filter((v) => v.key === todayKey).reduce((a, v) => a + v.monto, 0);
+    weekSalesCount = ventasTodas.filter((v) => inWeek(v.key)).length;
     weekOpenCount = weekRepairs.filter((t) => t.status !== 'entregado').length;
   }
 
