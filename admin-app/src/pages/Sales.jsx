@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
 import BarChart from '../components/BarChart.jsx';
+import FormPage from '../components/FormPage.jsx';
+import SaleForm from '../components/SaleForm.jsx';
 
 // Fecha "de negocio": el taller opera en hora de Chicago.
 function chicagoParts(date = new Date()) {
@@ -74,20 +76,42 @@ export default function Sales() {
   const [searchParams] = useSearchParams();
   const paramFecha = searchParams.get('fecha');
   const [tickets, setTickets] = useState(null);
+  const [directas, setDirectas] = useState(null);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+  const [registering, setRegistering] = useState(false);
+  const [tick, setTick] = useState(0);
   const [period, setPeriod] = useState(/^\d{4}-\d{2}-\d{2}$/.test(paramFecha || '') ? 'dia' : 'semana');
   const [day, setDay] = useState(/^\d{4}-\d{2}-\d{2}$/.test(paramFecha || '') ? paramFecha : chicagoParts().key);
   const [month, setMonth] = useState(chicagoParts().key.slice(0, 7));
 
-  const load = () => api('/repairs').then((d) => setTickets(d.tickets || [])).catch((e) => setErr(e.message));
-  useEffect(() => { load(); }, []);
+  const load = () => Promise.all([
+    api('/repairs').then((d) => setTickets(d.tickets || [])),
+    api('/sales').then((d) => setDirectas(d.sales || [])),
+  ]).catch((e) => setErr(e.message));
+  useEffect(() => { load(); }, [tick]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Ventas = tickets entregados con precio final, con su fecha/hora de Chicago.
-  const sales = useMemo(() => (tickets || [])
-    .filter((t) => t.status === 'entregado' && t.delivered_at)
-    .map((t) => ({ ...t, price: Number(t.final_price) || 0, cp: chicagoParts(new Date(t.delivered_at)) })),
-  [tickets]);
+  const cargado = tickets != null && directas != null;
+
+  // Ventas = reparaciones entregadas + ventas directas del mostrador, todas
+  // con su fecha/hora de Chicago y una forma común para KPIs/gráfico/tabla.
+  const sales = useMemo(() => {
+    const deReparacion = (tickets || [])
+      .filter((t) => t.status === 'entregado' && t.delivered_at)
+      .map((t) => ({
+        key: 'r' + t.id, tipo: 'reparacion', price: Number(t.final_price) || 0, when: t.delivered_at,
+        concepto: [t.device_brand, t.device_model].filter(Boolean).join(' ') || 'Reparación',
+        cliente: t.customer_name || null, telefono: t.customer_phone || null,
+        quien: t.assignee_username || null, cp: chicagoParts(new Date(t.delivered_at)),
+      }));
+    const deMostrador = (directas || []).map((v) => ({
+      key: 'v' + v.id, ventaId: v.id, tipo: 'venta', price: Number(v.total) || 0, when: v.created_at,
+      concepto: (v.items || []).map((i) => (i.qty > 1 ? `${i.qty}× ${i.name}` : i.name)).join(', ') || 'Venta',
+      cliente: null, telefono: null, pago: v.payment_method || null,
+      quien: v.seller_username || null, cp: chicagoParts(new Date(v.created_at)),
+    }));
+    return [...deReparacion, ...deMostrador];
+  }, [tickets, directas]);
 
   const now = chicagoParts();
   const wk = weekKeys();
@@ -104,7 +128,7 @@ export default function Sales() {
   };
 
   const sum = (list) => list.reduce((a, s) => a + s.price, 0);
-  const kpis = tickets ? {
+  const kpis = cargado ? {
     dia: { total: sum(sales.filter((s) => s.cp.key === now.key)), count: sales.filter((s) => s.cp.key === now.key).length },
     semana: { total: sum(sales.filter((s) => wk.includes(s.cp.key))), count: sales.filter((s) => wk.includes(s.cp.key)).length },
     mes: { total: sum(sales.filter((s) => s.cp.key.slice(0, 7) === curMonthKey)), count: sales.filter((s) => s.cp.key.slice(0, 7) === curMonthKey).length },
@@ -113,7 +137,7 @@ export default function Sales() {
 
   // Datos del gráfico según el período.
   let chart = null;
-  if (tickets) {
+  if (cargado) {
     if (period === 'dia') {
       const keys = []; const labels = [];
       for (let h = 8; h <= 20; h++) { keys.push(String(h)); labels.push(h + 'h'); }
@@ -143,7 +167,7 @@ export default function Sales() {
     }
   }
 
-  const shown = sales.filter((s) => inPeriod(s, period)).sort((a, b) => (a.delivered_at < b.delivered_at ? 1 : -1));
+  const shown = sales.filter((s) => inPeriod(s, period)).sort((a, b) => (a.when < b.when ? 1 : -1));
   const shownTotal = sum(shown);
   const fmtDay = (iso) => {
     const cp = chicagoParts(new Date(iso));
@@ -151,17 +175,29 @@ export default function Sales() {
     return `${d}/${m}/${y} ${String(cp.hour).padStart(2, '0')}:${String(new Date(iso).getUTCMinutes()).padStart(2, '0')}`;
   };
 
-  // Reiniciar Ventas. Esta página no guarda nada propio: cada venta es una
-  // reparación con estado "entregado", así que vaciarla es borrar esas
-  // reparaciones. Las activas (recibido/diagnóstico/reparación/listo) no se tocan.
+  // Reiniciar Ventas: borra las ventas de mostrador Y las reparaciones
+  // entregadas (que son la otra fuente de esta página). Las reparaciones en
+  // curso no se tocan y el stock no se repone (esas unidades sí se vendieron).
   const resetSales = async () => {
     if (!sales.length) return;
-    if (!window.confirm(`¿Borrar TODAS las ventas (${sales.length})?\n\nCada venta es una reparación entregada, así que esas reparaciones también desaparecen de la página de Reparaciones. Las reparaciones en curso no se tocan. No se puede deshacer.`)) return;
+    if (!window.confirm(`¿Borrar TODAS las ventas (${sales.length})?\n\nSe borran las ventas de mostrador y las reparaciones entregadas (desaparecen también de Reparaciones). Las reparaciones en curso no se tocan y el stock no cambia. No se puede deshacer.`)) return;
     if (!window.confirm('Última confirmación: la página de Ventas quedará en blanco.')) return;
     setBusy(true); setErr('');
     try {
       await api('/repairs', { method: 'DELETE', body: { delivered: true } });
-      await load();
+      await api('/sales', { method: 'DELETE', body: { all: true } });
+      setTick((t) => t + 1);
+    } catch (e) { setErr(e.message); }
+    setBusy(false);
+  };
+
+  // Anular una venta de mostrador (repone el stock de sus productos).
+  const anular = async (s) => {
+    if (!window.confirm(`¿Anular la venta de ${usd.format(s.price)} (${s.concepto})?\n\nSe repone el stock de los productos vendidos.`)) return;
+    setBusy(true); setErr('');
+    try {
+      await api('/sales/' + s.ventaId, { method: 'DELETE' });
+      setTick((t) => t + 1);
     } catch (e) { setErr(e.message); }
     setBusy(false);
   };
@@ -172,17 +208,30 @@ export default function Sales() {
     else if (period === 'ano') { setPeriod('mes'); setMonth(`${now.y}-${k.padStart(2, '0')}`); }
   };
 
+  // Alta de venta a página completa (mismo patrón que el resto del panel).
+  if (registering) {
+    return (
+      <FormPage title="Registrar venta" onBack={() => setRegistering(false)} max={680}>
+        <SaleForm
+          onCancel={() => setRegistering(false)}
+          onSaved={() => { setRegistering(false); setTick((t) => t + 1); }}
+        />
+      </FormPage>
+    );
+  }
+
   return (
     <div className="sales-page">
       {err && <div className="alert alert-error">{err}</div>}
 
-      {sales.length > 0 && (
-        <div className="row" style={{ justifyContent: 'flex-end', marginBottom: 16 }}>
+      <div className="row" style={{ justifyContent: 'flex-end', marginBottom: 16, gap: 10 }}>
+        {sales.length > 0 && (
           <button className="btn btn-danger btn-sm" onClick={resetSales} disabled={busy}>
             {busy ? <span className="spinner" /> : 'Borrar todas las ventas'}
           </button>
-        </div>
-      )}
+        )}
+        <button className="btn btn-primary" onClick={() => setRegistering(true)}>+ Registrar venta</button>
+      </div>
 
       <div className="stat-grid">
         {kpis == null
@@ -213,7 +262,7 @@ export default function Sales() {
             style={{ width: 'auto', marginLeft: 6 }} />
         )}
         <div className="spacer" />
-        {tickets != null && (
+        {cargado && (
           <strong style={{ fontSize: 15 }}>
             Total: {usd.format(shownTotal)} · {shown.length} venta{shown.length === 1 ? '' : 's'}
           </strong>
@@ -235,25 +284,36 @@ export default function Sales() {
 
       <div className="card">
         <h3>Detalle de ventas</h3>
-        {tickets == null ? <span className="spinner" />
+        {!cargado ? <span className="spinner" />
           : shown.length === 0 ? <div className="empty">No hay ventas en este período.</div>
             : (
               <div className="table-wrap">
                 <table className="data">
-                  <thead><tr><th>Fecha</th><th>Cliente</th><th>Equipo</th><th className="hide-sm">Técnico</th><th style={{ textAlign: 'right' }}>Precio</th></tr></thead>
+                  <thead><tr><th>Fecha</th><th>Detalle</th><th>Tipo</th><th className="hide-sm">Atendió</th><th style={{ textAlign: 'right' }}>Precio</th><th></th></tr></thead>
                   <tbody>
                     {shown.map((s) => (
-                      <tr key={s.id}>
-                        <td className="muted">{fmtDay(s.delivered_at)}</td>
-                        <td><strong>{s.customer_name || '—'}</strong>{s.customer_phone && <div className="muted" style={{ fontSize: 12 }}>{s.customer_phone}</div>}</td>
-                        <td className="muted">{[s.device_brand, s.device_model].filter(Boolean).join(' ') || '—'}</td>
-                        <td className="muted hide-sm">{s.assignee_username || '—'}</td>
+                      <tr key={s.key}>
+                        <td className="muted">{fmtDay(s.when)}</td>
+                        <td>
+                          <strong>{s.tipo === 'reparacion' ? (s.cliente || '—') : s.concepto}</strong>
+                          <div className="muted" style={{ fontSize: 12 }}>
+                            {s.tipo === 'reparacion' ? s.concepto : (s.pago || 'mostrador')}
+                          </div>
+                        </td>
+                        <td><span className={'badge ' + (s.tipo === 'venta' ? 'badge-on' : 'badge-worker')}>{s.tipo === 'venta' ? 'venta' : 'reparación'}</span></td>
+                        <td className="muted hide-sm">{s.quien || '—'}</td>
                         <td style={{ textAlign: 'right' }}><strong>{usd.format(s.price)}</strong></td>
+                        <td style={{ textAlign: 'right' }}>
+                          {s.tipo === 'venta' && (
+                            <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => anular(s)} title="Anular venta (repone stock)">Anular</button>
+                          )}
+                        </td>
                       </tr>
                     ))}
                     <tr>
                       <td colSpan="4" style={{ textAlign: 'right' }}><strong>Total del período</strong></td>
                       <td style={{ textAlign: 'right' }}><strong>{usd.format(shownTotal)}</strong></td>
+                      <td />
                     </tr>
                   </tbody>
                 </table>

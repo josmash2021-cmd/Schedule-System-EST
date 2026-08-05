@@ -617,6 +617,16 @@ button.nav-item { background: none; border: none; width: 100%; font-family: inhe
 /* Perfil: formularios estrechos, como en Ajustes del admin. */
 .wdesk .wperfil .card, .wdesk .wperfil .btn-block { max-width: 440px; }
 
+/* Registrar venta: cada línea es una rejilla producto/concepto + cantidad +
+   precio + quitar. En teléfono, el producto ocupa toda la fila. */
+.venta-linea { display: grid; grid-template-columns: 1fr 84px 110px 34px; gap: 0 10px; align-items: end; }
+.venta-linea .field { margin-bottom: 12px; }
+.venta-linea .vl-nombre { grid-column: 1 / -1; margin-top: -4px; }
+.venta-linea .vl-x { margin-bottom: 14px; padding: 7px 9px; }
+@media (max-width: 560px) {
+  .venta-linea { grid-template-columns: 1fr 74px 96px 30px; }
+}
+
 /* Citas del trabajador: el borde izquierdo de la tarjeta lleva el estado
    (mismo lenguaje que las tareas), y la cancelada se apaga. */
 .cita-card { border-left-color: #9a9aa2; }

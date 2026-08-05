@@ -207,6 +207,33 @@ async function initDb() {
     `);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_inv_mov_item ON inventory_movements(item_id);`);
 
+    // ----- Ventas directas (mostrador): cabecera + líneas -----
+    // Una venta puede mezclar productos del inventario (item_id, descuenta
+    // stock) y conceptos libres (item_id NULL). name/price son una FOTO del
+    // momento de la venta: si luego cambia el producto, la venta no se altera.
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS sales (
+        id             SERIAL PRIMARY KEY,
+        total          NUMERIC(10,2) NOT NULL DEFAULT 0,
+        payment_method TEXT,
+        note           TEXT,
+        created_by     INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at     TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_sales_created ON sales(created_at);`);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS sale_items (
+        id      SERIAL PRIMARY KEY,
+        sale_id INTEGER NOT NULL REFERENCES sales(id) ON DELETE CASCADE,
+        item_id INTEGER REFERENCES inventory_items(id) ON DELETE SET NULL,
+        name    TEXT NOT NULL,
+        qty     INTEGER NOT NULL DEFAULT 1,
+        price   NUMERIC(10,2) NOT NULL DEFAULT 0
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_sale_items_sale ON sale_items(sale_id);`);
+
     // Sembrar el primer admin desde ADMIN_PASSWORD (idempotente): solo si aún
     // no existe ningún admin. Nace con must_change_password para forzar rotación.
     if (ADMIN_PASSWORD) {
