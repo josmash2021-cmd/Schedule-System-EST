@@ -64,10 +64,11 @@ if (NODE_ENV === 'production' && !ADMIN_PATH) {
   console.warn('WARN: ADMIN_PATH no configurada; el panel de back-office quedará INALCANZABLE hasta definir un slug secreto en producción.');
 }
 
-// Carpeta de subidas (fotos de reparaciones). En producción va al volumen
-// persistente de Railway (DATA_DIR=/data/data → /data/data/uploads).
+// Carpetas de subidas. En producción van al volumen persistente de Railway
+// (DATA_DIR=/data/data → /data/data/uploads).
 const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(process.env.DATA_DIR || path.join(__dirname, 'data'), 'uploads');
 const REPAIRS_DIR = path.join(UPLOADS_DIR, 'repairs');
+const INVENTORY_DIR = path.join(UPLOADS_DIR, 'inventory');
 
 module.exports = {
   PORT,
@@ -92,4 +93,5 @@ module.exports = {
   BCRYPT_COST,
   UPLOADS_DIR,
   REPAIRS_DIR,
+  INVENTORY_DIR,
 };

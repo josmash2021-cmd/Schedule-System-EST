@@ -1,10 +1,38 @@
 /* Inventario: /api/admin/inventory/*
    Ver y ajustar stock: cualquier usuario. Crear/editar/eliminar productos: admin. */
 const express = require('express');
+const path = require('path');
+const fs = require('fs');
+const crypto = require('node:crypto');
+const multer = require('multer');
 const inventory = require('../models/inventory');
 const audit = require('../models/audit');
 const { verifyToken, loadUser, requireRole } = require('../middleware/auth');
 const { getClientIp } = require('../lib/rateLimit');
+const { INVENTORY_DIR } = require('../config');
+
+fs.mkdirSync(INVENTORY_DIR, { recursive: true });
+
+const EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, INVENTORY_DIR),
+  filename: (_req, file, cb) => cb(null, crypto.randomUUID() + (EXT[file.mimetype] || '.jpg')),
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024, files: 1 },
+  fileFilter: (_req, file, cb) => {
+    if (EXT[file.mimetype]) cb(null, true);
+    else cb(new Error('Solo se permiten imágenes JPG, PNG o WEBP.'));
+  },
+});
+function uploadPhoto(req, res, next) {
+  upload.single('photo')(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message || 'No se pudo subir la imagen.' });
+    if (!req.file) return res.status(400).json({ error: 'No se recibió ninguna imagen.' });
+    next();
+  });
+}
 
 const router = express.Router();
 router.use(verifyToken, loadUser);
@@ -27,7 +55,7 @@ function num(v, { int = false, min = 0 } = {}) {
 function extractItem(b) {
   const f = {};
   if (b.name !== undefined) f.name = String(b.name || '').trim().slice(0, 160);
-  for (const [k, max] of [['sku', 60], ['category', 60], ['description', 2000]]) {
+  for (const [k, max] of [['sku', 60], ['category', 60], ['description', 2000], ['image_url', 260]]) {
     if (b[k] !== undefined) { const s = b[k] == null ? null : String(b[k]).trim(); f[k] = s ? s.slice(0, max) : null; }
   }
   for (const k of ['price', 'cost']) {
@@ -131,6 +159,47 @@ router.get('/:id/movements', async (req, res) => {
   } catch (err) {
     console.error('inventory movements error:', err.message);
     res.status(500).json({ error: 'Error al obtener los movimientos.' });
+  }
+});
+
+// Subir foto de un producto (admin).
+router.post('/:id/photo', requireRole('admin'), uploadPhoto, async (req, res) => {
+  const id = parseId(req, res);
+  if (id === null) { fs.unlink(req.file.path, () => {}); return; }
+  const url = '/x/s/inventory/photos/' + req.file.filename;
+  try {
+    const existing = await inventory.findById(id);
+    if (!existing) { fs.unlink(req.file.path, () => {}); return res.status(404).json({ error: 'Producto no encontrado.' }); }
+    if (existing.image_url) {
+      const old = path.join(INVENTORY_DIR, path.basename(existing.image_url));
+      fs.unlink(old, () => {});
+    }
+    const item = await inventory.update(id, { image_url: url });
+    audit.logAction(req.user.id, 'inventory.photo_add', { targetType: 'inventory', targetId: id, ip: getClientIp(req) });
+    res.json({ item });
+  } catch (err) {
+    fs.unlink(req.file.path, () => {});
+    console.error('inventory photo upload error:', err.message);
+    res.status(500).json({ error: 'No se pudo guardar la foto.' });
+  }
+});
+
+// Eliminar foto de un producto (admin).
+router.delete('/:id/photo', requireRole('admin'), async (req, res) => {
+  const id = parseId(req, res); if (id === null) return;
+  try {
+    const existing = await inventory.findById(id);
+    if (!existing) return res.status(404).json({ error: 'Producto no encontrado.' });
+    if (existing.image_url) {
+      const old = path.join(INVENTORY_DIR, path.basename(existing.image_url));
+      fs.unlink(old, () => {});
+    }
+    const item = await inventory.update(id, { image_url: null });
+    audit.logAction(req.user.id, 'inventory.photo_delete', { targetType: 'inventory', targetId: id, ip: getClientIp(req) });
+    res.json({ item });
+  } catch (err) {
+    console.error('inventory photo delete error:', err.message);
+    res.status(500).json({ error: 'No se pudo eliminar la foto.' });
   }
 });
 

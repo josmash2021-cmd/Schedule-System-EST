@@ -187,12 +187,14 @@ async function initDb() {
         cost        NUMERIC(10,2),
         stock       INTEGER NOT NULL DEFAULT 0,
         min_stock   INTEGER NOT NULL DEFAULT 0,
+        image_url   TEXT,
         active      BOOLEAN NOT NULL DEFAULT true,
         created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
       );
     `);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_inventory_active ON inventory_items(active);`);
+    await client.query(`ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS image_url TEXT;`);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS inventory_movements (

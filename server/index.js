@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-const { PORT, CORS_ORIGIN, ADMIN_PATH, REPAIRS_DIR } = require('./config');
+const { PORT, CORS_ORIGIN, ADMIN_PATH, REPAIRS_DIR, INVENTORY_DIR } = require('./config');
 const { initDb } = require('./db');
 const slotsRouter = require('./routes/slots');
 const appointmentsRouter = require('./routes/appointments');
@@ -146,10 +146,11 @@ app.use('/x/s/users', adminUsersRouter);
 app.use('/x/s/time', adminTimeRouter);
 app.use('/x/s/tasks', adminTasksRouter);
 app.use('/x/s/live', adminMonitorRouter);
-// Fotos de reparaciones (nombres UUID no adivinables). Debe ir ANTES del router
-// para que /repairs/photo/<archivo> lo sirva el static y no lo capture /repairs/:id.
+// Fotos de reparaciones e inventario (nombres UUID no adivinables). Deben ir
+// ANTES de los routers para que no capturen /:id las rutas estáticas.
 app.use('/x/s/repairs/photo', express.static(REPAIRS_DIR, { index: false, fallthrough: true, maxAge: '7d' }));
 app.use('/x/s/repairs', adminRepairsRouter);
+app.use('/x/s/inventory/photos', express.static(INVENTORY_DIR, { index: false, fallthrough: true, maxAge: '7d' }));
 app.use('/x/s/inventory', adminInventoryRouter);
 // Citas desde el panel: crear/listar lo pueden hacer admin y trabajadores.
 app.use('/x/s/appointments', adminAppointmentsRouter);
