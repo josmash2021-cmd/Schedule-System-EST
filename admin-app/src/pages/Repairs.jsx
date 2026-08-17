@@ -2,7 +2,9 @@ import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import FormPage from '../components/FormPage.jsx';
-import RepairDetail, { REPAIR_STATUS } from '../components/RepairDetail.jsx';
+import RepairDetail, {
+  REPAIR_STATUS, DEVICE_TYPES, deviceTypeLabel, serviceTypeLabel,
+} from '../components/RepairDetail.jsx';
 
 const money = (n) => (n == null ? '—' : '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }));
 
@@ -18,6 +20,17 @@ function FilterPill({ v, cur, set, label }) {
   return <button className={'btn btn-sm ' + (cur === v ? 'btn-primary' : 'btn-secondary')} onClick={() => set(v)}>{label}</button>;
 }
 
+// Plurales para los pills de categoría de equipo.
+const DEVICE_PLURAL = { telefono: 'Teléfonos', tablet: 'Tablets', laptop: 'Laptops' };
+
+// Las reparaciones activas se organizan en tres columnas por estado:
+// recibidas → en proceso (diagnóstico + reparación) → listas para entregar.
+const KANBAN_COLS = [
+  { key: 'recibidos', label: 'Recibidos', match: (t) => t.status === 'recibido' },
+  { key: 'proceso', label: 'En proceso', match: (t) => t.status === 'diagnostico' || t.status === 'reparacion' },
+  { key: 'listos', label: 'Listos para entregar', match: (t) => t.status === 'listo' },
+];
+
 export default function Repairs() {
   const navigate = useNavigate();
   // Permite llegar con ?entregado=YYYY-MM-DD (desde el gráfico de ventas del Dashboard).
@@ -28,6 +41,7 @@ export default function Repairs() {
   const [workers, setWorkers] = useState([]);
   const [err, setErr] = useState('');
   const [filter, setFilter] = useState(dayFilter ? 'entregado' : 'activos');
+  const [deviceFilter, setDeviceFilter] = useState('todas'); // categoría de equipo
   const [detail, setDetail] = useState(null); // { id } | { id: null }
   const [sel, setSel] = useState(() => new Set()); // ids marcados para borrar
   const [busy, setBusy] = useState(false);
@@ -42,16 +56,22 @@ export default function Repairs() {
     api('/users').then((d) => setWorkers(d.users.filter((u) => u.active))).catch(() => {});
   }, [load]);
 
-  const shown = tickets ? tickets.filter((t) => {
+  // Filtro por categoría de equipo (teléfonos / tablets / laptops).
+  const byDevice = tickets ? tickets.filter((t) => deviceFilter === 'todas' || t.device_type === deviceFilter) : [];
+
+  const shown = byDevice.filter((t) => {
     if (dayFilter && chicagoKey(new Date(t.delivered_at || 0)) !== dayFilter) return false;
     if (filter === 'todos') return true;
     if (filter === 'activos') return t.status !== 'entregado';
     return t.status === filter;
-  }) : [];
+  });
+
+  // Vista de columnas (kanban) solo para las activas, sin filtro de fecha.
+  const kanban = filter === 'activos' && !dayFilter;
 
   // Al cambiar de filtro se limpia la selección: así nunca se borra algo que
   // ya no está a la vista.
-  useEffect(() => { setSel(new Set()); }, [filter, dayFilter]);
+  useEffect(() => { setSel(new Set()); }, [filter, deviceFilter, dayFilter]);
 
   const toggle = (id) => setSel((prev) => {
     const n = new Set(prev);
@@ -129,9 +149,16 @@ export default function Repairs() {
       </div>
       {err && <div className="alert alert-error">{err}</div>}
 
+      {/* Categoría de equipo */}
+      <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+        <FilterPill v="todas" cur={deviceFilter} set={setDeviceFilter} label="Todos los equipos" />
+        {DEVICE_TYPES.map((s) => <FilterPill key={s.v} v={s.v} cur={deviceFilter} set={setDeviceFilter} label={DEVICE_PLURAL[s.v]} />)}
+      </div>
+
+      {/* Estado */}
       <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
         <FilterPill v="activos" cur={filter} set={setFilter} label="Activas" />
-        {REPAIR_STATUS.map((s) => <FilterPill key={s.v} v={s.v} cur={filter} set={setFilter} label={s.l} />)}
+        <FilterPill v="entregado" cur={filter} set={setFilter} label="Entregadas" />
         <FilterPill v="todos" cur={filter} set={setFilter} label="Todas" />
       </div>
 
@@ -153,6 +180,39 @@ export default function Repairs() {
       )}
 
       {tickets == null ? <span className="spinner spinner-lg" />
+        : kanban ? (
+          <div className="kanban">
+            {KANBAN_COLS.map((col) => {
+              const items = shown.filter(col.match);
+              return (
+                <div key={col.key} className="kanban-col">
+                  <div className="kanban-col-head">{col.label} <span className="muted">({items.length})</span></div>
+                  {items.length === 0 ? <div className="muted" style={{ fontSize: 13, padding: '4px 2px' }}>Sin equipos.</div>
+                    : items.map((t) => (
+                      <div key={t.id} className="kanban-card" onClick={() => setDetail({ id: t.id })}>
+                        <div className="kanban-card-title">
+                          <strong>{[t.device_brand, t.device_model].filter(Boolean).join(' ') || '—'}</strong>
+                          {t.photo_count > 0 && <span className="muted" style={{ fontSize: 12 }}>📷 {t.photo_count}</span>}
+                        </div>
+                        <div className="muted" style={{ fontSize: 12 }}>
+                          {deviceTypeLabel(t.device_type)} · {serviceTypeLabel(t.service_type)}
+                        </div>
+                        <div style={{ fontSize: 13 }}>{t.customer_name || '—'}</div>
+                        <div className="kanban-card-foot">
+                          <span>{money(t.final_price != null ? t.final_price : t.quoted_price)}</span>
+                          <select className="estado-select" value={t.status}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => setEstado(t, e.target.value)}>
+                            {REPAIR_STATUS.map((s) => <option key={s.v} value={s.v}>{s.l}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              );
+            })}
+          </div>
+        )
         : shown.length === 0 ? <div className="card"><div className="empty">No hay reparaciones{filter !== 'todos' ? ' en este filtro' : ''}.</div></div>
           : (
             <div className="table-wrap">
@@ -170,7 +230,11 @@ export default function Repairs() {
                       <td onClick={(e) => e.stopPropagation()} style={{ cursor: 'default' }}>
                         <input type="checkbox" checked={sel.has(t.id)} onChange={() => toggle(t.id)} style={{ cursor: 'pointer' }} />
                       </td>
-                      <td><strong>{[t.device_brand, t.device_model].filter(Boolean).join(' ') || '—'}</strong>{t.device_serial && <div className="muted" style={{ fontSize: 12 }}>{t.device_serial}</div>}</td>
+                      <td><strong>{[t.device_brand, t.device_model].filter(Boolean).join(' ') || '—'}</strong>
+                        <div className="muted" style={{ fontSize: 12 }}>
+                          {[deviceTypeLabel(t.device_type), serviceTypeLabel(t.service_type)].join(' · ')}{t.device_serial ? ` · ${t.device_serial}` : ''}
+                        </div>
+                      </td>
                       <td>{t.customer_name || '—'}{t.customer_phone && <div className="muted" style={{ fontSize: 12 }}>{t.customer_phone}</div>}</td>
                       <td onClick={(e) => e.stopPropagation()} style={{ cursor: 'default' }}>
                         <select className="estado-select" value={t.status} onChange={(e) => setEstado(t, e.target.value)}>

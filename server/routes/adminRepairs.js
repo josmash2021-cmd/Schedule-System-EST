@@ -64,6 +64,19 @@ function extractFields(b) {
   return { fields: f };
 }
 
+// Valida los enums de tipo de equipo y servicio; los agrega a `fields`.
+function validEnums(b, fields) {
+  if (b.device_type !== undefined) {
+    if (b.device_type !== null && b.device_type !== '' && !repairs.DEVICE_TYPES.includes(b.device_type)) return 'Tipo de equipo inválido.';
+    fields.device_type = b.device_type || null;
+  }
+  if (b.service_type !== undefined) {
+    if (b.service_type !== null && b.service_type !== '' && !repairs.SERVICE_TYPES.includes(b.service_type)) return 'Tipo de servicio inválido.';
+    fields.service_type = b.service_type || null;
+  }
+  return null;
+}
+
 async function validAssignee(value) {
   if (value === null || value === undefined || value === '') return { ok: true, id: null };
   if (!/^\d+$/.test(String(value))) return { ok: false };
@@ -100,6 +113,8 @@ router.post('/', async (req, res) => {
   if (!fields.device_brand && !fields.device_model && !fields.customer_name) {
     return res.status(400).json({ error: 'Ingresa al menos el equipo o el cliente.' });
   }
+  const enumErr = validEnums(b, fields);
+  if (enumErr) return res.status(400).json({ error: enumErr });
   if (b.status !== undefined) {
     if (!repairs.STATUSES.includes(b.status)) return res.status(400).json({ error: 'Estado inválido.' });
     fields.status = b.status;
@@ -124,6 +139,8 @@ router.patch('/:id', async (req, res) => {
   const b = req.body || {};
   const { fields, error } = extractFields(b);
   if (error) return res.status(400).json({ error });
+  const enumErr = validEnums(b, fields);
+  if (enumErr) return res.status(400).json({ error: enumErr });
   if (b.status !== undefined) {
     if (!repairs.STATUSES.includes(b.status)) return res.status(400).json({ error: 'Estado inválido.' });
     fields.status = b.status;

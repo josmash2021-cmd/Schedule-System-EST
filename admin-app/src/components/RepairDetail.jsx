@@ -14,6 +14,20 @@ export const STATUS_BADGE = {
 };
 export const statusLabel = (v) => (REPAIR_STATUS.find((s) => s.v === v) || {}).l || v;
 
+// Tipo de equipo y tipo de servicio (se guardan en repair_tickets).
+export const DEVICE_TYPES = [
+  { v: 'telefono', l: 'Teléfono' },
+  { v: 'tablet', l: 'Tablet' },
+  { v: 'laptop', l: 'Laptop' },
+];
+export const SERVICE_TYPES = [
+  { v: 'revision', l: 'Revisión' },
+  { v: 'reparacion', l: 'Reparación' },
+  { v: 'mantenimiento', l: 'Mantenimiento' },
+];
+export const deviceTypeLabel = (v) => (DEVICE_TYPES.find((s) => s.v === v) || {}).l || '—';
+export const serviceTypeLabel = (v) => (SERVICE_TYPES.find((s) => s.v === v) || {}).l || '—';
+
 // Comprime/redimensiona la imagen en el navegador antes de subir: máx 1600px,
 // JPEG calidad 0.85. Reduce ~10-20x el tamaño y convierte HEIC de iPhone a JPG.
 // Si algo falla, devuelve el archivo original (fallback seguro).
@@ -40,6 +54,7 @@ async function compressImage(file, maxDim = 1600, quality = 0.85) {
 }
 
 const EMPTY = {
+  device_type: 'telefono', service_type: 'reparacion',
   device_brand: '', device_model: '', device_serial: '', customer_name: '', customer_phone: '',
   problem: '', diagnosis: '', quoted_price: '', final_price: '', status: 'recibido', assigned_to: '',
 };
@@ -61,6 +76,7 @@ export default function RepairDetail({ ticketId, workers = [], isAdmin, onClose,
     setLoading(true);
     api('/repairs/' + tid).then(({ ticket }) => {
       setF({
+        device_type: ticket.device_type || 'telefono', service_type: ticket.service_type || 'reparacion',
         device_brand: ticket.device_brand || '', device_model: ticket.device_model || '', device_serial: ticket.device_serial || '',
         customer_name: ticket.customer_name || '', customer_phone: ticket.customer_phone || '',
         problem: ticket.problem || '', diagnosis: ticket.diagnosis || '',
@@ -125,6 +141,14 @@ export default function RepairDetail({ ticketId, workers = [], isAdmin, onClose,
       {err && <div className="alert alert-error">{err}</div>}
       {ok && <div className="alert alert-ok">{ok}</div>}
 
+      <div className="rd-grid">
+        <label className="field"><span>Tipo de equipo</span>
+          <select value={f.device_type} onChange={set('device_type')}>{DEVICE_TYPES.map((s) => <option key={s.v} value={s.v}>{s.l}</option>)}</select>
+        </label>
+        <label className="field"><span>Servicio</span>
+          <select value={f.service_type} onChange={set('service_type')}>{SERVICE_TYPES.map((s) => <option key={s.v} value={s.v}>{s.l}</option>)}</select>
+        </label>
+      </div>
       <div className="rd-grid">
         <label className="field"><span>Marca</span><input value={f.device_brand} onChange={set('device_brand')} placeholder="ej. Apple" /></label>
         <label className="field"><span>Modelo</span><input value={f.device_model} onChange={set('device_model')} placeholder="ej. iPhone 12" /></label>

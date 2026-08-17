@@ -287,6 +287,17 @@ petición del dueño). OJO: al convertir tarjetas en `<Link>`, la regla global
 (puppeteer-core del `node_modules` raíz); shots en `.visual-test/shots/`.
 Los mocks usan fechas relativas (`iso()`/`dayKey()`). Verificar con captura
 todo cambio de UI antes de commit.
+**Reparaciones (2026-08-17):** `repair_tickets` ganó `device_type`
+(telefono/tablet/laptop) y `service_type` (revision/reparacion/mantenimiento)
+— `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` en `db.js`, enums exportados en
+`models/repairs.js` (`DEVICE_TYPES`/`SERVICE_TYPES`) y validados en la ruta
+(`validEnums`). La página "Activas" es un kanban de 3 columnas (Recibidos /
+En proceso = diagnostico+reparacion / Listos para entregar, `.kanban` en
+styles.css) con pills de categoría de equipo (Todos/Teléfonos/Tablets/Laptops);
+"Entregadas" y "Todas" siguen en tabla con borrado por selección. El formulario
+(`RepairDetail.jsx`) tiene selects de Tipo de equipo y Servicio; constantes
+compartidas `DEVICE_TYPES`/`SERVICE_TYPES` + `deviceTypeLabel`/
+`serviceTypeLabel` exportadas ahí.
 
 ### `terminos.html` / `politicas.html` — legales (tema claro, CSS inline duplicado)
 Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolsos

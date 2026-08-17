@@ -2,8 +2,11 @@
 const { pool } = require('../db');
 
 const STATUSES = ['recibido', 'diagnostico', 'reparacion', 'listo', 'entregado'];
+const DEVICE_TYPES = ['telefono', 'tablet', 'laptop'];
+const SERVICE_TYPES = ['revision', 'reparacion', 'mantenimiento'];
 // Campos editables (texto/precio/asignado). El estado se maneja aparte.
 const FIELDS = [
+  'device_type', 'service_type',
   'device_brand', 'device_model', 'device_serial',
   'customer_name', 'customer_phone',
   'problem', 'diagnosis',
@@ -113,6 +116,6 @@ async function removePhoto(photoId) {
 }
 
 module.exports = {
-  STATUSES, FIELDS, listAll, findById, getWithPhotos, create, update, remove, removeMany,
+  STATUSES, DEVICE_TYPES, SERVICE_TYPES, FIELDS, listAll, findById, getWithPhotos, create, update, remove, removeMany,
   listPhotoFilenames, addPhoto, getPhoto, removePhoto,
 };

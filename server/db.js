@@ -163,6 +163,11 @@ async function initDb() {
     `);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_repairs_status ON repair_tickets(status);`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_repairs_assigned ON repair_tickets(assigned_to);`);
+    // Tipo de equipo (telefono/tablet/laptop) y tipo de servicio
+    // (revision/reparacion/mantenimiento). Se validan en la ruta.
+    await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS device_type TEXT;`);
+    await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS service_type TEXT;`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_repairs_device_type ON repair_tickets(device_type);`);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS repair_photos (

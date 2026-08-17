@@ -62,9 +62,11 @@ cambies estructura, flujos o convenciones.
 - Modelos (SQL directo con `pg`): `server/models/` — `users.js`,
   `repairs.js`, `inventory.js`, `tasks.js`, `timeEntries.js`, `audit.js`.
 - `server/db.js`: Pool + `CREATE TABLE IF NOT EXISTS` (las tablas se
-  autocrean al arrancar). `repair_tickets` tiene `final_price`,
-  `quoted_price`, `status` (recibido→diagnostico→reparacion→listo→entregado),
-  `created_at`, `delivered_at`.
+  autocrean al arrancar). `repair_tickets` tiene `device_type`
+  (telefono/tablet/laptop), `service_type` (revision/reparacion/mantenimiento),
+  `final_price`, `quoted_price`, `status`
+  (recibido→diagnostico→reparacion→listo→entregado), `created_at`,
+  `delivered_at`.
 - Bots: `server/wa-bot/` (WhatsApp), `server/ig-bot/` (Instagram) —
   artefactos locales gitignored.
 
