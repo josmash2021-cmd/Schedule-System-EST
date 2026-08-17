@@ -249,6 +249,9 @@ select option { background: #fff; color: #111; }
 .stat-ico svg { width: 18px; height: 18px; }
 .stat-card .v { font-size: 32px; font-weight: 800; margin-top: 10px; letter-spacing: -0.03em; }
 .stat-card .v .spinner { width: 20px; height: 20px; }
+/* Tarjeta clicable (p. ej. "Fuera de stock" en Inventario) */
+.stat-card-btn { cursor: pointer; user-select: none; }
+.stat-card-on { border-color: #111; box-shadow: 0 0 0 1.5px #111, 0 12px 28px rgba(0, 0, 0, 0.08); }
 .card {
   color: #111;
   background: #fff;

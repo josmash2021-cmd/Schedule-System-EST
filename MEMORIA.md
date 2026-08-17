@@ -310,6 +310,12 @@ Año + selector de año con los años presentes en los datos) y pills de estado
 semana del mes (Sem 1 = días 1–7…), año → por mes; las barras bajan al
 detalle (semana/mes → día, año → mes). Lista y gráfica salen del mismo
 conjunto filtrado (sincronizadas); cada fila muestra badge de origen.
+**Inventario (2026-08-17):** la lista solo muestra productos CON stock
+(`stock > 0`); los de `stock <= 0` no aparecen. Cuarta tarjeta del stat-grid:
+"Fuera de stock" con el conteo (`.stat-card-btn`, clicable) — al tocarla la
+tabla muestra solo los sin stock (para reabastecerlos) con aviso y botón
+para volver. Los totales (productos/unidades/valor) cuentan solo los que
+tienen stock.
 
 ### `terminos.html` / `politicas.html` — legales (tema claro, CSS inline duplicado)
 Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolsos
