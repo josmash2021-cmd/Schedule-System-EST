@@ -27,7 +27,13 @@ export default function Inventory() {
     const products = inStock.length;
     const units = inStock.reduce((a, i) => a + (Number(i.stock) || 0), 0);
     const value = inStock.reduce((a, i) => a + (Number(i.stock) || 0) * (Number(i.price) || 0), 0);
-    return { products, units, value };
+    // Inversión = lo que costó el inventario actual (stock × costo).
+    // Ganancia potencial = valor de venta − inversión; el % es el margen
+    // sobre el precio de venta (costo vs venta).
+    const inversion = inStock.reduce((a, i) => a + (Number(i.stock) || 0) * (Number(i.cost) || 0), 0);
+    const ganancia = value - inversion;
+    const margen = value > 0 ? (ganancia / value) * 100 : 0;
+    return { products, units, value, inversion, ganancia, margen };
   }, [items, inStock]);
 
   const grouped = useMemo(() => {
@@ -77,6 +83,18 @@ export default function Inventory() {
                 <div className="stat-card">
                   <div className="k">Valor en inventario</div>
                   <div className="v">{money(totals.value)}</div>
+                </div>
+                <div className="stat-card">
+                  <div className="k">Valor de inversión</div>
+                  <div className="v">{money(totals.inversion)}</div>
+                  <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>stock × costo</div>
+                </div>
+                <div className="stat-card">
+                  <div className="k">Ganancia potencial</div>
+                  <div className="v">{money(totals.ganancia)}</div>
+                  <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>
+                    {totals.margen.toFixed(1).replace(/\.0$/, '')}% costo vs venta
+                  </div>
                 </div>
                 <div className={'stat-card stat-card-btn' + (showOut ? ' stat-card-on' : '')}
                   role="button" tabIndex={0}

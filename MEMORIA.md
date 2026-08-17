@@ -315,7 +315,9 @@ conjunto filtrado (sincronizadas); cada fila muestra badge de origen.
 "Fuera de stock" con el conteo (`.stat-card-btn`, clicable) — al tocarla la
 tabla muestra solo los sin stock (para reabastecerlos) con aviso y botón
 para volver. Los totales (productos/unidades/valor) cuentan solo los que
-tienen stock.
+tienen stock. Tarjetas extra (mismo filtro con stock): "Valor de inversión"
+(Σ stock × costo) y "Ganancia potencial" (valor venta − inversión, con el %
+de margen sobre el precio de venta = "costo vs venta").
 
 ### `terminos.html` / `politicas.html` — legales (tema claro, CSS inline duplicado)
 Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolsos
