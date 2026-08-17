@@ -53,6 +53,9 @@ async function initDb() {
       CREATE UNIQUE INDEX IF NOT EXISTS appointments_fecha_hora_activa
       ON appointments(fecha, hora) WHERE estado <> 'cancelada';
     `);
+    // Origen de la cita: 'web' (página), 'whatsapp' / 'instagram' (bots) o
+    // 'mostrador' (creada desde el panel). Las viejas quedan como 'web'.
+    await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS origen TEXT NOT NULL DEFAULT 'web';`);
 
     // ===== Back-office: usuarios, auditoría y perfiles de trabajador =====
     // Aislado en try/catch: si algo falla aquí, NO debe tumbar el servidor

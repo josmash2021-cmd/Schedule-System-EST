@@ -298,6 +298,18 @@ styles.css) con pills de categoría de equipo (Todos/Teléfonos/Tablets/Laptops)
 (`RepairDetail.jsx`) tiene selects de Tipo de equipo y Servicio; constantes
 compartidas `DEVICE_TYPES`/`SERVICE_TYPES` + `deviceTypeLabel`/
 `serviceTypeLabel` exportadas ahí.
+**Citas (2026-08-17):** `appointments` ganó `origen` (`web` por defecto /
+`whatsapp` / `instagram` — los bots lo mandan en el POST público — /
+`mostrador` — creada desde el panel, `adminAppointments.js`). La página se
+rehizo estilo Ventas: carga TODAS las citas una vez y filtra en cliente;
+KPIs con count-up (Hoy/Semana/Mes/Año, sin canceladas), pills de período
+(Hoy + selector de fecha, Semana actual lun–dom, Mes + selector de mes/año,
+Año + selector de año con los años presentes en los datos) y pills de estado
+(Activas = pendiente+confirmada / Completadas = atendida / Todas). Gráfica
+`BarChart` por período: hoy → por hora (8–20h), semana → por día, mes → por
+semana del mes (Sem 1 = días 1–7…), año → por mes; las barras bajan al
+detalle (semana/mes → día, año → mes). Lista y gráfica salen del mismo
+conjunto filtrado (sincronizadas); cada fila muestra badge de origen.
 
 ### `terminos.html` / `politicas.html` — legales (tema claro, CSS inline duplicado)
 Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolsos

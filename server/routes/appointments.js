@@ -67,13 +67,17 @@ router.post('/', rateLimitCitas, async (req, res) => {
     return res.status(400).json({ error: 'Ese horario ya no está disponible. Reserva con al menos 1 hora de anticipación.' });
   }
 
+  // Origen público: la página manda 'web' (o nada); los bots se identifican.
+  const ORIGENES = ['web', 'whatsapp', 'instagram'];
+  const origen = ORIGENES.includes(req.body?.origen) ? req.body.origen : 'web';
+
   try {
     const result = await pool.query(
-      `INSERT INTO appointments (nombre, telefono, correo, servicio, fecha, hora, estado)
-       VALUES ($1, $2, $3, $4, $5, $6, 'pendiente')
+      `INSERT INTO appointments (nombre, telefono, correo, servicio, fecha, hora, estado, origen)
+       VALUES ($1, $2, $3, $4, $5, $6, 'pendiente', $7)
        ON CONFLICT (fecha, hora) WHERE estado <> 'cancelada' DO NOTHING
        RETURNING *`,
-      [nombre, telefono, correo || null, servicio, fecha, hora]
+      [nombre, telefono, correo || null, servicio, fecha, hora, origen]
     );
 
     if (result.rows.length === 0) {
@@ -97,7 +101,7 @@ router.post('/', rateLimitCitas, async (req, res) => {
 router.get('/', requireAuth, async (req, res) => {
   const date = String(req.query.date || '').trim();
   try {
-    let query = 'SELECT id, nombre, telefono, correo, direccion, servicio, fecha::text as fecha, hora::text as hora, estado, created_at FROM appointments';
+    let query = 'SELECT id, nombre, telefono, correo, direccion, servicio, fecha::text as fecha, hora::text as hora, estado, origen, created_at FROM appointments';
     const params = [];
     if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       query += ' WHERE fecha = $1';

@@ -67,7 +67,8 @@ export async function crearCitaWeb(cita) {
     correo: cita.correo || '',
     servicio: cita.servicio,
     fecha: cita.fecha,
-    hora: cita.hora
+    hora: cita.hora,
+    origen: 'whatsapp'
   };
   let respuesta;
   try {

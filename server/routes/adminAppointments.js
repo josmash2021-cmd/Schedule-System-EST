@@ -18,7 +18,7 @@ router.use(verifyToken, loadUser); // admin + trabajadores
 
 const ESTADOS = ['pendiente', 'confirmada', 'atendida', 'cancelada'];
 const SELECT_COLS = `id, nombre, telefono, correo, direccion, servicio,
-  fecha::text AS fecha, hora::text AS hora, estado, created_at`;
+  fecha::text AS fecha, hora::text AS hora, estado, origen, created_at`;
 
 // Listado: ?date=YYYY-MM-DD para un día, sin parámetro para todas.
 router.get('/', async (req, res) => {
@@ -78,8 +78,8 @@ router.post('/', async (req, res) => {
     const r = await pool.query(
       // El índice único es PARCIAL (estado <> 'cancelada'): el ON CONFLICT
       // debe repetir ese predicado para coincidir con él.
-      `INSERT INTO appointments (nombre, telefono, correo, servicio, fecha, hora, estado)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO appointments (nombre, telefono, correo, servicio, fecha, hora, estado, origen)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'mostrador')
        ON CONFLICT (fecha, hora) WHERE estado <> 'cancelada' DO NOTHING
        RETURNING ${SELECT_COLS}`,
       [nombre, telefono, correo || null, servicio, fecha, hora,
