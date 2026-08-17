@@ -236,6 +236,18 @@ async function initDb() {
     `);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_sale_items_sale ON sale_items(sale_id);`);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS expenses (
+        id          SERIAL PRIMARY KEY,
+        description TEXT NOT NULL,
+        category    TEXT,
+        amount      NUMERIC(10,2) NOT NULL DEFAULT 0,
+        created_by  INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at  TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_expenses_created ON expenses(created_at);`);
+
     // Sembrar el primer admin desde ADMIN_PASSWORD (idempotente): solo si aún
     // no existe ningún admin. Nace con must_change_password para forzar rotación.
     if (ADMIN_PASSWORD) {

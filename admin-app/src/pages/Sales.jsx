@@ -51,16 +51,18 @@ function useCountUp(target, dur = 700) {
   return v;
 }
 
-function Kpi({ label, total, count }) {
+function Kpi({ label, total, count, suffix, prefix }) {
   const t = useCountUp(total);
   const n = useCountUp(count);
   return (
     <div className="stat-card">
       <div className="stat-top"><div className="k">{label}</div></div>
-      <div className="v">{usd.format(t)}</div>
-      <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>
-        {Math.round(n)} venta{Math.round(n) === 1 ? '' : 's'}
-      </div>
+      <div className="v">{prefix}{suffix ? t.toFixed(1).replace(/\.0$/, '') + suffix : usd.format(t)}</div>
+      {typeof count === 'number' && count >= 0 && (
+        <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>
+          {Math.round(n)} venta{Math.round(n) === 1 ? '' : 's'}
+        </div>
+      )}
     </div>
   );
 }
@@ -77,6 +79,7 @@ export default function Sales() {
   const paramFecha = searchParams.get('fecha');
   const [tickets, setTickets] = useState(null);
   const [directas, setDirectas] = useState(null);
+  const [expenses, setExpenses] = useState(null);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const [registering, setRegistering] = useState(false);
@@ -85,16 +88,22 @@ export default function Sales() {
   const [day, setDay] = useState(/^\d{4}-\d{2}-\d{2}$/.test(paramFecha || '') ? paramFecha : chicagoParts().key);
   const [month, setMonth] = useState(chicagoParts().key.slice(0, 7));
 
+  // Formulario de gasto
+  const [expDesc, setExpDesc] = useState('');
+  const [expCat, setExpCat] = useState('');
+  const [expAmount, setExpAmount] = useState('');
+  const [savingExpense, setSavingExpense] = useState(false);
+
   const load = () => Promise.all([
     api('/repairs').then((d) => setTickets(d.tickets || [])),
     api('/sales').then((d) => setDirectas(d.sales || [])),
+    api('/expenses').then((d) => setExpenses(d.expenses || [])),
   ]).catch((e) => setErr(e.message));
   useEffect(() => { load(); }, [tick]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const cargado = tickets != null && directas != null;
+  const cargado = tickets != null && directas != null && expenses != null;
 
-  // Ventas = reparaciones entregadas + ventas directas del mostrador, todas
-  // con su fecha/hora de Chicago y una forma común para KPIs/gráfico/tabla.
+  // Ventas = reparaciones entregadas + ventas directas del mostrador.
   const sales = useMemo(() => {
     const deReparacion = (tickets || [])
       .filter((t) => t.status === 'entregado' && t.delivered_at)
@@ -113,10 +122,11 @@ export default function Sales() {
     return [...deReparacion, ...deMostrador];
   }, [tickets, directas]);
 
+  const expensesCp = useMemo(() => (expenses || []).map((e) => ({ ...e, cp: chicagoParts(new Date(e.created_at)) })), [expenses]);
+
   const now = chicagoParts();
   const wk = weekKeys();
   const curMonthKey = now.key.slice(0, 7);
-  // Mes seleccionado (la vista Mes permite elegir meses pasados).
   const [selY, selM] = month.split('-').map(Number);
   const monthLabel = `${MONTH_LABELS[selM - 1]} ${selY}`;
 
@@ -128,12 +138,18 @@ export default function Sales() {
   };
 
   const sum = (list) => list.reduce((a, s) => a + s.price, 0);
+  const sumAmount = (list) => list.reduce((a, e) => a + Number(e.amount || 0), 0);
   const kpis = cargado ? {
     dia: { total: sum(sales.filter((s) => s.cp.key === now.key)), count: sales.filter((s) => s.cp.key === now.key).length },
     semana: { total: sum(sales.filter((s) => wk.includes(s.cp.key))), count: sales.filter((s) => wk.includes(s.cp.key)).length },
     mes: { total: sum(sales.filter((s) => s.cp.key.slice(0, 7) === curMonthKey)), count: sales.filter((s) => s.cp.key.slice(0, 7) === curMonthKey).length },
     ano: { total: sum(sales.filter((s) => s.cp.y === now.y)), count: sales.filter((s) => s.cp.y === now.y).length },
   } : null;
+
+  const ingresos = cargado ? sum(sales.filter((s) => inPeriod(s, period))) : 0;
+  const gastos = cargado ? sumAmount(expensesCp.filter((e) => inPeriod(e, period))) : 0;
+  const ganancia = ingresos - gastos;
+  const margen = ingresos > 0 ? (ganancia / ingresos) * 100 : 0;
 
   // Datos del gráfico según el período.
   let chart = null;
@@ -168,16 +184,15 @@ export default function Sales() {
   }
 
   const shown = sales.filter((s) => inPeriod(s, period)).sort((a, b) => (a.when < b.when ? 1 : -1));
+  const shownExpenses = expensesCp.filter((e) => inPeriod(e, period)).sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
   const shownTotal = sum(shown);
+  const shownExpensesTotal = sumAmount(shownExpenses);
   const fmtDay = (iso) => {
     const cp = chicagoParts(new Date(iso));
     const [y, m, d] = cp.key.split('-');
     return `${d}/${m}/${y} ${String(cp.hour).padStart(2, '0')}:${String(new Date(iso).getUTCMinutes()).padStart(2, '0')}`;
   };
 
-  // Reiniciar Ventas: borra las ventas de mostrador Y las reparaciones
-  // entregadas (que son la otra fuente de esta página). Las reparaciones en
-  // curso no se tocan y el stock no se repone (esas unidades sí se vendieron).
   const resetSales = async () => {
     if (!sales.length) return;
     if (!window.confirm(`¿Borrar TODAS las ventas (${sales.length})?\n\nSe borran las ventas de mostrador y las reparaciones entregadas (desaparecen también de Reparaciones). Las reparaciones en curso no se tocan y el stock no cambia. No se puede deshacer.`)) return;
@@ -191,7 +206,6 @@ export default function Sales() {
     setBusy(false);
   };
 
-  // Anular una venta de mostrador (repone el stock de sus productos).
   const anular = async (s) => {
     if (!window.confirm(`¿Anular la venta de ${usd.format(s.price)} (${s.concepto})?\n\nSe repone el stock de los productos vendidos.`)) return;
     setBusy(true); setErr('');
@@ -202,13 +216,36 @@ export default function Sales() {
     setBusy(false);
   };
 
+  const addExpense = async (e) => {
+    e.preventDefault();
+    setErr('');
+    const amount = Number(expAmount);
+    if (!expDesc.trim() || !Number.isFinite(amount) || amount <= 0) { setErr('Completa descripción y monto del gasto.'); return; }
+    setSavingExpense(true);
+    try {
+      await api('/expenses', { method: 'POST', body: { description: expDesc.trim(), category: expCat.trim(), amount } });
+      setExpDesc(''); setExpCat(''); setExpAmount('');
+      setTick((t) => t + 1);
+    } catch (err2) { setErr(err2.message); }
+    setSavingExpense(false);
+  };
+
+  const deleteExpense = async (id) => {
+    if (!window.confirm('¿Eliminar este gasto?')) return;
+    setBusy(true); setErr('');
+    try {
+      await api('/expenses/' + id, { method: 'DELETE' });
+      setTick((t) => t + 1);
+    } catch (err2) { setErr(err2.message); }
+    setBusy(false);
+  };
+
   const onBar = (k) => {
     if (period === 'semana') { setPeriod('dia'); setDay(k); }
     else if (period === 'mes') { setPeriod('dia'); setDay(`${month}-${k.padStart(2, '0')}`); }
     else if (period === 'ano') { setPeriod('mes'); setMonth(`${now.y}-${k.padStart(2, '0')}`); }
   };
 
-  // Alta de venta a página completa (mismo patrón que el resto del panel).
   if (registering) {
     return (
       <FormPage title="Registrar venta" onBack={() => setRegistering(false)} max={680}>
@@ -246,6 +283,19 @@ export default function Sales() {
           )}
       </div>
 
+      <div className="stat-grid" style={{ marginTop: 16 }}>
+        {!cargado ? (
+          <><div className="stat-card"><div className="k">Ingresos</div><div className="v"><span className="spinner" /></div></div><div className="stat-card"><div className="k">Gastos</div><div className="v"><span className="spinner" /></div></div><div className="stat-card"><div className="k">Ganancia</div><div className="v"><span className="spinner" /></div></div><div className="stat-card"><div className="k">Margen</div><div className="v"><span className="spinner" /></div></div></>
+        ) : (
+          <>
+            <Kpi label="Ingresos" total={ingresos} count={-1} />
+            <Kpi label="Gastos" total={gastos} count={-1} />
+            <Kpi label="Ganancia" total={ganancia} count={-1} />
+            <Kpi label="Margen" total={margen} count={-1} suffix="%" />
+          </>
+        )}
+      </div>
+
       <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 16, alignItems: 'center' }}>
         {PERIODS.map((p) => (
           <button key={p.v} className={'btn btn-sm ' + (period === p.v ? 'btn-primary' : 'btn-secondary')}
@@ -264,7 +314,7 @@ export default function Sales() {
         <div className="spacer" />
         {cargado && (
           <strong style={{ fontSize: 15 }}>
-            Total: {usd.format(shownTotal)} · {shown.length} venta{shown.length === 1 ? '' : 's'}
+            Total ventas: {usd.format(shownTotal)} · {shown.length} venta{shown.length === 1 ? '' : 's'} · Gastos: {usd.format(shownExpensesTotal)}
           </strong>
         )}
       </div>
@@ -280,6 +330,53 @@ export default function Sales() {
           : <BarChart data={chart.data} keys={chart.keys} labels={chart.labels} highlight={chart.highlight}
               format={fmtBar} onDay={period === 'dia' ? null : onBar} />}
         {period !== 'dia' && <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>Toca una barra para ver el detalle.</div>}
+      </div>
+
+      <div className="card" style={{ marginBottom: 18 }}>
+        <h3>Registrar gasto</h3>
+        <form onSubmit={addExpense}>
+          <div className="rd-grid">
+            <label className="field"><span>Descripción</span><input value={expDesc} onChange={(e) => setExpDesc(e.target.value)} placeholder="ej. Compra de repuestos" required /></label>
+            <label className="field"><span>Categoría</span><input value={expCat} onChange={(e) => setExpCat(e.target.value)} placeholder="ej. Refacciones" /></label>
+          </div>
+          <div className="rd-grid">
+            <label className="field"><span>Monto ($)</span><input type="number" min="0.01" step="0.01" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} placeholder="0.00" required /></label>
+            <div className="field" style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <button className="btn btn-primary" disabled={savingExpense} style={{ width: '100%' }}>{savingExpense ? <span className="spinner" /> : 'Registrar gasto'}</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div className="card" style={{ marginBottom: 18 }}>
+        <h3>Gastos del período</h3>
+        {!cargado ? <span className="spinner" />
+          : shownExpenses.length === 0 ? <div className="empty">No hay gastos en este período.</div>
+            : (
+              <div className="table-wrap">
+                <table className="data">
+                  <thead><tr><th>Fecha</th><th>Descripción</th><th className="hide-sm">Categoría</th><th style={{ textAlign: 'right' }}>Monto</th><th></th></tr></thead>
+                  <tbody>
+                    {shownExpenses.map((e) => (
+                      <tr key={e.id}>
+                        <td className="muted">{fmtDay(e.created_at)}</td>
+                        <td><strong>{e.description}</strong></td>
+                        <td className="muted hide-sm">{e.category || '—'}</td>
+                        <td style={{ textAlign: 'right' }}><strong>{usd.format(e.amount)}</strong></td>
+                        <td style={{ textAlign: 'right' }}>
+                          <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => deleteExpense(e.id)}>Eliminar</button>
+                        </td>
+                      </tr>
+                    ))}
+                    <tr>
+                      <td colSpan="3" style={{ textAlign: 'right' }}><strong>Total gastos</strong></td>
+                      <td style={{ textAlign: 'right' }}><strong>{usd.format(shownExpensesTotal)}</strong></td>
+                      <td />
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
       </div>
 
       <div className="card">

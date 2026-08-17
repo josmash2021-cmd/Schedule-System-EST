@@ -17,6 +17,7 @@ const adminRepairsRouter = require('./routes/adminRepairs');
 const adminInventoryRouter = require('./routes/adminInventory');
 const adminAppointmentsRouter = require('./routes/adminAppointments');
 const adminSalesRouter = require('./routes/adminSales');
+const adminExpensesRouter = require('./routes/adminExpenses');
 const adminDemoDataRouter = require('./routes/adminDemoData'); // limpieza de datos demo
 
 const app = express();
@@ -156,6 +157,7 @@ app.use('/x/s/inventory', adminInventoryRouter);
 app.use('/x/s/appointments', adminAppointmentsRouter);
 // Ventas directas: registrar (admin + trabajadores), listar/anular (admin).
 app.use('/x/s/sales', adminSalesRouter);
+app.use('/x/s/expenses', adminExpensesRouter);
 app.use('/x/s/demo-data', adminDemoDataRouter); // solo consulta/borra los datos demo
 
 // Entrada del panel tras el slug secreto. Slug incorrecto → next() → 404 por
