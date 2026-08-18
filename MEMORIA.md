@@ -322,7 +322,9 @@ de margen sobre el precio de venta = "costo vs venta").
 producto al vender; NULL en conceptos libres y ventas viejas). La tarjeta
 "Ganancia" ahora es ingresos − costo de lo vendido − gastos del período
 (las reparaciones entregadas cuentan con costo 0); se eliminó la tarjeta
-"Margen" (petición del dueño).
+"Margen" (petición del dueño). Al arrancar, `db.js` rellena el `cost` NULL
+de ventas viejas con el costo ACTUAL del inventario (UPDATE ... WHERE cost
+IS NULL), para que la ganancia histórica también descuente el costo.
 
 ### `terminos.html` / `politicas.html` — legales (tema claro, CSS inline duplicado)
 Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolsos
