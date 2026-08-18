@@ -42,14 +42,14 @@ async function create({ items, payment_method, note }, userId) {
         if (!p) throw fail(400, 'Uno de los productos ya no existe en el inventario.');
         if (p.stock < it.qty) throw fail(409, `Stock insuficiente de "${p.name}" (quedan ${p.stock}).`);
         const price = it.price != null ? it.price : (Number(p.price) || 0);
-        line = { item_id: p.id, name: p.name, qty: it.qty, price };
+        line = { item_id: p.id, name: p.name, qty: it.qty, price, cost: Number(p.cost) || 0 };
         await client.query('UPDATE inventory_items SET stock = stock - $2, updated_at = NOW() WHERE id = $1', [p.id, it.qty]);
         await client.query(
           'INSERT INTO inventory_movements (item_id, delta, reason, note, user_id) VALUES ($1, $2, $3, $4, $5)',
           [p.id, -it.qty, 'venta', null, userId || null]
         );
       } else {
-        line = { item_id: null, name: it.name, qty: it.qty, price: it.price };
+        line = { item_id: null, name: it.name, qty: it.qty, price: it.price, cost: null };
       }
       lines.push(line);
       total += line.qty * line.price;
@@ -62,8 +62,8 @@ async function create({ items, payment_method, note }, userId) {
     const sale = s.rows[0];
     for (const l of lines) {
       await client.query(
-        'INSERT INTO sale_items (sale_id, item_id, name, qty, price) VALUES ($1, $2, $3, $4, $5)',
-        [sale.id, l.item_id, l.name, l.qty, l.price]
+        'INSERT INTO sale_items (sale_id, item_id, name, qty, price, cost) VALUES ($1, $2, $3, $4, $5, $6)',
+        [sale.id, l.item_id, l.name, l.qty, l.price, l.cost]
       );
     }
     await client.query('COMMIT');

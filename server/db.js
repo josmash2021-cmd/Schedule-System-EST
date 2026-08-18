@@ -243,6 +243,9 @@ async function initDb() {
       );
     `);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_sale_items_sale ON sale_items(sale_id);`);
+    // Foto del costo del producto en el momento de la venta (para la ganancia
+    // real de la página de Ventas). NULL en conceptos libres y ventas viejas.
+    await client.query(`ALTER TABLE sale_items ADD COLUMN IF NOT EXISTS cost NUMERIC(10,2);`);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS expenses (

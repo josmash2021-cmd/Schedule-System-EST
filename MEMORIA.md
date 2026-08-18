@@ -318,6 +318,11 @@ para volver. Los totales (productos/unidades/valor) cuentan solo los que
 tienen stock. Tarjetas extra (mismo filtro con stock): "Valor de inversión"
 (Σ stock × costo) y "Ganancia potencial" (valor venta − inversión, con el %
 de margen sobre el precio de venta = "costo vs venta").
+**Ventas (2026-08-17):** `sale_items` ganó `cost` (foto del costo del
+producto al vender; NULL en conceptos libres y ventas viejas). La tarjeta
+"Ganancia" ahora es ingresos − costo de lo vendido − gastos del período
+(las reparaciones entregadas cuentan con costo 0); se eliminó la tarjeta
+"Margen" (petición del dueño).
 
 ### `terminos.html` / `politicas.html` — legales (tema claro, CSS inline duplicado)
 Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolsos

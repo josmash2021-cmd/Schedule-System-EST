@@ -108,13 +108,15 @@ export default function Sales() {
     const deReparacion = (tickets || [])
       .filter((t) => t.status === 'entregado' && t.delivered_at)
       .map((t) => ({
-        key: 'r' + t.id, tipo: 'reparacion', price: Number(t.final_price) || 0, when: t.delivered_at,
+        key: 'r' + t.id, tipo: 'reparacion', price: Number(t.final_price) || 0, when: t.delivered_at, costo: 0,
         concepto: [t.device_brand, t.device_model].filter(Boolean).join(' ') || 'Reparación',
         cliente: t.customer_name || null, telefono: t.customer_phone || null,
         quien: t.assignee_username || null, cp: chicagoParts(new Date(t.delivered_at)),
       }));
     const deMostrador = (directas || []).map((v) => ({
       key: 'v' + v.id, ventaId: v.id, tipo: 'venta', price: Number(v.total) || 0, when: v.created_at,
+      // Costo de lo vendido (foto del momento de la venta; null en viejas/libres = 0).
+      costo: (v.items || []).reduce((a, i) => a + (Number(i.cost) || 0) * (Number(i.qty) || 0), 0),
       concepto: (v.items || []).map((i) => (i.qty > 1 ? `${i.qty}× ${i.name}` : i.name)).join(', ') || 'Venta',
       cliente: null, telefono: null, pago: v.payment_method || null,
       quien: v.seller_username || null, cp: chicagoParts(new Date(v.created_at)),
@@ -148,8 +150,9 @@ export default function Sales() {
 
   const ingresos = cargado ? sum(sales.filter((s) => inPeriod(s, period))) : 0;
   const gastos = cargado ? sumAmount(expensesCp.filter((e) => inPeriod(e, period))) : 0;
-  const ganancia = ingresos - gastos;
-  const margen = ingresos > 0 ? (ganancia / ingresos) * 100 : 0;
+  // Ganancia = ingresos − costo de los productos vendidos − gastos del período.
+  const costoVendido = cargado ? sales.filter((s) => inPeriod(s, period)).reduce((a, s) => a + (s.costo || 0), 0) : 0;
+  const ganancia = ingresos - costoVendido - gastos;
 
   // Datos del gráfico según el período.
   let chart = null;
@@ -285,13 +288,12 @@ export default function Sales() {
 
       <div className="stat-grid" style={{ marginTop: 16 }}>
         {!cargado ? (
-          <><div className="stat-card"><div className="k">Ingresos</div><div className="v"><span className="spinner" /></div></div><div className="stat-card"><div className="k">Gastos</div><div className="v"><span className="spinner" /></div></div><div className="stat-card"><div className="k">Ganancia</div><div className="v"><span className="spinner" /></div></div><div className="stat-card"><div className="k">Margen</div><div className="v"><span className="spinner" /></div></div></>
+          <><div className="stat-card"><div className="k">Ingresos</div><div className="v"><span className="spinner" /></div></div><div className="stat-card"><div className="k">Gastos</div><div className="v"><span className="spinner" /></div></div><div className="stat-card"><div className="k">Ganancia</div><div className="v"><span className="spinner" /></div></div></>
         ) : (
           <>
             <Kpi label="Ingresos" total={ingresos} count={-1} />
             <Kpi label="Gastos" total={gastos} count={-1} />
             <Kpi label="Ganancia" total={ganancia} count={-1} />
-            <Kpi label="Margen" total={margen} count={-1} suffix="%" />
           </>
         )}
       </div>
