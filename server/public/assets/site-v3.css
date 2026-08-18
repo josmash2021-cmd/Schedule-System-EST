@@ -722,15 +722,14 @@ a { -webkit-tap-highlight-color: transparent; }
 }
 .gallery-grid {
     display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
-    max-width: 920px; margin: 0 auto;
+    max-width: 920px; margin: 0 auto; align-items: start;
 }
 .gallery-item {
     border-radius: 22px; overflow: hidden; border: 1px solid var(--line);
     background: var(--panel); box-shadow: 0 24px 60px rgba(0, 0, 0, .4);
 }
 .gallery-item img {
-    width: 100%; height: 100%; object-fit: contain; display: block;
-    aspect-ratio: 4 / 3;
+    width: 100%; height: auto; display: block;
     transition: transform .6s var(--ease);
 }
 .gallery-item:hover img { transform: scale(1.04); }
