@@ -284,8 +284,6 @@
 
     function wireAddButton() {
         document.querySelectorAll('#addToCart, .add-cart-card').forEach(function (btn) {
-            if (btn.dataset.cartBound) return; // no duplicar listeners al re-enlazar
-            btn.dataset.cartBound = '1';
             btn.addEventListener('click', function (e) {
                 e.stopPropagation();
                 var slug = (btn.dataset.cond || '').toLowerCase().replace(/\s+/g, '');
@@ -302,10 +300,6 @@
             });
         });
     }
-    // El catálogo y la ficha se generan dinámicamente (assets/products.js y
-    // producto.js): tras renderizar llaman EST_WIRE_CART() para enlazar sus
-    // botones de "Agregar al carrito".
-    window.EST_WIRE_CART = wireAddButton;
 
     /* ---------- Mini-carrito al agregar (lateral en PC, hoja inferior en móvil) ---------- */
     var drawer = null, drawerOverlay = null;

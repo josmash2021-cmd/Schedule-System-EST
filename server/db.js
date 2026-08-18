@@ -203,12 +203,6 @@ async function initDb() {
     `);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_inventory_active ON inventory_items(active);`);
     await client.query(`ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS image_url TEXT;`);
-    // Campos de la página web pública: subtítulo, 2 fotos de galería (la
-    // principal es image_url) y el interruptor "mostrar en la web".
-    await client.query(`ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS subtitle TEXT;`);
-    await client.query(`ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS image2_url TEXT;`);
-    await client.query(`ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS image3_url TEXT;`);
-    await client.query(`ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS show_on_web BOOLEAN NOT NULL DEFAULT false;`);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS inventory_movements (

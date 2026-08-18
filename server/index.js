@@ -6,7 +6,6 @@ const { PORT, CORS_ORIGIN, ADMIN_PATH, REPAIRS_DIR, INVENTORY_DIR } = require('.
 const { initDb } = require('./db');
 const slotsRouter = require('./routes/slots');
 const appointmentsRouter = require('./routes/appointments');
-const productsRouter = require('./routes/products');
 const authRouter = require('./routes/auth');
 const { router: checkoutRouter, webhookHandler } = require('./routes/checkout');
 const adminAuthRouter = require('./routes/adminAuth');
@@ -50,7 +49,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 const htmlRoutes = {
   '/': 'index.html',
   '/products': 'products.html',
-  '/producto': 'producto.html',
   '/macbook-air-13': 'macbook-air-13.html',
   '/iphone-15-pro': 'iphone-15-pro.html',
   '/cart': 'cart.html',
@@ -136,7 +134,6 @@ app.get('/bot-qr.png', async (req, res) => {
 
 app.use('/api/slots', slotsRouter);
 app.use('/api/appointments', appointmentsRouter);
-app.use('/api/products', productsRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/checkout', checkoutRouter);
 

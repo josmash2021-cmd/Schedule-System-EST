@@ -7,7 +7,6 @@ const publicDir = path.resolve(__dirname, '..', 'public');
 const itemsToCopy = [
   'index.html',
   'products.html',
-  'producto.html',
   'macbook-air-13.html',
   'iphone-15-pro.html',
   'cart.html',

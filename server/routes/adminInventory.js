@@ -55,23 +55,14 @@ function num(v, { int = false, min = 0 } = {}) {
 function extractItem(b) {
   const f = {};
   if (b.name !== undefined) f.name = String(b.name || '').trim().slice(0, 160);
-  for (const [k, max] of [['sku', 60], ['category', 60], ['description', 2000], ['image_url', 260], ['subtitle', 300]]) {
+  for (const [k, max] of [['sku', 60], ['category', 60], ['description', 2000], ['image_url', 260]]) {
     if (b[k] !== undefined) { const s = b[k] == null ? null : String(b[k]).trim(); f[k] = s ? s.slice(0, max) : null; }
   }
   for (const k of ['price', 'cost']) {
     if (b[k] !== undefined) { const r = num(b[k], { min: 0 }); if (!r.ok) return { error: `Valor inválido en ${k === 'price' ? 'precio' : 'costo'}.` }; f[k] = r.val; }
   }
   if (b.min_stock !== undefined) { const r = num(b.min_stock, { int: true, min: 0 }); if (!r.ok) return { error: 'Mínimo inválido.' }; f.min_stock = r.val == null ? 0 : r.val; }
-  if (b.show_on_web !== undefined) f.show_on_web = b.show_on_web === true || b.show_on_web === 'true' || b.show_on_web === 1;
   return { fields: f };
-}
-
-// Las fotos del producto: 1 = principal (arriba), 2 y 3 = galería de abajo.
-const PHOTO_COLS = { '1': 'image_url', '2': 'image2_url', '3': 'image3_url' };
-function photoSlot(req, res) {
-  const s = String(req.query.slot || '1');
-  if (!PHOTO_COLS[s]) { res.status(400).json({ error: 'Slot de foto inválido (1-3).' }); return null; }
-  return PHOTO_COLS[s];
 }
 
 router.get('/', async (req, res) => {
@@ -171,21 +162,19 @@ router.get('/:id/movements', async (req, res) => {
   }
 });
 
-// Subir foto de un producto (admin). ?slot=1 principal (default), 2 y 3 galería.
+// Subir foto de un producto (admin).
 router.post('/:id/photo', requireRole('admin'), uploadPhoto, async (req, res) => {
   const id = parseId(req, res);
   if (id === null) { fs.unlink(req.file.path, () => {}); return; }
-  const col = photoSlot(req, res);
-  if (!col) { fs.unlink(req.file.path, () => {}); return; }
   const url = '/x/s/inventory/photos/' + req.file.filename;
   try {
     const existing = await inventory.findById(id);
     if (!existing) { fs.unlink(req.file.path, () => {}); return res.status(404).json({ error: 'Producto no encontrado.' }); }
-    if (existing[col]) {
-      const old = path.join(INVENTORY_DIR, path.basename(existing[col]));
+    if (existing.image_url) {
+      const old = path.join(INVENTORY_DIR, path.basename(existing.image_url));
       fs.unlink(old, () => {});
     }
-    const item = await inventory.update(id, { [col]: url });
+    const item = await inventory.update(id, { image_url: url });
     audit.logAction(req.user.id, 'inventory.photo_add', { targetType: 'inventory', targetId: id, ip: getClientIp(req) });
     res.json({ item });
   } catch (err) {
@@ -195,18 +184,17 @@ router.post('/:id/photo', requireRole('admin'), uploadPhoto, async (req, res) =>
   }
 });
 
-// Eliminar foto de un producto (admin). Mismo ?slot= que la subida.
+// Eliminar foto de un producto (admin).
 router.delete('/:id/photo', requireRole('admin'), async (req, res) => {
   const id = parseId(req, res); if (id === null) return;
-  const col = photoSlot(req, res); if (!col) return;
   try {
     const existing = await inventory.findById(id);
     if (!existing) return res.status(404).json({ error: 'Producto no encontrado.' });
-    if (existing[col]) {
-      const old = path.join(INVENTORY_DIR, path.basename(existing[col]));
+    if (existing.image_url) {
+      const old = path.join(INVENTORY_DIR, path.basename(existing.image_url));
       fs.unlink(old, () => {});
     }
-    const item = await inventory.update(id, { [col]: null });
+    const item = await inventory.update(id, { image_url: null });
     audit.logAction(req.user.id, 'inventory.photo_delete', { targetType: 'inventory', targetId: id, ip: getClientIp(req) });
     res.json({ item });
   } catch (err) {

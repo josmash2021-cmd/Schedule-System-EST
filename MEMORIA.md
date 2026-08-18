@@ -318,21 +318,6 @@ para volver. Los totales (productos/unidades/valor) cuentan solo los que
 tienen stock. Tarjetas extra (mismo filtro con stock): "Valor de inversión"
 (Σ stock × costo) y "Ganancia potencial" (valor venta − inversión, con el %
 de margen sobre el precio de venta = "costo vs venta").
-**Productos web desde el panel (2026-08-18):** `inventory_items` ganó
-`subtitle`, `image2_url`, `image3_url` y `show_on_web` (default false).
-Fotos por slot: `POST/DELETE /x/s/inventory/:id/photo?slot=1|2|3` (1 =
-principal). Público: `GET /api/products` y `/api/products/:id` (solo
-`active AND show_on_web AND stock > 0`); las fotos cuelgan de
-`/x/s/inventory/photos/<uuid>` (estático público, proxificado por Vercel).
-En el panel, la ficha del producto tiene la sección "Página web"
-(mostrar en la web, subtítulo y las 3 fotos; las sube comprimidas con
-`compressImage` exportado de `RepairDetail.jsx`). En el sitio,
-`assets/products.js` genera el catálogo de `products.html` y
-`assets/producto.js` la ficha `producto.html?id=N`; ambos llaman
-`window.EST_WIRE_CART()` tras renderizar (guard `data-cart-bound` en
-cart.js para no duplicar listeners). Categoría→filtro del catálogo:
-CAT_MAP en products.js (Laptop Apple→macos, Windows/PC Gaming→windows,
-Tablets→tablet, Teléfonos→iphone, resto→otros).
 **Ventas (2026-08-17):** `sale_items` ganó `cost` (foto del costo del
 producto al vender; NULL en conceptos libres y ventas viejas). La tarjeta
 "Ganancia" ahora es ingresos − costo de lo vendido − gastos del período
