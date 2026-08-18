@@ -67,6 +67,21 @@ function Kpi({ label, total, count, suffix, prefix }) {
   );
 }
 
+// Ganancia clicable: rota semanal → mensual → anual al tocarla.
+function GananciaCard({ label, value, onCycle }) {
+  const t = useCountUp(value);
+  return (
+    <div className="stat-card stat-card-btn" role="button" tabIndex={0}
+      onClick={onCycle}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onCycle(); }}
+      title="Toca para cambiar: semanal, mensual, anual">
+      <div className="stat-top"><div className="k">{label}</div></div>
+      <div className="v">{usd.format(t)}</div>
+      <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>toca para cambiar</div>
+    </div>
+  );
+}
+
 const PERIODS = [
   { v: 'dia', l: 'Hoy' },
   { v: 'semana', l: 'Semana' },
@@ -150,9 +165,23 @@ export default function Sales() {
 
   const ingresos = cargado ? sum(sales.filter((s) => inPeriod(s, period))) : 0;
   const gastos = cargado ? sumAmount(expensesCp.filter((e) => inPeriod(e, period))) : 0;
-  // Ganancia = ingresos − costo de los productos vendidos − gastos del período.
-  const costoVendido = cargado ? sales.filter((s) => inPeriod(s, period)).reduce((a, s) => a + (s.costo || 0), 0) : 0;
-  const ganancia = ingresos - costoVendido - gastos;
+
+  // La tarjeta de Ganancia rota al tocarla: semanal → mensual → anual
+  // (siempre de la semana/mes/año ACTUALES, no del período seleccionado).
+  const GAN_VISTAS = [
+    { v: 'semana', l: 'Ganancia (semana)', match: (x) => wk.includes(x.cp.key) },
+    { v: 'mes', l: 'Ganancia (mes)', match: (x) => x.cp.key.slice(0, 7) === curMonthKey },
+    { v: 'ano', l: 'Ganancia (año)', match: (x) => x.cp.y === now.y },
+  ];
+  const [ganVista, setGanVista] = useState(0);
+  const gv = GAN_VISTAS[ganVista % GAN_VISTAS.length];
+  const ganValor = !cargado ? 0 : (() => {
+    const ss = sales.filter(gv.match);
+    const ing = sum(ss);
+    const costo = ss.reduce((a, s) => a + (s.costo || 0), 0);
+    const gas = sumAmount(expensesCp.filter(gv.match));
+    return ing - costo - gas;
+  })();
 
   // Datos del gráfico según el período.
   let chart = null;
@@ -293,7 +322,7 @@ export default function Sales() {
           <>
             <Kpi label="Ingresos" total={ingresos} count={-1} />
             <Kpi label="Gastos" total={gastos} count={-1} />
-            <Kpi label="Ganancia" total={ganancia} count={-1} />
+            <GananciaCard label={gv.l} value={ganValor} onCycle={() => setGanVista((v) => v + 1)} />
           </>
         )}
       </div>
