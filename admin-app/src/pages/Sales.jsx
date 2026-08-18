@@ -67,15 +67,27 @@ function Kpi({ label, total, count, suffix, prefix }) {
   );
 }
 
-// Ganancia clicable: rota semanal → mensual → anual al tocarla.
-function GananciaCard({ label, value, onCycle }) {
+// Ganancia clicable: rota semanal → mensual → anual al tocarla; las
+// flechitas cambian de semana/mes/año sin rotar la vista.
+function GananciaCard({ label, value, onCycle, onPrev, onNext, canNext }) {
   const t = useCountUp(value);
+  const arrow = (fn, glyph, title) => (
+    <button type="button" className="gan-arrow" title={title} disabled={fn == null}
+      onClick={(e) => { e.stopPropagation(); if (fn) fn(); }}
+      onKeyDown={(e) => e.stopPropagation()}>{glyph}</button>
+  );
   return (
     <div className="stat-card stat-card-btn" role="button" tabIndex={0}
       onClick={onCycle}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onCycle(); }}
       title="Toca para cambiar: semanal, mensual, anual">
-      <div className="stat-top"><div className="k">{label}</div></div>
+      <div className="stat-top">
+        <div className="k">{label}</div>
+        <div className="gan-arrows">
+          {arrow(onPrev, '‹', 'Anterior')}
+          {arrow(canNext ? onNext : null, '›', 'Siguiente')}
+        </div>
+      </div>
       <div className="v">{usd.format(t)}</div>
       <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>toca para cambiar</div>
     </div>
@@ -166,15 +178,51 @@ export default function Sales() {
   const ingresos = cargado ? sum(sales.filter((s) => inPeriod(s, period))) : 0;
   const gastos = cargado ? sumAmount(expensesCp.filter((e) => inPeriod(e, period))) : 0;
 
-  // La tarjeta de Ganancia rota al tocarla: semanal → mensual → anual
-  // (siempre de la semana/mes/año ACTUALES, no del período seleccionado).
-  const GAN_VISTAS = [
-    { v: 'semana', l: 'Ganancia (semana)', match: (x) => wk.includes(x.cp.key) },
-    { v: 'mes', l: 'Ganancia (mes)', match: (x) => x.cp.key.slice(0, 7) === curMonthKey },
-    { v: 'ano', l: 'Ganancia (año)', match: (x) => x.cp.y === now.y },
-  ];
+  // La tarjeta de Ganancia rota al tocarla: semanal → mensual → anual.
+  // Con las flechitas ‹ › se navega a semanas/meses/años anteriores o
+  // siguientes (offset 0 = el actual).
   const [ganVista, setGanVista] = useState(0);
-  const gv = GAN_VISTAS[ganVista % GAN_VISTAS.length];
+  const [ganOffset, setGanOffset] = useState(0);
+
+  // Semana lun–dom desplazada `off` semanas desde la actual.
+  const weekKeysOff = (off) => {
+    const monday = new Date(wk[0] + 'T00:00:00Z');
+    monday.setUTCDate(monday.getUTCDate() + off * 7);
+    const keys = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setUTCDate(monday.getUTCDate() + i);
+      keys.push(d.toISOString().slice(0, 10));
+    }
+    return keys;
+  };
+  const monthKeyOff = (off) => {
+    const [y0, m0] = curMonthKey.split('-').map(Number);
+    return new Date(Date.UTC(y0, m0 - 1 + off, 1)).toISOString().slice(0, 7);
+  };
+
+  const gv = (() => {
+    const v = ganVista % 3;
+    if (v === 0) {
+      const keys = weekKeysOff(ganOffset);
+      const [sy, sm, sd] = keys[0].split('-').map(Number);
+      return {
+        l: ganOffset === 0 ? 'Ganancia (semana)' : `Ganancia (sem. ${sd}/${sm}/${sy})`,
+        match: (x) => keys.includes(x.cp.key),
+      };
+    }
+    if (v === 1) {
+      const mk = monthKeyOff(ganOffset);
+      const [my, mm] = mk.split('-').map(Number);
+      return {
+        l: `Ganancia (${MONTH_LABELS[mm - 1]} ${my})`,
+        match: (x) => x.cp.key.slice(0, 7) === mk,
+      };
+    }
+    const yy = now.y + ganOffset;
+    return { l: `Ganancia (${yy})`, match: (x) => x.cp.y === yy };
+  })();
+
   const ganValor = !cargado ? 0 : (() => {
     const ss = sales.filter(gv.match);
     const ing = sum(ss);
@@ -322,7 +370,11 @@ export default function Sales() {
           <>
             <Kpi label="Ingresos" total={ingresos} count={-1} />
             <Kpi label="Gastos" total={gastos} count={-1} />
-            <GananciaCard label={gv.l} value={ganValor} onCycle={() => setGanVista((v) => v + 1)} />
+            <GananciaCard label={gv.l} value={ganValor}
+              onCycle={() => { setGanVista((v) => v + 1); setGanOffset(0); }}
+              onPrev={() => setGanOffset((o) => o - 1)}
+              onNext={() => setGanOffset((o) => o + 1)}
+              canNext={ganOffset < 0} />
           </>
         )}
       </div>

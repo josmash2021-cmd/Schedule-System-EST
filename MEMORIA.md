@@ -326,7 +326,9 @@ producto al vender; NULL en conceptos libres y ventas viejas). La tarjeta
 de ventas viejas con el costo ACTUAL del inventario (UPDATE ... WHERE cost
 IS NULL), para que la ganancia histórica también descuente el costo. La
 tarjeta "Ganancia" es clicable (`GananciaCard`) y rota al tocarla:
-semanal → mensual → anual (siempre de la semana/mes/año actuales).
+semanal → mensual → anual; con flechitas ‹ › se navega a la
+semana/mes/año anterior o siguiente (sin ir al futuro; al rotar vuelve
+al período actual).
 
 ### `terminos.html` / `politicas.html` — legales (tema claro, CSS inline duplicado)
 Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolsos

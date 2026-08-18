@@ -252,6 +252,16 @@ select option { background: #fff; color: #111; }
 /* Tarjeta clicable (p. ej. "Fuera de stock" en Inventario) */
 .stat-card-btn { cursor: pointer; user-select: none; }
 .stat-card-on { border-color: #111; box-shadow: 0 0 0 1.5px #111, 0 12px 28px rgba(0, 0, 0, 0.08); }
+/* Flechitas de la tarjeta Ganancia (semana/mes/año anterior y siguiente) */
+.gan-arrows { display: flex; gap: 6px; }
+.gan-arrow {
+  width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.14);
+  background: #f7f7f8; color: #111; font-size: 16px; line-height: 1; cursor: pointer;
+  display: grid; place-items: center; padding: 0 0 2px;
+  transition: background 0.18s, transform 0.18s;
+}
+.gan-arrow:hover:not(:disabled) { background: #eee; transform: scale(1.08); }
+.gan-arrow:disabled { opacity: 0.3; cursor: default; }
 .card {
   color: #111;
   background: #fff;
