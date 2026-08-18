@@ -43,7 +43,7 @@
     <main>
         <section class="product-detail container">
             <div class="product-media reveal">
-                <span class="card-badge card-badge-hot" data-en="Last unit">Última unidad</span>
+                <span class="card-badge" data-en="Sold">Vendido</span>
                 <img draggable="false" src="assets/img/iphone-15-pro.jpg" alt="iPhone 15 Pro 256 GB color azul" fetchpriority="high" data-en-alt="iPhone 15 Pro 256 GB in blue">
             </div>
             <div class="product-info reveal">
@@ -61,7 +61,7 @@
                 <div class="price-detail">
                     <small data-en="price">precio</small>
                     <span class="amount" id="priceAmount" data-en="$550">$550</span>
-                    <small id="priceNote" data-en="last unit available for pickup">última unidad disponible para pick up</small>
+                    <small id="priceNote" data-en="sold">vendido</small>
                 </div>
 
                 <p class="product-desc" data-en="256 GB iPhone 15 Pro in blue titanium, factory unlocked to use with any carrier. The device has no issues: screen, cameras, Face ID, buttons, and charging all work perfectly. Battery health is at 90%. Delivered without the box, phone only. Includes a 30-day warranty. Schedule a visit and try it with no obligation.">
@@ -75,12 +75,8 @@
 
                 <div class="product-actions">
                     <a href="/book-appointment" class="btn btn-blue" data-en="Schedule a visit">Agendar visita</a>
-                    <button type="button" id="addToCart" class="btn btn-ghost"
-                            data-id="iphone-15-pro" data-name="iPhone 15 Pro"
-                            data-desc="256 GB · Batería 90% · Desbloqueado" data-desc-en="256 GB · 90% battery · Unlocked" data-price="550"
-                            data-cond="Muy bueno"
-                            data-img="assets/img/iphone-15-pro.jpg">
-                        <span data-en="Add to cart">Agregar al carrito</span>
+                    <button type="button" class="btn btn-ghost" disabled>
+                        <span data-en="Sold">Vendido</span>
                     </button>
                 </div>
             </div>
