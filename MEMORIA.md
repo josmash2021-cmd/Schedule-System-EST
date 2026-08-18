@@ -310,6 +310,14 @@ Año + selector de año con los años presentes en los datos) y pills de estado
 semana del mes (Sem 1 = días 1–7…), año → por mes; las barras bajan al
 detalle (semana/mes → día, año → mes). Lista y gráfica salen del mismo
 conjunto filtrado (sincronizadas); cada fila muestra badge de origen.
+**Inventario — fixes (2026-08-18):** las especificaciones no reaparecían al
+reabrir un producto (parseDescription guardaba claves en español pero los
+campos usan claves en inglés) — ahora `SPEC_KEYMAP` mapea
+almacenamiento→storage, garantía→warranty, etc. La "Cantidad" no se guardaba
+al editar (el PATCH ignoraba `stock`) — `models/inventory.update()` acepta
+`stock` y la ruta lo valida. La ficha del producto va en 2 columnas en
+escritorio (`.inv-form` + `.inv-c1/.inv-c2/.inv-full`, FormPage max 1080)
+para que quepa sin apenas scroll.
 **Inventario (2026-08-17):** la lista solo muestra productos CON stock
 (`stock > 0`); los de `stock <= 0` no aparecen. Cuarta tarjeta del stat-grid:
 "Fuera de stock" con el conteo (`.stat-card-btn`, clicable) — al tocarla la

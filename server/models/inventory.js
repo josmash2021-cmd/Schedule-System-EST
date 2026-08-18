@@ -40,6 +40,8 @@ async function update(id, fields) {
   const vals = [];
   let i = 1;
   for (const k of FIELDS) if (fields[k] !== undefined) { sets.push(`${k} = $${i++}`); vals.push(fields[k]); }
+  // El stock también se puede corregir desde la ficha (Cantidad).
+  if (fields.stock !== undefined) { sets.push(`stock = $${i++}`); vals.push(fields.stock); }
   if (!sets.length) return findById(id);
   sets.push('updated_at = NOW()');
   vals.push(id);

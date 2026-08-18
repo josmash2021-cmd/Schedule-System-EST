@@ -108,6 +108,12 @@ router.patch('/:id', requireRole('admin'), async (req, res) => {
   const { fields, error } = extractItem(req.body || {});
   if (error) return res.status(400).json({ error });
   if (fields.name !== undefined && !fields.name) return res.status(400).json({ error: 'El nombre es obligatorio.' });
+  // Corrección directa de la Cantidad desde la ficha (además de /adjust).
+  if (req.body && req.body.stock !== undefined) {
+    const r = num(req.body.stock, { int: true, min: 0 });
+    if (!r.ok) return res.status(400).json({ error: 'Cantidad inválida.' });
+    fields.stock = r.val == null ? 0 : r.val;
+  }
   try {
     const existing = await inventory.findById(id);
     if (!existing) return res.status(404).json({ error: 'Producto no encontrado.' });

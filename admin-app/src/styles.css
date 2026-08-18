@@ -487,6 +487,15 @@ table.data tbody tr:hover td { background: #f5f5f6; }
 .kanban-card-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; }
 @media (max-width: 760px) { .kanban { grid-template-columns: 1fr; } }
 
+/* Inventario: ficha del producto en 2 columnas en escritorio (cabe en la página) */
+@media (min-width: 980px) {
+  .inv-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0 26px; align-items: start; }
+  .inv-form > .alert { grid-column: 1 / -1; }
+  .inv-c1 { grid-column: 1; }
+  .inv-c2 { grid-column: 2; }
+  .inv-full { grid-column: 1 / -1; }
+}
+
 /* Inventario */
 .stock-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; border-radius: 14px; background: #f7f7f8; border: 1px solid rgba(0, 0, 0, 0.08); margin-bottom: 16px; }
 .stock-banner.low { border-color: #111; }

@@ -49,7 +49,7 @@ export default function Inventory() {
   if (detail) {
     const back = () => { setDetail(null); load(search); };
     return (
-      <FormPage title={detail.id ? 'Producto' : 'Nuevo producto'} onBack={back}>
+      <FormPage title={detail.id ? 'Producto' : 'Nuevo producto'} onBack={back} max={1080}>
         <InventoryDetail itemId={detail.id} isAdmin onClose={back} onSaved={() => load(search)} />
       </FormPage>
     );

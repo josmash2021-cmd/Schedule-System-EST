@@ -28,12 +28,24 @@ function isComputer(category) {
   return category === 'Laptop Apple' || category === 'Laptops Windows' || category === 'PC Gaming';
 }
 
+// Las líneas de la descripción se guardan como "Clave: Valor" en español
+// (Almacenamiento: 256GB); al reabrir se mapean de vuelta a los campos.
+const SPEC_KEYMAP = {
+  'procesador': 'processor', 'ram': 'ram', 'almacenamiento': 'storage',
+  'color': 'color', 'condición': 'condition', 'condicion': 'condition',
+  'cargador incluido': 'charger', 'cargador': 'charger',
+  'liberado': 'unlocked', 'garantía': 'warranty', 'garantia': 'warranty',
+};
+
 function parseDescription(desc) {
   const specs = {};
   if (!desc) return specs;
   for (const line of String(desc).split('\n')) {
     const idx = line.indexOf(':');
-    if (idx > 0) specs[line.slice(0, idx).trim().toLowerCase()] = line.slice(idx + 1).trim();
+    if (idx > 0) {
+      const key = SPEC_KEYMAP[line.slice(0, idx).trim().toLowerCase()];
+      if (key) specs[key] = line.slice(idx + 1).trim();
+    }
   }
   return specs;
 }
@@ -99,6 +111,7 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
         price: item.price != null ? String(item.price) : '',
         cost: item.cost != null ? String(item.cost) : '',
         stock: item.stock != null ? String(item.stock) : '',
+        image_url: item.image_url || '',
       });
       setSpecs({ ...EMPTY_SPECS, ...parseDescription(item.description) });
       setMovements(movs || []);
@@ -204,14 +217,14 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
   const currentPhoto = photoPreview || (f.image_url ? f.image_url : null);
 
   return (
-    <div className="repair-detail">
+    <div className="repair-detail inv-form">
       {err && <div className="alert alert-error">{err}</div>}
       {ok && <div className="alert alert-ok">{ok}</div>}
 
       {isAdmin ? (
         <>
-          <label className="field"><span>Nombre</span><input value={f.name} onChange={setField('name')} placeholder="ej. MacBook Air 13" /></label>
-          <div className="rd-grid">
+          <label className="field inv-c1"><span>Nombre</span><input value={f.name} onChange={setField('name')} placeholder="ej. MacBook Air 13" /></label>
+          <div className="rd-grid inv-c1">
             <label className="field"><span>SKU / código</span><input value={f.sku} onChange={setField('sku')} /></label>
             <label className="field"><span>Categoría</span>
               <select value={f.category} onChange={setField('category')}>
@@ -220,14 +233,14 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
               </select>
             </label>
           </div>
-          <div className="rd-grid">
+          <div className="rd-grid inv-c1">
             <label className="field"><span>Precio venta ($)</span><input value={formatMoneyInput(f.price)} onChange={handlePrice('price')} placeholder="$0" /></label>
             <label className="field"><span>Costo ($)</span><input value={formatMoneyInput(f.cost)} onChange={handlePrice('cost')} placeholder="$0" /></label>
           </div>
-          <label className="field"><span>Cantidad</span><input type="number" min="0" step="1" value={f.stock} onChange={setField('stock')} /></label>
+          <label className="field inv-c1"><span>Cantidad</span><input type="number" min="0" step="1" value={f.stock} onChange={setField('stock')} /></label>
 
           {currentCategory && (
-            <div className="rd-photos">
+            <div className="rd-photos inv-c1">
               <strong style={{ fontSize: 14, display: 'block', marginBottom: 10 }}>Especificaciones</strong>
               {computer && (
                 <>
@@ -272,7 +285,7 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
             </div>
           )}
 
-          <div className="rd-photos">
+          <div className="rd-photos inv-c2">
             <strong style={{ fontSize: 14, display: 'block', marginBottom: 10 }}>Foto del producto</strong>
             <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handlePhoto} />
             {currentPhoto && (
@@ -286,7 +299,7 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
           </div>
         </>
       ) : (
-        <div className="card" style={{ marginBottom: 14 }}>
+        <div className="card inv-full" style={{ marginBottom: 14 }}>
           <strong>{f.name}</strong>
           <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>
             {[f.sku && ('SKU ' + f.sku), f.category].filter(Boolean).join(' · ')}
@@ -297,7 +310,7 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
       )}
 
       {id != null && (
-        <div className="rd-photos">
+        <div className="rd-photos inv-c2">
           <strong style={{ fontSize: 14, display: 'block', marginBottom: 10 }}>Ajustar stock</strong>
           <div className="adjust-row">
             <input type="number" min="1" step="1" value={qty} onChange={(e) => setQty(e.target.value)} style={{ width: 80 }} />
@@ -317,7 +330,7 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
       )}
 
       {id != null && movements.length > 0 && (
-        <div>
+        <div className="inv-c2">
           <strong style={{ fontSize: 14, display: 'block', margin: '4px 0 8px' }}>Movimientos</strong>
           <div className="activity-feed">
             {movements.map((m) => (
@@ -331,7 +344,7 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
         </div>
       )}
 
-      <div className="rd-actions">
+      <div className="rd-actions inv-full">
         {isAdmin && <button className="btn btn-primary" onClick={save} disabled={saving}>{saving ? <span className="spinner" /> : 'Guardar'}</button>}
         {isAdmin && id && <button className="btn btn-danger" onClick={del}>Eliminar</button>}
         {onClose && <button className="btn btn-ghost" onClick={onClose}>Cerrar</button>}
