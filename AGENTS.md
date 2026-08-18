@@ -19,11 +19,19 @@ cambies estructura, flujos o convenciones.
 ## Mapa de ubicaciones exactas
 
 ### Sitio público (raíz)
-- Páginas: `index.html`, `products.html`, `macbook-air-13.html`,
+- Páginas: `index.html`, `products.html`, `producto.html`, `macbook-air-13.html`,
   `iphone-15-pro.html`, `book-appointment.html`, `cart.html`, `success.html`,
   `terms.html`, `privacy.html`.
-- JS/CSS compartido: `assets/` (`site.js`, `cart.js`, `site-v3.css`,
-  `transitions.js`, `i18n.js`, `security.js`).
+- JS/CSS compartido: `assets/` (`site.js`, `cart.js`, `products.js`,
+  `producto.js`, `site-v3.css`, `transitions.js`, `i18n.js`, `security.js`).
+- **Catálogo dinámico (2026-08-18):** `products.html` ya no tiene tarjetas
+  fijas — `assets/products.js` pinta desde `GET /api/products` (productos del
+  inventario con `show_on_web` y `stock > 0`). La ficha es `producto.html?id=N`
+  (`assets/producto.js` → `GET /api/products/:id`): foto principal arriba,
+  2 fotos de galería abajo, título/subtítulo/precio/descripción. Los botones
+  de carrito se re-enlazan con `window.EST_WIRE_CART()` (cart.js). Las páginas
+  estáticas `iphone-15-pro.html`/`macbook-air-13.html` siguen vivas por URL
+  directa pero el catálogo ya no las enlaza.
 - **Tras editar cualquier página/asset del sitio:** `node server/scripts/copy-frontend.js`
   (copia a `server/public/`, que va commiteada para Railway). Si agregas o
   renombras una página, actualiza también `htmlRoutes` en `server/index.js` y
@@ -57,7 +65,8 @@ cambies estructura, flujos o convenciones.
 - Rutas del panel (`/x/s/*`): `server/routes/adminAuth.js`, `adminUsers.js`,
   `adminTime.js`, `adminTasks.js`, `adminMonitor.js`, `adminRepairs.js`,
   `adminInventory.js`.
-- Rutas públicas (`/api/*`): `appointments.js`, `slots.js`, `checkout.js`
+- Rutas públicas (`/api/*`): `appointments.js`, `slots.js`, `products.js`
+  (catálogo web del inventario), `checkout.js`
   (Stripe), `auth.js` (login viejo, sin frontend).
 - Modelos (SQL directo con `pg`): `server/models/` — `users.js`,
   `repairs.js`, `inventory.js`, `tasks.js`, `timeEntries.js`, `audit.js`.

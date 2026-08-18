@@ -1,8 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { api, apiUpload } from '../api.js';
+import { compressImage } from './RepairDetail.jsx';
 
 const REASONS = ['entrada', 'salida', 'venta', 'uso', 'ajuste', 'devolución'];
 export const money = (n) => (n == null || n === '' ? '—' : '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }));
+
+// Slots de foto: 1 = principal (la de arriba en la web), 2 y 3 = galería.
+const PHOTO_SLOTS = [
+  { slot: 1, col: 'image_url', label: 'Foto principal (la de arriba)' },
+  { slot: 2, col: 'image2_url', label: 'Foto 2 (galería de abajo)' },
+  { slot: 3, col: 'image3_url', label: 'Foto 3 (galería de abajo)' },
+];
 
 const CATEGORIES = [
   { value: 'Laptop Apple', label: 'Laptop Apple' },
@@ -12,7 +20,7 @@ const CATEGORIES = [
   { value: 'PC Gaming', label: 'PC Gaming' },
 ];
 
-const EMPTY = { name: '', sku: '', category: '', description: '', price: '', cost: '', stock: '' };
+const EMPTY = { name: '', sku: '', category: '', description: '', price: '', cost: '', stock: '', subtitle: '', show_on_web: false };
 const EMPTY_SPECS = {
   processor: '',
   ram: '',
@@ -82,9 +90,9 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
   const [direction, setDirection] = useState('in');
   const [note, setNote] = useState('');
 
-  const [photoFile, setPhotoFile] = useState(null);
-  const [photoPreview, setPhotoPreview] = useState(null);
-  const fileRef = useRef(null);
+  // Fotos pendientes de subir por slot: { 1: {file, preview}, ... }
+  const [photos, setPhotos] = useState({});
+  const fileRefs = { 1: useRef(null), 2: useRef(null), 3: useRef(null) };
 
   const setField = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.value }));
 
@@ -99,6 +107,11 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
         price: item.price != null ? String(item.price) : '',
         cost: item.cost != null ? String(item.cost) : '',
         stock: item.stock != null ? String(item.stock) : '',
+        subtitle: item.subtitle || '',
+        show_on_web: !!item.show_on_web,
+        image_url: item.image_url || '',
+        image2_url: item.image2_url || '',
+        image3_url: item.image3_url || '',
       });
       setSpecs({ ...EMPTY_SPECS, ...parseDescription(item.description) });
       setMovements(movs || []);
@@ -116,35 +129,40 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
     setF((s) => ({ ...s, [k]: val }));
   };
 
-  const handlePhoto = (e) => {
+  const handlePhoto = (slot) => (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setPhotoFile(file);
-    setPhotoPreview(URL.createObjectURL(file));
+    setPhotos((p) => ({ ...p, [slot]: { file, preview: URL.createObjectURL(file) } }));
   };
 
-  const removePhoto = async () => {
-    if (!id) { setPhotoFile(null); setPhotoPreview(null); if (fileRef.current) fileRef.current.value = ''; return; }
-    if (!window.confirm('¿Eliminar la foto de este producto?')) return;
+  const clearSlot = (slot) => {
+    setPhotos((p) => { const n = { ...p }; delete n[slot]; return n; });
+    if (fileRefs[slot].current) fileRefs[slot].current.value = '';
+  };
+
+  const removePhoto = async (slot, col) => {
+    if (!id) { clearSlot(slot); return; }
+    if (!window.confirm('¿Eliminar esta foto del producto?')) return;
     setBusy(true);
     try {
-      await api('/inventory/' + id + '/photo', { method: 'DELETE' });
-      setF((s) => ({ ...s, image_url: '' }));
-      setPhotoFile(null);
-      setPhotoPreview(null);
-      if (fileRef.current) fileRef.current.value = '';
+      await api('/inventory/' + id + '/photo?slot=' + slot, { method: 'DELETE' });
+      setF((s) => ({ ...s, [col]: '' }));
+      clearSlot(slot);
       if (onSaved) onSaved();
     } catch (e) { setErr(e.message); } finally { setBusy(false); }
   };
 
-  const uploadPendingPhoto = async (productId) => {
-    if (!photoFile || !productId) return;
-    const form = new FormData();
-    form.append('photo', photoFile);
-    await apiUpload('/inventory/' + productId + '/photo', form);
-    setPhotoFile(null);
-    setPhotoPreview(null);
-    if (fileRef.current) fileRef.current.value = '';
+  // Sube las fotos elegidas (comprimidas) tras guardar el producto.
+  const uploadPendingPhotos = async (productId) => {
+    for (const { slot } of PHOTO_SLOTS) {
+      const p = photos[slot];
+      if (!p || !productId) continue;
+      const img = await compressImage(p.file);
+      const form = new FormData();
+      form.append('photo', img);
+      await apiUpload('/inventory/' + productId + '/photo?slot=' + slot, form);
+      clearSlot(slot);
+    }
   };
 
   const save = async () => {
@@ -155,19 +173,22 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
       cost: cleanMoney(f.cost),
       stock: f.stock === '' ? 0 : Number(f.stock),
       description: buildDescription(specs, currentCategory),
+      show_on_web: !!f.show_on_web,
     };
+    // Las URLs de foto las manejan los endpoints de subida, no el PATCH.
+    delete body.image_url; delete body.image2_url; delete body.image3_url;
     if (!body.name) { setErr('El nombre es obligatorio.'); setSaving(false); return; }
 
     try {
       if (id) {
         await api('/inventory/' + id, { method: 'PATCH', body });
-        await uploadPendingPhoto(id);
+        await uploadPendingPhotos(id);
         load(id);
         setOk('Cambios guardados.');
       } else {
         const { item } = await api('/inventory', { method: 'POST', body });
         setId(item.id);
-        await uploadPendingPhoto(item.id);
+        await uploadPendingPhotos(item.id);
         setOk('Producto creado.');
         if (onSaved) onSaved();
         if (onClose) onClose();
@@ -200,8 +221,6 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
   };
 
   if (loading) return <div style={{ textAlign: 'center', padding: 40 }}><span className="spinner spinner-lg" /></div>;
-
-  const currentPhoto = photoPreview || (f.image_url ? f.image_url : null);
 
   return (
     <div className="repair-detail">
@@ -273,16 +292,36 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
           )}
 
           <div className="rd-photos">
-            <strong style={{ fontSize: 14, display: 'block', marginBottom: 10 }}>Foto del producto</strong>
-            <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handlePhoto} />
-            {currentPhoto && (
-              <div style={{ marginTop: 12 }}>
-                <div className="photo-thumb" style={{ width: 120, height: 120, display: 'inline-block', verticalAlign: 'top' }}>
-                  <img src={currentPhoto} alt="Vista previa" />
+            <strong style={{ fontSize: 14, display: 'block', marginBottom: 10 }}>Página web</strong>
+            <label className="row" style={{ gap: 8, cursor: 'pointer', marginBottom: 10 }}>
+              <input type="checkbox" style={{ width: 'auto' }} checked={!!f.show_on_web}
+                onChange={(e) => setF((s) => ({ ...s, show_on_web: e.target.checked }))} />
+              <span style={{ fontSize: 14 }}>Mostrar este producto en la página web</span>
+            </label>
+            <label className="field"><span>Subtítulo web</span>
+              <input value={f.subtitle} onChange={setField('subtitle')} placeholder="ej. 256 GB · Titanio azul · Desbloqueado" />
+            </label>
+            <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
+              El título es el nombre del producto y la descripción son las especificaciones. Si el stock llega a 0, el producto sale de la página solo.
+            </div>
+            {PHOTO_SLOTS.map(({ slot, col, label }) => {
+              const current = (photos[slot] && photos[slot].preview) || f[col] || null;
+              return (
+                <div key={slot} style={{ borderTop: '1px solid rgba(0,0,0,0.07)', paddingTop: 10, marginTop: 10 }}>
+                  <strong style={{ fontSize: 13, display: 'block', marginBottom: 8 }}>{label}</strong>
+                  <input ref={fileRefs[slot]} type="file" accept="image/jpeg,image/png,image/webp" onChange={handlePhoto(slot)} />
+                  {current && (
+                    <div style={{ marginTop: 10 }}>
+                      <div className="photo-thumb" style={{ width: 110, height: 110, display: 'inline-block', verticalAlign: 'top' }}>
+                        <img src={current} alt="Vista previa" />
+                      </div>
+                      <button className="btn btn-danger btn-sm" style={{ marginLeft: 10, verticalAlign: 'top' }}
+                        onClick={() => removePhoto(slot, col)} disabled={busy}>Quitar</button>
+                    </div>
+                  )}
                 </div>
-                <button className="btn btn-danger btn-sm" style={{ marginLeft: 10, verticalAlign: 'top' }} onClick={removePhoto} disabled={busy}>Quitar</button>
-              </div>
-            )}
+              );
+            })}
           </div>
         </>
       ) : (

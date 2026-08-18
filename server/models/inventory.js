@@ -2,7 +2,8 @@
 const { pool } = require('../db');
 
 // Campos editables del producto (stock inicial solo al crear).
-const FIELDS = ['name', 'sku', 'category', 'description', 'price', 'cost', 'min_stock', 'image_url'];
+const FIELDS = ['name', 'sku', 'category', 'description', 'price', 'cost', 'min_stock', 'image_url',
+  'subtitle', 'image2_url', 'image3_url', 'show_on_web'];
 
 async function listItems(search) {
   if (search) {

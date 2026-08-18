@@ -31,7 +31,7 @@ export const serviceTypeLabel = (v) => (SERVICE_TYPES.find((s) => s.v === v) || 
 // Comprime/redimensiona la imagen en el navegador antes de subir: máx 1600px,
 // JPEG calidad 0.85. Reduce ~10-20x el tamaño y convierte HEIC de iPhone a JPG.
 // Si algo falla, devuelve el archivo original (fallback seguro).
-async function compressImage(file, maxDim = 1600, quality = 0.85) {
+export async function compressImage(file, maxDim = 1600, quality = 0.85) {
   if (!file || !file.type || !file.type.startsWith('image/')) return file;
   try {
     let bitmap;
