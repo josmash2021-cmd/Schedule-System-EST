@@ -317,7 +317,13 @@ almacenamiento→storage, garantía→warranty, etc. La "Cantidad" no se guardab
 al editar (el PATCH ignoraba `stock`) — `models/inventory.update()` acepta
 `stock` y la ruta lo valida. La ficha del producto va en 2 columnas en
 escritorio (`.inv-form` + `.inv-c1/.inv-c2/.inv-full`, FormPage max 1080)
-para que quepa sin apenas scroll.
+para que quepa sin apenas scroll. `assets/stock-sync.js` (mismo día): la web
+marca "Vendido" SOLA cuando el producto llega a stock 0 en el panel —
+`GET /api/stock` público (sku/name/stock de activos, no-store) y cada
+tarjeta/ficha lleva `data-inv` = el SKU del panel (macbook-air-13,
+iphone-15-pro, macbook-neo-2026, ipad-air-1); si no hay coincidencia, la
+página no se toca. Solo marca vendido, nunca reactiva (el iPhone vendido a
+mano se queda así).
 **Inventario (2026-08-17):** la lista solo muestra productos CON stock
 (`stock > 0`); los de `stock <= 0` no aparecen. Cuarta tarjeta del stat-grid:
 "Fuera de stock" con el conteo (`.stat-card-btn`, clicable) — al tocarla la

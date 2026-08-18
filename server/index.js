@@ -6,6 +6,7 @@ const { PORT, CORS_ORIGIN, ADMIN_PATH, REPAIRS_DIR, INVENTORY_DIR } = require('.
 const { initDb } = require('./db');
 const slotsRouter = require('./routes/slots');
 const appointmentsRouter = require('./routes/appointments');
+const stockRouter = require('./routes/publicStock');
 const authRouter = require('./routes/auth');
 const { router: checkoutRouter, webhookHandler } = require('./routes/checkout');
 const adminAuthRouter = require('./routes/adminAuth');
@@ -136,6 +137,7 @@ app.get('/bot-qr.png', async (req, res) => {
 
 app.use('/api/slots', slotsRouter);
 app.use('/api/appointments', appointmentsRouter);
+app.use('/api/stock', stockRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/checkout', checkoutRouter);
 
