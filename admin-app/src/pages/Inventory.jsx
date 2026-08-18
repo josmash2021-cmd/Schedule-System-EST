@@ -16,6 +16,20 @@ export default function Inventory() {
   }, []);
   useEffect(() => { const t = setTimeout(() => load(search), 300); return () => clearTimeout(t); }, [search, load]);
 
+  // Stock editable directo en la lista: escribe la cantidad y al salir del
+  // campo (o Enter) se guarda. 0 = fuera de stock → sale de la lista.
+  const [stockBusy, setStockBusy] = useState(0);
+  const saveStock = async (i, raw) => {
+    const n = Math.max(0, Math.floor(Number(String(raw).replace(/[^\d]/g, '')) || 0));
+    if (n === Number(i.stock)) return;
+    setErr(''); setStockBusy(i.id);
+    try {
+      await api('/inventory/' + i.id, { method: 'PATCH', body: { stock: n } });
+      load(search);
+    } catch (e) { setErr(e.message); }
+    setStockBusy(0);
+  };
+
   // Los productos sin stock NO salen en la lista normal: se cuentan aparte
   // en la tarjeta "Fuera de stock" (clicable para verlos y poder reabastecer).
   const inStock = useMemo(() => (items || []).filter((i) => Number(i.stock) > 0), [items]);
@@ -143,7 +157,19 @@ export default function Inventory() {
                                 </td>
                                 <td className="muted hide-sm">{i.sku || '—'}</td>
                                 <td>{money(i.price)}</td>
-                                <td><span className={'badge ' + (Number(i.stock) > 0 ? 'badge-on' : 'badge-off')}>{i.stock}</span></td>
+                                <td onClick={(e) => e.stopPropagation()} style={{ cursor: 'default' }}>
+                                  <input
+                                    key={i.id + ':' + i.stock}
+                                    className="stock-inline"
+                                    defaultValue={i.stock}
+                                    inputMode="numeric"
+                                    title="Editar cantidad (0 = fuera de stock)"
+                                    disabled={stockBusy === i.id}
+                                    onChange={(e) => { e.target.value = e.target.value.replace(/[^\d]/g, ''); }}
+                                    onBlur={(e) => saveStock(i, e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
+                                  />
+                                </td>
                               </tr>
                             ))}
                           </>

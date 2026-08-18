@@ -264,6 +264,12 @@ select option { background: #fff; color: #111; }
 }
 .gan-arrow:hover:not(:disabled) { background: #eee; transform: scale(1.08); }
 .gan-arrow:disabled { opacity: 0.3; cursor: default; }
+/* Stock editable en la lista de inventario (0 = fuera de stock) */
+.stock-inline {
+  width: 64px; text-align: center; padding: 5px 8px; font-size: 14px; font-weight: 700;
+  border-radius: 10px; border: 1px solid rgba(0, 0, 0, 0.12); background: #f7f7f8;
+}
+.stock-inline:focus { border-color: #111; outline: none; background: #fff; }
 .card {
   color: #111;
   background: #fff;
