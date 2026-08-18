@@ -8,6 +8,7 @@ const itemsToCopy = [
   'index.html',
   'products.html',
   'macbook-air-13.html',
+  'macbook-neo-2026.html',
   'iphone-15-pro.html',
   'cart.html',
   'success.html',
