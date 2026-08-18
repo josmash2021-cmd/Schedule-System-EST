@@ -246,6 +246,13 @@ async function initDb() {
     // Foto del costo del producto en el momento de la venta (para la ganancia
     // real de la página de Ventas). NULL en conceptos libres y ventas viejas.
     await client.query(`ALTER TABLE sale_items ADD COLUMN IF NOT EXISTS cost NUMERIC(10,2);`);
+    // Sincroniza las ventas viejas (cost NULL) con el costo ACTUAL del
+    // inventario, para que la Ganancia también las descuente.
+    await client.query(`
+      UPDATE sale_items si SET cost = ii.cost
+      FROM inventory_items ii
+      WHERE si.item_id = ii.id AND si.cost IS NULL;
+    `);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS expenses (
