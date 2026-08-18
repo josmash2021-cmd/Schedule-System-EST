@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { api, apiUpload } from '../api.js';
 
-const REASONS = ['entrada', 'salida', 'venta', 'uso', 'ajuste', 'devolución'];
 export const money = (n) => (n == null || n === '' ? '—' : '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }));
 
 const CATEGORIES = [
@@ -88,11 +87,6 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [ok, setOk] = useState('');
-
-  const [qty, setQty] = useState(1);
-  const [reason, setReason] = useState('entrada');
-  const [direction, setDirection] = useState('in');
-  const [note, setNote] = useState('');
 
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -190,22 +184,6 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
     } catch (e) { setErr(e.message); } finally { setSaving(false); }
   };
 
-  const adjust = async () => {
-    const q = Math.abs(Math.floor(Number(qty)));
-    if (!q || !id) { setErr('Cantidad inválida.'); return; }
-    const delta = direction === 'out' ? -q : q;
-    setErr(''); setBusy(true);
-    try {
-      const { item } = await api('/inventory/' + id + '/adjust', { method: 'POST', body: { delta, reason, note: note || null } });
-      setF((s) => ({ ...s, stock: String(item.stock) }));
-      setNote('');
-      const { movements: movs } = await api('/inventory/' + id + '/movements');
-      setMovements(movs);
-      setOk('Ajuste guardado.');
-      if (onSaved) onSaved();
-    } catch (e) { setErr(e.message); } finally { setBusy(false); }
-  };
-
   const del = async () => {
     if (!window.confirm('¿Eliminar este producto? (se conserva el historial)')) return;
     try { await api('/inventory/' + id, { method: 'DELETE' }); if (onSaved) onSaved(); if (onClose) onClose(); }
@@ -237,7 +215,8 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
             <label className="field"><span>Precio venta ($)</span><input value={formatMoneyInput(f.price)} onChange={handlePrice('price')} placeholder="$0" /></label>
             <label className="field"><span>Costo ($)</span><input value={formatMoneyInput(f.cost)} onChange={handlePrice('cost')} placeholder="$0" /></label>
           </div>
-          <label className="field inv-c1"><span>Cantidad</span><input type="number" min="0" step="1" value={f.stock} onChange={setField('stock')} /></label>
+          <label className="field inv-c1"><span>Cantidad</span><input inputMode="numeric" value={f.stock}
+            onChange={(e) => setF((s) => ({ ...s, stock: e.target.value.replace(/[^\d]/g, '') }))} /></label>
 
           {currentCategory && (
             <div className="rd-photos inv-c1">
@@ -309,30 +288,10 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
         </div>
       )}
 
-      {id != null && (
-        <div className="rd-photos inv-c2">
-          <strong style={{ fontSize: 14, display: 'block', marginBottom: 10 }}>Ajustar stock</strong>
-          <div className="adjust-row">
-            <input type="number" min="1" step="1" value={qty} onChange={(e) => setQty(e.target.value)} style={{ width: 80 }} />
-            <select value={reason} onChange={(e) => setReason(e.target.value)} style={{ flex: 1 }}>
-              {REASONS.map((rz) => <option key={rz} value={rz}>{rz}</option>)}
-            </select>
-            <select value={direction} onChange={(e) => setDirection(e.target.value)} style={{ flex: 1 }}>
-              <option value="in">Entrada (+)</option>
-              <option value="out">Salida (−)</option>
-            </select>
-          </div>
-          <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Nota (opcional)" style={{ marginTop: 8 }} />
-          <div className="row" style={{ gap: 10, marginTop: 10 }}>
-            <button className="btn btn-primary" style={{ flex: 1 }} disabled={busy} onClick={adjust}>Guardar</button>
-          </div>
-        </div>
-      )}
-
       {id != null && movements.length > 0 && (
         <div className="inv-c2">
           <strong style={{ fontSize: 14, display: 'block', margin: '4px 0 8px' }}>Movimientos</strong>
-          <div className="activity-feed">
+          <div className="activity-feed" style={{ maxHeight: 240, overflowY: 'auto' }}>
             {movements.map((m) => (
               <div key={m.id} className="activity-row">
                 <span className={'mov-delta ' + (m.delta > 0 ? 'pos' : 'neg')}>{m.delta > 0 ? '+' : ''}{m.delta}</span>
