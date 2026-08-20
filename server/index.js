@@ -55,6 +55,7 @@ const htmlRoutes = {
   '/ipad-air-1': 'ipad-air-1.html',
   '/ipad-10-2022': 'ipad-10-2022.html',
   '/hp-15-i5-13': 'hp-15-i5-13.html',
+  '/hp-15-pentium': 'hp-15-pentium.html',
   '/iphone-15-pro': 'iphone-15-pro.html',
   '/cart': 'cart.html',
   '/success': 'success.html',
