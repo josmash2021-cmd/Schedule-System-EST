@@ -508,6 +508,10 @@ table.data tbody tr:hover td { background: #f5f5f6; }
 .inv-form .rd-photos { padding: 10px 12px; margin: 4px 0 10px; }
 .inv-form .rd-actions { margin-top: 0; padding-top: 10px; }
 
+/* Margen de ganancia en vivo en la ficha del producto */
+.inv-margin-amount { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 2px; }
+.inv-margin-amount.neg { color: #c0392b; }
+
 /* Inventario */
 .stock-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; border-radius: 14px; background: #f7f7f8; border: 1px solid rgba(0, 0, 0, 0.08); margin-bottom: 16px; }
 .stock-banner.low { border-color: #111; }

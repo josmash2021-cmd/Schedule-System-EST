@@ -194,6 +194,13 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
 
   const currentPhoto = photoPreview || (f.image_url ? f.image_url : null);
 
+  // Margen en vivo: aparece en cuanto hay precio de venta y costo.
+  // % = (venta − costo) / venta × 100 (misma fórmula que el resumen de Inventario).
+  const priceN = cleanMoney(f.price);
+  const costN = cleanMoney(f.cost);
+  const ganancia = priceN != null && costN != null ? priceN - costN : null;
+  const margen = ganancia != null && priceN > 0 ? (ganancia / priceN) * 100 : null;
+
   return (
     <div className="repair-detail inv-form">
       {err && <div className="alert alert-error">{err}</div>}
@@ -261,6 +268,15 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
                   <option value="No">No</option>
                 </select>
               </label>
+            </div>
+          )}
+
+          {ganancia != null && (
+            <div className="rd-photos inv-c2 inv-margin">
+              <strong style={{ fontSize: 14, display: 'block', marginBottom: 6 }}>Ganancia por unidad</strong>
+              <div className={'inv-margin-amount' + (ganancia < 0 ? ' neg' : '')}>{money(ganancia)}</div>
+              {margen != null && <div className="muted" style={{ fontSize: 12.5 }}>Margen: {margen.toFixed(1).replace(/\.0$/, '')}% del precio de venta</div>}
+              {ganancia < 0 && <div className="muted" style={{ fontSize: 12.5 }}>El costo supera al precio de venta.</div>}
             </div>
           )}
 
