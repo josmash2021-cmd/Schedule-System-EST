@@ -214,6 +214,7 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
             <div className="rd-photos inv-c2 inv-margin">
               <strong style={{ fontSize: 14, display: 'block', marginBottom: 6 }}>Ganancia por unidad</strong>
               <div className={'inv-margin-amount' + (ganancia < 0 ? ' neg' : '')}>{money(ganancia)}</div>
+              {margen != null && <div className="muted" style={{ fontSize: 12.5 }}>Margen: {margen.toFixed(1).replace(/\.0$/, '')}% del precio de venta</div>}
               {ganancia < 0 && <div className="muted" style={{ fontSize: 12.5 }}>El costo supera al precio de venta.</div>}
             </div>
           )}
@@ -277,14 +278,6 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
                   <option value="No">No</option>
                 </select>
               </label>
-            </div>
-          )}
-
-          {margen != null && (
-            <div className="rd-photos inv-c2 inv-margin">
-              <strong style={{ fontSize: 14, display: 'block', marginBottom: 6 }}>Margen de ganancia</strong>
-              <div className={'inv-margin-amount' + (margen < 0 ? ' neg' : '')}>{margen.toFixed(1).replace(/\.0$/, '')}%</div>
-              <div className="muted" style={{ fontSize: 12.5 }}>del precio de venta</div>
             </div>
           )}
 
