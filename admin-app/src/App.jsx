@@ -11,6 +11,7 @@ import Team from './pages/Team.jsx';
 import Repairs from './pages/Repairs.jsx';
 import Sales from './pages/Sales.jsx';
 import Inventory from './pages/Inventory.jsx';
+import Invoices from './pages/Invoices.jsx';
 import WorkerApp from './pages/WorkerApp.jsx';
 
 export default function App() {
@@ -37,6 +38,7 @@ export default function App() {
         <Route path="/equipo" element={<Team />} />
         <Route path="/reparaciones" element={<Repairs />} />
         <Route path="/ventas" element={<Sales />} />
+        <Route path="/facturas" element={<Invoices />} />
         <Route path="/inventario" element={<Inventory />} />
         <Route path="/citas" element={<Appointments />} />
         <Route path="/ajustes" element={<Settings />} />

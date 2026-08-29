@@ -599,3 +599,22 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   (2026-07-20): credenciales válidas y configuradas, pero los SMS se bloquean
   por falta de registro **A2P 10DLC** (error 30034). Falta registrar marca y
   campaña en Twilio Console para que entreguen.
+
+## 11. Facturas (Bill of Sale) — 2026-08-29
+
+- Nueva sección **Facturas** del panel (`/facturas`):
+  `admin-app/src/pages/Invoices.jsx`.
+- Tabla `invoices` en `server/db.js`: ligada a `sale_id` (venta de mostrador)
+  o `repair_id` (reparación entregada), ambas con `ON DELETE SET NULL`;
+  `items` es JSONB (foto de las líneas al emitir); el número se autogenera
+  `EST-0001…` si no se da uno.
+- Modelo `server/models/invoices.js` y rutas `server/routes/adminInvoices.js`
+  (solo admin), montadas en `/x/s/invoices`.
+- Desde `/ventas`, cada fila del detalle tiene botón **Facturar** que navega a
+  `/facturas?venta=N` o `/facturas?reparacion=N` y prellena el formulario.
+- El PDF es la **impresión nativa del navegador** (decisión del dueño, sin
+  jsPDF ni dependencias nuevas): `.invoice-doc` + `@media print` en
+  `styles.css` ocultan el shell y dejan solo el documento en tamaño carta.
+  "Compartir" usa Web Share API si existe; si no, cae al diálogo de imprimir.
+- Los datos del vendedor se recuerdan en `localStorage['est_invoice_seller']`
+  para no reescribirlos en cada factura.

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import BarChart from '../components/BarChart.jsx';
 import FormPage from '../components/FormPage.jsx';
@@ -103,6 +103,7 @@ const PERIODS = [
 
 export default function Sales() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const paramFecha = searchParams.get('fecha');
   const [tickets, setTickets] = useState(null);
   const [directas, setDirectas] = useState(null);
@@ -135,7 +136,7 @@ export default function Sales() {
     const deReparacion = (tickets || [])
       .filter((t) => t.status === 'entregado' && t.delivered_at)
       .map((t) => ({
-        key: 'r' + t.id, tipo: 'reparacion', price: Number(t.final_price) || 0, when: t.delivered_at, costo: 0,
+        key: 'r' + t.id, repairId: t.id, tipo: 'reparacion', price: Number(t.final_price) || 0, when: t.delivered_at, costo: 0,
         concepto: [t.device_brand, t.device_model].filter(Boolean).join(' ') || 'Reparación',
         cliente: t.customer_name || null, telefono: t.customer_phone || null,
         quien: t.assignee_username || null, cp: chicagoParts(new Date(t.delivered_at)),
@@ -483,7 +484,10 @@ export default function Sales() {
                         <td><span className={'badge ' + (s.tipo === 'venta' ? 'badge-on' : 'badge-worker')}>{s.tipo === 'venta' ? 'venta' : 'reparación'}</span></td>
                         <td className="muted hide-sm">{s.quien || '—'}</td>
                         <td style={{ textAlign: 'right' }}><strong>{usd.format(s.price)}</strong></td>
-                        <td style={{ textAlign: 'right' }}>
+                        <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                          <button className="btn btn-ghost btn-sm"
+                            onClick={() => navigate(s.tipo === 'venta' ? `/facturas?venta=${s.ventaId}` : `/facturas?reparacion=${s.repairId}`)}
+                            title="Crear factura (Bill of Sale)">Facturar</button>
                           {s.tipo === 'venta' && (
                             <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => anular(s)} title="Anular venta (repone stock)">Anular</button>
                           )}

@@ -266,6 +266,45 @@ async function initDb() {
     `);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_expenses_created ON expenses(created_at);`);
 
+    // ----- Facturas (Bill of Sale) -----
+    // Una factura puede nacer de una venta de mostrador (sale_id), de una
+    // reparación entregada (repair_id) o de ambos. Los textos se guardan como
+    // fueron emitidos; si luego cambia el negocio o el cliente, la factura
+    // histórica no se altera.
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS invoices (
+        id             SERIAL PRIMARY KEY,
+        invoice_number TEXT,
+        sale_id        INTEGER REFERENCES sales(id) ON DELETE SET NULL,
+        repair_id      INTEGER REFERENCES repair_tickets(id) ON DELETE SET NULL,
+        seller_name    TEXT NOT NULL DEFAULT 'ElectronicST, LLC',
+        seller_address TEXT,
+        seller_phone   TEXT,
+        seller_email   TEXT,
+        buyer_name     TEXT,
+        buyer_address  TEXT,
+        buyer_phone    TEXT,
+        buyer_email    TEXT,
+        sale_date      DATE,
+        sale_time      TIME,
+        payment_method TEXT,
+        tax_rate       NUMERIC(5,2) NOT NULL DEFAULT 0,
+        subtotal       NUMERIC(10,2) NOT NULL DEFAULT 0,
+        tax_total      NUMERIC(10,2) NOT NULL DEFAULT 0,
+        total          NUMERIC(10,2) NOT NULL DEFAULT 0,
+        items          JSONB NOT NULL DEFAULT '[]'::jsonb,
+        warranty_text  TEXT,
+        terms_text     TEXT,
+        notes          TEXT,
+        created_by     INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at     TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_invoices_sale ON invoices(sale_id);`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_invoices_repair ON invoices(repair_id);`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_invoices_number ON invoices(invoice_number);`);
+
     // Sembrar el primer admin desde ADMIN_PASSWORD (idempotente): solo si aún
     // no existe ningún admin. Nace con must_change_password para forzar rotación.
     if (ADMIN_PASSWORD) {

@@ -33,6 +33,9 @@ cambies estructura, flujos o convenciones.
 - Páginas: `admin-app/src/pages/` — `Dashboard.jsx`, `Workers.jsx`,
   `Tasks.jsx`, `Team.jsx`, `Repairs.jsx`, `Sales.jsx` (Ventas: KPIs
   hoy/semana/mes/año con count-up, gráfica por período, tabla detalle),
+  `Invoices.jsx` (Facturas: Bill of Sale por venta/reparación, formulario +
+  documento imprimible con `window.print()`, sin librerías de PDF; datos del
+  vendedor recordados en localStorage `est_invoice_seller`),
   `Inventory.jsx`, `Appointments.jsx`, `Settings.jsx`,
   `Login.jsx`, `WorkerHome.jsx`/`WorkerApp.jsx` (app móvil del trabajador).
 - Componentes: `admin-app/src/components/` (`Layout.jsx`, `FormPage.jsx`,
@@ -46,7 +49,8 @@ cambies estructura, flujos o convenciones.
 - Estilos: `admin-app/src/styles.css` (páginas blancas con pelotitas sutiles,
   tarjetas blancas con sombras 3D; shell y modales/login oscuros).
 - Rutas internas del panel: `admin-app/src/App.jsx` (`/`, `/trabajadores`,
-  `/tareas`, `/equipo`, `/reparaciones`, `/inventario`, `/citas`, `/ajustes`).
+  `/tareas`, `/equipo`, `/reparaciones`, `/ventas`, `/facturas`,
+  `/inventario`, `/citas`, `/ajustes`).
 - **Build obligatorio tras cualquier cambio:** `cd admin-app && npm run build`
   → genera `server/admin-dist/` (commiteado; Railway solo despliega `server/`).
 - URL en producción: `/x/<slug>` (slug en env `ADMIN_PATH`); assets en
@@ -56,11 +60,13 @@ cambies estructura, flujos o convenciones.
 - Entrada: `server/index.js` — monta routers y sirve estáticos.
 - Rutas del panel (`/x/s/*`): `server/routes/adminAuth.js`, `adminUsers.js`,
   `adminTime.js`, `adminTasks.js`, `adminMonitor.js`, `adminRepairs.js`,
-  `adminInventory.js`.
+  `adminInventory.js`, `adminInvoices.js` (facturas, solo admin).
 - Rutas públicas (`/api/*`): `appointments.js`, `slots.js`, `checkout.js`
   (Stripe), `auth.js` (login viejo, sin frontend).
 - Modelos (SQL directo con `pg`): `server/models/` — `users.js`,
-  `repairs.js`, `inventory.js`, `tasks.js`, `timeEntries.js`, `audit.js`.
+  `repairs.js`, `inventory.js`, `tasks.js`, `timeEntries.js`, `audit.js`,
+  `invoices.js` (tabla `invoices`: Bill of Sale ligado a `sale_id` o
+  `repair_id`; `items` JSONB; número auto `EST-0001`).
 - `server/db.js`: Pool + `CREATE TABLE IF NOT EXISTS` (las tablas se
   autocrean al arrancar). `repair_tickets` tiene `device_type`
   (telefono/tablet/laptop), `service_type` (revision/reparacion/mantenimiento),
