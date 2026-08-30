@@ -44,6 +44,14 @@ const CATALOG = {
     price: 250,
     img: 'assets/img/macbook-air-13.jpg',
   },
+  'macbook-neo-2026-openbox': {
+    name: 'MacBook Neo 2026',
+    desc: '256 GB · 8 GB RAM · Open box',
+    cond: 'Open box',
+    condEn: 'Open box',
+    price: 500,
+    img: 'assets/img/macbook-neo-pink.jpg',
+  },
 };
 
 function getItem(id) {

@@ -62,6 +62,7 @@
         });
     }
     var TAX_RATE = 0.10;
+    var SHIPPING = 16; // envío flat; debe coincidir con SHIPPING_FLAT del backend (routes/checkout.js)
     var MAX_QTY = 10; // debe coincidir con MAX_QTY del backend (routes/checkout.js)
     /* Escapa texto antes de insertarlo con innerHTML: defensa en profundidad y,
        además, evita que caracteres como la comilla de 'MacBook Air 13"' rompan
@@ -483,7 +484,8 @@
         var tax = Math.round(subtotal * TAX_RATE * 100) / 100;
         document.getElementById('cartSubtotal').textContent = money(subtotal);
         document.getElementById('cartTax').textContent = money(tax);
-        document.getElementById('cartTotal').textContent = money(subtotal + tax);
+        document.getElementById('cartShipping').textContent = money(SHIPPING);
+        document.getElementById('cartTotal').textContent = money(subtotal + tax + SHIPPING);
     }
 
     function wireCartPage() {

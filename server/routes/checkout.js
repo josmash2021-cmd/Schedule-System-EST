@@ -26,6 +26,8 @@ if (STRIPE_SECRET_KEY) {
 
 const MAX_QTY = 10;
 const MAX_LINES = 50;
+// Envío flat por pedido; debe coincidir con SHIPPING del front (assets/cart.js).
+const SHIPPING_FLAT = 16;
 
 // Rate limiting simple en memoria (defensa contra abuso/flood). Es generoso
 // para no afectar tráfico legítimo de una tienda pequeña y falla-abierto: si
@@ -156,6 +158,21 @@ router.post('/', rateLimit, async (req, res) => {
         },
       });
     }
+  }
+
+  // Envío flat como línea aparte, para que el total coincida con el carrito
+  // (no entra en la base del impuesto: se suma después del tax).
+  if (SHIPPING_FLAT > 0) {
+    line_items.push({
+      quantity: 1,
+      price_data: {
+        currency: CURRENCY,
+        unit_amount: Math.round(SHIPPING_FLAT * 100),
+        product_data: {
+          name: lang === 'en' ? 'Shipping' : 'Envío',
+        },
+      },
+    });
   }
 
   try {
