@@ -33,7 +33,7 @@
         return getCart().reduce(function (n, i) { return n + i.qty; }, 0);
     }
     function cartTotal() {
-        return getCart().reduce(function (s, i) { return s + i.price * i.qty; }, 0);
+        return getCart().reduce(function (s, i) { return s + effectivePrice(i) * i.qty; }, 0);
     }
     function addItem(item) {
         var items = getCart();
@@ -61,15 +61,39 @@
             maximumFractionDigits: 2
         });
     }
-    var TAX_RATE = 0.10;
+    var TAX_RATE = 0.08;
     var SHIPPING = 16; // envío flat; debe coincidir con SHIPPING_FLAT del backend (routes/checkout.js)
     var MAX_QTY = 10; // debe coincidir con MAX_QTY del backend (routes/checkout.js)
+    /* Código de descuento welcome26: la Victus baja a $420 y el envío sale
+       gratis. Debe coincidir con PROMO_* del backend (routes/checkout.js) —
+       el precio real lo valida SIEMPRE el server al crear la sesión. */
+    var PROMO_KEY = 'est_promo';
+    var PROMO_CODE = 'welcome26';
+    var PROMO_ITEM = 'victus-gaming-excelente';
+    var PROMO_PRICE = 420;
+    function getPromo() {
+        try { return localStorage.getItem(PROMO_KEY) || ''; } catch (e) { return ''; }
+    }
+    function setPromo(code) {
+        try {
+            if (code) localStorage.setItem(PROMO_KEY, code); else localStorage.removeItem(PROMO_KEY);
+        } catch (e) { /* sin storage */ }
+    }
+    // El código solo aplica si la Victus está en el carrito
+    function promoValid() {
+        if (getPromo().trim().toLowerCase() !== PROMO_CODE) return false;
+        return getCart().some(function (i) { return i.id === PROMO_ITEM; });
+    }
+    function effectivePrice(item) {
+        return (promoValid() && item.id === PROMO_ITEM) ? PROMO_PRICE : item.price;
+    }
     /* Envío gratis por producto: los botones con data-ship="0" (p. ej. la
-       Alienware) guardan freeShip en el item. El envío sale en $0 solo si
-       TODOS los items del carrito lo tienen — igual que en el backend. */
+       Alienware) guardan freeShip en el item. El envío sale en $0 si TODOS
+       los items lo tienen o si hay un código válido — igual que el backend. */
     function cartShipping() {
         var items = getCart();
         if (!items.length) return SHIPPING;
+        if (promoValid()) return 0;
         return items.every(function (i) { return i.freeShip; }) ? 0 : SHIPPING;
     }
     /* Escapa texto antes de insertarlo con innerHTML: defensa en profundidad y,
@@ -355,9 +379,14 @@
                     '<span>' + esc(item.desc) + '</span>' +
                     (item.cond ? '<span class="cd-cond">' + T('Condición: ', 'Condition: ') + esc(condLabel(item.cond)) + '</span>' : '') +
                 '</div>' +
-                '<strong class="cd-price">' + money(item.price) + '</strong>' +
+                '<strong class="cd-price">' + money(effectivePrice(item)) + '</strong>' +
             '</div>' +
             '<div class="cd-subtotal"><span>' + T('Subtotal', 'Subtotal') + '</span><strong>' + money(cartTotal()) + '</strong></div>' +
+            '<div class="cd-promo">' +
+                '<input type="text" class="cd-promo-input" placeholder="' + T('Código de descuento', 'Discount code') + '" autocomplete="off" spellcheck="false" value="' + esc(getPromo()) + '">' +
+                '<button type="button" class="btn btn-ghost btn-sm cd-promo-apply">' + T('Aplicar', 'Apply') + '</button>' +
+            '</div>' +
+            '<p class="cd-promo-msg hidden"></p>' +
             '<div class="cd-actions">' +
                 '<button type="button" class="btn btn-blue cd-pay"><svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span>' + T('Finalizar compra', 'Checkout') + '</span></button>' +
                 '<a href="/cart" class="btn btn-ghost"><svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>' + T('Ir al carrito', 'Go to cart') + '</a>' +
@@ -369,6 +398,15 @@
         var payBtn = drawer.querySelector('.cd-pay');
         if (payBtn) payBtn.addEventListener('click', function () {
             startCheckout(payBtn, drawer.querySelector('.cd-error'));
+        });
+        var pMsg = drawer.querySelector('.cd-promo-msg');
+        if (getPromo() && pMsg) {
+            pMsg.classList.remove('hidden', 'ok', 'bad');
+            if (promoValid()) { pMsg.textContent = promoOkText(); pMsg.classList.add('ok'); }
+            else { pMsg.textContent = promoNaText(); pMsg.classList.add('bad'); }
+        }
+        wirePromo(drawer.querySelector('.cd-promo-input'), drawer.querySelector('.cd-promo-apply'), pMsg, function () {
+            openCartDrawer(item);
         });
         drawer.classList.remove('closing');
         drawerOverlay.classList.remove('closing');
@@ -409,7 +447,7 @@
         fetch('/api/checkout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ items: items, lang: LANG })
+            body: JSON.stringify({ items: items, lang: LANG, promo: promoValid() ? getPromo().trim() : '' })
         }).then(function (r) {
             return r.json().catch(function () { return {}; }).then(function (data) {
                 return { ok: r.ok, data: data };
@@ -446,7 +484,7 @@
             '<h3>' + esc(item.name) + '</h3>' +
             '<p>' + esc(item.desc) + '</p>' +
             (item.cond ? '<div class="cart-item-cond">' + T('Condición: ', 'Condition: ') + esc(condLabel(item.cond)) + '</div>' : '') +
-            '<span class="cart-item-price">' + money(item.price) + '</span>' +
+            '<span class="cart-item-price">' + money(effectivePrice(item)) + '</span>' +
             '</div>' +
             '<div class="cart-item-actions">' +
             '<div class="qty">' +
@@ -454,7 +492,7 @@
             '<span>' + item.qty + '</span>' +
             '<button type="button" data-act="inc" aria-label="' + T('Agregar uno', 'Add one') + '">+</button>' +
             '</div>' +
-            '<strong class="cart-item-total">' + money(item.price * item.qty) + '</strong>' +
+            '<strong class="cart-item-total">' + money(effectivePrice(item) * item.qty) + '</strong>' +
             '<button type="button" class="cart-item-remove" data-act="del" aria-label="' + T('Quitar del carrito', 'Remove from cart') + '">' +
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
             '</button>' +
@@ -496,6 +534,7 @@
         document.getElementById('cartTax').textContent = money(tax);
         document.getElementById('cartShipping').textContent = ship === 0 ? T('Gratis', 'Free') : money(ship);
         document.getElementById('cartTotal').textContent = money(subtotal + tax + ship);
+        refreshPromoMsg();
     }
 
     function wireCartPage() {
@@ -514,11 +553,53 @@
         });
     }
 
+    /* ---------- Código de descuento (welcome26) ---------- */
+    function promoOkText() { return T('Código aplicado: laptop Victus a $420 y envío gratis.', 'Code applied: Victus laptop at $420 and free shipping.'); }
+    function promoNaText() { return T('El código no aplica a este carrito.', 'This code does not apply to this cart.'); }
+    function applyPromo(input, msg, refresh) {
+        var code = input.value.trim();
+        if (!code) {
+            setPromo('');
+            if (refresh) refresh();
+            return;
+        }
+        if (code.toLowerCase() !== PROMO_CODE) {
+            msg.classList.remove('hidden', 'ok', 'bad');
+            msg.textContent = T('Código inválido.', 'Invalid code.');
+            msg.classList.add('bad');
+            return;
+        }
+        setPromo(code);
+        if (refresh) refresh();
+    }
+    function wirePromo(input, btn, msg, refresh) {
+        if (!input || !btn) return;
+        btn.addEventListener('click', function () { applyPromo(input, msg, refresh); });
+        input.addEventListener('keydown', function (e) { if (e.key === 'Enter') applyPromo(input, msg, refresh); });
+    }
+    /* Mensaje de estado del código en la página del carrito */
+    function refreshPromoMsg() {
+        var msg = document.getElementById('promoMsg');
+        if (!msg) return;
+        var code = getPromo();
+        msg.classList.remove('hidden', 'ok', 'bad');
+        if (!code || !getCart().length) return; // queda oculto
+        if (promoValid()) { msg.textContent = promoOkText(); msg.classList.add('ok'); }
+        else { msg.textContent = promoNaText(); msg.classList.add('bad'); }
+    }
+    function wirePromoPage() {
+        var input = document.getElementById('promoInput');
+        if (!input) return;
+        input.value = getPromo();
+        wirePromo(input, document.getElementById('promoApply'), document.getElementById('promoMsg'), renderCartPage);
+    }
+
     /* ---------- Init ---------- */
     injectCartLink();
     wireConditionPicker();
     wireAddButton();
     wireCartPage();
     wireCheckout();
+    wirePromoPage();
     renderCartPage();
 })();

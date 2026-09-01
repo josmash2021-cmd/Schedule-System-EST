@@ -1010,6 +1010,23 @@ footer {
 .cart-error, .cd-error {
     color: #ff6b6b; font-size: 13px; line-height: 1.45; margin: 12px 0 0;
 }
+
+/* ---------- Código de descuento (carrito + mini-carrito) ---------- */
+.cart-promo { margin: 14px 0 4px; }
+.cart-promo label { display: block; color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+.cart-promo-row { display: flex; gap: 8px; }
+.cart-promo-row .btn { width: auto; margin-top: 0; flex: none; }
+.cart-promo-input, .cd-promo-input {
+    flex: 1; min-width: 0; font: inherit; font-size: 14px; color: inherit;
+    background: rgba(255, 255, 255, .05); border: 1px solid var(--line);
+    border-radius: 12px; padding: 9px 12px;
+}
+.cart-promo-input:focus, .cd-promo-input:focus { outline: none; border-color: #d4af37; }
+.cart-promo-msg, .cd-promo-msg { font-size: 12.5px; line-height: 1.45; margin: 8px 0 0; }
+.cart-promo-msg.ok, .cd-promo-msg.ok { color: #d4af37; }
+.cart-promo-msg.bad, .cd-promo-msg.bad { color: #ff6b6b; }
+.cd-promo { display: flex; gap: 8px; margin-top: 10px; }
+.cd-promo .btn { flex: none; }
 .cart-secure {
     display: flex; align-items: center; justify-content: center; gap: 7px;
     color: var(--muted); font-size: 12.5px; margin: 14px 0 0;

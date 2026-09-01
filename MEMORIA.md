@@ -177,11 +177,21 @@ móvil cerrado) la bolsa sale con fade local; con
   "Agendar visita" → `/solicitud-servicio` (no hay pago en línea: la
   compra se cierra en tienda). Estado vacío con icono y link a productos.
   Precio guardado: $150 ("desde"; nota de precio final según condición).
-  Impuestos: `TAX_RATE = 0.10` en cart.js — el resumen muestra Subtotal,
-  Impuestos (10%), Envío y Total (subtotal + tax + envío); `money()`
+  Impuestos: `TAX_RATE = 0.08` en cart.js (2026-09-01, antes 10%) — el
+  resumen muestra Subtotal, Impuestos (SIN porcentaje visible, petición del
+  dueño), Envío y Total (subtotal + tax + envío); `money()`
   formatea con 2 decimales solo cuando hacen falta. Envío flat $16
   (`SHIPPING` en cart.js = `SHIPPING_FLAT` en `server/routes/checkout.js`,
   línea aparte en Stripe, fuera de la base del impuesto).
+  **Código de descuento (2026-09-01):** campo "¿Tienes un código de
+  descuento?" en el resumen del carrito y en el mini-carrito. `welcome26`
+  (PROMO_* en cart.js = `server/routes/checkout.js`): la Victus
+  (`victus-gaming-excelente`) baja de $450 a $420 y el envío sale gratis;
+  el server lo valida y aplica el precio especial al crear la sesión de
+  Stripe (código desconocido o sin la Victus en el carrito → 400). El tax
+  se calcula sobre el subtotal YA descontado. Envío gratis también por
+  producto: items con `data-ship="0"` (Alienware) → envío $0 si TODOS los
+  items del carrito lo tienen (`freeShip` en `server/catalog.js`).
   Entrada fluida (2026-07-20): items en cascada (90 ms entre cada uno,
   `@keyframes cartIn`) y resumen con retraso, SOLO en la primera carga —
   los re-renders por cantidad/quitar no reaniman.

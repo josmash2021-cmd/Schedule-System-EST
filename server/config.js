@@ -46,7 +46,7 @@ const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 const SITE_URL = process.env.SITE_URL;
 // Moneda e impuesto usados en el checkout (deben coincidir con el carrito del front).
 const CURRENCY = process.env.CURRENCY || 'usd';
-const TAX_RATE = Number(process.env.TAX_RATE || '0.10');
+const TAX_RATE = Number(process.env.TAX_RATE || '0.08');
 
 if (STRIPE_SECRET_KEY && !SITE_URL) {
   console.warn('WARN: STRIPE_SECRET_KEY configurada pero SITE_URL no. En producción el checkout se BLOQUEARÁ hasta configurar SITE_URL; en desarrollo se usa el Origin/Referer.');

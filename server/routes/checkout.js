@@ -29,6 +29,13 @@ const MAX_LINES = 50;
 // Envío flat por pedido; debe coincidir con SHIPPING del front (assets/cart.js).
 const SHIPPING_FLAT = 16;
 
+// Código de descuento welcome26: la Victus baja a $420 y el envío sale gratis.
+// Debe coincidir con PROMO_* del front (assets/cart.js). El descuento se aplica
+// SOLO aquí, server-side: nunca se confía en precios que mande el cliente.
+const PROMO_CODE = 'welcome26';
+const PROMO_ITEM = 'victus-gaming-excelente';
+const PROMO_PRICE = 420;
+
 // Rate limiting simple en memoria (defensa contra abuso/flood). Es generoso
 // para no afectar tráfico legítimo de una tienda pequeña y falla-abierto: si
 // se reinicia el proceso, el contador se limpia. Nota: detrás de un proxy,
@@ -95,6 +102,11 @@ router.post('/', rateLimit, async (req, res) => {
 
   const lang = req.body && req.body.lang === 'en' ? 'en' : 'es';
   const rawItems = Array.isArray(req.body && req.body.items) ? req.body.items : [];
+  // Código de descuento opcional; uno desconocido rechaza el pedido.
+  const promo = String(req.body && req.body.promo || '').trim().toLowerCase();
+  if (promo && promo !== PROMO_CODE) {
+    return res.status(400).json({ error: 'Código de descuento inválido.' });
+  }
 
   if (!rawItems.length) {
     return res.status(400).json({ error: 'El carrito está vacío.' });
@@ -114,6 +126,8 @@ router.post('/', rateLimit, async (req, res) => {
   // Envío gratis solo si TODOS los productos del pedido lo tienen (freeShip
   // en catalog.js); si se mezcla con un producto normal, se cobra el flat.
   let allFreeShip = true;
+  // true si el código welcome26 se aplicó a la Victus del pedido
+  let promoApplied = false;
 
   for (const raw of rawItems) {
     const id = String(raw && raw.id || '');
@@ -126,7 +140,12 @@ router.post('/', rateLimit, async (req, res) => {
       return res.status(400).json({ error: `Producto no disponible: "${shortId(id)}".` });
     }
 
-    const unitCents = Math.round(prod.price * 100);
+    let unit = prod.price;
+    if (promo === PROMO_CODE && id === PROMO_ITEM) {
+      unit = PROMO_PRICE;
+      promoApplied = true;
+    }
+    const unitCents = Math.round(unit * 100);
     subtotalCents += unitCents * qty;
     if (!prod.freeShip) allFreeShip = false;
 
@@ -146,18 +165,25 @@ router.post('/', rateLimit, async (req, res) => {
     orderItems.push({ id, qty, name: prod.name, cond: prod.cond, price: prod.price });
   }
 
+  // El código welcome26 solo aplica si la Victus está en el pedido; con
+  // código válido el envío sale gratis aunque se mezcle con otros productos.
+  if (promo === PROMO_CODE && !promoApplied) {
+    return res.status(400).json({ error: 'El código no aplica a este carrito.' });
+  }
+  if (promoApplied) allFreeShip = true;
+
   // Impuestos como línea aparte, para que el total coincida con el carrito.
+  // La etiqueta NO muestra el porcentaje (petición del dueño).
   if (TAX_RATE > 0) {
     const taxCents = Math.round(subtotalCents * TAX_RATE);
     if (taxCents > 0) {
-      const pct = Math.round(TAX_RATE * 100);
       line_items.push({
         quantity: 1,
         price_data: {
           currency: CURRENCY,
           unit_amount: taxCents,
           product_data: {
-            name: lang === 'en' ? `Tax (${pct}%)` : `Impuestos (${pct}%)`,
+            name: lang === 'en' ? 'Tax' : 'Impuestos',
           },
         },
       });

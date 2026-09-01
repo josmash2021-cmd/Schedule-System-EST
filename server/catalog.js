@@ -57,7 +57,7 @@ const CATALOG = {
     desc: '16 GB DDR5 · RTX 3050 6 GB · 512 GB SSD',
     cond: 'Excelente',
     condEn: 'Excellent',
-    price: 440,
+    price: 450,
     img: 'assets/img/victus-gaming.jpg',
   },
   'alienware-16-aurora-nuevo': {

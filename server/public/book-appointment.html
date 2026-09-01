@@ -599,7 +599,7 @@
         if (pickupMode) {
             try { pickupItems = JSON.parse(localStorage.getItem('est_cart')) || []; } catch (e) { pickupItems = []; }
         }
-        const PICKUP_TAX = 0.10;
+        const PICKUP_TAX = 0.08; // igual que TAX_RATE del carrito/checkout
         function pickupMoney(n) {
             const r = Math.round(n * 100) / 100;
             return '$' + r.toLocaleString('en-US', { minimumFractionDigits: r % 1 ? 2 : 0, maximumFractionDigits: 2 });
@@ -625,7 +625,7 @@
                     </div>`).join('') +
                 `<div class="pickup-totals">
                     <div><span>Subtotal</span><strong>${pickupMoney(sub)}</strong></div>
-                    <div><span>${T('Impuestos (10%)', 'Tax (10%)')}</span><strong>${pickupMoney(tax)}</strong></div>
+                    <div><span>${T('Impuestos', 'Tax')}</span><strong>${pickupMoney(tax)}</strong></div>
                     <div class="pickup-total"><span>Total</span><strong>${pickupMoney(sub + tax)}</strong></div>
                 </div>`;
             document.getElementById('pickupSummary').classList.remove('hidden');
@@ -792,7 +792,7 @@
                     `<div class="inv-item"><span>${i.name}${i.cond ? ' (' + i.cond + ')' : ''} · x${i.qty}</span><strong>${pickupMoney(i.price * i.qty)}</strong></div>`
                 ).join('') +
                 `<div class="inv-item inv-sub"><span>Subtotal</span><strong>${pickupMoney(sub)}</strong></div>
-                 <div class="inv-item inv-sub"><span>${T('Impuestos (10%)', 'Tax (10%)')}</span><strong>${pickupMoney(tax)}</strong></div>
+                 <div class="inv-item inv-sub"><span>${T('Impuestos', 'Tax')}</span><strong>${pickupMoney(tax)}</strong></div>
                  <div class="inv-item inv-total"><span>Total</span><strong>${pickupMoney(sub + tax)}</strong></div>`;
             } else {
                 invItems = `<div class="inv-item"><span>${escapeHtml(d.servicio)}</span><strong>${T('Por confirmar', 'To be confirmed')}</strong></div>`;
