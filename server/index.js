@@ -57,6 +57,7 @@ const htmlRoutes = {
   '/ipad-10-2022': 'ipad-10-2022.html',
   '/hp-15-i5-13': 'hp-15-i5-13.html',
   '/hp-15-pentium': 'hp-15-pentium.html',
+  '/victus-gaming': 'victus-gaming.html',
   '/iphone-15-pro': 'iphone-15-pro.html',
   '/cart': 'cart.html',
   '/success': 'success.html',

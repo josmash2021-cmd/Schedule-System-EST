@@ -52,6 +52,14 @@ const CATALOG = {
     price: 500,
     img: 'assets/img/macbook-neo-pink.jpg',
   },
+  'victus-gaming-excelente': {
+    name: 'Victus Gaming 15.6" Ryzen 5',
+    desc: '16 GB DDR5 · RTX 3050 6 GB · 512 GB SSD',
+    cond: 'Excelente',
+    condEn: 'Excellent',
+    price: 440,
+    img: 'assets/img/victus-gaming.jpg',
+  },
 };
 
 function getItem(id) {
