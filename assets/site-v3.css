@@ -734,6 +734,12 @@ a { -webkit-tap-highlight-color: transparent; }
 }
 .gallery-item:hover img { transform: scale(1.04); }
 
+/* Galería de altura uniforme (Victus Gaming): recorta con cover para que
+   todos los cuadros midan lo mismo sin importar la proporción de la foto. */
+.gallery-grid-even .gallery-item img {
+    aspect-ratio: 1 / 1; object-fit: cover;
+}
+
 @media (max-width: 720px) {
     .gallery-grid { grid-template-columns: 1fr; }
 }
