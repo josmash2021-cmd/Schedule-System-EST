@@ -126,7 +126,7 @@ async function sendOwnerWhatsAppNotification(cita) {
 }
 
 // Notificación al dueño cuando se completa un pago por Stripe.
-// order: { total, currency, email, items: [{ name, cond, qty, price }], reference }
+// order: { total, currency, email, address, items: [{ name, cond, qty, price }], reference }
 async function sendOwnerOrderNotification(order) {
   const money = (n) => `$${Number(n || 0).toFixed(2)}`;
   const lines = (order.items || []).map(
@@ -140,6 +140,7 @@ async function sendOwnerOrderNotification(order) {
     '',
     `Total: ${money(order.total)} ${String(order.currency || 'usd').toUpperCase()}`,
     order.email ? `Cliente: ${order.email}` : '',
+    order.address ? `Envío: ${order.address}` : '',
     order.reference ? `Ref: ${order.reference}` : '',
     '',
     `ElectronicST - ${STORE_ADDRESS}`,
@@ -154,6 +155,7 @@ async function sendOwnerOrderNotification(order) {
     '',
     `Total: ${money(order.total)} ${String(order.currency || 'usd').toUpperCase()}`,
     order.email ? `Cliente: ${order.email}` : '',
+    order.address ? `Envío: ${order.address}` : '',
     order.reference ? `Ref: ${order.reference}` : '',
     '',
     `ElectronicST - ${STORE_ADDRESS}`,

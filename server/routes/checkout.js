@@ -212,6 +212,9 @@ router.post('/', rateLimit, async (req, res) => {
       line_items,
       locale: lang === 'en' ? 'en' : 'es',
       billing_address_collection: 'auto',
+      // Dirección de envío del cliente (US): aparece en shipping_details
+      // del webhook y se incluye en la notificación al dueño.
+      shipping_address_collection: { allowed_countries: ['US'] },
       phone_number_collection: { enabled: true },
       success_url: `${base}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${base}/cart`,
@@ -285,10 +288,20 @@ async function webhookHandler(req, res) {
         console.error('No se pudieron leer las líneas del pedido:', e.message);
       }
 
+      // Dirección de envío en una sola línea (nombre + línea, ciudad, estado, ZIP).
+      let address = null;
+      const sd = session.shipping_details;
+      if (sd && sd.address) {
+        const a = sd.address;
+        const parts = [sd.name, a.line1, a.line2, [a.city, a.state, a.postal_code].filter(Boolean).join(', ')].filter(Boolean);
+        address = parts.join(' | ');
+      }
+
       sendOwnerOrderNotification({
         total: (session.amount_total || 0) / 100,
         currency: session.currency,
         email: session.customer_details ? session.customer_details.email : null,
+        address,
         items,
         reference: session.id,
       }).catch((e) => console.error('Order notification failed:', e.message));
