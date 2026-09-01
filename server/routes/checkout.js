@@ -111,6 +111,9 @@ router.post('/', rateLimit, async (req, res) => {
   const line_items = [];
   const orderItems = []; // resumen confiable para metadata/notificaciones
   let subtotalCents = 0;
+  // Envío gratis solo si TODOS los productos del pedido lo tienen (freeShip
+  // en catalog.js); si se mezcla con un producto normal, se cobra el flat.
+  let allFreeShip = true;
 
   for (const raw of rawItems) {
     const id = String(raw && raw.id || '');
@@ -125,6 +128,7 @@ router.post('/', rateLimit, async (req, res) => {
 
     const unitCents = Math.round(prod.price * 100);
     subtotalCents += unitCents * qty;
+    if (!prod.freeShip) allFreeShip = false;
 
     const condLabel = lang === 'en' ? (prod.condEn || prod.cond) : prod.cond;
     line_items.push({
@@ -161,8 +165,9 @@ router.post('/', rateLimit, async (req, res) => {
   }
 
   // Envío flat como línea aparte, para que el total coincida con el carrito
-  // (no entra en la base del impuesto: se suma después del tax).
-  if (SHIPPING_FLAT > 0) {
+  // (no entra en la base del impuesto: se suma después del tax). Productos
+  // con freeShip (p. ej. Alienware) no pagan envío si el pedido es solo de ellos.
+  if (SHIPPING_FLAT > 0 && !allFreeShip) {
     line_items.push({
       quantity: 1,
       price_data: {

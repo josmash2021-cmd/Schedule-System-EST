@@ -11,7 +11,7 @@
     var KEY = 'est_cart';
     var LANG = window.EST_LANG || 'es';
     function T(es, en) { return LANG === 'en' ? en : es; }
-    var COND_EN = { 'bueno': 'Good', 'muybueno': 'Very good', 'excelente': 'Excellent' };
+    var COND_EN = { 'bueno': 'Good', 'muybueno': 'Very good', 'excelente': 'Excellent', 'nuevo': 'Brand new' };
     function condLabel(cond) {
         if (LANG !== 'en') return cond;
         var key = String(cond || '').toLowerCase().replace(/\s+/g, '');
@@ -40,7 +40,7 @@
         var found = null;
         items.forEach(function (i) { if (i.id === item.id) found = i; });
         if (found) found.qty = Math.min(found.qty + 1, MAX_QTY);
-        else items.push({ id: item.id, name: item.name, desc: item.desc, cond: item.cond || '', price: item.price, img: item.img, qty: 1 });
+        else items.push({ id: item.id, name: item.name, desc: item.desc, cond: item.cond || '', price: item.price, img: item.img, qty: 1, freeShip: !!item.freeShip });
         saveCart(items);
     }
     function setQty(id, qty) {
@@ -64,6 +64,14 @@
     var TAX_RATE = 0.10;
     var SHIPPING = 16; // envío flat; debe coincidir con SHIPPING_FLAT del backend (routes/checkout.js)
     var MAX_QTY = 10; // debe coincidir con MAX_QTY del backend (routes/checkout.js)
+    /* Envío gratis por producto: los botones con data-ship="0" (p. ej. la
+       Alienware) guardan freeShip en el item. El envío sale en $0 solo si
+       TODOS los items del carrito lo tienen — igual que en el backend. */
+    function cartShipping() {
+        var items = getCart();
+        if (!items.length) return SHIPPING;
+        return items.every(function (i) { return i.freeShip; }) ? 0 : SHIPPING;
+    }
     /* Escapa texto antes de insertarlo con innerHTML: defensa en profundidad y,
        además, evita que caracteres como la comilla de 'MacBook Air 13"' rompan
        atributos (src/alt/data-id). */
@@ -294,7 +302,8 @@
                     desc: (LANG === 'en' && btn.dataset.descEn) ? btn.dataset.descEn : btn.dataset.desc,
                     cond: btn.dataset.cond || '',
                     price: Number(btn.dataset.price),
-                    img: btn.dataset.img
+                    img: btn.dataset.img,
+                    freeShip: btn.dataset.ship === '0'
                 };
                 if (btn.classList.contains('add-cart-card')) quickAddCard(btn, item);
                 else flyToCart(btn, function () { addItem(item); openCartDrawer(item); });
@@ -482,10 +491,11 @@
         }
         var subtotal = cartTotal();
         var tax = Math.round(subtotal * TAX_RATE * 100) / 100;
+        var ship = cartShipping();
         document.getElementById('cartSubtotal').textContent = money(subtotal);
         document.getElementById('cartTax').textContent = money(tax);
-        document.getElementById('cartShipping').textContent = money(SHIPPING);
-        document.getElementById('cartTotal').textContent = money(subtotal + tax + SHIPPING);
+        document.getElementById('cartShipping').textContent = ship === 0 ? T('Gratis', 'Free') : money(ship);
+        document.getElementById('cartTotal').textContent = money(subtotal + tax + ship);
     }
 
     function wireCartPage() {

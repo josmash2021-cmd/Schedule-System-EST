@@ -14,6 +14,7 @@ const itemsToCopy = [
   'hp-15-i5-13.html',
   'hp-15-pentium.html',
   'victus-gaming.html',
+  'alienware-16-aurora.html',
   'iphone-15-pro.html',
   'cart.html',
   'success.html',

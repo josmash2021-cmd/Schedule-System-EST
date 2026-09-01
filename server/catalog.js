@@ -60,6 +60,15 @@ const CATALOG = {
     price: 440,
     img: 'assets/img/victus-gaming.jpg',
   },
+  'alienware-16-aurora-nuevo': {
+    name: 'Alienware 16 Aurora (2025)',
+    desc: 'Intel i7 · 16 GB DDR5 · RTX 5050 8 GB · 1 TB SSD',
+    cond: 'Nuevo',
+    condEn: 'Brand new',
+    price: 1400,
+    img: 'assets/img/alienware-16-aurora.jpg',
+    freeShip: true,
+  },
 };
 
 function getItem(id) {
