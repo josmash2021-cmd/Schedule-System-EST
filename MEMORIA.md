@@ -555,7 +555,13 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   foto y descripción (`catalog.enrichLineItems` agrega `img`/`desc` en inglés
   al JSONB de items en el webhook y en el sync de adminOrders) y el desglose
   Subtotal/Tax/Shipping/Total paid (las líneas Impuestos/Envío de Stripe se
-  separan por nombre en `email.splitItems`). OJO Resend: sin dominio verificado, el plan
+  separan por nombre en `email.splitItems`). Borde inferior con dientes de
+  sierra tipo recibo (`assets/img/receipt-edge.png`, PNG generado con Pillow)
+  y la confirmación adjunta el recibo PDF automáticamente (`autoInvoice` ahora
+  se espera con `await` antes de mandar correos; el PDF sale de
+  `invoices.createFromOrder` + `buildInvoicePdf`, y si falla el PDF el correo
+  sale igual sin adjunto). Teléfono del pie de los correos: (385) 461-2042.
+  OJO Resend: sin dominio verificado, el plan
   gratis solo envía al correo de la propia cuenta; para clientes hay que
   verificar el dominio (DNS) en resend.com.
   **Facturas automáticas + PDF (2026-09-02):** cada orden nueva (web o FB)
