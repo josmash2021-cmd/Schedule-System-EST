@@ -61,7 +61,8 @@ cambies estructura, flujos o convenciones.
 - Rutas del panel (`/x/s/*`): `server/routes/adminAuth.js`, `adminUsers.js`,
   `adminTime.js`, `adminTasks.js`, `adminMonitor.js`, `adminRepairs.js`,
   `adminInventory.js`, `adminInvoices.js` (facturas, solo admin),
-  `adminOrders.js` (órdenes online Stripe, solo lectura, solo admin).
+  `adminOrders.js` (órdenes online Stripe, solo lectura, solo admin; el GET
+  sincroniza solo con Stripe — auto-importa los pagos que falten, máx. 1 vez/min).
 - Rutas públicas (`/api/*`): `appointments.js`, `slots.js`, `checkout.js`
   (Stripe; su webhook guarda cada pago en la tabla `online_orders` y pide
   dirección de envío US en la sesión), `auth.js` (login viejo, sin frontend).

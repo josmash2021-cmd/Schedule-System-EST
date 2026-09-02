@@ -516,7 +516,10 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   teléfono, dirección en una línea) vía `models/orders.js` — antes solo se
   mandaba SMS/WhatsApp y no quedaba registro. El panel las lee con
   `GET /x/s/orders` (`routes/adminOrders.js`, solo admin, solo lectura:
-  los reembolsos se hacen en Stripe). Ventas y Dashboard suman 3 fuentes
+  los reembolsos se hacen en Stripe). El GET sincroniza automáticamente con
+  Stripe antes de responder (máx. 1 vez por minuto, últimas 100 sesiones):
+  auto-importa los pagos que falten con su fecha real de pago, así compras
+  anteriores al webhook también aparecen sin intervención del usuario. Ventas y Dashboard suman 3 fuentes
   (reparaciones entregadas + mostrador + online; costo 0 en online porque el
   catálogo web no está ligado al inventario). En la tabla de Ventas, cada
   orden online tiene badge "online" y botón Detalle que expande cliente,
