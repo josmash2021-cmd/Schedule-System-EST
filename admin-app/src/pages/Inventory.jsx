@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { api } from '../api.js';
 import FormPage from '../components/FormPage.jsx';
+import BarChart from '../components/BarChart.jsx';
 import InventoryDetail, { money } from '../components/InventoryDetail.jsx';
 
 export default function Inventory() {
@@ -84,6 +85,23 @@ export default function Inventory() {
     };
   }, [compras, comprasOffset]);
 
+  // Gráfica de inversión mes a mes (cronológica) + total invertido global.
+  const comprasChart = useMemo(() => {
+    if (!compras) return null;
+    const asc = [...compras].sort((a, b) => (a.mes < b.mes ? -1 : 1));
+    const nowKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit' })
+      .formatToParts(new Date()).reduce((a, x) => { a[x.type] = x.value; return a; }, {});
+    const cur = `${nowKey.year}-${nowKey.month}`;
+    return {
+      keys: asc.map((x) => x.mes),
+      data: asc.map((x) => x.total),
+      labels: asc.map((x) => MESES[Number(x.mes.slice(5, 7)) - 1].slice(0, 3) + ' ' + x.mes.slice(2, 4)),
+      highlight: cur,
+      totalInvertido: compras.reduce((a, x) => a + x.total, 0),
+      totalUnidades: compras.reduce((a, x) => a + x.unidades, 0),
+    };
+  }, [compras]);
+
   if (detail) {
     const back = () => { setDetail(null); load(search); };
     return (
@@ -159,6 +177,20 @@ export default function Inventory() {
                   </div>
                 </div>
               </div>
+
+              {/* Inversión total mes a mes (entradas de stock × costo). */}
+              {comprasChart && comprasChart.keys.length > 0 && (
+                <div className="card" style={{ marginBottom: 18 }}>
+                  <h3>Inversión en inventario por mes</h3>
+                  <BarChart data={comprasChart.data} keys={comprasChart.keys} labels={comprasChart.labels}
+                    highlight={comprasChart.highlight}
+                    format={(v) => '$' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(0))} />
+                  <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>
+                    Total invertido: <strong style={{ color: '#111' }}>{money(comprasChart.totalInvertido)}</strong>
+                    {' '}· {comprasChart.totalUnidades} unidades en total
+                  </div>
+                </div>
+              )}
 
               {showOut && (
                 <div className="row" style={{ gap: 10, marginBottom: 14, alignItems: 'center' }}>
