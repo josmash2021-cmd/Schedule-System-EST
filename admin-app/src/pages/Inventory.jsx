@@ -5,6 +5,7 @@ import InventoryDetail, { money } from '../components/InventoryDetail.jsx';
 
 export default function Inventory() {
   const [items, setItems] = useState(null);
+  const [compras, setCompras] = useState(null); // mercancía comprada por mes
   const [search, setSearch] = useState('');
   const [err, setErr] = useState('');
   const [detail, setDetail] = useState(null);
@@ -15,6 +16,9 @@ export default function Inventory() {
     api('/inventory' + (q ? '?search=' + encodeURIComponent(q) : '')).then((d) => setItems(d.items)).catch((e) => setErr(e.message));
   }, []);
   useEffect(() => { const t = setTimeout(() => load(search), 300); return () => clearTimeout(t); }, [search, load]);
+  useEffect(() => {
+    api('/inventory/purchases-by-month').then((d) => setCompras(d.months || [])).catch(() => setCompras([]));
+  }, []);
 
   // Stock editable directo en la lista: escribe la cantidad y al salir del
   // campo (o Enter) se guarda. 0 = fuera de stock → sale de la lista.
@@ -60,6 +64,20 @@ export default function Inventory() {
     return Object.entries(map).sort(([a], [b]) => a.localeCompare(b, 'es'));
   }, [visible]);
 
+  // Mercancía comprada: mes actual y mes anterior (hora de Chicago, YYYY-MM).
+  const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  const comprasMes = useMemo(() => {
+    if (!compras) return null;
+    const p = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit' })
+      .formatToParts(new Date()).reduce((a, x) => { a[x.type] = x.value; return a; }, {});
+    const cur = `${p.year}-${p.month}`;
+    const [y, m] = cur.split('-').map(Number);
+    const prev = new Date(Date.UTC(y, m - 2, 1)).toISOString().slice(0, 7);
+    const find = (k) => compras.find((x) => x.mes === k) || { mes: k, unidades: 0, total: 0 };
+    const label = (k) => MESES[Number(k.slice(5, 7)) - 1] + ' ' + k.slice(0, 4);
+    return { actual: { ...find(cur), label: label(cur) }, pasado: { ...find(prev), label: label(prev) } };
+  }, [compras]);
+
   if (detail) {
     const back = () => { setDetail(null); load(search); };
     return (
@@ -86,6 +104,16 @@ export default function Inventory() {
           : (
             <>
               <div className="stat-grid" style={{ marginBottom: 18 }}>
+                <div className="stat-card">
+                  <div className="k">Mercancía comprada — {comprasMes ? comprasMes.actual.label.split(' ')[0] : 'mes actual'}</div>
+                  <div className="v">{comprasMes ? money(comprasMes.actual.total) : <span className="spinner" />}</div>
+                  {comprasMes && <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>{comprasMes.actual.unidades} unidades · {comprasMes.actual.label}</div>}
+                </div>
+                <div className="stat-card">
+                  <div className="k">Mercancía comprada — {comprasMes ? comprasMes.pasado.label.split(' ')[0] : 'mes pasado'}</div>
+                  <div className="v">{comprasMes ? money(comprasMes.pasado.total) : <span className="spinner" />}</div>
+                  {comprasMes && <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>{comprasMes.pasado.unidades} unidades · {comprasMes.pasado.label}</div>}
+                </div>
                 <div className="stat-card">
                   <div className="k">Productos</div>
                   <div className="v">{totals.products}</div>

@@ -90,4 +90,20 @@ async function listMovements(itemId, limit = 50) {
   return r.rows;
 }
 
-module.exports = { FIELDS, listItems, findById, create, update, softDelete, adjustStock, listMovements };
+// Mercancía comprada por mes: entradas de stock (delta > 0) × costo ACTUAL
+// del producto, agrupado por mes calendario en hora de Chicago (los
+// timestamps están en UTC). No hay foto del costo en el movimiento: si el
+// costo del producto cambia después, los meses viejos reflejan el costo nuevo.
+async function purchasesByMonth() {
+  const r = await pool.query(
+    `SELECT to_char(date_trunc('month', (m.created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Chicago'), 'YYYY-MM') AS mes,
+            SUM(m.delta) AS unidades,
+            SUM(m.delta * COALESCE(i.cost, 0)) AS total
+     FROM inventory_movements m JOIN inventory_items i ON i.id = m.item_id
+     WHERE m.delta > 0 AND (m.reason IS NULL OR m.reason <> 'venta anulada')
+     GROUP BY 1 ORDER BY 1 DESC`
+  );
+  return r.rows.map((x) => ({ mes: x.mes, unidades: Number(x.unidades) || 0, total: Number(x.total) || 0 }));
+}
+
+module.exports = { FIELDS, listItems, findById, create, update, softDelete, adjustStock, listMovements, purchasesByMonth };

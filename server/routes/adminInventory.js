@@ -74,6 +74,17 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Mercancía comprada por mes (entradas de stock × costo), para las tarjetas
+// "Compras del mes" de la página de Inventario. Solo admin (cifras internas).
+router.get('/purchases-by-month', requireRole('admin'), async (_req, res) => {
+  try {
+    res.json({ months: await inventory.purchasesByMonth() });
+  } catch (err) {
+    console.error('inventory purchases error:', err.message);
+    res.status(500).json({ error: 'Error al calcular las compras de mercancía.' });
+  }
+});
+
 router.get('/:id', async (req, res) => {
   const id = parseId(req, res); if (id === null) return;
   try {
