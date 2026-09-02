@@ -3,6 +3,8 @@
    (patrón Twilio: un correo fallido NUNCA tumba un pago o una orden).
    Los correos van en INGLÉS, fondo blanco y logo negro (petición del dueño). */
 const { RESEND_API_KEY, EMAIL_FROM, OWNER_EMAIL, SITE_URL } = require('../config');
+const invoices = require('../models/invoices');
+const { buildInvoicePdf } = require('./invoicePdf');
 
 const usd = (n) => `$${Number(n || 0).toFixed(2)}`;
 
@@ -50,12 +52,14 @@ async function sendEmail({ to, subject, html, text, attachments }) {
 }
 
 // Plantilla base: fondo blanco, logo negro (assets/img/logo-black.png servido
-// por el sitio público), acento dorado del brazo del logo.
+// por el sitio público), borde inferior con dientes de sierra tipo recibo
+// (receipt-edge.png) y acento dorado del brazo del logo.
 function plantilla(titulo, cuerpoHtml) {
   const logo = `${siteBase()}/assets/img/logo-black.png`;
+  const sierra = `${siteBase()}/assets/img/receipt-edge.png`;
   return `<!doctype html><html><body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;color:#111111;">
   <div style="max-width:560px;margin:0 auto;padding:32px 20px;">
-    <div style="background:#ffffff;border:1px solid #e5e5e8;border-radius:12px;padding:32px 28px;">
+    <div style="background:#ffffff;border:1px solid #e5e5e8;border-bottom:none;border-radius:12px 12px 0 0;padding:32px 28px;">
       <div style="text-align:center;padding-bottom:20px;border-bottom:1px solid #e5e5e8;">
         <img src="${logo}" alt="ElectronicST" width="170" style="display:block;margin:0 auto;max-width:170px;height:auto;">
         <div style="font-size:10px;letter-spacing:.2em;color:#8a8a92;text-transform:uppercase;margin-top:10px;">Electronic Service Technology</div>
@@ -63,8 +67,9 @@ function plantilla(titulo, cuerpoHtml) {
       <h1 style="font-size:18px;color:#111;margin:26px 0 10px;">${titulo}</h1>
       ${cuerpoHtml}
     </div>
+    <img src="${sierra}" alt="" width="520" style="display:block;width:100%;max-width:520px;height:auto;margin:-1px auto 0;">
     <div style="margin-top:20px;font-size:11px;color:#8a8a92;text-align:center;">
-      ElectronicST · 3659 Lorna Rd Suite 157, Hoover, AL 35216 · (205) 573-7840
+      ElectronicST · 3659 Lorna Rd Suite 157, Hoover, AL 35216 · (385) 461-2042
     </div>
   </div></body></html>`;
 }
@@ -141,14 +146,29 @@ async function sendNewOrderEmails(order) {
 
   if (order.email) {
     const link = trackLink(order);
+    // Recibo PDF adjunto: la factura ya se creó sola al registrar la orden
+    // (autoInvoice); si no está, se crea al vuelo. Un fallo del PDF NUNCA
+    // impide mandar la confirmación.
+    let attachments;
+    let notaRecibo = '';
+    try {
+      const inv = await invoices.createFromOrder(order);
+      const pdf = await buildInvoicePdf(inv);
+      attachments = [{ filename: `Receipt-${inv.invoice_number || num}.pdf`, content: pdf.toString('base64') }];
+      notaRecibo = `<p style="font-size:13px;color:#55555c;">Your receipt is attached as a PDF.</p>`;
+    } catch (e) {
+      console.error('[email] No se pudo adjuntar el recibo PDF:', e.message);
+    }
     tasks.push(sendEmail({
       to: order.email,
       subject: `Thanks for your purchase! Order ${num}`,
-      text: `Hi${order.customer_name ? ' ' + order.customer_name : ''},\n\nYour order ${num} is confirmed. Total: ${total}.\nTrack your shipment here: ${link}`,
+      text: `Hi${order.customer_name ? ' ' + order.customer_name : ''},\n\nYour order ${num} is confirmed. Total: ${total}.\nYour receipt is attached as a PDF.\nTrack your shipment here: ${link}`,
       html: plantilla(`Thanks for your purchase!`, `
         <p style="font-size:14px;color:#3a3a40;">Hi${order.customer_name ? ' <strong>' + order.customer_name + '</strong>' : ''}, your order <strong style="color:#111;">${num}</strong> is confirmed.</p>
         ${resumenPedido(order)}
+        ${notaRecibo}
         ${boton(link, 'Track my package')}`),
+      attachments,
     }));
   }
 

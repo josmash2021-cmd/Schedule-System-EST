@@ -8,11 +8,15 @@ const invoices = require('./invoices');
 const { getItem } = require('../catalog');
 
 // Toda orden nueva (web o FB) genera su factura automáticamente con los
-// datos del cliente ya llenos, lista para "Enviar por correo". Un fallo de
-// facturación NUNCA debe impedir registrar la orden.
-function autoInvoice(order) {
+// datos del cliente ya llenos, lista para adjuntar en el correo de
+// confirmación. Un fallo de facturación NUNCA debe impedir registrar la orden.
+async function autoInvoice(order) {
   if (!order) return;
-  invoices.createFromOrder(order).catch((e) => console.error('auto invoice error:', e.message));
+  try {
+    await invoices.createFromOrder(order);
+  } catch (e) {
+    console.error('auto invoice error:', e.message);
+  }
 }
 
 // Link secreto de seguimiento del cliente (página pública track.html).
@@ -44,7 +48,7 @@ async function createFromStripe(order) {
       Number(order.costo) || 0,
     ]
   );
-  autoInvoice(r.rows[0]);
+  await autoInvoice(r.rows[0]);
   return r.rows[0] || null;
 }
 
@@ -150,7 +154,7 @@ async function createManual({ customer_name, email, phone, address, items, total
       Math.max(0, Number(costo) || 0),
     ]
   );
-  autoInvoice(r.rows[0]);
+  await autoInvoice(r.rows[0]);
   return r.rows[0];
 }
 
