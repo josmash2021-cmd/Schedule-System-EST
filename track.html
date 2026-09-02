@@ -91,6 +91,7 @@
             <div class="nav-links">
                 <a href="/" data-en="Home">Inicio</a>
                 <a href="/products" data-en="Products">Productos</a>
+                <a href="/track" class="active" data-en="My order">Mi pedido</a>
                 <a href="/book-appointment" class="btn btn-blue btn-sm nav-cta" data-en="Book appointment">Reservar cita</a>
             </div>
         </div>
@@ -108,6 +109,13 @@
             <div id="trackError" class="track-err hidden">
                 <h2 data-en="Order not found">Pedido no encontrado</h2>
                 <p data-en="Check the link we sent you by email or contact us.">Revisa el enlace que te enviamos por correo o contáctanos.</p>
+                <a href="/products" class="btn btn-blue" data-en="View products">Ver productos</a>
+            </div>
+
+            <!-- Se muestra al entrar desde el menú ("Mi pedido") sin token. -->
+            <div id="trackNoToken" class="track-err hidden">
+                <h2 data-en="Find your order">Encuentra tu pedido</h2>
+                <p data-en="When you placed your order we emailed you a tracking link — open it to see the status here.">Cuando hiciste tu compra te enviamos un enlace de seguimiento por correo — ábrelo para ver el estado de tu pedido aquí.</p>
                 <a href="/products" class="btn btn-blue" data-en="View products">Ver productos</a>
             </div>
 
@@ -207,10 +215,12 @@
         var token = new URLSearchParams(location.search).get('t');
         var loading = document.getElementById('trackLoading');
         var errBox = document.getElementById('trackError');
+        var noTokenBox = document.getElementById('trackNoToken');
         var body = document.getElementById('trackBody');
         if (!token) {
+            // Entró desde el menú ("Mi pedido"): mensaje amable, no error.
             loading.classList.add('hidden');
-            errBox.classList.remove('hidden');
+            noTokenBox.classList.remove('hidden');
             return;
         }
         var CARRIER_URLS = {

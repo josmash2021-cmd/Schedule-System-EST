@@ -23,7 +23,9 @@ cambies estructura, flujos o convenciones.
   `iphone-15-pro.html`, `book-appointment.html`, `cart.html`, `success.html`,
   `track.html` (seguimiento público del pedido del cliente: `?t=<track_token>`,
   consulta `/api/track/:token` cada 30 s; línea de progreso + carrusel de
-  productos; CSS inline propio — define `.hidden`, que `site-v3.css` no tiene),
+  productos; CSS inline propio — define `.hidden`, que `site-v3.css` no tiene;
+  enlazada desde el menú principal como "Mi pedido" / `data-en="My order"` en
+  todas las páginas — sin token muestra el bloque `#trackNoToken`, no el error),
   `terms.html`, `privacy.html`.
 - JS/CSS compartido: `assets/` (`site.js`, `cart.js`, `site-v3.css`,
   `transitions.js`, `i18n.js`, `security.js`).
