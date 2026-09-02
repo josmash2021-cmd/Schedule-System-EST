@@ -30,6 +30,21 @@ function fmtDay(iso) {
   return `${p.day}/${p.month}/${p.year} ${p.hour}:${p.minute}`;
 }
 
+// Teléfono en formato US: +12055550111 → (205) 555-0111.
+function fmtPhone(p) {
+  if (!p) return '—';
+  const digits = String(p).replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
+  if (digits.length === 10) return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  return p;
+}
+
+// Dirección en formato de dirección: cada parte en su línea
+// ("calle" / "ciudad, estado, ZIP"). Las órdenes la guardan separada por " | ".
+function fmtAddress(addr) {
+  if (!addr) return '—';
+  return String(addr).split(' | ').filter(Boolean).join('\n');
+}
+
 // Barra de progreso animada del envío: Enviado → En tránsito → En reparto →
 // Entregado. Usa ship_tag (AfterShip) cuando existe; si no, cae al estado
 // interno (ship_status). El relleno se anima solo al montar/cambiar.
@@ -143,7 +158,7 @@ function OrderForm({ onCancel, onSaved }) {
 
       <div className="rd-grid" style={{ marginTop: 12 }}>
         <label className="field">
-          <span>Costo de la mercancía ($) — lo que pagaste por ella</span>
+          <span>Costo del producto ($) — lo que pagaste por él</span>
           <input type="number" min="0" step="0.01" value={form.costo} onChange={(e) => set({ costo: e.target.value })} placeholder="0.00" />
         </label>
         <div className="field" style={{ justifyContent: 'flex-end' }}>
@@ -296,9 +311,11 @@ export default function Orders() {
                             <div className="order-detail">
                               <div><span className="muted">Cliente:</span> <strong>{o.customer_name || '—'}</strong></div>
                               <div><span className="muted">Email:</span> {o.email || '—'}</div>
-                              <div><span className="muted">Teléfono:</span> {o.phone || '—'}</div>
+                              <div><span className="muted">Teléfono:</span> {fmtPhone(o.phone)}</div>
                               <div className="row" style={{ gap: 8, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                                <span><span className="muted">Dirección de envío:</span> {o.address || '—'}</span>
+                                <span><span className="muted">Dirección de envío:</span><br />
+                                  <span style={{ whiteSpace: 'pre-line' }}>{fmtAddress(o.address)}</span>
+                                </span>
                                 {o.address && (
                                   <button type="button" className="btn btn-ghost btn-sm" onClick={() => copiarDireccion(o)}
                                     title="Copiar dirección">
@@ -313,9 +330,13 @@ export default function Orders() {
                                     <li key={idx}>{i.qty > 1 ? `${i.qty}× ` : ''}{i.name} — {usd.format(Number(i.price) || 0)}</li>
                                   ))}
                                 </ul>
+                                <div style={{ marginTop: 6 }}>
+                                  <span className="muted">Total que pagó el cliente:</span>{' '}
+                                  <strong>{usd.format(Number(o.total) || 0)}</strong>
+                                </div>
                               </div>
                               <div>
-                                <span className="muted">Costo de la mercancía:</span> {usd.format(Number(o.costo) || 0)}
+                                <span className="muted">Costo del producto:</span> {usd.format(Number(o.costo) || 0)}
                                 {' · '}
                                 <span className="muted">Ganancia:</span>{' '}
                                 <strong>{usd.format((Number(o.total) || 0) - (Number(o.costo) || 0))}</strong>

@@ -39,11 +39,12 @@ async function syncFromStripe() {
       const li = await stripe.checkout.sessions.listLineItems(s.id, { limit: 100 });
       items = (li.data || []).map((l) => ({ name: l.description, qty: l.quantity, price: (l.amount_total || 0) / 100 }));
     } catch (_) { /* si falla, se guarda sin detalle de líneas */ }
+    // Dirección de envío SIN el nombre (va aparte en customer_name).
     let address = null;
     const sd = s.shipping_details;
     if (sd && sd.address) {
       const a = sd.address;
-      address = [sd.name, a.line1, a.line2, [a.city, a.state, a.postal_code].filter(Boolean).join(', ')].filter(Boolean).join(' | ');
+      address = [a.line1, a.line2, [a.city, a.state, a.postal_code].filter(Boolean).join(', ')].filter(Boolean).join(' | ');
     }
     const cd = s.customer_details || {};
     const saved = await orders.createFromStripe({

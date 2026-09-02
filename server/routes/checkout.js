@@ -290,12 +290,13 @@ async function webhookHandler(req, res) {
         console.error('No se pudieron leer las líneas del pedido:', e.message);
       }
 
-      // Dirección de envío en una sola línea (nombre + línea, ciudad, estado, ZIP).
+      // Dirección de envío SIN el nombre (va aparte en customer_name):
+      // "calle | ciudad, estado, ZIP".
       let address = null;
       const sd = session.shipping_details;
       if (sd && sd.address) {
         const a = sd.address;
-        const parts = [sd.name, a.line1, a.line2, [a.city, a.state, a.postal_code].filter(Boolean).join(', ')].filter(Boolean);
+        const parts = [a.line1, a.line2, [a.city, a.state, a.postal_code].filter(Boolean).join(', ')].filter(Boolean);
         address = parts.join(' | ');
       }
 
