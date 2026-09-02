@@ -367,6 +367,8 @@ table.data tbody tr:hover td { background: #f5f5f6; }
 .badge-cancelada { background: #fff; color: #9a9aa2; border-color: rgba(0, 0, 0, 0.1); text-decoration: line-through; }
 /* Compras web (Stripe) en la página de Ventas. */
 .badge-online { background: #111; color: #fff; border-color: #111; border-style: dashed; }
+/* Órdenes manuales de FB Marketplace: outline punteado sin relleno. */
+.badge-fb { background: #fff; color: #111; border-color: #111; border-style: dashed; }
 .order-detail { display: grid; gap: 4px; font-size: 13.5px; }
 .order-detail ul li { margin: 2px 0; }
 
@@ -756,6 +758,17 @@ button.nav-item { background: none; border: none; width: 100%; font-family: inhe
 .idoc-sign-line { border-bottom: 1px solid #111; margin-bottom: 6px; height: 26px; }
 .idoc-foot { text-align: center; font-size: 10.5px; color: #8a8a92; margin-top: 26px; letter-spacing: 0.04em; }
 
+/* Editor de factura con vista previa en vivo: formulario a la izquierda,
+   documento a la derecha (sticky para acompañar el scroll). En pantallas
+   angostas se apila: formulario arriba, preview debajo. */
+.inv-editor { display: grid; grid-template-columns: minmax(380px, 560px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.inv-editor-preview { position: sticky; top: 16px; }
+.inv-editor-preview .invoice-doc { max-width: none; }
+@media (max-width: 1100px) {
+  .inv-editor { grid-template-columns: 1fr; }
+  .inv-editor-preview { position: static; }
+}
+
 @media (max-width: 560px) {
   .invoice-doc { padding: 22px 18px; }
   .idoc-cols { grid-template-columns: 1fr; }
@@ -766,10 +779,12 @@ button.nav-item { background: none; border: none; width: 100%; font-family: inhe
 @media print {
   body::before { display: none; }
   body { background: #fff; }
-  .sidebar, .topbar, .invoice-toolbar, .sidebar-backdrop { display: none !important; }
+  .sidebar, .topbar, .invoice-toolbar, .sidebar-backdrop, .inv-editor-form { display: none !important; }
   .shell { display: block; }
   .content { padding: 0; max-width: none; }
   .content > * { animation: none; }
+  .inv-editor { display: block; }
+  .inv-editor-preview { position: static; }
   .invoice-doc {
     max-width: none; margin: 0; border: none; border-radius: 0; box-shadow: none;
     padding: 0; font-size: 12px;

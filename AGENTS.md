@@ -35,7 +35,11 @@ cambies estructura, flujos o convenciones.
   hoy/semana/mes/año con count-up, gráfica por período, tabla detalle),
   `Invoices.jsx` (Facturas: Bill of Sale por venta/reparación, formulario +
   documento imprimible con `window.print()`, sin librerías de PDF; datos del
-  vendedor recordados en localStorage `est_invoice_seller`),
+  vendedor recordados en localStorage `est_invoice_seller`; **vista previa en
+  vivo** del documento al lado del formulario, layout `.inv-editor`),
+  `Orders.jsx` (Órdenes/Envíos: compras del website automáticas vía Stripe +
+  órdenes manuales de FB Marketplace; tracking number → estado
+  pendiente→enviado→entregado; polling 30 s),
   `Inventory.jsx`, `Appointments.jsx`, `Settings.jsx`,
   `Login.jsx`, `WorkerHome.jsx`/`WorkerApp.jsx` (app móvil del trabajador).
 - Componentes: `admin-app/src/components/` (`Layout.jsx`, `FormPage.jsx`,
@@ -49,7 +53,7 @@ cambies estructura, flujos o convenciones.
 - Estilos: `admin-app/src/styles.css` (páginas blancas con pelotitas sutiles,
   tarjetas blancas con sombras 3D; shell y modales/login oscuros).
 - Rutas internas del panel: `admin-app/src/App.jsx` (`/`, `/trabajadores`,
-  `/tareas`, `/equipo`, `/reparaciones`, `/ventas`, `/facturas`,
+  `/tareas`, `/equipo`, `/reparaciones`, `/ventas`, `/facturas`, `/ordenes`,
   `/inventario`, `/citas`, `/ajustes`).
 - **Build obligatorio tras cualquier cambio:** `cd admin-app && npm run build`
   → genera `server/admin-dist/` (commiteado; Railway solo despliega `server/`).
@@ -61,8 +65,9 @@ cambies estructura, flujos o convenciones.
 - Rutas del panel (`/x/s/*`): `server/routes/adminAuth.js`, `adminUsers.js`,
   `adminTime.js`, `adminTasks.js`, `adminMonitor.js`, `adminRepairs.js`,
   `adminInventory.js`, `adminInvoices.js` (facturas, solo admin),
-  `adminOrders.js` (órdenes online Stripe, solo lectura, solo admin; el GET
-  sincroniza solo con Stripe — auto-importa los pagos que falten, máx. 1 vez/min).
+  `adminOrders.js` (órdenes de envío: website vía Stripe + manuales FB
+  Marketplace; GET sincroniza con Stripe máx. 1 vez/min, POST crea manual,
+  PATCH tracking → 'enviado' o 'entregado' manual).
 - Rutas públicas (`/api/*`): `appointments.js`, `slots.js`, `checkout.js`
   (Stripe; su webhook guarda cada pago en la tabla `online_orders` y pide
   dirección de envío US en la sesión), `auth.js` (login viejo, sin frontend).
@@ -70,12 +75,20 @@ cambies estructura, flujos o convenciones.
   `repairs.js`, `inventory.js`, `tasks.js`, `timeEntries.js`, `audit.js`,
   `invoices.js` (tabla `invoices`: Bill of Sale ligado a `sale_id` o
   `repair_id`; `items` JSONB; número auto `EST-0001`), `orders.js` (tabla
-  `online_orders`: compras web; `stripe_session_id` UNIQUE como dedupe;
-  `items` JSONB; email/teléfono/dirección del cliente).
+  `online_orders`: envíos; `stripe_session_id` UNIQUE nullable como dedupe;
+  `items` JSONB; email/teléfono/dirección del cliente; `origen`
+  website/fb_marketplace; `ship_status` pendiente→enviado→entregado;
+  `tracking_number`/`carrier`/`tracking_id`).
+- **Tracking de envíos:** `server/lib/tracking.js` (AfterShip API v4, solo si
+  hay `AFTERSHIP_API_KEY` en el entorno). Al guardar tracking la orden pasa a
+  'enviado' sola; un job cada 15 min en `server/index.js` marca 'entregado'
+  cuando AfterShip reporta la entrega. Sin la key, 'entregado' se marca
+  manual desde el panel (botón en el detalle de la orden).
 - **Ventas del panel = 3 fuentes** (misma definición en `Sales.jsx` y
   `Dashboard.jsx`): reparaciones entregadas + ventas de mostrador + órdenes
-  online. Las órdenes tienen `costo: 0` (el catálogo web no está ligado al
-  inventario) y no se anulan ni borran desde el panel (reembolsos en Stripe).
+  de envío (website + FB Marketplace). Las órdenes tienen `costo: 0` (ni el
+  catálogo web ni FB están ligados al inventario) y no se anulan ni borran
+  desde el panel (reembolsos en Stripe / trato directo en FB).
 - `server/db.js`: Pool + `CREATE TABLE IF NOT EXISTS` (las tablas se
   autocrean al arrancar). `repair_tickets` tiene `device_type`
   (telefono/tablet/laptop), `service_type` (revision/reparacion/mantenimiento),

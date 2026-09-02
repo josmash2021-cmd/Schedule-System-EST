@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
-import FormPage from '../components/FormPage.jsx';
 
 /* Facturas (Bill of Sale). Listado + formulario + documento imprimible.
    La impresión/PDF es la nativa del navegador: en @media print solo queda
@@ -425,12 +424,27 @@ export default function Invoices() {
   }
 
   if (mode === 'form' && form) {
+    // Editor con vista previa en vivo: el documento de la derecha se va
+    // llenando solo mientras se escribe (InvoiceDoc tolera campos vacíos).
+    // El botón Imprimir imprime la preview (el formulario se oculta en print).
     return (
-      <FormPage title={editId ? `Editar factura ${invoices?.find((i) => i.id === editId)?.invoice_number || ''}` : 'Nueva factura'}
-        onBack={() => { setMode('list'); setEditId(null); setErr(''); }} max={720}>
-        <InvoiceForm form={form} setForm={setForm} onSave={guardar} saving={saving} err={err}
-          isNew={!editId} onCancel={() => { setMode('list'); setEditId(null); setErr(''); }} />
-      </FormPage>
+      <div className="invoice-page">
+        <div className="section-head invoice-toolbar">
+          <button className="btn btn-secondary btn-sm" onClick={() => { setMode('list'); setEditId(null); setErr(''); }}>← Volver</button>
+          <strong style={{ fontSize: 15 }}>{editId ? `Editar factura ${invoices?.find((i) => i.id === editId)?.invoice_number || ''}` : 'Nueva factura'}</strong>
+          <div className="spacer" />
+          <button className="btn btn-secondary btn-sm" onClick={imprimir}>Imprimir / PDF</button>
+        </div>
+        <div className="inv-editor">
+          <div className="card inv-editor-form">
+            <InvoiceForm form={form} setForm={setForm} onSave={guardar} saving={saving} err={err}
+              isNew={!editId} onCancel={() => { setMode('list'); setEditId(null); setErr(''); }} />
+          </div>
+          <div className="inv-editor-preview">
+            <InvoiceDoc inv={form} items={form.items} />
+          </div>
+        </div>
+      </div>
     );
   }
 

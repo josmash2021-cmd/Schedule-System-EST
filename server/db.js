@@ -287,6 +287,17 @@ async function initDb() {
       );
     `);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_online_orders_created ON online_orders(created_at);`);
+    // Órdenes manuales (FB Marketplace) y estados de envío (2026-09-01):
+    // stripe_session_id pasa a nullable (varias manuales con NULL no chocan
+    // con el UNIQUE). origen: 'website' (Stripe, automática) | 'fb_marketplace'.
+    // ship_status: pendiente → enviado (auto al poner tracking) → entregado
+    // (auto vía AfterShip si hay AFTERSHIP_API_KEY, o manual).
+    await client.query(`ALTER TABLE online_orders ALTER COLUMN stripe_session_id DROP NOT NULL;`);
+    await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS origen TEXT NOT NULL DEFAULT 'website';`);
+    await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS ship_status TEXT NOT NULL DEFAULT 'pendiente';`);
+    await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS tracking_number TEXT;`);
+    await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS carrier TEXT;`);
+    await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS tracking_id TEXT;`);
 
     // ----- Facturas (Bill of Sale) -----
     // Una factura puede nacer de una venta de mostrador (sale_id), de una

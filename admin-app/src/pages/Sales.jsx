@@ -161,6 +161,7 @@ export default function Sales() {
       concepto: (o.items || []).map((i) => (i.qty > 1 ? `${i.qty}× ${i.name}` : i.name)).join(', ') || 'Compra web',
       items: o.items || [],
       cliente: o.customer_name || null, email: o.email || null, telefono: o.phone || null, direccion: o.address || null,
+      origen: o.origen || 'website',
       quien: null, cp: chicagoParts(new Date(o.created_at)),
     }));
     return [...deReparacion, ...deMostrador, ...deOnline];
@@ -493,10 +494,10 @@ export default function Sales() {
                           <td>
                             <strong>{s.tipo === 'reparacion' ? (s.cliente || '—') : (s.tipo === 'online' ? (s.cliente || s.concepto) : s.concepto)}</strong>
                             <div className="muted" style={{ fontSize: 12 }}>
-                              {s.tipo === 'reparacion' ? s.concepto : s.tipo === 'online' ? (s.email || 'compra web') : (s.pago || 'mostrador')}
+                              {s.tipo === 'reparacion' ? s.concepto : s.tipo === 'online' ? (s.email || (s.origen === 'fb_marketplace' ? 'FB Marketplace' : 'compra web')) : (s.pago || 'mostrador')}
                             </div>
                           </td>
-                          <td><span className={'badge ' + (s.tipo === 'venta' ? 'badge-on' : s.tipo === 'online' ? 'badge-online' : 'badge-worker')}>{s.tipo === 'venta' ? 'venta' : s.tipo === 'online' ? 'online' : 'reparación'}</span></td>
+                          <td><span className={'badge ' + (s.tipo === 'venta' ? 'badge-on' : s.tipo === 'online' ? (s.origen === 'fb_marketplace' ? 'badge-fb' : 'badge-online') : 'badge-worker')}>{s.tipo === 'venta' ? 'venta' : s.tipo === 'online' ? (s.origen === 'fb_marketplace' ? 'FB Marketplace' : 'online') : 'reparación'}</span></td>
                           <td className="muted hide-sm">{s.quien || '—'}</td>
                           <td style={{ textAlign: 'right' }}><strong>{usd.format(s.price)}</strong></td>
                           <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>

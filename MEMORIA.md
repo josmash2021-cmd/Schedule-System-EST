@@ -519,7 +519,23 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   los reembolsos se hacen en Stripe). El GET sincroniza automáticamente con
   Stripe antes de responder (máx. 1 vez por minuto, últimas 100 sesiones):
   auto-importa los pagos que falten con su fecha real de pago, así compras
-  anteriores al webhook también aparecen sin intervención del usuario. Ventas y Dashboard suman 3 fuentes
+  anteriores al webhook también aparecen sin intervención del usuario.
+  **Órdenes/Envíos (2026-09-01, segunda fase):** la misma tabla aloja órdenes
+  manuales de FB Marketplace (`stripe_session_id` pasa a nullable; `origen`
+  website/fb_marketplace; `ship_status` pendiente→enviado→entregado;
+  `tracking_number`/`carrier`/`tracking_id`). POST `/x/s/orders` crea la
+  orden manual (total server-side); PATCH `/:id` guarda tracking (→ 'enviado'
+  automático) o marca 'entregado' manual. `server/lib/tracking.js` integra
+  AfterShip v4 solo si existe `AFTERSHIP_API_KEY` (plan gratis,
+  aftership.com): registra el tracking y un job cada 15 min en `index.js`
+  marca 'entregado' cuando el paquete llega; sin key todo funciona igual pero
+  el 'entregado' es manual. Nueva página del panel `/ordenes`
+  (`pages/Orders.jsx`): tabla de envíos con badges de origen/estado, detalle
+  expandible con formulario de tracking, formulario de nueva orden FB,
+  polling de 30 s para reflejar cambios en tiempo real. Las FB también
+  cuentan en Ventas/Dashboard (badge "FB Marketplace", costo 0). Facturas:
+  el formulario ahora muestra el documento en vivo al lado (layout
+  `.inv-editor`, sticky; `.inv-editor-form` se oculta en `@media print`). Ventas y Dashboard suman 3 fuentes
   (reparaciones entregadas + mostrador + online; costo 0 en online porque el
   catálogo web no está ligado al inventario). En la tabla de Ventas, cada
   orden online tiene badge "online" y botón Detalle que expande cliente,

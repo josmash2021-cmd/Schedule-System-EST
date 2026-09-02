@@ -37,6 +37,10 @@ const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 const TWILIO_SMS_FROM = process.env.TWILIO_SMS_FROM;
 
+// AfterShip (rastreo de envíos, opcional): sin key, el estado 'entregado' de
+// las órdenes se marca manual en el panel.
+const AFTERSHIP_API_KEY = process.env.AFTERSHIP_API_KEY;
+
 // Stripe (pagos)
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
@@ -82,6 +86,7 @@ module.exports = {
   TWILIO_ACCOUNT_SID,
   TWILIO_AUTH_TOKEN,
   TWILIO_SMS_FROM,
+  AFTERSHIP_API_KEY,
   STRIPE_SECRET_KEY,
   STRIPE_WEBHOOK_SECRET,
   SITE_URL,

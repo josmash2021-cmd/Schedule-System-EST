@@ -20,6 +20,8 @@ const adminAppointmentsRouter = require('./routes/adminAppointments');
 const adminSalesRouter = require('./routes/adminSales');
 const adminExpensesRouter = require('./routes/adminExpenses');
 const adminOrdersRouter = require('./routes/adminOrders');
+const orders = require('./models/orders');
+const tracking = require('./lib/tracking');
 const adminInvoicesRouter = require('./routes/adminInvoices');
 const adminDemoDataRouter = require('./routes/adminDemoData'); // limpieza de datos demo
 
@@ -207,6 +209,28 @@ async function start() {
   app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
   });
+
+  // Job de rastreo de envíos (AfterShip): cada 15 min revisa las órdenes con
+  // tracking activo y marca 'entregado' las que ya llegaron. Solo corre si
+  // hay AFTERSHIP_API_KEY; un fallo no tumba el server.
+  if (tracking.enabled()) {
+    const checkDeliveries = async () => {
+      try {
+        const inTransit = await orders.listInTransit();
+        for (const o of inTransit) {
+          const done = await tracking.isDelivered(o.tracking_id);
+          if (done) {
+            await orders.updateShipStatus(o.id, 'entregado');
+            console.log(`[tracking] Orden #${o.id} marcada como entregada.`);
+          }
+        }
+      } catch (e) {
+        console.error('[tracking] Error revisando entregas:', e.message);
+      }
+    };
+    setInterval(checkDeliveries, 15 * 60 * 1000).unref();
+    setTimeout(checkDeliveries, 60 * 1000).unref(); // primera pasada al minuto
+  }
 
   // Bot de WhatsApp (Angel): corre en el mismo proceso (ver server/wa-bot/).
   // Se puede desactivar con BOT_ENABLED=false. Un fallo del bot no tumba la web.

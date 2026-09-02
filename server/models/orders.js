@@ -39,4 +39,56 @@ async function listSessionIds() {
   return r.rows.map((x) => x.stripe_session_id);
 }
 
-module.exports = { createFromStripe, listAll, listSessionIds };
+// Órdenes manuales (FB Marketplace): sin stripe_session_id; el total llega ya
+// calculado por la ruta (server-side). Nacen como envío 'pendiente'.
+async function createManual({ customer_name, email, phone, address, items, total }) {
+  const r = await pool.query(
+    `INSERT INTO online_orders (stripe_session_id, customer_name, email, phone, address, items, total, currency, origen)
+     VALUES (NULL, $1, $2, $3, $4, $5, $6, 'usd', 'fb_marketplace')
+     RETURNING *`,
+    [
+      customer_name || null,
+      email || null,
+      phone || null,
+      address || null,
+      JSON.stringify(items || []),
+      total || 0,
+    ]
+  );
+  return r.rows[0];
+}
+
+// Guardar el número de tracking: la orden pasa automáticamente a 'enviado'
+// (sin tracking no hay envío). tracking_id es el id en AfterShip (si hay API).
+async function updateTracking(id, { tracking_number, carrier, tracking_id }) {
+  const r = await pool.query(
+    `UPDATE online_orders
+     SET tracking_number = $2, carrier = $3, tracking_id = COALESCE($4, tracking_id),
+         ship_status = CASE WHEN ship_status = 'pendiente' THEN 'enviado' ELSE ship_status END
+     WHERE id = $1 RETURNING *`,
+    [id, tracking_number || null, carrier || null, tracking_id || null]
+  );
+  return r.rows[0] || null;
+}
+
+const SHIP_STATUSES = ['pendiente', 'enviado', 'entregado'];
+
+async function updateShipStatus(id, status) {
+  const r = await pool.query(
+    'UPDATE online_orders SET ship_status = $2 WHERE id = $1 RETURNING *',
+    [id, status]
+  );
+  return r.rows[0] || null;
+}
+
+// Órdenes con tracking activo que aún no se marcan entregadas: el job de
+// AfterShip las consulta periódicamente.
+async function listInTransit() {
+  const r = await pool.query(
+    `SELECT id, tracking_id, tracking_number, carrier FROM online_orders
+     WHERE tracking_id IS NOT NULL AND ship_status <> 'entregado'`
+  );
+  return r.rows;
+}
+
+module.exports = { createFromStripe, createManual, listAll, listSessionIds, updateTracking, updateShipStatus, listInTransit, SHIP_STATUSES };
