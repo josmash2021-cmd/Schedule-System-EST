@@ -570,8 +570,9 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   líneas Impuestos/Envío —, tax_rate 0, payment 'tarjeta' web / 'otro' FB,
   fecha-hora America/Chicago, garantía 30 días, seller ElectronicST). El PDF
   del Bill of Sale se dibuja server-side con pdfkit
-  (`server/lib/invoicePdf.js`, réplica del diseño del panel; logo medido por
-  cabecera PNG para no solapar). `GET /x/s/invoices/:id/pdf` lo descarga
+  (`server/lib/invoicePdf.js`, réplica del diseño del panel; logo
+  `public/assets/img/logo-black.png` medido por cabecera PNG para no solapar;
+  SIN bloque de firmas, ni en el PDF ni en el InvoiceDoc del panel), `GET /x/s/invoices/:id/pdf` lo descarga
   (botón "Descargar PDF" en la vista de factura) y
   `POST /x/s/orders/:id/send-invoice` lo adjunta en un correo Resend al
   cliente (botón "Enviar factura por correo" en el detalle de la orden; las
