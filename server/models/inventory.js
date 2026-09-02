@@ -152,4 +152,36 @@ async function purchasesByMonth() {
   return r.rows.map((x) => ({ mes: x.mes, unidades: Number(x.unidades) || 0, total: Number(x.total) || 0 }));
 }
 
-module.exports = { FIELDS, listItems, findById, create, update, softDelete, adjustStock, listMovements, purchasesByMonth };
+// Inventario que quedaba al CIERRE de cada mes (para la contabilidad mensual
+// de Ventas). Reconstruye el stock histórico: stock actual − movimientos
+// posteriores a ese cierre. Valor a costo y a precio de venta. Todo en hora
+// de Chicago; los timestamps de la base están en UTC.
+async function stockAtMonthEnds() {
+  const r = await pool.query(`
+    WITH meses AS (
+      SELECT DISTINCT date_trunc('month', (created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Chicago') AS m
+      FROM inventory_movements
+    )
+    SELECT to_char(meses.m, 'YYYY-MM') AS mes,
+           SUM(GREATEST(i.stock - COALESCE(mov.despues, 0), 0)) AS unidades,
+           SUM(GREATEST(i.stock - COALESCE(mov.despues, 0), 0) * COALESCE(i.cost, 0)) AS valor_costo,
+           SUM(GREATEST(i.stock - COALESCE(mov.despues, 0), 0) * COALESCE(i.price, 0)) AS valor_venta
+    FROM meses
+    CROSS JOIN inventory_items i
+    LEFT JOIN LATERAL (
+      SELECT SUM(mv.delta) AS despues FROM inventory_movements mv
+      WHERE mv.item_id = i.id
+        AND (mv.created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Chicago' >= meses.m + INTERVAL '1 month'
+    ) mov ON true
+    WHERE i.active
+    GROUP BY meses.m ORDER BY meses.m DESC
+  `);
+  return r.rows.map((x) => ({
+    mes: x.mes,
+    unidades: Number(x.unidades) || 0,
+    valorCosto: Number(x.valor_costo) || 0,
+    valorVenta: Number(x.valor_venta) || 0,
+  }));
+}
+
+module.exports = { FIELDS, listItems, findById, create, update, softDelete, adjustStock, listMovements, purchasesByMonth, stockAtMonthEnds };

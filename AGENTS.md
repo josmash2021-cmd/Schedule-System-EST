@@ -35,7 +35,10 @@ cambies estructura, flujos o convenciones.
 ### Panel de gestión (`admin-app/`)
 - Páginas: `admin-app/src/pages/` — `Dashboard.jsx`, `Workers.jsx`,
   `Tasks.jsx`, `Team.jsx`, `Repairs.jsx`, `Sales.jsx` (Ventas: KPIs
-  hoy/semana/mes/año con count-up, gráfica por período, tabla detalle),
+  hoy/semana/mes/año con count-up, gráfica por período, tabla detalle, y
+  **Resumen por mes**: ventas, ganancia, inversión en inventario e inventario
+  al cierre de cada mes — vía `/x/s/inventory/purchases-by-month` y
+  `/x/s/inventory/stock-by-month`),
   `Invoices.jsx` (Facturas: Bill of Sale por venta/reparación, formulario +
   documento imprimible con `window.print()`, sin librerías de PDF; datos del
   vendedor recordados en localStorage `est_invoice_seller`; **vista previa en

@@ -110,6 +110,8 @@ export default function Sales() {
   const [expenses, setExpenses] = useState(null);
   const [ordenes, setOrdenes] = useState(null);
   const [openOrder, setOpenOrder] = useState(null);
+  const [comprasMes, setComprasMes] = useState(null); // inversión en inventario por mes
+  const [stockMes, setStockMes] = useState(null); // inventario al cierre de cada mes
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const [registering, setRegistering] = useState(false);
@@ -129,6 +131,8 @@ export default function Sales() {
     api('/sales').then((d) => setDirectas(d.sales || [])),
     api('/expenses').then((d) => setExpenses(d.expenses || [])),
     api('/orders').then((d) => setOrdenes(d.orders || [])),
+    api('/inventory/purchases-by-month').then((d) => setComprasMes(d.months || [])).catch(() => setComprasMes([])),
+    api('/inventory/stock-by-month').then((d) => setStockMes(d.months || [])).catch(() => setStockMes([])),
   ]).catch((e) => setErr(e.message));
   useEffect(() => { load(); }, [tick]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -168,6 +172,38 @@ export default function Sales() {
   }, [tickets, directas, ordenes]);
 
   const expensesCp = useMemo(() => (expenses || []).map((e) => ({ ...e, cp: chicagoParts(new Date(e.created_at)) })), [expenses]);
+
+  // Resumen contable por mes: ventas, ganancia (ventas − costo vendido −
+  // gastos), inversión en inventario (compras) e inventario al cierre.
+  // Todos los meses con CUALQUIER actividad, más reciente primero.
+  const resumenMensual = useMemo(() => {
+    if (!cargado || comprasMes == null || stockMes == null) return null;
+    const meses = new Set();
+    for (const s of sales) meses.add(s.cp.key.slice(0, 7));
+    for (const e of expensesCp) meses.add(e.cp.key.slice(0, 7));
+    for (const c of comprasMes) meses.add(c.mes);
+    for (const s of stockMes) meses.add(s.mes);
+    const compraPorMes = Object.fromEntries(comprasMes.map((c) => [c.mes, c]));
+    const stockPorMes = Object.fromEntries(stockMes.map((s) => [s.mes, s]));
+    return [...meses].sort().reverse().map((mes) => {
+      const ss = sales.filter((s) => s.cp.key.slice(0, 7) === mes);
+      const ventas = ss.reduce((a, s) => a + s.price, 0);
+      const costo = ss.reduce((a, s) => a + (s.costo || 0), 0);
+      const gastos = expensesCp.filter((e) => e.cp.key.slice(0, 7) === mes).reduce((a, e) => a + Number(e.amount || 0), 0);
+      const c = compraPorMes[mes];
+      const st = stockPorMes[mes];
+      return {
+        mes,
+        ventas,
+        ganancia: ventas - costo - gastos,
+        gastos,
+        inversion: c ? c.total : 0,
+        unidadesCompradas: c ? c.unidades : 0,
+        stockCierre: st ? st.unidades : null,
+        valorCierreCosto: st ? st.valorCosto : null,
+      };
+    });
+  }, [cargado, sales, expensesCp, comprasMes, stockMes]);
 
   const now = chicagoParts();
   const wk = weekKeys();
@@ -430,6 +466,50 @@ export default function Sales() {
               format={fmtBar} onDay={period === 'dia' ? null : onBar} />}
         {period !== 'dia' && <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>Toca una barra para ver el detalle.</div>}
       </div>
+
+      {/* Contabilidad mes a mes: ventas, ganancia, inversión e inventario al cierre. */}
+      {resumenMensual && resumenMensual.length > 0 && (
+        <div className="card" style={{ marginBottom: 18 }}>
+          <h3>Resumen por mes</h3>
+          <div className="table-wrap">
+            <table className="data">
+              <thead>
+                <tr>
+                  <th>Mes</th>
+                  <th style={{ textAlign: 'right' }}>Ventas</th>
+                  <th style={{ textAlign: 'right' }}>Ganancia</th>
+                  <th style={{ textAlign: 'right' }}>Inversión (compras)</th>
+                  <th style={{ textAlign: 'right' }}>Inventario al cierre</th>
+                </tr>
+              </thead>
+              <tbody>
+                {resumenMensual.map((r) => (
+                  <tr key={r.mes}>
+                    <td><strong>{MONTH_LABELS[Number(r.mes.slice(5, 7)) - 1]} {r.mes.slice(0, 4)}</strong></td>
+                    <td style={{ textAlign: 'right' }}>{usd.format(r.ventas)}</td>
+                    <td style={{ textAlign: 'right' }}>{usd.format(r.ganancia)}</td>
+                    <td style={{ textAlign: 'right' }}>
+                      {usd.format(r.inversion)}
+                      <div className="muted" style={{ fontSize: 12 }}>{r.unidadesCompradas} unidades</div>
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      {r.stockCierre == null ? '—' : (
+                        <>
+                          {usd.format(r.valorCierreCosto)}
+                          <div className="muted" style={{ fontSize: 12 }}>{r.stockCierre} unidades (a costo)</div>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="muted" style={{ fontSize: 12, marginTop: 8 }}>
+            Ganancia = ventas − costo de lo vendido − gastos del mes. Inversión = entradas de inventario × costo. Inventario al cierre = unidades que quedaban al terminar el mes, valuadas a costo.
+          </div>
+        </div>
+      )}
 
       <div className="card" style={{ marginBottom: 18 }}>
         <h3>Registrar gasto</h3>

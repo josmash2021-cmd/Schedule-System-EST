@@ -74,6 +74,16 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Inventario al cierre de cada mes (contabilidad mensual de Ventas).
+router.get('/stock-by-month', requireRole('admin'), async (_req, res) => {
+  try {
+    res.json({ months: await inventory.stockAtMonthEnds() });
+  } catch (err) {
+    console.error('inventory stock-by-month error:', err.message);
+    res.status(500).json({ error: 'Error al calcular el inventario por mes.' });
+  }
+});
+
 // Mercancía comprada por mes (entradas de stock × costo), para las tarjetas
 // "Compras del mes" de la página de Inventario. Solo admin (cifras internas).
 router.get('/purchases-by-month', requireRole('admin'), async (_req, res) => {
