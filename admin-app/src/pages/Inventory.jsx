@@ -64,19 +64,25 @@ export default function Inventory() {
     return Object.entries(map).sort(([a], [b]) => a.localeCompare(b, 'es'));
   }, [visible]);
 
-  // Mercancía comprada: mes actual y mes anterior (hora de Chicago, YYYY-MM).
+  // Mercancía comprada por mes con navegación ‹ › (patrón de la tarjeta de
+  // Ganancia en Ventas): empieza en el mes actual y se puede ir a meses
+  // anteriores. Hora de Chicago.
   const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  const [comprasOffset, setComprasOffset] = useState(0); // 0 = mes actual
   const comprasMes = useMemo(() => {
     if (!compras) return null;
     const p = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit' })
       .formatToParts(new Date()).reduce((a, x) => { a[x.type] = x.value; return a; }, {});
-    const cur = `${p.year}-${p.month}`;
-    const [y, m] = cur.split('-').map(Number);
-    const prev = new Date(Date.UTC(y, m - 2, 1)).toISOString().slice(0, 7);
-    const find = (k) => compras.find((x) => x.mes === k) || { mes: k, unidades: 0, total: 0 };
-    const label = (k) => MESES[Number(k.slice(5, 7)) - 1] + ' ' + k.slice(0, 4);
-    return { actual: { ...find(cur), label: label(cur) }, pasado: { ...find(prev), label: label(prev) } };
-  }, [compras]);
+    const [y, m] = [`${p.year}-${p.month}`].flatMap((k) => k.split('-').map(Number));
+    const key = new Date(Date.UTC(y, m - 1 + comprasOffset, 1)).toISOString().slice(0, 7);
+    const found = compras.find((x) => x.mes === key);
+    return {
+      key,
+      label: MESES[Number(key.slice(5, 7)) - 1] + ' ' + key.slice(0, 4),
+      total: found ? found.total : 0,
+      unidades: found ? found.unidades : 0,
+    };
+  }, [compras, comprasOffset]);
 
   if (detail) {
     const back = () => { setDetail(null); load(search); };
@@ -105,14 +111,17 @@ export default function Inventory() {
             <>
               <div className="stat-grid" style={{ marginBottom: 18 }}>
                 <div className="stat-card">
-                  <div className="k">Mercancía comprada — {comprasMes ? comprasMes.actual.label.split(' ')[0] : 'mes actual'}</div>
-                  <div className="v">{comprasMes ? money(comprasMes.actual.total) : <span className="spinner" />}</div>
-                  {comprasMes && <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>{comprasMes.actual.unidades} unidades · {comprasMes.actual.label}</div>}
-                </div>
-                <div className="stat-card">
-                  <div className="k">Mercancía comprada — {comprasMes ? comprasMes.pasado.label.split(' ')[0] : 'mes pasado'}</div>
-                  <div className="v">{comprasMes ? money(comprasMes.pasado.total) : <span className="spinner" />}</div>
-                  {comprasMes && <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>{comprasMes.pasado.unidades} unidades · {comprasMes.pasado.label}</div>}
+                  <div className="stat-top">
+                    <div className="k">Compras de inventario</div>
+                    <div className="gan-arrows">
+                      <button type="button" className="gan-arrow" title="Mes anterior"
+                        onClick={() => setComprasOffset((o) => o - 1)}>‹</button>
+                      <button type="button" className="gan-arrow" title="Mes siguiente" disabled={comprasOffset >= 0}
+                        onClick={() => setComprasOffset((o) => Math.min(0, o + 1))}>›</button>
+                    </div>
+                  </div>
+                  <div className="v">{comprasMes ? money(comprasMes.total) : <span className="spinner" />}</div>
+                  {comprasMes && <div className="muted k-nowrap" style={{ fontSize: 12.5, marginTop: 2 }}>{comprasMes.label} · {comprasMes.unidades} unidades</div>}
                 </div>
                 <div className="stat-card">
                   <div className="k">Productos</div>
