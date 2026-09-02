@@ -69,7 +69,7 @@ function InvoiceDoc({ inv, items }) {
           <div className="idoc-brand-sub">SALES &amp; REPAIR SERVICE</div>
         </div>
         <div className="idoc-title">
-          <div className="idoc-title-main">BILL OF SALE</div>
+          <div className="idoc-title-main">RECEIPT</div>
           {inv.invoice_number && <div className="idoc-title-num">{inv.invoice_number}</div>}
         </div>
       </div>

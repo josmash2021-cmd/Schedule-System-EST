@@ -12,6 +12,26 @@ const LOGO = path.resolve(__dirname, '..', 'public', 'assets', 'img', 'logo-dark
 
 const money = (n) => `$${Number(n || 0).toFixed(2)}`;
 
+// pg devuelve sale_date (tipo DATE) como Date y sale_time como "HH:MM:SS";
+// en el PDF van formateados (DD/MM/YYYY y HH:MM), nunca el crudo de la DB.
+function fmtDate(v) {
+  if (!v) return '—';
+  if (v instanceof Date) {
+    const iso = v.toISOString().slice(0, 10); // YYYY-MM-DD
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  }
+  const s = String(v);
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : s;
+}
+function fmtTime(v) {
+  if (!v) return '—';
+  const s = String(v);
+  const m = s.match(/^(\d{2}):(\d{2})/);
+  return m ? `${m[1]}:${m[2]}` : s;
+}
+
 // Dimensiones de un PNG leyendo su cabecera IHDR (sin dependencias).
 function pngSize(file) {
   try {
@@ -66,7 +86,7 @@ function buildInvoicePdf(inv) {
       .text('S A L E S   &   R E P A I R   S E R V I C E', brandX, y + 30, { characterSpacing: 1 });
 
     doc.font('Helvetica-Bold').fontSize(21).fillColor('#111')
-      .text('BILL OF SALE', M, y + 10, { width: CW, align: 'right' });
+      .text('RECEIPT', M, y + 10, { width: CW, align: 'right' });
     if (inv.invoice_number) {
       doc.font('Helvetica').fontSize(9).fillColor('#55555c')
         .text(inv.invoice_number, M, y + 36, { width: CW, align: 'right' });
@@ -109,7 +129,7 @@ function buildInvoicePdf(inv) {
     const rowY = y + 34;
     const halfW = CW / 2;
     const saleRows = [
-      ['Date:', inv.sale_date || '—', 'Time:', inv.sale_time || '—'],
+      ['Date:', fmtDate(inv.sale_date), 'Time:', fmtTime(inv.sale_time)],
       ['Payment Method:', inv.payment_method || '—', 'Tax Rate:', `${Number(inv.tax_rate || 0)}%`],
     ];
     saleRows.forEach((r, i) => {
