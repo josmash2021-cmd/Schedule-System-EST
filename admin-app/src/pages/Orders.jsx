@@ -153,9 +153,27 @@ export default function Orders() {
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [openId, setOpenId] = useState(null);
+  const [copiedId, setCopiedId] = useState(null);
   // Form de tracking por orden (se edita dentro del detalle expandido).
   const [track, setTrack] = useState({}); // { [orderId]: { number, carrier } }
+
+  // Copiar la dirección al portapapeles (con feedback "Copiada").
+  const copiarDireccion = async (o) => {
+    if (!o.address) return;
+    try {
+      await navigator.clipboard.writeText(o.address);
+    } catch (_) {
+      // Fallback para contextos sin clipboard API (HTTP viejo).
+      const ta = document.createElement('textarea');
+      ta.value = o.address;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch (e2) { /* nada más que hacer */ }
+      ta.remove();
+    }
+    setCopiedId(o.id);
+    setTimeout(() => setCopiedId((c) => (c === o.id ? null : c)), 1600);
+  };
 
   const load = (silent) => api('/orders')
     .then((d) => setOrders(d.orders || []))
@@ -223,7 +241,7 @@ export default function Orders() {
               <div className="table-wrap">
                 <table className="data">
                   <thead>
-                    <tr><th>Fecha</th><th>Cliente</th><th className="hide-sm">Origen</th><th className="hide-sm">Dirección</th><th style={{ textAlign: 'right' }}>Total</th><th>Estado</th><th></th></tr>
+                    <tr><th>Fecha</th><th>Cliente</th><th className="hide-sm">Origen</th><th className="hide-sm">Dirección</th><th style={{ textAlign: 'right' }}>Total</th><th>Estado</th></tr>
                   </thead>
                   <tbody>
                     {orders.map((o) => (
@@ -244,66 +262,68 @@ export default function Orders() {
                           </td>
                           <td style={{ textAlign: 'right' }}><strong>{usd.format(Number(o.total) || 0)}</strong></td>
                           <td><span className={'badge ' + (SHIP_BADGE[o.ship_status] || '')}>{SHIP_LABEL[o.ship_status] || o.ship_status}</span></td>
-                          <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                            <button className="btn btn-ghost btn-sm" onClick={() => setOpenId(openId === o.id ? null : o.id)}>
-                              {openId === o.id ? 'Cerrar' : 'Detalle'}
-                            </button>
-                          </td>
                         </tr>
-                        {openId === o.id && (
-                          <tr>
-                            <td colSpan="7" style={{ background: '#f8f9fb' }}>
-                              <div className="order-detail">
-                                <div><span className="muted">Cliente:</span> <strong>{o.customer_name || '—'}</strong></div>
-                                <div><span className="muted">Email:</span> {o.email || '—'}</div>
-                                <div><span className="muted">Teléfono:</span> {o.phone || '—'}</div>
-                                <div><span className="muted">Dirección de envío:</span> {o.address || '—'}</div>
-                                <div>
-                                  <span className="muted">Artículos:</span>
-                                  <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
-                                    {(o.items || []).map((i, idx) => (
-                                      <li key={idx}>{i.qty > 1 ? `${i.qty}× ` : ''}{i.name} — {usd.format(Number(i.price) || 0)}</li>
-                                    ))}
-                                  </ul>
-                                </div>
-                                <div style={{ marginTop: 8, borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 10 }}>
-                                  <span className="muted">Tracking:</span>{' '}
-                                  {o.tracking_number
-                                    ? <><strong>{o.tracking_number}</strong>{o.carrier ? ` (${String(o.carrier).toUpperCase()})` : ''}</>
-                                    : 'sin tracking'}
-                                </div>
-                                <div style={{ marginTop: 12 }}>
-                                  <ShipBar order={o} />
-                                </div>
-                                {o.ship_status !== 'entregado' && (
-                                  <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                                    <input
-                                      style={{ width: 220 }}
-                                      placeholder="Número de tracking"
-                                      value={(track[o.id] && track[o.id].number) || ''}
-                                      onChange={(e) => setTrack((m) => ({ ...m, [o.id]: { number: e.target.value, carrier: (m[o.id] && m[o.id].carrier) || 'usps' } }))}
-                                    />
-                                    <select
-                                      style={{ width: 'auto' }}
-                                      value={(track[o.id] && track[o.id].carrier) || 'usps'}
-                                      onChange={(e) => setTrack((m) => ({ ...m, [o.id]: { number: (m[o.id] && m[o.id].number) || '', carrier: e.target.value } }))}
-                                    >
-                                      {CARRIERS.map((c) => <option key={c.v} value={c.v}>{c.l}</option>)}
-                                    </select>
-                                    <button className="btn btn-primary btn-sm" disabled={busy} onClick={() => guardarTracking(o)}>
-                                      Guardar tracking → Enviado
-                                    </button>
-                                    {o.ship_status === 'enviado' && (
-                                      <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => marcarEntregado(o)}>
-                                        Marcar entregado
-                                      </button>
-                                    )}
-                                  </div>
+                        {/* Detalle siempre abierto: toda la info a la vista. */}
+                        <tr>
+                          <td colSpan="6" style={{ background: '#f8f9fb' }}>
+                            <div className="order-detail">
+                              <div><span className="muted">Cliente:</span> <strong>{o.customer_name || '—'}</strong></div>
+                              <div><span className="muted">Email:</span> {o.email || '—'}</div>
+                              <div><span className="muted">Teléfono:</span> {o.phone || '—'}</div>
+                              <div className="row" style={{ gap: 8, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                                <span><span className="muted">Dirección de envío:</span> {o.address || '—'}</span>
+                                {o.address && (
+                                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => copiarDireccion(o)}
+                                    title="Copiar dirección">
+                                    {copiedId === o.id ? '✓ Copiada' : 'Copiar'}
+                                  </button>
                                 )}
                               </div>
-                            </td>
-                          </tr>
-                        )}
+                              <div>
+                                <span className="muted">Artículos:</span>
+                                <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
+                                  {(o.items || []).map((i, idx) => (
+                                    <li key={idx}>{i.qty > 1 ? `${i.qty}× ` : ''}{i.name} — {usd.format(Number(i.price) || 0)}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                              <div style={{ marginTop: 8, borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 10 }}>
+                                <span className="muted">Tracking:</span>{' '}
+                                {o.tracking_number
+                                  ? <><strong>{o.tracking_number}</strong>{o.carrier ? ` (${String(o.carrier).toUpperCase()})` : ''}</>
+                                  : 'sin tracking'}
+                              </div>
+                              <div style={{ marginTop: 12 }}>
+                                <ShipBar order={o} />
+                              </div>
+                              {o.ship_status !== 'entregado' && (
+                                <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                                  <input
+                                    style={{ width: 220 }}
+                                    placeholder="Número de tracking"
+                                    value={(track[o.id] && track[o.id].number) || ''}
+                                    onChange={(e) => setTrack((m) => ({ ...m, [o.id]: { number: e.target.value, carrier: (m[o.id] && m[o.id].carrier) || 'usps' } }))}
+                                  />
+                                  <select
+                                    style={{ width: 'auto' }}
+                                    value={(track[o.id] && track[o.id].carrier) || 'usps'}
+                                    onChange={(e) => setTrack((m) => ({ ...m, [o.id]: { number: (m[o.id] && m[o.id].number) || '', carrier: e.target.value } }))}
+                                  >
+                                    {CARRIERS.map((c) => <option key={c.v} value={c.v}>{c.l}</option>)}
+                                  </select>
+                                  <button className="btn btn-primary btn-sm" disabled={busy} onClick={() => guardarTracking(o)}>
+                                    Guardar tracking → Enviado
+                                  </button>
+                                  {o.ship_status === 'enviado' && (
+                                    <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => marcarEntregado(o)}>
+                                      Marcar entregado
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
                       </Fragment>
                     ))}
                   </tbody>
