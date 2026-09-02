@@ -144,10 +144,6 @@ function InvoiceDoc({ inv, items }) {
         </div>
       )}
 
-      <div className="idoc-signs">
-        <div className="idoc-sign"><div className="idoc-sign-line" /><span>Firma del vendedor</span></div>
-        <div className="idoc-sign"><div className="idoc-sign-line" /><span>Firma del comprador</span></div>
-      </div>
       <div className="idoc-foot">Gracias por su compra — ElectronicST, LLC</div>
     </div>
   );

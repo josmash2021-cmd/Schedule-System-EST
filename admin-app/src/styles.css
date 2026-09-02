@@ -376,8 +376,9 @@ table.data tbody tr:hover td { background: #f5f5f6; }
   .order-detail { grid-template-columns: 1fr; }
 }
 
-/* Barra de progreso del envío (página Órdenes): 4 pasos con relleno animado. */
-.shipbar { max-width: 560px; }
+/* Barra de progreso del envío (página Órdenes): 5 pasos con relleno animado,
+   centrada en la tarjeta. */
+.shipbar { max-width: 640px; margin: 4px auto 0; }
 .shipbar-line { position: relative; height: 4px; border-radius: 999px; background: rgba(0, 0, 0, 0.1); margin: 14px 8px 0; }
 .shipbar-fill {
   position: absolute; left: 0; top: 0; height: 100%; border-radius: 999px;
@@ -386,7 +387,7 @@ table.data tbody tr:hover td { background: #f5f5f6; }
   animation: shipbarIn 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes shipbarIn { from { transform: scaleX(0); } }
-.shipbar-steps { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: -11px; }
+.shipbar-steps { display: grid; grid-template-columns: repeat(5, 1fr); margin-top: -11px; }
 .shipbar-step { text-align: center; position: relative; }
 .shipbar-dot {
   width: 14px; height: 14px; margin: 0 auto 5px; border-radius: 50%;

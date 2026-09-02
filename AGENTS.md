@@ -109,7 +109,9 @@ cambies estructura, flujos o convenciones.
   website/fb_marketplace; `ship_status` pendiente→enviado→entregado;
   `tracking_number`/`carrier`/`tracking_id`; `ship_tag` (tag fino de
   AfterShip: InTransit/OutForDelivery/Delivered, alimenta la barra de
-  progreso animada de 4 pasos en Órdenes y en `track.html`).
+  progreso animada centrada de 5 pasos en Órdenes — Label generado → Enviado →
+  En tránsito → En reparto → Delivered — y la línea de progreso de
+  `track.html`).
 - **Tracking de envíos:** `server/lib/tracking.js` (AfterShip API v4, solo si
   hay `AFTERSHIP_API_KEY` en el entorno). Al guardar tracking la orden pasa a
   'enviado' sola; un job cada 15 min en `server/index.js` marca 'entregado'

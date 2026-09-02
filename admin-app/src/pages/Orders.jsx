@@ -49,21 +49,22 @@ function fmtAddress(addr) {
   return String(addr).split(' | ').filter(Boolean).join('\n');
 }
 
-// Barra de progreso animada del envío: Enviado → En tránsito → En reparto →
-// Entregado. Usa ship_tag (AfterShip) cuando existe; si no, cae al estado
-// interno (ship_status). El relleno se anima solo al montar/cambiar.
-const SHIP_STEPS = ['Enviado', 'En tránsito', 'En reparto', 'Entregado'];
+// Barra de progreso animada del envío: Label generado → Enviado → En tránsito →
+// En reparto → Delivered. Usa ship_tag (AfterShip) cuando existe; si no, cae al
+// estado interno (ship_status). El relleno se anima solo al montar/cambiar.
+const SHIP_STEPS = ['Label generado', 'Enviado', 'En tránsito', 'En reparto', 'Delivered'];
 function shipStep(o) {
   const tag = o.ship_tag;
-  if (o.ship_status === 'entregado' || tag === 'Delivered') return 4;
-  if (tag === 'OutForDelivery') return 3;
-  if (tag === 'InTransit') return 2;
-  if (o.ship_status === 'enviado' || o.tracking_number) return 1;
-  return 0;
+  if (o.ship_status === 'entregado' || tag === 'Delivered') return 5;
+  if (tag === 'OutForDelivery') return 4;
+  if (tag === 'InTransit') return 3;
+  if (o.ship_status === 'enviado' || o.tracking_number) return 2;
+  return 1;
 }
 function ShipBar({ order }) {
   const step = shipStep(order);
-  const pct = step === 0 ? 0 : (step / SHIP_STEPS.length) * 100;
+  // El relleno llega hasta el centro de la columna del paso actual
+  const pct = ((step - 0.5) / SHIP_STEPS.length) * 100;
   return (
     <div className="shipbar">
       <div className="shipbar-line">
@@ -80,7 +81,7 @@ function ShipBar({ order }) {
           );
         })}
       </div>
-      {step === 0 && <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>Pendiente de envío — guarda el tracking para activar el seguimiento.</div>}
+      {step === 1 && !order.tracking_number && <div className="muted" style={{ fontSize: 12, marginTop: 6, textAlign: 'center' }}>Label generada — guarda el tracking cuando salga el paquete.</div>}
     </div>
   );
 }
