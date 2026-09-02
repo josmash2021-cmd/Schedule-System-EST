@@ -44,6 +44,7 @@ router.get('/:token', rateLimit, async (req, res) => {
       currency: o.currency || 'usd',
       address: o.address || null,
       ship_status: o.ship_status || 'pendiente',
+      ship_tag: o.ship_tag || null,
       tracking_number: o.tracking_number || null,
       carrier: o.carrier || null,
       created_at: o.created_at,

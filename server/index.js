@@ -226,6 +226,7 @@ async function start() {
         for (const o of inTransit) {
           const tag = await tracking.getTag(o.tracking_id);
           if (!tag) continue;
+          if (tag !== o.ship_tag) await orders.updateShipTag(o.id, tag);
           if ((tag === 'InTransit' || tag === 'OutForDelivery') && !o.email_transit) {
             const ok = await emailLib.sendTransitEmail(o);
             if (ok) await orders.markEmailSent(o.id, 'email_transit');

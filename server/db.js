@@ -307,6 +307,9 @@ async function initDb() {
     await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS email_shipped BOOLEAN NOT NULL DEFAULT false;`);
     await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS email_transit BOOLEAN NOT NULL DEFAULT false;`);
     await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS email_delivered BOOLEAN NOT NULL DEFAULT false;`);
+    // Tag fino de AfterShip (InTransit, OutForDelivery, Delivered…) para la
+    // barra de progreso de 4 pasos del panel y de la página del cliente.
+    await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS ship_tag TEXT;`);
 
     // ----- Facturas (Bill of Sale) -----
     // Una factura puede nacer de una venta de mostrador (sale_id), de una

@@ -83,6 +83,12 @@ async function updateTracking(id, { tracking_number, carrier, tracking_id }) {
 
 const SHIP_STATUSES = ['pendiente', 'enviado', 'entregado'];
 
+// Tag fino de AfterShip (InTransit/OutForDelivery/Delivered): lo escribe el
+// job de rastreo y alimenta la barra de progreso de 4 pasos.
+async function updateShipTag(id, tag) {
+  await pool.query('UPDATE online_orders SET ship_tag = $2 WHERE id = $1', [id, tag || null]);
+}
+
 async function updateShipStatus(id, status) {
   const r = await pool.query(
     'UPDATE online_orders SET ship_status = $2 WHERE id = $1 RETURNING *',
@@ -117,6 +123,6 @@ async function markEmailSent(id, flag) {
 
 module.exports = {
   createFromStripe, createManual, listAll, listSessionIds,
-  updateTracking, updateShipStatus, listInTransit,
+  updateTracking, updateShipStatus, updateShipTag, listInTransit,
   findByTrackToken, markEmailSent, SHIP_STATUSES,
 };

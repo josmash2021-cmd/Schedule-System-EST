@@ -30,6 +30,42 @@ function fmtDay(iso) {
   return `${p.day}/${p.month}/${p.year} ${p.hour}:${p.minute}`;
 }
 
+// Barra de progreso animada del envío: Enviado → En tránsito → En reparto →
+// Entregado. Usa ship_tag (AfterShip) cuando existe; si no, cae al estado
+// interno (ship_status). El relleno se anima solo al montar/cambiar.
+const SHIP_STEPS = ['Enviado', 'En tránsito', 'En reparto', 'Entregado'];
+function shipStep(o) {
+  const tag = o.ship_tag;
+  if (o.ship_status === 'entregado' || tag === 'Delivered') return 4;
+  if (tag === 'OutForDelivery') return 3;
+  if (tag === 'InTransit') return 2;
+  if (o.ship_status === 'enviado' || o.tracking_number) return 1;
+  return 0;
+}
+function ShipBar({ order }) {
+  const step = shipStep(order);
+  const pct = step === 0 ? 0 : (step / SHIP_STEPS.length) * 100;
+  return (
+    <div className="shipbar">
+      <div className="shipbar-line">
+        <div className="shipbar-fill" style={{ width: pct + '%' }} />
+      </div>
+      <div className="shipbar-steps">
+        {SHIP_STEPS.map((label, i) => {
+          const n = i + 1;
+          return (
+            <div key={label} className={'shipbar-step' + (step >= n ? ' on' : '') + (step === n ? ' current' : '')}>
+              <div className="shipbar-dot" />
+              <span>{label}</span>
+            </div>
+          );
+        })}
+      </div>
+      {step === 0 && <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>Pendiente de envío — guarda el tracking para activar el seguimiento.</div>}
+    </div>
+  );
+}
+
 let SEQ = 1;
 const nuevaLinea = () => ({ uid: SEQ++, name: '', qty: '1', price: '' });
 
@@ -235,6 +271,9 @@ export default function Orders() {
                                   {o.tracking_number
                                     ? <><strong>{o.tracking_number}</strong>{o.carrier ? ` (${String(o.carrier).toUpperCase()})` : ''}</>
                                     : 'sin tracking'}
+                                </div>
+                                <div style={{ marginTop: 12 }}>
+                                  <ShipBar order={o} />
                                 </div>
                                 {o.ship_status !== 'entregado' && (
                                   <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>
