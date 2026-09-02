@@ -16,7 +16,7 @@ function trackLink(order) {
   return `${base}/track?t=${order.track_token}`;
 }
 
-async function sendEmail({ to, subject, html, text }) {
+async function sendEmail({ to, subject, html, text, attachments }) {
   if (!RESEND_API_KEY) {
     console.log(`[email] (sin RESEND_API_KEY, no enviado) → ${to}: ${subject}`);
     return false;
@@ -29,7 +29,10 @@ async function sendEmail({ to, subject, html, text }) {
         Authorization: `Bearer ${RESEND_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ from: EMAIL_FROM, to: [to], subject, html, text }),
+      body: JSON.stringify({
+        from: EMAIL_FROM, to: [to], subject, html, text,
+        ...(attachments && attachments.length ? { attachments } : {}),
+      }),
     });
     if (!res.ok) {
       const body = await res.text().catch(() => '');
@@ -147,4 +150,21 @@ async function sendDeliveredEmail(order) {
   });
 }
 
-module.exports = { sendEmail, sendNewOrderEmails, sendTrackingEmail, sendTransitEmail, sendDeliveredEmail, orderNumber, trackLink };
+// Factura de la orden con el PDF del Bill of Sale adjunto (mismo diseño que
+// el del panel, generado con lib/invoicePdf.js).
+async function sendInvoiceEmail(order, invoice, pdfBuffer) {
+  if (!order.email) return false;
+  const num = invoice.invoice_number || orderNumber(order);
+  const filename = `Factura-${num}.pdf`;
+  return sendEmail({
+    to: order.email,
+    subject: `Tu factura ${num} — ElectronicST`,
+    text: `Adjuntamos tu factura ${num} en PDF. Total: ${usd(invoice.total)}.\nSigue tu pedido aquí: ${trackLink(order)}`,
+    html: plantilla(`Tu factura ${num}`, `
+      <p style="font-size:14px;color:#d5d5da;">Adjuntamos tu factura en PDF. Total: <strong style="color:#fff;">${usd(invoice.total)}</strong>.</p>
+      ${boton(trackLink(order), 'Ver mi pedido')}`),
+    attachments: [{ filename, content: pdfBuffer.toString('base64') }],
+  });
+}
+
+module.exports = { sendEmail, sendNewOrderEmails, sendTrackingEmail, sendTransitEmail, sendDeliveredEmail, sendInvoiceEmail, orderNumber, trackLink };

@@ -6,6 +6,8 @@
    siempre está al día sin intervención del usuario. */
 const express = require('express');
 const orders = require('../models/orders');
+const invoices = require('../models/invoices');
+const { buildInvoicePdf } = require('../lib/invoicePdf');
 const tracking = require('../lib/tracking');
 const email = require('../lib/email');
 const { verifyToken, loadUser, requireRole } = require('../middleware/auth');
@@ -170,6 +172,30 @@ router.patch('/:id', requireRole('admin'), async (req, res) => {
   } catch (err) {
     console.error('orders patch error:', err.message);
     res.status(500).json({ error: 'Error al actualizar la orden.' });
+  }
+});
+
+// POST /:id/send-invoice — envía al cliente su factura por correo con el PDF
+// del Bill of Sale adjunto (mismo diseño que el del panel). La factura ya
+// existe (se crea sola al registrar la orden); si falta, se crea al vuelo.
+router.post('/:id/send-invoice', requireRole('admin'), async (req, res) => {
+  if (!/^\d+$/.test(String(req.params.id))) return res.status(400).json({ error: 'Orden inválida.' });
+  const id = Number(req.params.id);
+  try {
+    const order = await orders.findById(id);
+    if (!order) return res.status(404).json({ error: 'Orden no encontrada.' });
+    if (!order.email) return res.status(400).json({ error: 'La orden no tiene correo del cliente.' });
+
+    const invoice = await invoices.findByOrderId(id) || await invoices.createFromOrder(order);
+    const pdf = await buildInvoicePdf(invoice);
+    const ok = await email.sendInvoiceEmail(order, invoice, pdf);
+    if (!ok) {
+      return res.status(502).json({ error: 'No se pudo enviar el correo (revisa RESEND_API_KEY y el dominio verificado).' });
+    }
+    res.json({ ok: true, invoice_number: invoice.invoice_number });
+  } catch (err) {
+    console.error('send-invoice error:', err.message);
+    res.status(500).json({ error: 'Error al enviar la factura.' });
   }
 });
 

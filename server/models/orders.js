@@ -4,6 +4,15 @@
    hacen en Stripe / trato directo en FB. */
 const crypto = require('crypto');
 const { pool } = require('../db');
+const invoices = require('./invoices');
+
+// Toda orden nueva (web o FB) genera su factura automáticamente con los
+// datos del cliente ya llenos, lista para "Enviar por correo". Un fallo de
+// facturación NUNCA debe impedir registrar la orden.
+function autoInvoice(order) {
+  if (!order) return;
+  invoices.createFromOrder(order).catch((e) => console.error('auto invoice error:', e.message));
+}
 
 // Link secreto de seguimiento del cliente (página pública track.html).
 function newTrackToken() {
@@ -33,6 +42,7 @@ async function createFromStripe(order) {
       newTrackToken(),
     ]
   );
+  autoInvoice(r.rows[0]);
   return r.rows[0] || null;
 }
 
@@ -65,6 +75,7 @@ async function createManual({ customer_name, email, phone, address, items, total
       newTrackToken(),
     ]
   );
+  autoInvoice(r.rows[0]);
   return r.rows[0];
 }
 
@@ -114,6 +125,11 @@ async function findByTrackToken(token) {
   return r.rows[0] || null;
 }
 
+async function findById(id) {
+  const r = await pool.query('SELECT * FROM online_orders WHERE id = $1', [id]);
+  return r.rows[0] || null;
+}
+
 // Marca un correo como enviado para no reenviarlo (whitelist estricta).
 const EMAIL_FLAGS = ['email_shipped', 'email_transit', 'email_delivered'];
 async function markEmailSent(id, flag) {
@@ -124,5 +140,5 @@ async function markEmailSent(id, flag) {
 module.exports = {
   createFromStripe, createManual, listAll, listSessionIds,
   updateTracking, updateShipStatus, updateShipTag, listInTransit,
-  findByTrackToken, markEmailSent, SHIP_STATUSES,
+  findByTrackToken, findById, markEmailSent, SHIP_STATUSES,
 };

@@ -212,6 +212,18 @@ export default function Orders() {
     setBusy(false);
   };
 
+  // Enviar la factura (PDF del Bill of Sale) al correo del cliente.
+  const [sendingInvoice, setSendingInvoice] = useState(null);
+  const [invoiceSent, setInvoiceSent] = useState({}); // { [orderId]: 'EST-0001' }
+  const enviarFactura = async (o) => {
+    setSendingInvoice(o.id); setErr('');
+    try {
+      const d = await api('/orders/' + o.id + '/send-invoice', { method: 'POST' });
+      setInvoiceSent((m) => ({ ...m, [o.id]: d.invoice_number }));
+    } catch (e) { setErr(e.message); }
+    setSendingInvoice(null);
+  };
+
   const pendientes = useMemo(() => (orders || []).filter((o) => o.ship_status === 'pendiente').length, [orders]);
 
   if (creating) {
@@ -295,6 +307,21 @@ export default function Orders() {
                               </div>
                               <div style={{ marginTop: 12 }}>
                                 <ShipBar order={o} />
+                              </div>
+                              <div className="row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                                {o.email ? (
+                                  invoiceSent[o.id] ? (
+                                    <span className="badge badge-atendida">Factura {invoiceSent[o.id]} enviada ✓</span>
+                                  ) : (
+                                    <button className="btn btn-secondary btn-sm" disabled={sendingInvoice === o.id}
+                                      onClick={() => enviarFactura(o)}
+                                      title={`Enviar la factura en PDF a ${o.email}`}>
+                                      {sendingInvoice === o.id ? <span className="spinner" /> : 'Enviar factura por correo'}
+                                    </button>
+                                  )
+                                ) : (
+                                  <span className="muted" style={{ fontSize: 12 }}>Sin correo del cliente: la factura no se puede enviar.</span>
+                                )}
                               </div>
                               {o.ship_status !== 'entregado' && (
                                 <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>

@@ -1,7 +1,10 @@
 /* Facturas (Bill of Sale): /x/s/invoices
-   Listar, crear, actualizar y eliminar facturas: solo admin. */
+   Listar, crear, actualizar y eliminar facturas: solo admin.
+   GET /:id/pdf descarga el PDF del documento (mismo diseño que el panel,
+   generado server-side con lib/invoicePdf.js). */
 const express = require('express');
 const invoices = require('../models/invoices');
+const { buildInvoicePdf } = require('../lib/invoicePdf');
 const audit = require('../models/audit');
 const { verifyToken, loadUser, requireRole } = require('../middleware/auth');
 const { getClientIp } = require('../lib/rateLimit');
@@ -18,8 +21,24 @@ router.get('/', requireRole('admin'), async (_req, res) => {
   }
 });
 
-router.get('/:id', requireRole('admin'), async (req, res) => {
+// PDF del documento (misma generación que el adjunto del correo).
+router.get('/:id/pdf', requireRole('admin'), async (req, res) => {
   const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id < 1) return res.status(404).json({ error: 'Factura no encontrada.' });
+  try {
+    const inv = await invoices.findById(id);
+    if (!inv) return res.status(404).json({ error: 'Factura no encontrada.' });
+    const pdf = await buildInvoicePdf(inv);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="Factura-${inv.invoice_number || id}.pdf"`);
+    res.send(pdf);
+  } catch (err) {
+    console.error('invoice pdf error:', err.message);
+    res.status(500).json({ error: 'No se pudo generar el PDF.' });
+  }
+});
+
+router.get('/:id', requireRole('admin'), async (req, res) => {  const id = Number(req.params.id);
   if (!Number.isInteger(id) || id < 1) return res.status(404).json({ error: 'Factura no encontrada.' });
   try {
     const inv = await invoices.findById(id);

@@ -37,6 +37,7 @@ function normalizeFields(body) {
   for (const k of textFields) if (b[k] !== undefined) fields[k] = trim(b[k], k === 'warranty_text' || k === 'terms_text' ? 4000 : 400);
   if (b.sale_id !== undefined) fields.sale_id = /^\d+$/.test(String(b.sale_id)) ? Number(b.sale_id) : null;
   if (b.repair_id !== undefined) fields.repair_id = /^\d+$/.test(String(b.repair_id)) ? Number(b.repair_id) : null;
+  if (b.order_id !== undefined) fields.order_id = /^\d+$/.test(String(b.order_id)) ? Number(b.order_id) : null;
   if (b.sale_date !== undefined) fields.sale_date = trim(b.sale_date, 10) || null;
   if (b.sale_time !== undefined) fields.sale_time = trim(b.sale_time, 8) || null;
   if (b.payment_method !== undefined && fields.payment_method && !PAYMENT_METHODS.includes(fields.payment_method)) fields.payment_method = null;
@@ -107,4 +108,64 @@ async function remove(id) {
   return r.rowCount > 0;
 }
 
-module.exports = { listAll, findById, create, update, remove };
+// Factura de una orden de envío (website/FB). Devuelve null si ya existe una
+// para esa orden (no duplicar).
+async function findByOrderId(orderId) {
+  const r = await pool.query('SELECT * FROM invoices WHERE order_id = $1 ORDER BY id DESC LIMIT 1', [orderId]);
+  const row = r.rows[0] || null;
+  if (row && typeof row.items === 'string') row.items = JSON.parse(row.items);
+  return row;
+}
+
+// Crea la factura de la orden con TODOS los datos del cliente ya llenos:
+// solo queda darle "Enviar por correo". La dirección de la orden viene como
+// "Nombre | calle | ciudad, estado, zip" — se quita el nombre para no
+// repetirlo y se une con comas.
+async function createFromOrder(order) {
+  const existing = await findByOrderId(order.id);
+  if (existing) return existing;
+
+  let address = order.address || null;
+  if (address && order.customer_name && address.startsWith(order.customer_name + ' | ')) {
+    address = address.slice(order.customer_name.length + 3);
+  }
+  if (address) address = address.split(' | ').filter(Boolean).join(', ');
+
+  const when = order.created_at ? new Date(order.created_at) : new Date();
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }).formatToParts(when).reduce((a, x) => { a[x.type] = x.value; return a; }, {});
+
+  const items = (order.items || []).map((i) => ({
+    description: String(i.name || '').slice(0, 200),
+    qty: Number(i.qty) || 1,
+    price: Number(i.price) || 0,
+  }));
+  const total = Number(order.total) || items.reduce((a, i) => a + i.qty * i.price, 0);
+
+  return create({
+    order_id: order.id,
+    seller_name: 'ElectronicST, LLC',
+    seller_address: '3659 Lorna Rd Suite 157, Hoover, AL 35216',
+    seller_phone: '(205) 573-7840',
+    seller_email: 'ventas@electronicservicetechnology.com',
+    buyer_name: order.customer_name || null,
+    buyer_address: address,
+    buyer_phone: order.phone || null,
+    buyer_email: order.email || null,
+    sale_date: `${parts.year}-${parts.month}-${parts.day}`,
+    sale_time: `${parts.hour}:${parts.minute}`,
+    // Las compras web son tarjeta vía Stripe; las de FB Marketplace se cobran
+    // fuera — quedan como 'otro' para no inventar el método.
+    payment_method: order.origen === 'fb_marketplace' ? 'otro' : 'tarjeta',
+    tax_rate: 0, // el impuesto ya viene como línea dentro de items
+    subtotal: total,
+    tax_total: 0,
+    total,
+    items,
+    warranty_text: '30-Day Limited Warranty',
+  }, null);
+}
+
+module.exports = { listAll, findById, create, update, remove, findByOrderId, createFromOrder };

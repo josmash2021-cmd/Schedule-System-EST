@@ -79,9 +79,15 @@ cambies estructura, flujos o convenciones.
 - **Correos transaccionales:** `server/lib/email.js` (Resend vía fetch, sin
   dependencias; env `RESEND_API_KEY`, `EMAIL_FROM`, `OWNER_EMAIL`). Se envían:
   nuevo pedido (dueño + confirmación al cliente con link `/track?t=`), "va en
-  camino" al guardar tracking, "en tránsito" y "entregado" (vía AfterShip).
+  camino" al guardar tracking, "en tránsito" y "entregado" (vía AfterShip), y
+  la factura con PDF adjunto (`POST /x/s/orders/:id/send-invoice`).
   Flags en `online_orders` (`email_shipped/transit/delivered`) para no
   reenviar. Sin key solo loguea y sigue.
+- **Facturas automáticas por orden:** al registrarse una orden (web o FB) se
+  crea sola su factura (`invoices.order_id`, `invoices.createFromOrder`) con
+  todos los datos del cliente. El PDF del Bill of Sale se genera server-side
+  con `server/lib/invoicePdf.js` (pdfkit) — `GET /x/s/invoices/:id/pdf`
+  descarga y el correo de factura lo adjunta.
 - Modelos (SQL directo con `pg`): `server/models/` — `users.js`,
   `repairs.js`, `inventory.js`, `tasks.js`, `timeEntries.js`, `audit.js`,
   `invoices.js` (tabla `invoices`: Bill of Sale ligado a `sale_id` o

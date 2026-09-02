@@ -389,6 +389,27 @@ export default function Invoices() {
 
   const imprimir = () => window.print();
 
+  // Descarga el PDF del documento (generado en el server, mismo diseño).
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const descargarPdf = async () => {
+    if (!viewInv) return;
+    setDownloadingPdf(true);
+    try {
+      const res = await fetch(`/x/s/invoices/${viewInv.id}/pdf`, {
+        headers: { Authorization: `Bearer ${sessionStorage.getItem('est_office_token') || ''}` },
+      });
+      if (!res.ok) throw new Error('No se pudo generar el PDF.');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Factura-${viewInv.invoice_number || viewInv.id}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) { setErr(e.message); }
+    setDownloadingPdf(false);
+  };
+
   const compartir = async () => {
     const inv = viewInv;
     const texto = `Factura ${inv.invoice_number || '#' + inv.id} — ${inv.seller_name || 'ElectronicST, LLC'} — Total ${usd.format(Number(inv.total) || 0)}`;
@@ -415,6 +436,9 @@ export default function Invoices() {
           <button className="btn btn-secondary btn-sm" onClick={() => setMode('list')}>← Volver</button>
           <div className="spacer" />
           <button className="btn btn-secondary btn-sm" onClick={() => editar(viewInv)}>Editar</button>
+          <button className="btn btn-secondary btn-sm" onClick={descargarPdf} disabled={downloadingPdf}>
+            {downloadingPdf ? <span className="spinner" /> : 'Descargar PDF'}
+          </button>
           <button className="btn btn-secondary btn-sm" onClick={compartir}>Compartir</button>
           <button className="btn btn-primary btn-sm" onClick={imprimir}>Imprimir / PDF</button>
         </div>

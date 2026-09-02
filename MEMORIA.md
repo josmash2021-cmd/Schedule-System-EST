@@ -550,7 +550,19 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   "en tránsito" y "entregado" (job AfterShip; flags `email_shipped/transit/
   delivered` para no reenviar). OJO Resend: sin dominio verificado, el plan
   gratis solo envía al correo de la propia cuenta; para clientes hay que
-  verificar el dominio (DNS) en resend.com. Ventas y Dashboard suman 3 fuentes
+  verificar el dominio (DNS) en resend.com.
+  **Facturas automáticas + PDF (2026-09-02):** cada orden nueva (web o FB)
+  genera su factura sola (`invoices.order_id`, `createFromOrder`: buyer con
+  nombre/email/teléfono/dirección de la orden, items tal cual — incluidas las
+  líneas Impuestos/Envío —, tax_rate 0, payment 'tarjeta' web / 'otro' FB,
+  fecha-hora America/Chicago, garantía 30 días, seller ElectronicST). El PDF
+  del Bill of Sale se dibuja server-side con pdfkit
+  (`server/lib/invoicePdf.js`, réplica del diseño del panel; logo medido por
+  cabecera PNG para no solapar). `GET /x/s/invoices/:id/pdf` lo descarga
+  (botón "Descargar PDF" en la vista de factura) y
+  `POST /x/s/orders/:id/send-invoice` lo adjunta en un correo Resend al
+  cliente (botón "Enviar factura por correo" en el detalle de la orden; las
+  órdenes viejas crean su factura al vuelo aquí). Ventas y Dashboard suman 3 fuentes
   (reparaciones entregadas + mostrador + online; costo 0 en online porque el
   catálogo web no está ligado al inventario). En la tabla de Ventas, cada
   orden online tiene badge "online" y botón Detalle que expande cliente,

@@ -349,6 +349,10 @@ async function initDb() {
     await client.query(`CREATE INDEX IF NOT EXISTS idx_invoices_sale ON invoices(sale_id);`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_invoices_repair ON invoices(repair_id);`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_invoices_number ON invoices(invoice_number);`);
+    // Factura automática por orden de envío (website/FB): se crea sola con
+    // los datos del cliente al registrarse la orden.
+    await client.query(`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS order_id INTEGER REFERENCES online_orders(id) ON DELETE SET NULL;`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_invoices_order ON invoices(order_id);`);
 
     // Sembrar el primer admin desde ADMIN_PASSWORD (idempotente): solo si aún
     // no existe ningún admin. Nace con must_change_password para forzar rotación.
