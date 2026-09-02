@@ -369,8 +369,12 @@ table.data tbody tr:hover td { background: #f5f5f6; }
 .badge-online { background: #111; color: #fff; border-color: #111; border-style: dashed; }
 /* Órdenes manuales de FB Marketplace: outline punteado sin relleno. */
 .badge-fb { background: #fff; color: #111; border-color: #111; border-style: dashed; }
-.order-detail { display: grid; gap: 4px; font-size: 13.5px; }
+.order-detail { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 24px; font-size: 13.5px; }
 .order-detail ul li { margin: 2px 0; }
+.od-full { grid-column: 1 / -1; }
+@media (max-width: 900px) {
+  .order-detail { grid-template-columns: 1fr; }
+}
 
 /* Barra de progreso del envío (página Órdenes): 4 pasos con relleno animado. */
 .shipbar { max-width: 560px; }

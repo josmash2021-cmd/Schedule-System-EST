@@ -27,6 +27,7 @@ async function syncFromStripe() {
   lastSync = Date.now();
 
   const stripe = require('stripe')(STRIPE_SECRET_KEY);
+  const { getItem } = require('../catalog');
   // Últimas 100 sesiones de checkout: cubre el historial de una tienda
   // pequeña y las compras hechas antes de que existiera el webhook.
   const list = await stripe.checkout.sessions.list({ limit: 100 });
@@ -34,6 +35,12 @@ async function syncFromStripe() {
   for (const s of list.data || []) {
     if (s.status !== 'complete' || s.payment_status !== 'paid') continue;
     if (existing.has(s.id)) continue; // ya guardada: no gastar otra llamada
+    // Solo importar sesiones de ESTA tienda: nuestro checkout siempre deja
+    // metadata.items con ids del catálogo. La misma cuenta de Stripe se usó
+    // para otro servicio (AI AETHEL) y esas sesiones NO deben entrar.
+    let metaItems = [];
+    try { metaItems = JSON.parse((s.metadata && s.metadata.items) || '[]'); } catch (_) { metaItems = []; }
+    if (!metaItems.length || !metaItems.some((m) => getItem(String(m && m.id || '')))) continue;
     let items = [];
     try {
       const li = await stripe.checkout.sessions.listLineItems(s.id, { limit: 100 });
@@ -63,9 +70,9 @@ async function syncFromStripe() {
     if (saved) {
       email.sendNewOrderEmails(saved).catch((e) => console.error('Order emails failed:', e.message));
       // Inventario: descontar stock y guardar el costo real (igual que el
-      // webhook; solo si la orden se insertó ahora).
+      // webhook; solo si la orden se insertó ahora). metaItems ya viene
+      // parseado del filtro de arriba.
       try {
-        const metaItems = JSON.parse((s.metadata && s.metadata.items) || '[]');
         const costo = await orders.applySaleToInventory(metaItems);
         if (costo > 0) await orders.setCosto(saved.id, costo);
       } catch (e) {

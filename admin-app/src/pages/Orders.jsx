@@ -30,10 +30,14 @@ function fmtDay(iso) {
   return `${p.day}/${p.month}/${p.year} ${p.hour}:${p.minute}`;
 }
 
-// Teléfono en formato US: +12055550111 → (205) 555-0111.
+// Teléfono en formato US: "+12055550111" → "(205) 555-0111". Si trae código
+// de país de más dígitos, se toman los últimos 10; si no cuadra, se muestra
+// tal cual.
 function fmtPhone(p) {
   if (!p) return '—';
-  const digits = String(p).replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
+  let digits = String(p).replace(/\D/g, '');
+  if (digits.length === 11 && digits.startsWith('1')) digits = digits.slice(1);
+  if (digits.length > 11) digits = digits.slice(-10);
   if (digits.length === 10) return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
   return p;
 }
@@ -309,49 +313,56 @@ export default function Orders() {
                         <tr>
                           <td colSpan="6" style={{ background: '#f8f9fb' }}>
                             <div className="order-detail">
-                              <div><span className="muted">Cliente:</span> <strong>{o.customer_name || '—'}</strong></div>
-                              <div><span className="muted">Email:</span> {o.email || '—'}</div>
-                              <div><span className="muted">Teléfono:</span> {fmtPhone(o.phone)}</div>
-                              <div className="row" style={{ gap: 8, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                                <span><span className="muted">Dirección de envío:</span><br />
-                                  <span style={{ whiteSpace: 'pre-line' }}>{fmtAddress(o.address)}</span>
-                                </span>
-                                {o.address && (
-                                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => copiarDireccion(o)}
-                                    title="Copiar dirección">
-                                    {copiedId === o.id ? '✓ Copiada' : 'Copiar'}
-                                  </button>
-                                )}
+                              <div className="od-col">
+                                <div><span className="muted">Cliente:</span> <strong>{o.customer_name || '—'}</strong></div>
+                                <div><span className="muted">Email:</span> {o.email || '—'}</div>
+                                <div><span className="muted">Teléfono:</span> {fmtPhone(o.phone)}</div>
                               </div>
-                              <div>
-                                <span className="muted">Artículos:</span>
-                                <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
-                                  {(o.items || []).map((i, idx) => (
-                                    <li key={idx}>{i.qty > 1 ? `${i.qty}× ` : ''}{i.name} — {usd.format(Number(i.price) || 0)}</li>
-                                  ))}
-                                </ul>
-                                <div style={{ marginTop: 6 }}>
-                                  <span className="muted">Total que pagó el cliente:</span>{' '}
-                                  <strong>{usd.format(Number(o.total) || 0)}</strong>
+                              <div className="od-col">
+                                <div>
+                                  <div className="row" style={{ gap: 8, alignItems: 'center', marginBottom: 4 }}>
+                                    <span className="muted">Dirección de envío</span>
+                                    {o.address && (
+                                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => copiarDireccion(o)}
+                                        title="Copiar dirección">
+                                        {copiedId === o.id ? '✓ Copiada' : 'Copiar'}
+                                      </button>
+                                    )}
+                                  </div>
+                                  <span style={{ whiteSpace: 'pre-line' }}>{fmtAddress(o.address)}</span>
                                 </div>
                               </div>
-                              <div>
-                                <span className="muted">Costo del producto:</span> {usd.format(Number(o.costo) || 0)}
-                                {' · '}
-                                <span className="muted">Ganancia:</span>{' '}
-                                <strong>{usd.format((Number(o.total) || 0) - (Number(o.costo) || 0))}</strong>
-                                {Number(o.costo) === 0 && <span className="muted" style={{ fontSize: 12 }}> (sin costo registrado)</span>}
+                              <div className="od-col">
+                                <div>
+                                  <span className="muted">Artículos:</span>
+                                  <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
+                                    {(o.items || []).map((i, idx) => (
+                                      <li key={idx}>{i.qty > 1 ? `${i.qty}× ` : ''}{i.name} — {usd.format(Number(i.price) || 0)}</li>
+                                    ))}
+                                  </ul>
+                                  <div style={{ marginTop: 6 }}>
+                                    <span className="muted">Total que pagó el cliente:</span>{' '}
+                                    <strong>{usd.format(Number(o.total) || 0)}</strong>
+                                  </div>
+                                </div>
+                                <div>
+                                  <span className="muted">Costo del producto:</span> {usd.format(Number(o.costo) || 0)}
+                                  {' · '}
+                                  <span className="muted">Ganancia:</span>{' '}
+                                  <strong>{usd.format((Number(o.total) || 0) - (Number(o.costo) || 0))}</strong>
+                                  {Number(o.costo) === 0 && <span className="muted" style={{ fontSize: 12 }}> (sin costo registrado)</span>}
+                                </div>
                               </div>
-                              <div style={{ marginTop: 8, borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 10 }}>
+                              <div className="od-full" style={{ marginTop: 8, borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 10 }}>
                                 <span className="muted">Tracking:</span>{' '}
                                 {o.tracking_number
                                   ? <><strong>{o.tracking_number}</strong>{o.carrier ? ` (${String(o.carrier).toUpperCase()})` : ''}</>
                                   : 'sin tracking'}
                               </div>
-                              <div style={{ marginTop: 12 }}>
+                              <div className="od-full" style={{ marginTop: 12 }}>
                                 <ShipBar order={o} />
                               </div>
-                              <div className="row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                              <div className="od-full row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap', alignItems: 'center' }}>
                                 {o.email ? (
                                   invoiceSent[o.id] ? (
                                     <span className="badge badge-atendida">Factura {invoiceSent[o.id]} enviada ✓</span>
@@ -367,7 +378,7 @@ export default function Orders() {
                                 )}
                               </div>
                               {o.ship_status !== 'entregado' && (
-                                <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                                <div className="od-full row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                                   <input
                                     style={{ width: 220 }}
                                     placeholder="Número de tracking"
