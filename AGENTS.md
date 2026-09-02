@@ -86,9 +86,12 @@ cambies estructura, flujos o convenciones.
   descripción** (los items se enriquecen en el webhook/sync con
   `catalog.enrichLineItems`, que guarda `img`/`desc` en inglés en el JSONB) y
   el desglose Subtotal / Tax / Shipping / Total paid. El borde inferior de la
-  tarjeta es una sierra tipo recibo (`assets/img/receipt-edge.png`) y la
+  tarjeta es una sierra tipo recibo **gris** (`assets/img/receipt-edge.png`,
+  dientes #e5e5e8 del color del fondo, sutiles también en modo oscuro) y la
   confirmación adjunta el **recibo PDF** sola (la factura se crea con
-  `await autoInvoice` antes de los correos). Teléfono del pie: (385) 461-2042.
+  `await autoInvoice` antes de los correos; el PDF va **todo en inglés**:
+  fecha MM/DD/YYYY, método de pago traducido, footer "Thank you…").
+  Teléfono del pie: (385) 461-2042.
   Se envían:
   nuevo pedido (dueño + confirmación al cliente con link `/track?t=`), "va en
   camino" al guardar tracking, "en tránsito" y "entregado" (vía AfterShip), y
