@@ -1,14 +1,14 @@
 /* Generador del PDF del Bill of Sale con pdfkit: replica el diseño del
    documento del panel (InvoiceDoc): header con logo, cajas Seller/Buyer,
-   Sale Information, tabla de artículos, totales, garantía y firmas.
+   Sale Information, tabla de artículos, totales, garantía y términos.
    Letter (612×792 pt), monocromo, fuentes Helvetica de serie. */
 const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
 
-// Versión oscura del logo (letras negras): la normal es blanca y no se ve
+// Versión negra del logo (letras negras): la normal es blanca y no se ve
 // sobre el fondo blanco del documento.
-const LOGO = path.resolve(__dirname, '..', 'public', 'assets', 'img', 'logo-dark.png');
+const LOGO = path.resolve(__dirname, '..', 'public', 'assets', 'img', 'logo-black.png');
 
 const money = (n) => `$${Number(n || 0).toFixed(2)}`;
 
@@ -208,16 +208,6 @@ function buildInvoicePdf(inv) {
         .text(String(v), M + 14, y + 32, { width: CW - 28 });
       y += h + 12;
     }
-
-    // ---------- Firmas ----------
-    y = Math.max(y + 26, 640);
-    const sigW = 200;
-    const sigY = y + 30;
-    doc.moveTo(M + 30, sigY).lineTo(M + 30 + sigW, sigY).lineWidth(0.8).strokeColor('#111').stroke();
-    doc.moveTo(PW - M - 30 - sigW, sigY).lineTo(PW - M - 30, sigY).stroke();
-    doc.font('Helvetica').fontSize(8.5).fillColor('#55555c');
-    doc.text('Firma del vendedor', M + 30, sigY + 6, { width: sigW, align: 'center' });
-    doc.text('Firma del comprador', PW - M - 30 - sigW, sigY + 6, { width: sigW, align: 'center' });
 
     // ---------- Footer ----------
     doc.font('Helvetica').fontSize(8.5).fillColor('#8a8a92')
