@@ -6,7 +6,9 @@ const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
 
-const LOGO = path.resolve(__dirname, '..', 'public', 'assets', 'img', 'logo-cruise.png');
+// Versión oscura del logo (letras negras): la normal es blanca y no se ve
+// sobre el fondo blanco del documento.
+const LOGO = path.resolve(__dirname, '..', 'public', 'assets', 'img', 'logo-dark.png');
 
 const money = (n) => `$${Number(n || 0).toFixed(2)}`;
 

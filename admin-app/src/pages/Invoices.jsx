@@ -62,7 +62,8 @@ function InvoiceDoc({ inv, items }) {
   return (
     <div className="invoice-doc">
       <div className="idoc-head">
-        <img className="idoc-logo" src="/x/static/img/logo-cruise.png" alt="ElectronicST" />
+        {/* Logo oscuro: el normal es blanco y no se ve sobre el papel blanco. */}
+        <img className="idoc-logo" src="/x/static/img/logo-dark.png" alt="ElectronicST" />
         <div className="idoc-brand">
           <div className="idoc-brand-name">{inv.seller_name || 'ElectronicST, LLC'}</div>
           <div className="idoc-brand-sub">SALES &amp; REPAIR SERVICE</div>
