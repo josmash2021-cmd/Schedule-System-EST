@@ -25,11 +25,16 @@ function fmtDate(v) {
   const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   return m ? `${m[2]}/${m[3]}/${m[1]}` : s;
 }
+// Hora en formato 12h (5:44 PM), no 24h.
 function fmtTime(v) {
   if (!v) return '—';
   const s = String(v);
   const m = s.match(/^(\d{2}):(\d{2})/);
-  return m ? `${m[1]}:${m[2]}` : s;
+  if (!m) return s;
+  let h = Number(m[1]);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${h}:${m[2]} ${ampm}`;
 }
 
 // El método de pago se guarda en español en la DB; el PDF va en inglés.
@@ -134,7 +139,7 @@ function buildInvoicePdf(inv) {
     const halfW = CW / 2;
     const saleRows = [
       ['Date:', fmtDate(inv.sale_date), 'Time:', fmtTime(inv.sale_time)],
-      ['Payment Method:', fmtPayment(inv.payment_method), 'Tax Rate:', `${Number(inv.tax_rate || 0)}%`],
+      ['Payment Method:', fmtPayment(inv.payment_method), '', ''],
     ];
     saleRows.forEach((r, i) => {
       const ry = rowY + i * 16;
@@ -147,9 +152,10 @@ function buildInvoicePdf(inv) {
 
     // ---------- Items ----------
     const items = (inv.items || []).filter((i) => i && (i.description || i.name));
+    const conDesc = items.some((i) => i.desc);
     const tableTop = y;
     const headH = 24;
-    const rowH = 20;
+    const rowH = conDesc ? 34 : 20; // filas más altas cuando hay descripción
     const subtotal = Number(inv.subtotal) || items.reduce((a, i) => a + (Number(i.qty) || 1) * (Number(i.price) || 0), 0);
     const taxTotal = Number(inv.tax_total) || 0;
     const total = Number(inv.total) || (subtotal + taxTotal);
@@ -169,17 +175,22 @@ function buildInvoicePdf(inv) {
     doc.text('AMOUNT', cAmt, tY, { width: 86, align: 'right', characterSpacing: 1 });
     doc.moveTo(M + 14, tY + 12).lineTo(PW - M - 14, tY + 12).lineWidth(0.7).strokeColor('#999999').stroke();
 
-    // Filas
+    // Filas: título del artículo en negrita y descripción debajo en gris.
     let ry = tY + headH;
-    doc.font('Helvetica').fontSize(10).fillColor('#111');
     for (const i of items) {
       const qty = Number(i.qty) || 1;
       const price = Number(i.price) || 0;
+      doc.font('Helvetica-Bold').fontSize(10).fillColor('#111');
       doc.text(String(i.description || i.name), M + 14, ry, { width: cQty - M - 30 });
+      if (i.desc) {
+        doc.font('Helvetica').fontSize(8.5).fillColor('#8a8a92');
+        doc.text(String(i.desc), M + 14, ry + 13, { width: cQty - M - 30 });
+      }
+      doc.font('Helvetica').fontSize(10).fillColor('#111');
       doc.text(String(qty), cQty, ry, { width: 50, align: 'center' });
       doc.text(money(price), cPrice, ry, { width: 80, align: 'right' });
       doc.text(money(qty * price), cAmt, ry, { width: 86, align: 'right' });
-      doc.moveTo(M + 14, ry + 14).lineTo(PW - M - 14, ry + 14).lineWidth(0.4).strokeColor('#e2e2e6').stroke();
+      doc.moveTo(M + 14, ry + rowH - 6).lineTo(PW - M - 14, ry + rowH - 6).lineWidth(0.4).strokeColor('#e2e2e6').stroke();
       ry += rowH;
     }
 

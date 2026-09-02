@@ -97,7 +97,6 @@ function InvoiceDoc({ inv, items }) {
           <div className="idoc-line"><b>Date:</b> <span>{inv.sale_date ? inv.sale_date.split('-').reverse().join('/') : '—'}</span></div>
           <div className="idoc-line"><b>Time:</b> <span>{inv.sale_time || '—'}</span></div>
           <div className="idoc-line"><b>Payment Method:</b> <span>{pago}</span></div>
-          <div className="idoc-line"><b>Tax Rate:</b> <span>{rate}%</span></div>
         </div>
       </div>
 
@@ -110,7 +109,7 @@ function InvoiceDoc({ inv, items }) {
           <tbody>
             {items.filter((it) => it.description || Number(it.price)).map((it) => (
               <tr key={it.uid ?? it.description}>
-                <td>{it.description || '—'}</td>
+                <td>{it.description || '—'}{it.desc && <div style={{ fontSize: 12, color: '#8a8a92', marginTop: 2 }}>{it.desc}</div>}</td>
                 <td className="c">{it.qty}</td>
                 <td className="r">{usd.format(Number(it.price) || 0)}</td>
                 <td className="r">{usd.format((Number(it.qty) || 0) * (Number(it.price) || 0))}</td>

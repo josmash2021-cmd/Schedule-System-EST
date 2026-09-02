@@ -137,8 +137,11 @@ async function createFromOrder(order) {
     hour: '2-digit', minute: '2-digit', hour12: false,
   }).formatToParts(when).reduce((a, x) => { a[x.type] = x.value; return a; }, {});
 
+  // desc (opcional): descripción corta del producto del catálogo, va debajo
+  // del título en el PDF del recibo.
   const items = (order.items || []).map((i) => ({
     description: String(i.name || '').slice(0, 200),
+    ...(i.desc ? { desc: String(i.desc).slice(0, 200) } : {}),
     qty: Number(i.qty) || 1,
     price: Number(i.price) || 0,
   }));
