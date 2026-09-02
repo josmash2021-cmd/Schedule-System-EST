@@ -73,7 +73,15 @@ export default function Inventory() {
       if (!map[cat]) map[cat] = [];
       map[cat].push(i);
     }
-    return Object.entries(map).sort(([a], [b]) => a.localeCompare(b, 'es'));
+    // Orden fijo de la tienda (no alfabético): teléfonos primero, repuestos
+    // al final; lo que no esté en la lista va antes de "Sin categoría".
+    const ORDEN = ['Teléfonos', 'Tablets', 'Laptop Apple', 'Laptops Windows', 'PC Gaming', 'Consolas', 'Audífonos', 'Accesorios', 'Repuestos'];
+    return Object.entries(map).sort(([a], [b]) => {
+      const ia = ORDEN.indexOf(a), ib = ORDEN.indexOf(b);
+      const ra = ia === -1 ? (a === 'Sin categoría' ? 999 : 500) : ia;
+      const rb = ib === -1 ? (b === 'Sin categoría' ? 999 : 500) : ib;
+      return ra !== rb ? ra - rb : a.localeCompare(b, 'es');
+    });
   }, [visible]);
 
   // Resumen contable del mes seleccionado (navegación ‹ ›): inversión en

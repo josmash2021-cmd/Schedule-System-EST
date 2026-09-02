@@ -4,11 +4,15 @@ import { api, apiUpload } from '../api.js';
 export const money = (n) => (n == null || n === '' ? '—' : '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }));
 
 const CATEGORIES = [
-  { value: 'Laptop Apple', label: 'Laptop Apple' },
-  { value: 'Tablets', label: 'Tablets' },
-  { value: 'Laptops Windows', label: 'Laptops Windows' },
   { value: 'Teléfonos', label: 'Teléfonos' },
+  { value: 'Tablets', label: 'Tablets' },
+  { value: 'Laptop Apple', label: 'Laptop Apple' },
+  { value: 'Laptops Windows', label: 'Laptops Windows' },
   { value: 'PC Gaming', label: 'PC Gaming' },
+  { value: 'Consolas', label: 'Consolas' },
+  { value: 'Audífonos', label: 'Audífonos' },
+  { value: 'Accesorios', label: 'Accesorios' },
+  { value: 'Repuestos', label: 'Repuestos' },
 ];
 
 const EMPTY = { name: '', sku: '', category: '', description: '', price: '', cost: '', stock: '' };
