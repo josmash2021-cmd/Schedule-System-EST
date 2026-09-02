@@ -7,6 +7,7 @@
 const express = require('express');
 const orders = require('../models/orders');
 const tracking = require('../lib/tracking');
+const email = require('../lib/email');
 const { verifyToken, loadUser, requireRole } = require('../middleware/auth');
 const { STRIPE_SECRET_KEY } = require('../config');
 
@@ -43,7 +44,7 @@ async function syncFromStripe() {
       address = [sd.name, a.line1, a.line2, [a.city, a.state, a.postal_code].filter(Boolean).join(', ')].filter(Boolean).join(' | ');
     }
     const cd = s.customer_details || {};
-    await orders.createFromStripe({
+    const saved = await orders.createFromStripe({
       sessionId: s.id,
       customerName: sd && sd.name ? sd.name : cd.name,
       email: cd.email,
@@ -54,6 +55,11 @@ async function syncFromStripe() {
       currency: s.currency,
       createdAt: s.created ? new Date(s.created * 1000) : null, // fecha real del pago
     });
+    // Correos de pedido nuevo (dueño + confirmación al cliente) también para
+    // órdenes recuperadas por sync — el webhook pudo no haber llegado.
+    if (saved) {
+      email.sendNewOrderEmails(saved).catch((e) => console.error('Order emails failed:', e.message));
+    }
   }
 }
 
@@ -109,6 +115,11 @@ router.post('/', requireRole('admin'), async (req, res) => {
       items,
       total,
     });
+    // Correo de confirmación al cliente con su link de seguimiento (si dio
+    // correo); si no, el dueño puede reenviar el link por WhatsApp.
+    if (order.email) {
+      email.sendNewOrderEmails(order).catch((e) => console.error('Order emails failed:', e.message));
+    }
     res.status(201).json({ order });
   } catch (err) {
     console.error('orders create error:', err.message);
@@ -147,6 +158,14 @@ router.patch('/:id', requireRole('admin'), async (req, res) => {
       tracking_id: trackingId,
     });
     if (!order) return res.status(404).json({ error: 'Orden no encontrada.' });
+    // Correo "tu pedido va en camino" al cliente, una sola vez (el flag se
+    // marca solo si el correo realmente salió; sin RESEND_API_KEY no se marca
+    // y se reintenta en el próximo guardado de tracking).
+    if (!order.email_shipped) {
+      email.sendTrackingEmail(order)
+        .then((ok) => { if (ok) return orders.markEmailSent(id, 'email_shipped'); })
+        .catch((e) => console.error('Tracking email failed:', e.message));
+    }
     res.json({ order, tracking_activo: Boolean(trackingId) });
   } catch (err) {
     console.error('orders patch error:', err.message);

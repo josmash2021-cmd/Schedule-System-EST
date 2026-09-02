@@ -41,6 +41,14 @@ const TWILIO_SMS_FROM = process.env.TWILIO_SMS_FROM;
 // las órdenes se marca manual en el panel.
 const AFTERSHIP_API_KEY = process.env.AFTERSHIP_API_KEY;
 
+// Resend (correos transaccionales, opcional): sin key, los correos se loguean
+// y no se envían — el resto del flujo sigue igual. EMAIL_FROM debe ser un
+// remitente de un dominio verificado en Resend (onboarding@resend.dev solo
+// sirve para pruebas hacia el propio correo de la cuenta).
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const EMAIL_FROM = process.env.EMAIL_FROM || 'ElectronicST <pedidos@electronicservicetechnology.com>';
+const OWNER_EMAIL = process.env.OWNER_EMAIL;
+
 // Stripe (pagos)
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
@@ -87,6 +95,9 @@ module.exports = {
   TWILIO_AUTH_TOKEN,
   TWILIO_SMS_FROM,
   AFTERSHIP_API_KEY,
+  RESEND_API_KEY,
+  EMAIL_FROM,
+  OWNER_EMAIL,
   STRIPE_SECRET_KEY,
   STRIPE_WEBHOOK_SECRET,
   SITE_URL,

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title data-en="Track your order — ElectronicST">Rastrea tu pedido — ElectronicST</title>
+    <meta name="description" content="Estado y seguimiento de tu pedido en ElectronicST, Hoover, AL." data-en="Your order status and tracking at ElectronicST, Hoover, AL.">
+    <meta name="robots" content="noindex">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="assets/img/favicon.png">
+    <link rel="stylesheet" href="assets/site-v3.css">
+    <script src="assets/i18n.js"></script>
+    <style>
+        /* Seguimiento de pedido (track.html): monocromo oscuro, acento dorado
+           solo en la línea de progreso, coherente con success.html. */
+        .track-wrap { max-width: 720px; margin: 0 auto; padding: 56px 0 70px; }
+        .track-head { text-align: center; margin-bottom: 26px; }
+        .track-head h1 { margin: 10px 0 6px; }
+        .track-num { display: inline-block; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px; }
+        .track-num strong { color: #f5f5f7; font-weight: 700; }
+
+        /* Línea de progreso: Pendiente → Enviado → Entregado */
+        .track-steps { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; margin: 8px 0 26px; position: relative; }
+        .track-steps::before { content: ""; position: absolute; top: 17px; left: 16.6%; right: 16.6%; height: 2px; background: var(--line); }
+        .track-step { text-align: center; position: relative; }
+        .track-dot { width: 34px; height: 34px; margin: 0 auto 8px; border-radius: 50%; border: 2px solid var(--line); background: #0c0c0f; display: flex; align-items: center; justify-content: center; color: var(--muted); position: relative; z-index: 1; }
+        .track-dot svg { width: 15px; height: 15px; }
+        .track-step span { font-size: 12.5px; color: var(--muted); letter-spacing: .02em; }
+        .track-step.on .track-dot { border-color: #d4af37; background: #d4af37; color: #000; }
+        .track-step.on span { color: #f5f5f7; font-weight: 600; }
+
+        .track-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; margin-bottom: 16px; }
+        .track-card h2 { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; font-weight: 700; }
+        .track-line { display: flex; justify-content: space-between; gap: 14px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.07); font-size: 14px; }
+        .track-line:last-child { border-bottom: 0; }
+        .track-line .p { color: #f5f5f7; }
+        .track-total { display: flex; justify-content: space-between; padding-top: 12px; margin-top: 4px; border-top: 1px solid var(--line); font-size: 16px; }
+        .track-total strong { color: #d4af37; }
+        .track-addr { font-size: 14px; line-height: 1.55; color: #d5d5da; }
+        .track-ship { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; font-size: 14px; }
+        .track-ship strong { color: #f5f5f7; }
+        .track-ship a { color: #d4af37; text-decoration: none; font-weight: 600; }
+        .track-ship a:hover { text-decoration: underline; }
+        .track-err { text-align: center; color: var(--muted); padding: 60px 0; }
+        .track-loading { text-align: center; color: var(--muted); padding: 60px 0; font-size: 14px; }
+
+        /* Carrusel "También te puede interesar" */
+        .track-more { margin-top: 44px; }
+        .track-more-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+        .track-more-head h2 { font-size: 17px; margin: 0; }
+        .track-arrows { display: flex; gap: 8px; }
+        .track-arrow { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: #f5f5f7; cursor: pointer; font-size: 15px; line-height: 1; }
+        .track-arrow:hover { border-color: #d4af37; color: #d4af37; }
+        .track-carousel { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding-bottom: 6px; }
+        .track-carousel::-webkit-scrollbar { display: none; }
+        .track-prod { flex: 0 0 190px; scroll-snap-align: start; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; text-decoration: none; color: inherit; display: block; transition: border-color .2s; }
+        .track-prod:hover { border-color: rgba(212,175,55,.5); }
+        .track-prod img { width: 100%; height: 150px; object-fit: cover; display: block; }
+        .track-prod div { padding: 10px 12px 12px; }
+        .track-prod b { display: block; font-size: 13px; font-weight: 600; }
+        .track-prod span { font-size: 12.5px; color: #d4af37; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="container nav-inner">
+            <a href="/" class="brand">
+                <img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST" data-en-alt="ElectronicST" class="logo-desktop">
+                <img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST" data-en-alt="ElectronicST" class="logo-mobile">
+                <span data-en="ElectronicST">ElectronicST</span>
+            </a>
+            <button class="burger" aria-label="Abrir menú" data-en-aria="Open menu" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+            <div class="nav-links">
+                <a href="/" data-en="Home">Inicio</a>
+                <a href="/products" data-en="Products">Productos</a>
+                <a href="/book-appointment" class="btn btn-blue btn-sm nav-cta" data-en="Book appointment">Reservar cita</a>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="container track-wrap">
+            <div class="track-head">
+                <span class="eyebrow" data-en="Order tracking">Seguimiento de pedido</span>
+                <h1 data-en="Your order">Tu pedido</h1>
+                <div class="track-num"><span data-en="Order">Orden</span> <strong id="trackNum">—</strong></div>
+            </div>
+
+            <div id="trackLoading" class="track-loading" data-en="Loading your order…">Cargando tu pedido…</div>
+            <div id="trackError" class="track-err hidden">
+                <h2 data-en="Order not found">Pedido no encontrado</h2>
+                <p data-en="Check the link we sent you by email or contact us.">Revisa el enlace que te enviamos por correo o contáctanos.</p>
+                <a href="/products" class="btn btn-blue" data-en="View products">Ver productos</a>
+            </div>
+
+            <div id="trackBody" class="hidden">
+                <div class="track-steps" id="trackSteps">
+                    <div class="track-step" data-step="pendiente">
+                        <div class="track-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg></div>
+                        <span data-en="Processing">Preparando</span>
+                    </div>
+                    <div class="track-step" data-step="enviado">
+                        <div class="track-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h-2v-11a1 1 0 0 1 1-1h9v12h-6z"/><path d="M13 8h5l3 4v5h-3"/><circle cx="7.5" cy="17.5" r="2"/><circle cx="17.5" cy="17.5" r="2"/></svg></div>
+                        <span data-en="Shipped">Enviado</span>
+                    </div>
+                    <div class="track-step" data-step="entregado">
+                        <div class="track-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                        <span data-en="Delivered">Entregado</span>
+                    </div>
+                </div>
+
+                <div class="track-card">
+                    <h2 data-en="Products">Productos</h2>
+                    <div id="trackItems"></div>
+                    <div class="track-total"><span data-en="Total paid">Total pagado</span><strong id="trackTotal">—</strong></div>
+                </div>
+
+                <div class="track-card">
+                    <h2 data-en="Shipping address">Dirección de envío</h2>
+                    <div class="track-addr" id="trackAddr">—</div>
+                </div>
+
+                <div class="track-card">
+                    <h2 data-en="Tracking">Rastreo</h2>
+                    <div class="track-ship" id="trackShip" data-en="As soon as your package ships, the tracking number will appear here.">En cuanto tu paquete sea enviado, aquí aparecerá el número de rastreo.</div>
+                </div>
+            </div>
+
+            <div class="track-more">
+                <div class="track-more-head">
+                    <h2 data-en="You may also like">También te puede interesar</h2>
+                    <div class="track-arrows">
+                        <button class="track-arrow" id="carPrev" aria-label="Anterior">‹</button>
+                        <button class="track-arrow" id="carNext" aria-label="Siguiente">›</button>
+                    </div>
+                </div>
+                <div class="track-carousel" id="trackCarousel">
+                    <a class="track-prod" href="/macbook-neo-2026">
+                        <img src="assets/img/macbook-neo-pink.jpg" alt="MacBook Neo 2026" loading="lazy">
+                        <div><b>MacBook Neo 2026</b><span>$499.99</span></div>
+                    </a>
+                    <a class="track-prod" href="/iphone-15-pro">
+                        <img src="assets/img/iphone-15-pro.jpg" alt="iPhone 15 Pro" loading="lazy">
+                        <div><b>iPhone 15 Pro</b><span>$899.00</span></div>
+                    </a>
+                    <a class="track-prod" href="/ipad-10-2022">
+                        <img src="assets/img/ipad-10-pink.jpg" alt="iPad 10 (2022)" loading="lazy">
+                        <div><b>iPad 10 (2022)</b><span>$329.00</span></div>
+                    </a>
+                    <a class="track-prod" href="/macbook-air-13">
+                        <img src="assets/img/macbook-air-13.jpg" alt="MacBook Air 13" loading="lazy">
+                        <div><b>MacBook Air 13</b><span>$749.00</span></div>
+                    </a>
+                    <a class="track-prod" href="/alienware-16-aurora">
+                        <img src="assets/img/alienware-16-aurora.jpg" alt="Alienware 16 Aurora" loading="lazy">
+                        <div><b>Alienware 16 Aurora</b><span>$1,199.00</span></div>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <a href="/" class="brand">
+                        <img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST" data-en-alt="ElectronicST">
+                        <span data-en="ElectronicST">ElectronicST</span>
+                    </a>
+                    <p data-en="Your trusted store for MacBook, iPhone, and specialized technical service in Hoover, Alabama.">Tu tienda de confianza para MacBook, iPhone y servicio técnico especializado en Hoover, Alabama.</p>
+                </div>
+                <div class="footer-links">
+                    <a href="/products" data-en="Products">Productos</a>
+                    <a href="/book-appointment" data-en="Book appointment">Reservar cita</a>
+                    <a href="/terms" data-en="Terms and conditions">Términos y condiciones</a>
+                    <a href="/privacy" data-en="Privacy policy">Políticas de privacidad</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span data-en="© ElectronicST. All rights reserved.">© ElectronicST. Todos los derechos reservados.</span>
+                <span><a href="#" class="map-link" data-en="3659 Lorna Rd Suite 157, Hoover, AL 35216">3659 Lorna Rd Suite 157, Hoover, AL 35216</a> · <a href="tel:+12055737840" data-en="(205) 573-7840">(205) 573-7840</a></span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    /* Seguimiento del pedido: lee ?t=TOKEN, consulta /api/track/:token y se
+       actualiza solo cada 30 s (el tracking que el admin pone en el panel
+       aparece aquí en tiempo real). */
+    (function () {
+        var token = new URLSearchParams(location.search).get('t');
+        var loading = document.getElementById('trackLoading');
+        var errBox = document.getElementById('trackError');
+        var body = document.getElementById('trackBody');
+        if (!token) {
+            loading.classList.add('hidden');
+            errBox.classList.remove('hidden');
+            return;
+        }
+        var CARRIER_URLS = {
+            usps: 'https://tools.usps.com/go/TrackConfirmAction?tLabels=',
+            ups: 'https://www.ups.com/track?tracknum=',
+            fedex: 'https://www.fedex.com/fedextrack/?trknbr=',
+            dhl: 'https://www.dhl.com/en/express/tracking.html?AWB='
+        };
+        var ORDER = ['pendiente', 'enviado', 'entregado'];
+        function money(n, cur) {
+            return '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        function esc(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+        function render(d) {
+            document.getElementById('trackNum').textContent = d.order_number;
+            var idx = ORDER.indexOf(d.ship_status);
+            document.querySelectorAll('#trackSteps .track-step').forEach(function (el) {
+                el.classList.toggle('on', ORDER.indexOf(el.getAttribute('data-step')) <= idx);
+            });
+            document.getElementById('trackItems').innerHTML = (d.items || []).map(function (i) {
+                return '<div class="track-line"><span>' + (i.qty > 1 ? i.qty + '× ' : '') + esc(i.name) + '</span><span class="p">' + money(i.price) + '</span></div>';
+            }).join('');
+            document.getElementById('trackTotal').textContent = money(d.total, d.currency);
+            document.getElementById('trackAddr').textContent = d.address || '—';
+            var ship = document.getElementById('trackShip');
+            if (d.tracking_number) {
+                var url = CARRIER_URLS[String(d.carrier || '').toLowerCase()];
+                ship.innerHTML = '<span>Tracking: <strong>' + esc(d.tracking_number) + '</strong>' +
+                    (d.carrier ? ' · ' + esc(String(d.carrier).toUpperCase()) : '') + '</span>' +
+                    (url ? '<a href="' + url + encodeURIComponent(d.tracking_number) + '" target="_blank" rel="noopener">Ver en la paquetería →</a>' : '');
+            }
+        }
+        function load() {
+            fetch('/api/track/' + encodeURIComponent(token))
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (d) {
+                    loading.classList.add('hidden');
+                    if (!d) { errBox.classList.remove('hidden'); return; }
+                    errBox.classList.add('hidden');
+                    body.classList.remove('hidden');
+                    render(d);
+                })
+                .catch(function () { loading.textContent = 'Sin conexión. Reintentando…'; });
+        }
+        load();
+        setInterval(load, 30000);
+
+        // Carrusel: flechas con scroll suave.
+        var car = document.getElementById('trackCarousel');
+        document.getElementById('carPrev').addEventListener('click', function () { car.scrollBy({ left: -220, behavior: 'smooth' }); });
+        document.getElementById('carNext').addEventListener('click', function () { car.scrollBy({ left: 220, behavior: 'smooth' }); });
+    })();
+    </script>
+
+    <script src="assets/security.js" defer></script>
+    <script src="assets/transitions.js" defer></script>
+    <script src="assets/cart.js" defer></script>
+    <script src="assets/site.js" defer></script>
+</body>
+</html>

@@ -535,7 +535,22 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   polling de 30 s para reflejar cambios en tiempo real. Las FB también
   cuentan en Ventas/Dashboard (badge "FB Marketplace", costo 0). Facturas:
   el formulario ahora muestra el documento en vivo al lado (layout
-  `.inv-editor`, sticky; `.inv-editor-form` se oculta en `@media print`). Ventas y Dashboard suman 3 fuentes
+  `.inv-editor`, sticky; `.inv-editor-form` se oculta en `@media print`).
+  **Seguimiento público + correos (2026-09-01, tercera fase):** cada orden
+  tiene `track_token` (48 hex, es la credencial del cliente). Página pública
+  `track.html?t=<token>` (raíz; CSS inline propio — define `.hidden` porque
+  `site-v3.css` no la tiene, y el bloque de tracking NO lleva `data-en`
+  porque `i18n.js` pisaría el contenido dinámico): consulta
+  `GET /api/track/:token` (`routes/track.js`, rate limit, sin email/teléfono)
+  cada 30 s y muestra número de orden (`EST-{1000+id}`, derivado del id, sin
+  columna), productos, total, dirección, progreso y carrusel de productos.
+  Correos con Resend (`server/lib/email.js`, fetch sin dependencias; env
+  `RESEND_API_KEY`, `EMAIL_FROM`, `OWNER_EMAIL`): nuevo pedido (dueño +
+  confirmación al cliente con el link), "va en camino" al guardar tracking,
+  "en tránsito" y "entregado" (job AfterShip; flags `email_shipped/transit/
+  delivered` para no reenviar). OJO Resend: sin dominio verificado, el plan
+  gratis solo envía al correo de la propia cuenta; para clientes hay que
+  verificar el dominio (DNS) en resend.com. Ventas y Dashboard suman 3 fuentes
   (reparaciones entregadas + mostrador + online; costo 0 en online porque el
   catálogo web no está ligado al inventario). En la tabla de Ventas, cada
   orden online tiene badge "online" y botón Detalle que expande cliente,

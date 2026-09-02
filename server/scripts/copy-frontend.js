@@ -18,6 +18,7 @@ const itemsToCopy = [
   'iphone-15-pro.html',
   'cart.html',
   'success.html',
+  'track.html',
   'book-appointment.html',
   'terms.html',
   'privacy.html',

@@ -298,6 +298,15 @@ async function initDb() {
     await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS tracking_number TEXT;`);
     await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS carrier TEXT;`);
     await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS tracking_id TEXT;`);
+    // Link secreto de seguimiento para el cliente (página pública track.html).
+    // El token ES la credencial: quien lo tiene ve el pedido. 48 hex chars.
+    await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS track_token TEXT;`);
+    await client.query(`UPDATE online_orders SET track_token = md5(random()::text || ':' || id::text) || md5(random()::text) WHERE track_token IS NULL;`);
+    await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_online_orders_track ON online_orders(track_token);`);
+    // Flags de correos ya enviados al cliente (no reenviar).
+    await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS email_shipped BOOLEAN NOT NULL DEFAULT false;`);
+    await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS email_transit BOOLEAN NOT NULL DEFAULT false;`);
+    await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS email_delivered BOOLEAN NOT NULL DEFAULT false;`);
 
     // ----- Facturas (Bill of Sale) -----
     // Una factura puede nacer de una venta de mostrador (sale_id), de una

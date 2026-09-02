@@ -55,19 +55,18 @@ async function register(trackingNumber, carrier) {
   }
 }
 
-// ¿El paquete ya fue entregado? Devuelve true/false; null si no se pudo saber.
-// Se consulta por tracking id (el que guardamos al registrar).
-async function isDelivered(trackingId) {
+// Tag actual del paquete ('InTransit', 'OutForDelivery', 'Delivered', …) o
+// null si no se pudo saber. Se consulta por tracking id (guardado al registrar).
+async function getTag(trackingId) {
   if (!enabled() || !trackingId) return null;
   try {
     const d = await call(`/trackings/${encodeURIComponent(trackingId)}`);
     const t = d && d.data && d.data.tracking;
-    if (!t) return null;
-    return t.tag === 'Delivered';
+    return t ? (t.tag || null) : null;
   } catch (e) {
     console.error('AfterShip check error:', e.message);
     return null;
   }
 }
 
-module.exports = { enabled, register, isDelivered };
+module.exports = { enabled, register, getTag };

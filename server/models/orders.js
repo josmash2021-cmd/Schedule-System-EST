@@ -1,17 +1,25 @@
-/* Órdenes online (compras web pagadas por Stripe Checkout). Se crean desde el
-   webhook de checkout; el panel solo las lista (no se anulan ni editan aquí:
-   los reembolsos se hacen en Stripe). */
+/* Órdenes online (compras web pagadas por Stripe Checkout) y manuales de
+   FB Marketplace. Las web se crean desde el webhook/sync de checkout; las
+   manuales desde el panel. No se anulan ni editan aquí: los reembolsos se
+   hacen en Stripe / trato directo en FB. */
+const crypto = require('crypto');
 const { pool } = require('../db');
+
+// Link secreto de seguimiento del cliente (página pública track.html).
+function newTrackToken() {
+  return crypto.randomBytes(24).toString('hex'); // 48 hex chars, no adivinable
+}
 
 // order: { sessionId, customerName, email, phone, address, items, total, currency, createdAt? }
 // ON CONFLICT DO NOTHING: Stripe entrega los webhooks "al menos una vez"; si el
 // evento se repite (o el server se reinicia y pierde el dedupe en memoria), la
-// orden no se duplica. Devuelve true si se insertó.
+// orden no se duplica. Devuelve la fila insertada o null si ya existía.
 async function createFromStripe(order) {
   const r = await pool.query(
-    `INSERT INTO online_orders (stripe_session_id, customer_name, email, phone, address, items, total, currency, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, COALESCE($9::timestamp, NOW()))
-     ON CONFLICT (stripe_session_id) DO NOTHING`,
+    `INSERT INTO online_orders (stripe_session_id, customer_name, email, phone, address, items, total, currency, created_at, track_token)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, COALESCE($9::timestamp, NOW()), $10)
+     ON CONFLICT (stripe_session_id) DO NOTHING
+     RETURNING *`,
     [
       order.sessionId,
       order.customerName || null,
@@ -22,9 +30,10 @@ async function createFromStripe(order) {
       order.total || 0,
       order.currency || 'usd',
       order.createdAt || null, // backfill: fecha real del pago (epoch de Stripe)
+      newTrackToken(),
     ]
   );
-  return r.rowCount > 0;
+  return r.rows[0] || null;
 }
 
 async function listAll() {
@@ -43,8 +52,8 @@ async function listSessionIds() {
 // calculado por la ruta (server-side). Nacen como envío 'pendiente'.
 async function createManual({ customer_name, email, phone, address, items, total }) {
   const r = await pool.query(
-    `INSERT INTO online_orders (stripe_session_id, customer_name, email, phone, address, items, total, currency, origen)
-     VALUES (NULL, $1, $2, $3, $4, $5, $6, 'usd', 'fb_marketplace')
+    `INSERT INTO online_orders (stripe_session_id, customer_name, email, phone, address, items, total, currency, origen, track_token)
+     VALUES (NULL, $1, $2, $3, $4, $5, $6, 'usd', 'fb_marketplace', $7)
      RETURNING *`,
     [
       customer_name || null,
@@ -53,6 +62,7 @@ async function createManual({ customer_name, email, phone, address, items, total
       address || null,
       JSON.stringify(items || []),
       total || 0,
+      newTrackToken(),
     ]
   );
   return r.rows[0];
@@ -82,13 +92,31 @@ async function updateShipStatus(id, status) {
 }
 
 // Órdenes con tracking activo que aún no se marcan entregadas: el job de
-// AfterShip las consulta periódicamente.
+// AfterShip las consulta periódicamente (trayendo todo lo que necesita para
+// los correos de tránsito/entrega).
 async function listInTransit() {
   const r = await pool.query(
-    `SELECT id, tracking_id, tracking_number, carrier FROM online_orders
+    `SELECT * FROM online_orders
      WHERE tracking_id IS NOT NULL AND ship_status <> 'entregado'`
   );
   return r.rows;
 }
 
-module.exports = { createFromStripe, createManual, listAll, listSessionIds, updateTracking, updateShipStatus, listInTransit, SHIP_STATUSES };
+// Página pública de seguimiento: busca por el token secreto del cliente.
+async function findByTrackToken(token) {
+  const r = await pool.query('SELECT * FROM online_orders WHERE track_token = $1', [token]);
+  return r.rows[0] || null;
+}
+
+// Marca un correo como enviado para no reenviarlo (whitelist estricta).
+const EMAIL_FLAGS = ['email_shipped', 'email_transit', 'email_delivered'];
+async function markEmailSent(id, flag) {
+  if (!EMAIL_FLAGS.includes(flag)) return;
+  await pool.query(`UPDATE online_orders SET ${flag} = true WHERE id = $1`, [id]);
+}
+
+module.exports = {
+  createFromStripe, createManual, listAll, listSessionIds,
+  updateTracking, updateShipStatus, listInTransit,
+  findByTrackToken, markEmailSent, SHIP_STATUSES,
+};

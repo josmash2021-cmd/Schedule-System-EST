@@ -10,6 +10,7 @@ const {
 } = require('../config');
 const { sendOwnerOrderNotification } = require('../notifications');
 const orders = require('../models/orders');
+const { sendNewOrderEmails } = require('../lib/email');
 
 const router = express.Router();
 
@@ -301,8 +302,9 @@ async function webhookHandler(req, res) {
       // Guardar la orden en la base (aparece en el panel, página Ventas).
       // En try/catch aparte: si la DB falla, la notificación al dueño igual sale.
       const cd = session.customer_details || {};
+      let savedOrder = null;
       try {
-        await orders.createFromStripe({
+        savedOrder = await orders.createFromStripe({
           sessionId: session.id,
           customerName: sd && sd.name ? sd.name : cd.name,
           email: cd.email,
@@ -314,6 +316,12 @@ async function webhookHandler(req, res) {
         });
       } catch (e) {
         console.error('No se pudo guardar la orden online:', e.message);
+      }
+
+      // Correos (Resend): al dueño "nuevo pedido" y al cliente la
+      // confirmación con su link de seguimiento. No bloqueantes.
+      if (savedOrder) {
+        sendNewOrderEmails(savedOrder).catch((e) => console.error('Order emails failed:', e.message));
       }
 
       sendOwnerOrderNotification({

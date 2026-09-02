@@ -7,6 +7,7 @@ const { initDb } = require('./db');
 const slotsRouter = require('./routes/slots');
 const appointmentsRouter = require('./routes/appointments');
 const stockRouter = require('./routes/publicStock');
+const trackRouter = require('./routes/track');
 const authRouter = require('./routes/auth');
 const { router: checkoutRouter, webhookHandler } = require('./routes/checkout');
 const adminAuthRouter = require('./routes/adminAuth');
@@ -65,6 +66,7 @@ const htmlRoutes = {
   '/iphone-15-pro': 'iphone-15-pro.html',
   '/cart': 'cart.html',
   '/success': 'success.html',
+  '/track': 'track.html',
   '/book-appointment': 'book-appointment.html',
   '/terms': 'terms.html',
   '/privacy': 'privacy.html',
@@ -147,6 +149,8 @@ app.get('/bot-qr.png', async (req, res) => {
 app.use('/api/slots', slotsRouter);
 app.use('/api/appointments', appointmentsRouter);
 app.use('/api/stock', stockRouter);
+// Seguimiento público de pedidos (link secreto que recibe el cliente).
+app.use('/api/track', trackRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/checkout', checkoutRouter);
 
@@ -211,17 +215,28 @@ async function start() {
   });
 
   // Job de rastreo de envíos (AfterShip): cada 15 min revisa las órdenes con
-  // tracking activo y marca 'entregado' las que ya llegaron. Solo corre si
-  // hay AFTERSHIP_API_KEY; un fallo no tumba el server.
+  // tracking activo. En tránsito → correo al cliente (una vez); entregado →
+  // estado 'entregado' + correo (una vez). Solo corre si hay AFTERSHIP_API_KEY;
+  // un fallo no tumba el server.
   if (tracking.enabled()) {
+    const emailLib = require('./lib/email');
     const checkDeliveries = async () => {
       try {
         const inTransit = await orders.listInTransit();
         for (const o of inTransit) {
-          const done = await tracking.isDelivered(o.tracking_id);
-          if (done) {
+          const tag = await tracking.getTag(o.tracking_id);
+          if (!tag) continue;
+          if ((tag === 'InTransit' || tag === 'OutForDelivery') && !o.email_transit) {
+            const ok = await emailLib.sendTransitEmail(o);
+            if (ok) await orders.markEmailSent(o.id, 'email_transit');
+          }
+          if (tag === 'Delivered') {
             await orders.updateShipStatus(o.id, 'entregado');
             console.log(`[tracking] Orden #${o.id} marcada como entregada.`);
+            if (!o.email_delivered) {
+              const ok = await emailLib.sendDeliveredEmail(o);
+              if (ok) await orders.markEmailSent(o.id, 'email_delivered');
+            }
           }
         }
       } catch (e) {

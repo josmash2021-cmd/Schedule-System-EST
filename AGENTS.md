@@ -21,6 +21,9 @@ cambies estructura, flujos o convenciones.
 ### Sitio público (raíz)
 - Páginas: `index.html`, `products.html`, `macbook-air-13.html`,
   `iphone-15-pro.html`, `book-appointment.html`, `cart.html`, `success.html`,
+  `track.html` (seguimiento público del pedido del cliente: `?t=<track_token>`,
+  consulta `/api/track/:token` cada 30 s; línea de progreso + carrusel de
+  productos; CSS inline propio — define `.hidden`, que `site-v3.css` no tiene),
   `terms.html`, `privacy.html`.
 - JS/CSS compartido: `assets/` (`site.js`, `cart.js`, `site-v3.css`,
   `transitions.js`, `i18n.js`, `security.js`).
@@ -70,7 +73,15 @@ cambies estructura, flujos o convenciones.
   PATCH tracking → 'enviado' o 'entregado' manual).
 - Rutas públicas (`/api/*`): `appointments.js`, `slots.js`, `checkout.js`
   (Stripe; su webhook guarda cada pago en la tabla `online_orders` y pide
-  dirección de envío US en la sesión), `auth.js` (login viejo, sin frontend).
+  dirección de envío US en la sesión), `track.js` (seguimiento público:
+  `GET /api/track/:token` por `track_token`, sin PII de contacto),
+  `auth.js` (login viejo, sin frontend).
+- **Correos transaccionales:** `server/lib/email.js` (Resend vía fetch, sin
+  dependencias; env `RESEND_API_KEY`, `EMAIL_FROM`, `OWNER_EMAIL`). Se envían:
+  nuevo pedido (dueño + confirmación al cliente con link `/track?t=`), "va en
+  camino" al guardar tracking, "en tránsito" y "entregado" (vía AfterShip).
+  Flags en `online_orders` (`email_shipped/transit/delivered`) para no
+  reenviar. Sin key solo loguea y sigue.
 - Modelos (SQL directo con `pg`): `server/models/` — `users.js`,
   `repairs.js`, `inventory.js`, `tasks.js`, `timeEntries.js`, `audit.js`,
   `invoices.js` (tabla `invoices`: Bill of Sale ligado a `sale_id` o
