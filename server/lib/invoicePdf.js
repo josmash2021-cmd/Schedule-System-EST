@@ -13,17 +13,17 @@ const LOGO = path.resolve(__dirname, '..', 'public', 'assets', 'img', 'logo-blac
 const money = (n) => `$${Number(n || 0).toFixed(2)}`;
 
 // pg devuelve sale_date (tipo DATE) como Date y sale_time como "HH:MM:SS";
-// en el PDF van formateados (DD/MM/YYYY y HH:MM), nunca el crudo de la DB.
+// en el PDF van formateados en inglés (MM/DD/YYYY y HH:MM), nunca el crudo.
 function fmtDate(v) {
   if (!v) return '—';
   if (v instanceof Date) {
     const iso = v.toISOString().slice(0, 10); // YYYY-MM-DD
     const [y, m, d] = iso.split('-');
-    return `${d}/${m}/${y}`;
+    return `${m}/${d}/${y}`;
   }
   const s = String(v);
   const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  return m ? `${m[3]}/${m[2]}/${m[1]}` : s;
+  return m ? `${m[2]}/${m[3]}/${m[1]}` : s;
 }
 function fmtTime(v) {
   if (!v) return '—';
@@ -31,6 +31,10 @@ function fmtTime(v) {
   const m = s.match(/^(\d{2}):(\d{2})/);
   return m ? `${m[1]}:${m[2]}` : s;
 }
+
+// El método de pago se guarda en español en la DB; el PDF va en inglés.
+const PAYMENT_EN = { tarjeta: 'Card', efectivo: 'Cash', transferencia: 'Transfer', otro: 'Other' };
+const fmtPayment = (v) => PAYMENT_EN[String(v || '').toLowerCase()] || v || '—';
 
 // Dimensiones de un PNG leyendo su cabecera IHDR (sin dependencias).
 function pngSize(file) {
@@ -130,7 +134,7 @@ function buildInvoicePdf(inv) {
     const halfW = CW / 2;
     const saleRows = [
       ['Date:', fmtDate(inv.sale_date), 'Time:', fmtTime(inv.sale_time)],
-      ['Payment Method:', inv.payment_method || '—', 'Tax Rate:', `${Number(inv.tax_rate || 0)}%`],
+      ['Payment Method:', fmtPayment(inv.payment_method), 'Tax Rate:', `${Number(inv.tax_rate || 0)}%`],
     ];
     saleRows.forEach((r, i) => {
       const ry = rowY + i * 16;
@@ -211,7 +215,7 @@ function buildInvoicePdf(inv) {
 
     // ---------- Footer ----------
     doc.font('Helvetica').fontSize(8.5).fillColor('#8a8a92')
-      .text(`Gracias por su compra — ${inv.seller_name || 'ElectronicST, LLC'}`, M, 736, { width: CW, align: 'center' });
+      .text(`Thank you for your purchase — ${inv.seller_name || 'ElectronicST, LLC'}`, M, 736, { width: CW, align: 'center' });
 
     doc.end();
   });
