@@ -7,6 +7,8 @@ import InventoryDetail, { money } from '../components/InventoryDetail.jsx';
 export default function Inventory() {
   const [items, setItems] = useState(null);
   const [compras, setCompras] = useState(null); // mercancía comprada por mes
+  const [stockMes, setStockMes] = useState(null); // inventario al cierre de cada mes
+  const [datosVentas, setDatosVentas] = useState(null); // ventas/gastos por mes
   const [search, setSearch] = useState('');
   const [err, setErr] = useState('');
   const [detail, setDetail] = useState(null);
@@ -19,6 +21,15 @@ export default function Inventory() {
   useEffect(() => { const t = setTimeout(() => load(search), 300); return () => clearTimeout(t); }, [search, load]);
   useEffect(() => {
     api('/inventory/purchases-by-month').then((d) => setCompras(d.months || [])).catch(() => setCompras([]));
+    api('/inventory/stock-by-month').then((d) => setStockMes(d.months || [])).catch(() => setStockMes([]));
+    // Ventas/gastos para el resumen del mes (misma definición que Ventas).
+    Promise.all([
+      api('/repairs').then((d) => d.tickets || []),
+      api('/sales').then((d) => d.sales || []),
+      api('/orders').then((d) => d.orders || []),
+      api('/expenses').then((d) => d.expenses || []),
+    ]).then(([t, s, o, e]) => setDatosVentas({ tickets: t, directas: s, ordenes: o, expenses: e }))
+      .catch(() => setDatosVentas({ tickets: [], directas: [], ordenes: [], expenses: [] }));
   }, []);
 
   // Stock editable directo en la lista: escribe la cantidad y al salir del
@@ -65,25 +76,60 @@ export default function Inventory() {
     return Object.entries(map).sort(([a], [b]) => a.localeCompare(b, 'es'));
   }, [visible]);
 
-  // Mercancía comprada por mes con navegación ‹ › (patrón de la tarjeta de
-  // Ganancia en Ventas): empieza en el mes actual y se puede ir a meses
-  // anteriores. Hora de Chicago.
+  // Resumen contable del mes seleccionado (navegación ‹ ›): inversión en
+  // mercancía, ventas, ganancia e inventario que quedó al cierre. Misma
+  // definición que el "Resumen por mes" de Ventas. Hora de Chicago.
   const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
   const [comprasOffset, setComprasOffset] = useState(0); // 0 = mes actual
-  const comprasMes = useMemo(() => {
-    if (!compras) return null;
+  const chicagoMonth = (iso) => {
+    const p = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit' })
+      .formatToParts(new Date(iso)).reduce((a, x) => { a[x.type] = x.value; return a; }, {});
+    return `${p.year}-${p.month}`;
+  };
+  const resumenMes = useMemo(() => {
+    if (!compras || !stockMes) return null;
     const p = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit' })
       .formatToParts(new Date()).reduce((a, x) => { a[x.type] = x.value; return a; }, {});
     const [y, m] = [`${p.year}-${p.month}`].flatMap((k) => k.split('-').map(Number));
     const key = new Date(Date.UTC(y, m - 1 + comprasOffset, 1)).toISOString().slice(0, 7);
+
     const found = compras.find((x) => x.mes === key);
+    const stock = stockMes.find((x) => x.mes === key);
+
+    let ventas = 0;
+    let costoVendido = 0;
+    let gastos = 0;
+    if (datosVentas) {
+      for (const t of datosVentas.tickets) {
+        if (t.status === 'entregado' && t.delivered_at && chicagoMonth(t.delivered_at) === key) ventas += Number(t.final_price) || 0;
+      }
+      for (const v of datosVentas.directas) {
+        if (chicagoMonth(v.created_at) !== key) continue;
+        ventas += Number(v.total) || 0;
+        costoVendido += (v.items || []).reduce((a, i) => a + (Number(i.cost) || 0) * (Number(i.qty) || 0), 0);
+      }
+      for (const o of datosVentas.ordenes) {
+        if (chicagoMonth(o.created_at) !== key) continue;
+        ventas += Number(o.total) || 0;
+        costoVendido += Number(o.costo) || 0;
+      }
+      for (const e of datosVentas.expenses) {
+        if (chicagoMonth(e.created_at) === key) gastos += Number(e.amount) || 0;
+      }
+    }
+
     return {
       key,
       label: MESES[Number(key.slice(5, 7)) - 1] + ' ' + key.slice(0, 4),
-      total: found ? found.total : 0,
-      unidades: found ? found.unidades : 0,
+      inversion: found ? found.total : 0,
+      unidadesCompradas: found ? found.unidades : 0,
+      ventas,
+      ganancia: ventas - costoVendido - gastos,
+      stockCierre: stock ? stock.unidades : null,
+      valorCierre: stock ? stock.valorCosto : null,
+      valorCierreVenta: stock ? stock.valorVenta : null,
     };
-  }, [compras, comprasOffset]);
+  }, [compras, stockMes, datosVentas, comprasOffset]);
 
   // Gráfica de inversión mes a mes (cronológica) + total invertido global.
   const comprasChart = useMemo(() => {
@@ -127,20 +173,48 @@ export default function Inventory() {
         : items.length === 0 ? <div className="card"><div className="empty">{search ? 'Sin resultados.' : 'No hay productos. Crea el primero.'}</div></div>
           : (
             <>
-              <div className="stat-grid" style={{ marginBottom: 18 }}>
-                <div className="stat-card">
-                  <div className="stat-top">
-                    <div className="k">Compras de inventario</div>
-                    <div className="gan-arrows">
-                      <button type="button" className="gan-arrow" title="Mes anterior"
-                        onClick={() => setComprasOffset((o) => o - 1)}>‹</button>
-                      <button type="button" className="gan-arrow" title="Mes siguiente" disabled={comprasOffset >= 0}
-                        onClick={() => setComprasOffset((o) => Math.min(0, o + 1))}>›</button>
+              {/* Resumen del mes: inversión, ventas, ganancia e inventario
+                  que quedó al cierre (en dinero). Flechas ‹ › cambian de mes. */}
+              <div className="card" style={{ marginBottom: 18 }}>
+                <div className="stat-top" style={{ marginBottom: 12 }}>
+                  <h3 style={{ margin: 0 }}>Resumen del mes — {resumenMes ? resumenMes.label : '…'}</h3>
+                  <div className="gan-arrows">
+                    <button type="button" className="gan-arrow" title="Mes anterior"
+                      onClick={() => setComprasOffset((o) => o - 1)}>‹</button>
+                    <button type="button" className="gan-arrow" title="Mes siguiente" disabled={comprasOffset >= 0}
+                      onClick={() => setComprasOffset((o) => Math.min(0, o + 1))}>›</button>
+                  </div>
+                </div>
+                {!resumenMes ? <span className="spinner" /> : (
+                  <div className="stat-grid" style={{ margin: 0 }}>
+                    <div className="stat-card">
+                      <div className="k">Inversión en inventario</div>
+                      <div className="v">{money(resumenMes.inversion)}</div>
+                      <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>{resumenMes.unidadesCompradas} unidades compradas</div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="k">Ventas del mes</div>
+                      <div className="v">{money(resumenMes.ventas)}</div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="k">Ganancia del mes</div>
+                      <div className="v">{money(resumenMes.ganancia)}</div>
+                      <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>ventas − costo − gastos</div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="k">Quedó en inventario</div>
+                      <div className="v">{resumenMes.valorCierre == null ? '—' : money(resumenMes.valorCierre)}</div>
+                      {resumenMes.valorCierre != null && (
+                        <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>
+                          {resumenMes.stockCierre} unidades a costo · {money(resumenMes.valorCierreVenta)} a precio de venta
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="v">{comprasMes ? money(comprasMes.total) : <span className="spinner" />}</div>
-                  {comprasMes && <div className="muted k-nowrap" style={{ fontSize: 12.5, marginTop: 2 }}>{comprasMes.label} · {comprasMes.unidades} unidades</div>}
-                </div>
+                )}
+              </div>
+
+              <div className="stat-grid" style={{ marginBottom: 18 }}>
                 <div className="stat-card">
                   <div className="k">Productos</div>
                   <div className="v">{totals.products}</div>
