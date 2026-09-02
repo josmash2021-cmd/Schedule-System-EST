@@ -322,6 +322,21 @@ async function webhookHandler(req, res) {
       // confirmación con su link de seguimiento. No bloqueantes.
       if (savedOrder) {
         sendNewOrderEmails(savedOrder).catch((e) => console.error('Order emails failed:', e.message));
+
+        // Inventario: descontar el stock de los productos ligados (invId en
+        // catalog.js) y guardar el COSTO real de la orden, para que la
+        // ganancia mensual cuadre (antes las ventas web contaban costo 0).
+        // Solo si la orden se insertó (un webhook duplicado no descuenta dos
+        // veces). Los ids salen del metadata compacto del checkout.
+        (async () => {
+          try {
+            const metaItems = JSON.parse((session.metadata && session.metadata.items) || '[]');
+            const costo = await orders.applySaleToInventory(metaItems);
+            if (costo > 0) await orders.setCosto(savedOrder.id, costo);
+          } catch (e) {
+            console.error('No se pudo aplicar la venta al inventario:', e.message);
+          }
+        })();
       }
 
       sendOwnerOrderNotification({

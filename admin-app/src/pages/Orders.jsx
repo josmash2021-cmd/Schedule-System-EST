@@ -72,7 +72,7 @@ const nuevaLinea = () => ({ uid: SEQ++, name: '', qty: '1', price: '' });
 // Formulario de nueva orden manual (FB Marketplace), a página completa.
 function OrderForm({ onCancel, onSaved }) {
   const [form, setForm] = useState({
-    customer_name: '', phone: '', email: '', address: '', items: [nuevaLinea()],
+    customer_name: '', phone: '', email: '', address: '', costo: '', items: [nuevaLinea()],
   });
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
@@ -103,6 +103,7 @@ function OrderForm({ onCancel, onSaved }) {
           email: form.email.trim(),
           address: form.address.trim(),
           items,
+          costo: form.costo === '' ? 0 : Number(form.costo),
         },
       });
       onSaved();
@@ -139,6 +140,20 @@ function OrderForm({ onCancel, onSaved }) {
       </button>
 
       <div className="inv-total-row"><span>Total</span><strong>{usd.format(total)}</strong></div>
+
+      <div className="rd-grid" style={{ marginTop: 12 }}>
+        <label className="field">
+          <span>Costo de la mercancía ($) — lo que pagaste por ella</span>
+          <input type="number" min="0" step="0.01" value={form.costo} onChange={(e) => set({ costo: e.target.value })} placeholder="0.00" />
+        </label>
+        <div className="field" style={{ justifyContent: 'flex-end' }}>
+          <span className="muted" style={{ fontSize: 12.5 }}>
+            {Number(form.costo) > 0
+              ? `Ganancia estimada: ${usd.format(total - (Number(form.costo) || 0))}`
+              : 'Sin costo, la ganancia de esta orden contará como 100%.'}
+          </span>
+        </div>
+      </div>
 
       <div className="row" style={{ justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
         <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={saving}>Cancelar</button>
@@ -298,6 +313,13 @@ export default function Orders() {
                                     <li key={idx}>{i.qty > 1 ? `${i.qty}× ` : ''}{i.name} — {usd.format(Number(i.price) || 0)}</li>
                                   ))}
                                 </ul>
+                              </div>
+                              <div>
+                                <span className="muted">Costo de la mercancía:</span> {usd.format(Number(o.costo) || 0)}
+                                {' · '}
+                                <span className="muted">Ganancia:</span>{' '}
+                                <strong>{usd.format((Number(o.total) || 0) - (Number(o.costo) || 0))}</strong>
+                                {Number(o.costo) === 0 && <span className="muted" style={{ fontSize: 12 }}> (sin costo registrado)</span>}
                               </div>
                               <div style={{ marginTop: 8, borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 10 }}>
                                 <span className="muted">Tracking:</span>{' '}

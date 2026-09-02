@@ -61,6 +61,15 @@ async function syncFromStripe() {
     // órdenes recuperadas por sync — el webhook pudo no haber llegado.
     if (saved) {
       email.sendNewOrderEmails(saved).catch((e) => console.error('Order emails failed:', e.message));
+      // Inventario: descontar stock y guardar el costo real (igual que el
+      // webhook; solo si la orden se insertó ahora).
+      try {
+        const metaItems = JSON.parse((s.metadata && s.metadata.items) || '[]');
+        const costo = await orders.applySaleToInventory(metaItems);
+        if (costo > 0) await orders.setCosto(saved.id, costo);
+      } catch (e) {
+        console.error('No se pudo aplicar la venta al inventario:', e.message);
+      }
     }
   }
 }
@@ -108,6 +117,11 @@ router.post('/', requireRole('admin'), async (req, res) => {
   }
   total = Math.round(total * 100) / 100;
 
+  // Costo de la mercancía (lo que pagó el dueño por lo vendido): lo escribe
+  // él en el formulario; sin él, la ganancia de la orden saldría inflada.
+  const costo = b.costo === undefined || b.costo === null || b.costo === '' ? 0 : Number(b.costo);
+  if (!Number.isFinite(costo) || costo < 0) return res.status(400).json({ error: 'Costo inválido.' });
+
   try {
     const order = await orders.createManual({
       customer_name: customerName,
@@ -116,6 +130,7 @@ router.post('/', requireRole('admin'), async (req, res) => {
       address,
       items,
       total,
+      costo,
     });
     // Correo de confirmación al cliente con su link de seguimiento (si dio
     // correo); si no, el dueño puede reenviar el link por WhatsApp.

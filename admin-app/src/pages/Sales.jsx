@@ -157,11 +157,13 @@ export default function Sales() {
       cliente: null, telefono: null, pago: v.payment_method || null,
       quien: v.seller_username || null, cp: chicagoParts(new Date(v.created_at)),
     }));
-    // Órdenes online (Stripe): costo 0 porque el catálogo web no está ligado al
-    // inventario del panel; el detalle del cliente (email, teléfono,
-    // dirección de envío) se muestra al expandir la fila.
+    // Órdenes online (Stripe) y FB Marketplace: el costo viene de la orden
+    // (web: inventario ligado por invId; FB: lo escribe el dueño). El detalle
+    // del cliente (email, teléfono, dirección de envío) se muestra al
+    // expandir la fila.
     const deOnline = (ordenes || []).map((o) => ({
-      key: 'o' + o.id, orderId: o.id, tipo: 'online', price: Number(o.total) || 0, when: o.created_at, costo: 0,
+      key: 'o' + o.id, orderId: o.id, tipo: 'online', price: Number(o.total) || 0, when: o.created_at,
+      costo: Number(o.costo) || 0,
       concepto: (o.items || []).map((i) => (i.qty > 1 ? `${i.qty}× ${i.name}` : i.name)).join(', ') || 'Compra web',
       items: o.items || [],
       cliente: o.customer_name || null, email: o.email || null, telefono: o.phone || null, direccion: o.address || null,

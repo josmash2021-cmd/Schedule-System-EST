@@ -326,6 +326,10 @@ async function initDb() {
     // Tag fino de AfterShip (InTransit, OutForDelivery, Delivered…) para la
     // barra de progreso de 4 pasos del panel y de la página del cliente.
     await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS ship_tag TEXT;`);
+    // Costo de lo vendido online (catálogo ligado al inventario por invId):
+    // sin esto la ganancia mensual salía inflada porque las ventas web
+    // contaban costo 0.
+    await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS costo NUMERIC(10,2) NOT NULL DEFAULT 0;`);
 
     // ----- Facturas (Bill of Sale) -----
     // Una factura puede nacer de una venta de mostrador (sale_id), de una

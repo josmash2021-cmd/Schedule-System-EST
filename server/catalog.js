@@ -11,6 +11,10 @@
    ============================================================ */
 
 // Precios en dólares (unidad). Stripe usa centavos (se multiplica x100).
+// invId: id del producto en el inventario del panel (inventory_items.id).
+// Sirve para que las ventas web descuenten stock y lleven su COSTO real en
+// la contabilidad (ganancia = venta − costo). Sin invId (p. ej. Alienware),
+// la venta no toca inventario y su costo cuenta 0.
 const CATALOG = {
   'iphone-15-pro-muybueno': {
     name: 'iPhone 15 Pro',
@@ -19,6 +23,7 @@ const CATALOG = {
     condEn: 'Very good',
     price: 550,
     img: 'assets/img/iphone-15-pro.jpg',
+    invId: 9,
   },
   'macbook-air-13-bueno': {
     name: 'MacBook Air 13"',
@@ -27,6 +32,7 @@ const CATALOG = {
     condEn: 'Good',
     price: 150,
     img: 'assets/img/macbook-air-13.jpg',
+    invId: 22,
   },
   'macbook-air-13-muybueno': {
     name: 'MacBook Air 13"',
@@ -35,6 +41,7 @@ const CATALOG = {
     condEn: 'Very good',
     price: 200,
     img: 'assets/img/macbook-air-13.jpg',
+    invId: 22,
   },
   'macbook-air-13-excelente': {
     name: 'MacBook Air 13"',
@@ -43,6 +50,7 @@ const CATALOG = {
     condEn: 'Excellent',
     price: 250,
     img: 'assets/img/macbook-air-13.jpg',
+    invId: 22,
   },
   'macbook-neo-2026-openbox': {
     name: 'MacBook Neo 2026',
@@ -51,6 +59,7 @@ const CATALOG = {
     condEn: 'Open box',
     price: 500,
     img: 'assets/img/macbook-neo-pink.jpg',
+    invId: 19,
   },
   'victus-gaming-excelente': {
     name: 'Victus Gaming 15.6" Ryzen 5',
@@ -59,6 +68,7 @@ const CATALOG = {
     condEn: 'Excellent',
     price: 450,
     img: 'assets/img/victus-gaming.jpg',
+    invId: 34,
   },
   'alienware-16-aurora-nuevo': {
     name: 'Alienware 16 Aurora (2025)',

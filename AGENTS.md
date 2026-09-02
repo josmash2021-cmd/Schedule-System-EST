@@ -108,9 +108,14 @@ cambies estructura, flujos o convenciones.
   manual desde el panel (botón en el detalle de la orden).
 - **Ventas del panel = 3 fuentes** (misma definición en `Sales.jsx` y
   `Dashboard.jsx`): reparaciones entregadas + ventas de mostrador + órdenes
-  de envío (website + FB Marketplace). Las órdenes tienen `costo: 0` (ni el
-  catálogo web ni FB están ligados al inventario) y no se anulan ni borran
+  de envío (website + FB Marketplace). Las órdenes no se anulan ni borran
   desde el panel (reembolsos en Stripe / trato directo en FB).
+  **Costo de órdenes (`online_orders.costo`):** el catálogo web
+  (`server/catalog.js`) está ligado al inventario por `invId` — al pagar, el
+  webhook/sync descuenta stock y guarda el costo real; en FB lo escribe el
+  dueño en el formulario. `orders.backfillCosts()` corre al arranque y
+  repara órdenes viejas (empareja por nombre, NO toca stock). Sin costo, la
+  ganancia mensual sale inflada (cuenta 100%).
 - `server/db.js`: Pool + `CREATE TABLE IF NOT EXISTS` (las tablas se
   autocrean al arrancar). `repair_tickets` tiene `device_type`
   (telefono/tablet/laptop), `service_type` (revision/reparacion/mantenimiento),

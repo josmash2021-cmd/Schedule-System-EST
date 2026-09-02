@@ -210,6 +210,10 @@ app.use((err, _req, res, _next) => {
 
 async function start() {
   await initDb();
+  // Costo real de órdenes web viejas (contabilidad; no toca stock).
+  orders.backfillCosts()
+    .then((n) => { if (n) console.log(`[orders] Costo calculado para ${n} órdenes viejas.`); })
+    .catch((e) => console.error('[orders] backfill de costos falló:', e.message));
   app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
   });
