@@ -19,6 +19,7 @@ const CATALOG = {
   'iphone-15-pro-muybueno': {
     name: 'iPhone 15 Pro',
     desc: '256 GB · Batería 90% · Desbloqueado',
+    descEn: '256 GB · 90% battery · Unlocked',
     cond: 'Muy bueno',
     condEn: 'Very good',
     price: 550,
@@ -28,6 +29,7 @@ const CATALOG = {
   'macbook-air-13-bueno': {
     name: 'MacBook Air 13"',
     desc: 'Intel i5 · 8 GB RAM · 256 GB SSD',
+    descEn: 'Intel i5 · 8 GB RAM · 256 GB SSD',
     cond: 'Bueno',
     condEn: 'Good',
     price: 150,
@@ -37,6 +39,7 @@ const CATALOG = {
   'macbook-air-13-muybueno': {
     name: 'MacBook Air 13"',
     desc: 'Intel i5 · 8 GB RAM · 256 GB SSD',
+    descEn: 'Intel i5 · 8 GB RAM · 256 GB SSD',
     cond: 'Muy bueno',
     condEn: 'Very good',
     price: 200,
@@ -46,6 +49,7 @@ const CATALOG = {
   'macbook-air-13-excelente': {
     name: 'MacBook Air 13"',
     desc: 'Intel i5 · 8 GB RAM · 256 GB SSD',
+    descEn: 'Intel i5 · 8 GB RAM · 256 GB SSD',
     cond: 'Excelente',
     condEn: 'Excellent',
     price: 250,
@@ -55,6 +59,7 @@ const CATALOG = {
   'macbook-neo-2026-openbox': {
     name: 'MacBook Neo 2026',
     desc: '256 GB · 8 GB RAM · Open box',
+    descEn: '256 GB · 8 GB RAM · Open box',
     cond: 'Open box',
     condEn: 'Open box',
     price: 500,
@@ -64,6 +69,7 @@ const CATALOG = {
   'victus-gaming-excelente': {
     name: 'Victus Gaming 15.6" Ryzen 5',
     desc: '16 GB DDR5 · RTX 3050 6 GB · 512 GB SSD',
+    descEn: '16 GB DDR5 · RTX 3050 6 GB · 512 GB SSD',
     cond: 'Excelente',
     condEn: 'Excellent',
     price: 450,
@@ -73,6 +79,7 @@ const CATALOG = {
   'alienware-16-aurora-nuevo': {
     name: 'Alienware 16 Aurora (2025)',
     desc: 'Intel i7 · 16 GB DDR5 · RTX 5050 8 GB · 1 TB SSD',
+    descEn: 'Intel i7 · 16 GB DDR5 · RTX 5050 8 GB · 1 TB SSD',
     cond: 'Nuevo',
     condEn: 'Brand new',
     price: 1400,
@@ -87,4 +94,26 @@ function getItem(id) {
   return Object.prototype.hasOwnProperty.call(CATALOG, id) ? CATALOG[id] : null;
 }
 
-module.exports = { CATALOG, getItem };
+// Enriquece las líneas de Stripe (p. ej. "iPhone 15 Pro (Very good)") con la
+// FOTO y la DESCRIPCIÓN del catálogo, emparejando por los ids del metadata de
+// la sesión. Sirve para que el correo de confirmación muestre cada producto
+// con imagen. Las líneas de Impuestos/Envío no emparejan y quedan tal cual.
+// La descripción se guarda en INGLÉS (los correos van en inglés).
+function enrichLineItems(lines, metaItems, locale) {
+  const prods = (metaItems || [])
+    .map((m) => getItem(String(m && m.id || '')))
+    .filter(Boolean);
+  return (lines || []).map((l) => {
+    const name = String(l.name || '');
+    for (const p of prods) {
+      const cond = locale === 'en' ? (p.condEn || p.cond) : p.cond;
+      const label = cond ? `${p.name} (${cond})` : p.name;
+      if (name === label || name === p.name || name.startsWith(p.name + ' (')) {
+        return { ...l, img: p.img || null, desc: p.descEn || p.desc || null };
+      }
+    }
+    return l;
+  });
+}
+
+module.exports = { CATALOG, getItem, enrichLineItems };

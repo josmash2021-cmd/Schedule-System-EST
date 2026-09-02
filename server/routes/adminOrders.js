@@ -27,7 +27,7 @@ async function syncFromStripe() {
   lastSync = Date.now();
 
   const stripe = require('stripe')(STRIPE_SECRET_KEY);
-  const { getItem } = require('../catalog');
+  const { getItem, enrichLineItems } = require('../catalog');
   // Últimas 100 sesiones de checkout: cubre el historial de una tienda
   // pequeña y las compras hechas antes de que existiera el webhook.
   const list = await stripe.checkout.sessions.list({ limit: 100 });
@@ -45,6 +45,7 @@ async function syncFromStripe() {
     try {
       const li = await stripe.checkout.sessions.listLineItems(s.id, { limit: 100 });
       items = (li.data || []).map((l) => ({ name: l.description, qty: l.quantity, price: (l.amount_total || 0) / 100 }));
+      items = enrichLineItems(items, metaItems, s.locale);
     } catch (_) { /* si falla, se guarda sin detalle de líneas */ }
     // Dirección de envío SIN el nombre (va aparte en customer_name).
     let address = null;

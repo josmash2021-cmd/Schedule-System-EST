@@ -1,5 +1,5 @@
 const express = require('express');
-const { getItem } = require('../catalog');
+const { getItem, enrichLineItems } = require('../catalog');
 const {
   NODE_ENV,
   STRIPE_SECRET_KEY,
@@ -278,7 +278,11 @@ async function webhookHandler(req, res) {
     if (session.payment_status === 'paid') {
       // Las líneas se leen directo de Stripe (fuente confiable), no del
       // metadata: así el detalle nunca se trunca ni depende del cliente.
+      // Luego se enriquecen con foto/descripción del catálogo (para el
+      // correo de confirmación) usando los ids del metadata.
       let items = [];
+      let metaItems = [];
+      try { metaItems = JSON.parse((session.metadata && session.metadata.items) || '[]'); } catch (_) { metaItems = []; }
       try {
         const li = await stripe.checkout.sessions.listLineItems(session.id, { limit: 100 });
         items = (li.data || []).map((l) => ({
@@ -286,6 +290,7 @@ async function webhookHandler(req, res) {
           qty: l.quantity,
           price: (l.amount_total || 0) / 100,
         }));
+        items = enrichLineItems(items, metaItems, session.locale);
       } catch (e) {
         console.error('No se pudieron leer las líneas del pedido:', e.message);
       }
@@ -331,7 +336,6 @@ async function webhookHandler(req, res) {
         // veces). Los ids salen del metadata compacto del checkout.
         (async () => {
           try {
-            const metaItems = JSON.parse((session.metadata && session.metadata.items) || '[]');
             const costo = await orders.applySaleToInventory(metaItems);
             if (costo > 0) await orders.setCosto(savedOrder.id, costo);
           } catch (e) {

@@ -69,9 +69,52 @@ function plantilla(titulo, cuerpoHtml) {
   </div></body></html>`;
 }
 
-const itemsHtml = (items) => (items || [])
-  .map((i) => `<tr><td style="padding:6px 0;border-bottom:1px solid #e5e5e8;">${i.qty > 1 ? `${i.qty}× ` : ''}${i.name}</td><td style="padding:6px 0;border-bottom:1px solid #e5e5e8;text-align:right;">${usd(i.price)}</td></tr>`)
-  .join('');
+// Separa las líneas de productos de las de cargos (tax/envío), que Stripe
+// guarda como líneas más del pedido. Los nombres dependen del idioma de la
+// sesión de checkout ('Impuestos'/'Tax', 'Envío'/'Shipping').
+function splitItems(items) {
+  const products = [];
+  const extras = { tax: 0, ship: 0 };
+  for (const i of items || []) {
+    const n = String(i.name || '').trim().toLowerCase();
+    if (n === 'impuestos' || n === 'tax') extras.tax += Number(i.price) || 0;
+    else if (n === 'envío' || n === 'envio' || n === 'shipping') extras.ship += Number(i.price) || 0;
+    else products.push(i);
+  }
+  return { products, extras };
+}
+
+// Fila de producto con foto (servida por el sitio público), nombre,
+// descripción y precio. Sin foto (órdenes manuales FB) solo el texto.
+const filaProducto = (i) => {
+  const foto = i.img
+    ? `<img src="${siteBase()}/${String(i.img).replace(/^\/+/, '')}" alt="" width="56" style="display:block;width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid #e5e5e8;">`
+    : '';
+  return `<tr>
+    <td style="padding:10px 10px 10px 0;border-bottom:1px solid #e5e5e8;width:60px;vertical-align:top;">${foto}</td>
+    <td style="padding:10px 0;border-bottom:1px solid #e5e5e8;vertical-align:top;">
+      <div style="font-size:14px;color:#111;font-weight:700;">${i.qty > 1 ? `${i.qty}× ` : ''}${i.name}</div>
+      ${i.desc ? `<div style="font-size:12px;color:#8a8a92;margin-top:3px;">${i.desc}</div>` : ''}
+    </td>
+    <td style="padding:10px 0;border-bottom:1px solid #e5e5e8;text-align:right;vertical-align:top;font-size:14px;color:#3a3a40;white-space:nowrap;">${usd(i.price)}</td>
+  </tr>`;
+};
+
+// Resumen del pedido: tabla de productos + bloque de totales
+// (Subtotal / Tax / Shipping / Total). Tax y Shipping solo si existen.
+function resumenPedido(order) {
+  const { products, extras } = splitItems(order.items);
+  const subtotal = products.reduce((a, i) => a + (Number(i.price) || 0), 0);
+  const cargo = (label, val) =>
+    `<tr><td style="padding:4px 0;font-size:13px;color:#55555c;">${label}</td><td style="padding:4px 0;text-align:right;font-size:13px;color:#55555c;">${usd(val)}</td></tr>`;
+  let totales = cargo('Subtotal', subtotal);
+  if (extras.tax > 0) totales += cargo('Tax', extras.tax);
+  if (extras.ship > 0) totales += cargo('Shipping', extras.ship);
+  totales += `<tr><td style="padding:10px 0 0;font-size:16px;color:#111;border-top:1px solid #e5e5e8;"><strong>Total paid</strong></td><td style="padding:10px 0 0;text-align:right;font-size:16px;color:#111;border-top:1px solid #e5e5e8;"><strong>${usd(order.total)}</strong></td></tr>`;
+  return `
+    <table style="width:100%;border-collapse:collapse;">${products.map(filaProducto).join('')}</table>
+    <table style="width:100%;border-collapse:collapse;margin-top:8px;">${totales}</table>`;
+}
 
 const boton = (url, texto) =>
   `<div style="text-align:center;margin:26px 0;"><a href="${url}" style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 28px;border-radius:8px;">${texto}</a></div>`;
@@ -91,9 +134,8 @@ async function sendNewOrderEmails(order) {
       subject: `New order ${num} — ${total}`,
       text: `New order ${num}\nCustomer: ${order.customer_name || order.email || '—'}\nTotal: ${total}\nAddress: ${order.address || '—'}`,
       html: plantilla(`New order ${num}`, `
-        <table style="width:100%;font-size:14px;color:#3a3a40;border-collapse:collapse;">${itemsHtml(order.items)}</table>
-        <p style="font-size:16px;color:#111;"><strong>Total: ${total}</strong></p>
-        <p style="font-size:13px;color:#55555c;">Customer: ${order.customer_name || '—'}<br>Email: ${order.email || '—'}<br>Phone: ${order.phone || '—'}<br>Address: ${order.address || '—'}</p>`),
+        ${resumenPedido(order)}
+        <p style="font-size:13px;color:#55555c;margin-top:18px;">Customer: ${order.customer_name || '—'}<br>Email: ${order.email || '—'}<br>Phone: ${order.phone || '—'}<br>Address: ${order.address || '—'}</p>`),
     }));
   }
 
@@ -105,9 +147,8 @@ async function sendNewOrderEmails(order) {
       text: `Hi${order.customer_name ? ' ' + order.customer_name : ''},\n\nYour order ${num} is confirmed. Total: ${total}.\nTrack your shipment here: ${link}`,
       html: plantilla(`Thanks for your purchase!`, `
         <p style="font-size:14px;color:#3a3a40;">Hi${order.customer_name ? ' <strong>' + order.customer_name + '</strong>' : ''}, your order <strong style="color:#111;">${num}</strong> is confirmed.</p>
-        <table style="width:100%;font-size:14px;color:#3a3a40;border-collapse:collapse;">${itemsHtml(order.items)}</table>
-        <p style="font-size:16px;color:#111;"><strong>Total paid: ${total}</strong></p>
-        ${boton(link, 'Track my order')}`),
+        ${resumenPedido(order)}
+        ${boton(link, 'Track my package')}`),
     }));
   }
 
