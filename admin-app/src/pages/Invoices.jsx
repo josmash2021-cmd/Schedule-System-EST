@@ -387,19 +387,53 @@ export default function Invoices() {
     setSaving(false);
   };
 
-  const imprimir = () => window.print();
+  // window.print() de la página se atascaba en Chrome ("Loading preview…"),
+  // así que todo pasa por el PDF del server: ver helpers abajo.
 
-  // Descarga el PDF del documento (generado en el server, mismo diseño).
+  // PDF del documento generado en el server (mismo diseño). Abrir el PDF en
+  // una pestaña nueva y ahí imprimir es más confiable que window.print() de
+  // la página (el diálogo de Chrome se quedaba en "Loading preview…").
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const fetchPdfBlob = async (url, options) => {
+    const res = await fetch(url, {
+      ...options,
+      headers: { Authorization: `Bearer ${sessionStorage.getItem('est_office_token') || ''}`, ...(options && options.headers) },
+    });
+    if (!res.ok) throw new Error('No se pudo generar el PDF.');
+    return res.blob();
+  };
+  const abrirBlob = (blob) => {
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank', 'noopener');
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  };
+  // Vista de factura guardada: abre su PDF (para imprimir/guardar desde el visor).
+  const abrirPdf = async () => {
+    if (!viewInv) return;
+    setDownloadingPdf(true);
+    try {
+      abrirBlob(await fetchPdfBlob(`/x/s/invoices/${viewInv.id}/pdf`));
+    } catch (e) { setErr(e.message); }
+    setDownloadingPdf(false);
+  };
+  // Editor (factura nueva sin guardar): PDF del contenido actual del form.
+  const abrirPdfBorrador = async () => {
+    if (!form) return;
+    setDownloadingPdf(true);
+    try {
+      abrirBlob(await fetchPdfBlob('/x/s/invoices/preview-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      }));
+    } catch (e) { setErr(e.message); }
+    setDownloadingPdf(false);
+  };
   const descargarPdf = async () => {
     if (!viewInv) return;
     setDownloadingPdf(true);
     try {
-      const res = await fetch(`/x/s/invoices/${viewInv.id}/pdf`, {
-        headers: { Authorization: `Bearer ${sessionStorage.getItem('est_office_token') || ''}` },
-      });
-      if (!res.ok) throw new Error('No se pudo generar el PDF.');
-      const blob = await res.blob();
+      const blob = await fetchPdfBlob(`/x/s/invoices/${viewInv.id}/pdf`);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -440,7 +474,9 @@ export default function Invoices() {
             {downloadingPdf ? <span className="spinner" /> : 'Descargar PDF'}
           </button>
           <button className="btn btn-secondary btn-sm" onClick={compartir}>Compartir</button>
-          <button className="btn btn-primary btn-sm" onClick={imprimir}>Imprimir / PDF</button>
+          <button className="btn btn-primary btn-sm" onClick={abrirPdf} disabled={downloadingPdf}>
+            {downloadingPdf ? <span className="spinner" /> : 'Imprimir / PDF'}
+          </button>
         </div>
         <InvoiceDoc inv={viewInv} items={viewInv.items} />
       </div>
@@ -450,14 +486,17 @@ export default function Invoices() {
   if (mode === 'form' && form) {
     // Editor con vista previa en vivo: el documento de la derecha se va
     // llenando solo mientras se escribe (InvoiceDoc tolera campos vacíos).
-    // El botón Imprimir imprime la preview (el formulario se oculta en print).
+    // "Imprimir / PDF" abre el PDF generado en el server con el contenido
+    // actual del form (window.print() de la página se atascaba en Chrome).
     return (
       <div className="invoice-page">
         <div className="section-head invoice-toolbar">
           <button className="btn btn-secondary btn-sm" onClick={() => { setMode('list'); setEditId(null); setErr(''); }}>← Volver</button>
           <strong style={{ fontSize: 15 }}>{editId ? `Editar factura ${invoices?.find((i) => i.id === editId)?.invoice_number || ''}` : 'Nueva factura'}</strong>
           <div className="spacer" />
-          <button className="btn btn-secondary btn-sm" onClick={imprimir}>Imprimir / PDF</button>
+          <button className="btn btn-secondary btn-sm" onClick={abrirPdfBorrador} disabled={downloadingPdf}>
+            {downloadingPdf ? <span className="spinner" /> : 'Imprimir / PDF'}
+          </button>
         </div>
         <div className="inv-editor">
           <div className="card inv-editor-form">

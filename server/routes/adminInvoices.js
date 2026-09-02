@@ -21,6 +21,23 @@ router.get('/', requireRole('admin'), async (_req, res) => {
   }
 });
 
+// PDF sin guardar: el modo form del panel lo usa para "Imprimir / PDF" —
+// recibe el contenido del formulario y devuelve el documento, sin tocar la DB.
+router.post('/preview-pdf', requireRole('admin'), async (req, res) => {
+  try {
+    const f = invoices.normalizeFields(req.body);
+    // normalizeFields serializa items a JSON (como se guardan en la DB);
+    // el generador de PDF los necesita como array.
+    const pdf = await buildInvoicePdf({ ...f, items: f.items ? JSON.parse(f.items) : [] });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline; filename="Factura-borrador.pdf"');
+    res.send(pdf);
+  } catch (err) {
+    console.error('invoice preview-pdf error:', err.message);
+    res.status(500).json({ error: 'No se pudo generar el PDF.' });
+  }
+});
+
 // PDF del documento (misma generación que el adjunto del correo).
 router.get('/:id/pdf', requireRole('admin'), async (req, res) => {
   const id = Number(req.params.id);

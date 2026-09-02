@@ -168,4 +168,4 @@ async function createFromOrder(order) {
   }, null);
 }
 
-module.exports = { listAll, findById, create, update, remove, findByOrderId, createFromOrder };
+module.exports = { listAll, findById, create, update, remove, findByOrderId, createFromOrder, normalizeFields };
