@@ -24,29 +24,75 @@ async function findById(id) {
   return r.rows[0] || null;
 }
 
-async function create(fields) {
+async function create(fields, userId) {
   const cols = [];
   const vals = [];
   const ph = [];
   let i = 1;
   for (const k of FIELDS) if (fields[k] !== undefined) { cols.push(k); vals.push(fields[k]); ph.push(`$${i++}`); }
   if (fields.stock !== undefined) { cols.push('stock'); vals.push(fields.stock); ph.push(`$${i++}`); }
-  const r = await pool.query(`INSERT INTO inventory_items (${cols.join(', ')}) VALUES (${ph.join(', ')}) RETURNING *`, vals);
-  return r.rows[0];
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const r = await client.query(`INSERT INTO inventory_items (${cols.join(', ')}) VALUES (${ph.join(', ')}) RETURNING *`, vals);
+    const item = r.rows[0];
+    // El stock inicial ES una compra de mercancía: debe quedar su movimiento
+    // de entrada, si no la inversión del mes no lo cuenta.
+    if (Number(item.stock) > 0) {
+      await client.query(
+        'INSERT INTO inventory_movements (item_id, delta, reason, note, user_id) VALUES ($1, $2, $3, $4, $5)',
+        [item.id, Number(item.stock), 'entrada', 'Stock inicial', userId || null]
+      );
+    }
+    await client.query('COMMIT');
+    return item;
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch (_) { /* conexión rota */ }
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
-async function update(id, fields) {
+async function update(id, fields, userId) {
   const sets = [];
   const vals = [];
   let i = 1;
   for (const k of FIELDS) if (fields[k] !== undefined) { sets.push(`${k} = $${i++}`); vals.push(fields[k]); }
   // El stock también se puede corregir desde la ficha (Cantidad).
-  if (fields.stock !== undefined) { sets.push(`stock = $${i++}`); vals.push(fields.stock); }
+  const corrigeStock = fields.stock !== undefined;
+  if (corrigeStock) { sets.push(`stock = $${i++}`); vals.push(fields.stock); }
   if (!sets.length) return findById(id);
   sets.push('updated_at = NOW()');
   vals.push(id);
-  const r = await pool.query(`UPDATE inventory_items SET ${sets.join(', ')} WHERE id = $${i} RETURNING *`, vals);
-  return r.rows[0] || null;
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    // La corrección directa de cantidad también deja su movimiento (si no,
+    // las compras/ajustes hechos así no aparecen en la inversión del mes).
+    if (corrigeStock) {
+      const prev = await client.query('SELECT stock FROM inventory_items WHERE id = $1 FOR UPDATE', [id]);
+      if (prev.rows.length) {
+        const delta = Number(fields.stock) - Number(prev.rows[0].stock || 0);
+        if (delta !== 0) {
+          await client.query(
+            'INSERT INTO inventory_movements (item_id, delta, reason, note, user_id) VALUES ($1, $2, $3, $4, $5)',
+            [id, delta, delta > 0 ? 'entrada' : 'ajuste', 'Corrección de cantidad', userId || null]
+          );
+        }
+      }
+    }
+    const r = await client.query(`UPDATE inventory_items SET ${sets.join(', ')} WHERE id = $${i} RETURNING *`, vals);
+    await client.query('COMMIT');
+    return r.rows[0] || null;
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch (_) { /* conexión rota */ }
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 // Baja lógica (preserva el historial de movimientos).

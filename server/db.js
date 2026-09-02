@@ -254,6 +254,22 @@ async function initDb() {
       WHERE si.item_id = ii.id AND si.cost IS NULL;
     `);
 
+    // Backfill (idempotente): productos dados de alta ANTES de que el alta
+    // registrara su movimiento de entrada. Sin esto, las "Compras de
+    // inventario" por mes no contaban esas unidades. Aproximación:
+    // delta = stock actual + unidades vendidas de ese producto; la fecha del
+    // movimiento es la del alta del producto (cuenta en su mes).
+    // (Va aquí porque necesita que sale_items ya exista.)
+    await client.query(`
+      INSERT INTO inventory_movements (item_id, delta, reason, note, user_id, created_at)
+      SELECT i.id,
+             i.stock + COALESCE((SELECT SUM(si.qty) FROM sale_items si WHERE si.item_id = i.id), 0),
+             'entrada', 'Stock inicial (registrado retroactivamente)', NULL, i.created_at
+      FROM inventory_items i
+      WHERE NOT EXISTS (SELECT 1 FROM inventory_movements m WHERE m.item_id = i.id AND m.delta > 0)
+        AND (i.stock + COALESCE((SELECT SUM(si.qty) FROM sale_items si WHERE si.item_id = i.id), 0)) > 0;
+    `);
+
     await client.query(`
       CREATE TABLE IF NOT EXISTS expenses (
         id          SERIAL PRIMARY KEY,

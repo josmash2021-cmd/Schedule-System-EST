@@ -105,7 +105,7 @@ router.post('/', requireRole('admin'), async (req, res) => {
   if (!fields.name) return res.status(400).json({ error: 'El nombre es obligatorio.' });
   if (b.stock !== undefined) { const r = num(b.stock, { int: true, min: 0 }); if (!r.ok) return res.status(400).json({ error: 'Stock inicial inválido.' }); fields.stock = r.val == null ? 0 : r.val; }
   try {
-    const item = await inventory.create(fields);
+    const item = await inventory.create(fields, req.user.id);
     audit.logAction(req.user.id, 'inventory.create', { targetType: 'inventory', targetId: item.id, ip: getClientIp(req) });
     res.status(201).json({ item });
   } catch (err) {
@@ -128,7 +128,7 @@ router.patch('/:id', requireRole('admin'), async (req, res) => {
   try {
     const existing = await inventory.findById(id);
     if (!existing) return res.status(404).json({ error: 'Producto no encontrado.' });
-    const item = await inventory.update(id, fields);
+    const item = await inventory.update(id, fields, req.user.id);
     audit.logAction(req.user.id, 'inventory.update', { targetType: 'inventory', targetId: id, ip: getClientIp(req) });
     res.json({ item });
   } catch (err) {
