@@ -548,7 +548,10 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   `RESEND_API_KEY`, `EMAIL_FROM`, `OWNER_EMAIL`): nuevo pedido (dueño +
   confirmación al cliente con el link), "va en camino" al guardar tracking,
   "en tránsito" y "entregado" (job AfterShip; flags `email_shipped/transit/
-  delivered` para no reenviar). OJO Resend: sin dominio verificado, el plan
+  delivered` para no reenviar). **Diseño de los correos (2026-09-02): van en
+  INGLÉS, fondo blanco y logo negro** `assets/img/logo-black.png` (derivado de
+  `logo-cruise.png` recolorando lo blanco a negro, el brazo dorado intacto;
+  servido desde el sitio público). OJO Resend: sin dominio verificado, el plan
   gratis solo envía al correo de la propia cuenta; para clientes hay que
   verificar el dominio (DNS) en resend.com.
   **Facturas automáticas + PDF (2026-09-02):** cada orden nueva (web o FB)

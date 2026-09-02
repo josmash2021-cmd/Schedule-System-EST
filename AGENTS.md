@@ -80,7 +80,9 @@ cambies estructura, flujos o convenciones.
   `GET /api/track/:token` por `track_token`, sin PII de contacto),
   `auth.js` (login viejo, sin frontend).
 - **Correos transaccionales:** `server/lib/email.js` (Resend vía fetch, sin
-  dependencias; env `RESEND_API_KEY`, `EMAIL_FROM`, `OWNER_EMAIL`). Se envían:
+  dependencias; env `RESEND_API_KEY`, `EMAIL_FROM`, `OWNER_EMAIL`). **En
+  inglés, fondo blanco y logo negro** (`assets/img/logo-black.png`, servido
+  por el sitio público). Se envían:
   nuevo pedido (dueño + confirmación al cliente con link `/track?t=`), "va en
   camino" al guardar tracking, "en tránsito" y "entregado" (vía AfterShip), y
   la factura con PDF adjunto (`POST /x/s/orders/:id/send-invoice`).
