@@ -551,7 +551,11 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   delivered` para no reenviar). **Diseño de los correos (2026-09-02): van en
   INGLÉS, fondo blanco y logo negro** `assets/img/logo-black.png` (derivado de
   `logo-cruise.png` recolorando lo blanco a negro, el brazo dorado intacto;
-  servido desde el sitio público). OJO Resend: sin dominio verificado, el plan
+  servido desde el sitio público). La confirmación lleva cada producto con
+  foto y descripción (`catalog.enrichLineItems` agrega `img`/`desc` en inglés
+  al JSONB de items en el webhook y en el sync de adminOrders) y el desglose
+  Subtotal/Tax/Shipping/Total paid (las líneas Impuestos/Envío de Stripe se
+  separan por nombre en `email.splitItems`). OJO Resend: sin dominio verificado, el plan
   gratis solo envía al correo de la propia cuenta; para clientes hay que
   verificar el dominio (DNS) en resend.com.
   **Facturas automáticas + PDF (2026-09-02):** cada orden nueva (web o FB)

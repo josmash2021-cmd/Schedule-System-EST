@@ -82,7 +82,10 @@ cambies estructura, flujos o convenciones.
 - **Correos transaccionales:** `server/lib/email.js` (Resend vía fetch, sin
   dependencias; env `RESEND_API_KEY`, `EMAIL_FROM`, `OWNER_EMAIL`). **En
   inglés, fondo blanco y logo negro** (`assets/img/logo-black.png`, servido
-  por el sitio público). Se envían:
+  por el sitio público). La confirmación muestra cada producto con **foto y
+  descripción** (los items se enriquecen en el webhook/sync con
+  `catalog.enrichLineItems`, que guarda `img`/`desc` en inglés en el JSONB) y
+  el desglose Subtotal / Tax / Shipping / Total paid. Se envían:
   nuevo pedido (dueño + confirmación al cliente con link `/track?t=`), "va en
   camino" al guardar tracking, "en tránsito" y "entregado" (vía AfterShip), y
   la factura con PDF adjunto (`POST /x/s/orders/:id/send-invoice`).
