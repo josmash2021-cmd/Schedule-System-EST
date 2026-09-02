@@ -266,6 +266,28 @@ async function initDb() {
     `);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_expenses_created ON expenses(created_at);`);
 
+    // ----- Órdenes online (Stripe Checkout) -----
+    // Cada pago web completado se guarda aquí desde el webhook de checkout.
+    // stripe_session_id es UNIQUE: dedupe persistente (Stripe reintenta los
+    // webhooks; el Set en memoria del handler no basta tras un reinicio).
+    // Los textos del cliente (nombre, dirección) son una foto del momento del
+    // pago, igual que las facturas.
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS online_orders (
+        id                SERIAL PRIMARY KEY,
+        stripe_session_id TEXT UNIQUE NOT NULL,
+        customer_name     TEXT,
+        email             TEXT,
+        phone             TEXT,
+        address           TEXT,
+        items             JSONB NOT NULL DEFAULT '[]'::jsonb,
+        total             NUMERIC(10,2) NOT NULL DEFAULT 0,
+        currency          TEXT NOT NULL DEFAULT 'usd',
+        created_at        TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_online_orders_created ON online_orders(created_at);`);
+
     // ----- Facturas (Bill of Sale) -----
     // Una factura puede nacer de una venta de mostrador (sale_id), de una
     // reparación entregada (repair_id) o de ambos. Los textos se guardan como

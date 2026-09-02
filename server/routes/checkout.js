@@ -9,6 +9,7 @@ const {
   TAX_RATE,
 } = require('../config');
 const { sendOwnerOrderNotification } = require('../notifications');
+const orders = require('../models/orders');
 
 const router = express.Router();
 
@@ -297,10 +298,28 @@ async function webhookHandler(req, res) {
         address = parts.join(' | ');
       }
 
+      // Guardar la orden en la base (aparece en el panel, página Ventas).
+      // En try/catch aparte: si la DB falla, la notificación al dueño igual sale.
+      const cd = session.customer_details || {};
+      try {
+        await orders.createFromStripe({
+          sessionId: session.id,
+          customerName: sd && sd.name ? sd.name : cd.name,
+          email: cd.email,
+          phone: cd.phone,
+          address,
+          items,
+          total: (session.amount_total || 0) / 100,
+          currency: session.currency,
+        });
+      } catch (e) {
+        console.error('No se pudo guardar la orden online:', e.message);
+      }
+
       sendOwnerOrderNotification({
         total: (session.amount_total || 0) / 100,
         currency: session.currency,
-        email: session.customer_details ? session.customer_details.email : null,
+        email: cd.email,
         address,
         items,
         reference: session.id,

@@ -111,6 +111,7 @@ export default function Dashboard() {
   const [weekAppts, setWeekAppts] = useState(null);
   const [tickets, setTickets] = useState(null);
   const [directas, setDirectas] = useState(null); // ventas de mostrador
+  const [ordenes, setOrdenes] = useState(null); // compras online (Stripe)
   const [inventory, setInventory] = useState(null);
   const [err, setErr] = useState('');
 
@@ -124,6 +125,7 @@ export default function Dashboard() {
       .catch(() => setWeekAppts([]));
     api('/repairs').then((d) => setTickets(d.tickets || [])).catch(() => setTickets([]));
     api('/sales').then((d) => setDirectas(d.sales || [])).catch(() => setDirectas([]));
+    api('/orders').then((d) => setOrdenes(d.orders || [])).catch(() => setOrdenes([]));
     api('/inventory').then((d) => setInventory(d.items || [])).catch(() => setInventory([]));
   }, []);
 
@@ -135,15 +137,17 @@ export default function Dashboard() {
   // Reparaciones creadas esta semana.
   const weekRepairs = tickets ? tickets.filter((t) => inWeek(chicagoKey(new Date(t.created_at)))) : null;
 
-  // Toda venta = reparación entregada O venta de mostrador, como {fecha, monto}.
-  // Es la MISMA definición que usa la página de Ventas; si difieren, los números
-  // del Dashboard no cuadran con los de esa página.
-  const ventasTodas = (tickets && directas) ? [
+  // Toda venta = reparación entregada O venta de mostrador O compra online,
+  // como {fecha, monto}. Es la MISMA definición que usa la página de Ventas;
+  // si difieren, los números del Dashboard no cuadran con los de esa página.
+  const ventasTodas = (tickets && directas && ordenes) ? [
     ...tickets
       .filter((t) => t.status === 'entregado' && t.delivered_at)
       .map((t) => ({ key: chicagoKey(new Date(t.delivered_at)), monto: Number(t.final_price) || 0 })),
     ...directas
       .map((v) => ({ key: chicagoKey(new Date(v.created_at)), monto: Number(v.total) || 0 })),
+    ...ordenes
+      .map((o) => ({ key: chicagoKey(new Date(o.created_at)), monto: Number(o.total) || 0 })),
   ] : null;
 
   // Ventas de la semana por día (reparaciones + mostrador).

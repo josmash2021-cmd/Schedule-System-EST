@@ -509,6 +509,18 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   `JWT_SECRET` obligatorio en producción (sale con error si falta);
   `CALLMEBOT_API_KEY` y `OWNER_PHONE` presentes pero **CallMeBot ya no se usa**
   (residuo de una integración anterior a Twilio).
+- **Órdenes online conectadas al panel (2026-09-01):** la sesión de Stripe
+  pide dirección de envío US (`shipping_address_collection`) y el webhook de
+  `routes/checkout.js` guarda cada pago en la tabla `online_orders`
+  (`stripe_session_id` UNIQUE como dedupe persistente, `items` JSONB, email,
+  teléfono, dirección en una línea) vía `models/orders.js` — antes solo se
+  mandaba SMS/WhatsApp y no quedaba registro. El panel las lee con
+  `GET /x/s/orders` (`routes/adminOrders.js`, solo admin, solo lectura:
+  los reembolsos se hacen en Stripe). Ventas y Dashboard suman 3 fuentes
+  (reparaciones entregadas + mostrador + online; costo 0 en online porque el
+  catálogo web no está ligado al inventario). En la tabla de Ventas, cada
+  orden online tiene badge "online" y botón Detalle que expande cliente,
+  email, teléfono, dirección de envío y artículos.
 
 ## 5. Backend Netlify (`netlify/functions/`) — legado/paralelo
 

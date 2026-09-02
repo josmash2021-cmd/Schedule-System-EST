@@ -60,13 +60,21 @@ cambies estructura, flujos o convenciones.
 - Entrada: `server/index.js` — monta routers y sirve estáticos.
 - Rutas del panel (`/x/s/*`): `server/routes/adminAuth.js`, `adminUsers.js`,
   `adminTime.js`, `adminTasks.js`, `adminMonitor.js`, `adminRepairs.js`,
-  `adminInventory.js`, `adminInvoices.js` (facturas, solo admin).
+  `adminInventory.js`, `adminInvoices.js` (facturas, solo admin),
+  `adminOrders.js` (órdenes online Stripe, solo lectura, solo admin).
 - Rutas públicas (`/api/*`): `appointments.js`, `slots.js`, `checkout.js`
-  (Stripe), `auth.js` (login viejo, sin frontend).
+  (Stripe; su webhook guarda cada pago en la tabla `online_orders` y pide
+  dirección de envío US en la sesión), `auth.js` (login viejo, sin frontend).
 - Modelos (SQL directo con `pg`): `server/models/` — `users.js`,
   `repairs.js`, `inventory.js`, `tasks.js`, `timeEntries.js`, `audit.js`,
   `invoices.js` (tabla `invoices`: Bill of Sale ligado a `sale_id` o
-  `repair_id`; `items` JSONB; número auto `EST-0001`).
+  `repair_id`; `items` JSONB; número auto `EST-0001`), `orders.js` (tabla
+  `online_orders`: compras web; `stripe_session_id` UNIQUE como dedupe;
+  `items` JSONB; email/teléfono/dirección del cliente).
+- **Ventas del panel = 3 fuentes** (misma definición en `Sales.jsx` y
+  `Dashboard.jsx`): reparaciones entregadas + ventas de mostrador + órdenes
+  online. Las órdenes tienen `costo: 0` (el catálogo web no está ligado al
+  inventario) y no se anulan ni borran desde el panel (reembolsos en Stripe).
 - `server/db.js`: Pool + `CREATE TABLE IF NOT EXISTS` (las tablas se
   autocrean al arrancar). `repair_tickets` tiene `device_type`
   (telefono/tablet/laptop), `service_type` (revision/reparacion/mantenimiento),

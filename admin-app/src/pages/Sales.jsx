@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, Fragment } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import BarChart from '../components/BarChart.jsx';
@@ -108,6 +108,8 @@ export default function Sales() {
   const [tickets, setTickets] = useState(null);
   const [directas, setDirectas] = useState(null);
   const [expenses, setExpenses] = useState(null);
+  const [ordenes, setOrdenes] = useState(null);
+  const [openOrder, setOpenOrder] = useState(null);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const [registering, setRegistering] = useState(false);
@@ -126,12 +128,14 @@ export default function Sales() {
     api('/repairs').then((d) => setTickets(d.tickets || [])),
     api('/sales').then((d) => setDirectas(d.sales || [])),
     api('/expenses').then((d) => setExpenses(d.expenses || [])),
+    api('/orders').then((d) => setOrdenes(d.orders || [])),
   ]).catch((e) => setErr(e.message));
   useEffect(() => { load(); }, [tick]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const cargado = tickets != null && directas != null && expenses != null;
+  const cargado = tickets != null && directas != null && expenses != null && ordenes != null;
 
-  // Ventas = reparaciones entregadas + ventas directas del mostrador.
+  // Ventas = reparaciones entregadas + ventas directas del mostrador + órdenes online.
+  // Cualquier fuente nueva debe añadirse también en Dashboard.jsx (ventasTodas).
   const sales = useMemo(() => {
     const deReparacion = (tickets || [])
       .filter((t) => t.status === 'entregado' && t.delivered_at)
@@ -149,8 +153,18 @@ export default function Sales() {
       cliente: null, telefono: null, pago: v.payment_method || null,
       quien: v.seller_username || null, cp: chicagoParts(new Date(v.created_at)),
     }));
-    return [...deReparacion, ...deMostrador];
-  }, [tickets, directas]);
+    // Órdenes online (Stripe): costo 0 porque el catálogo web no está ligado al
+    // inventario del panel; el detalle del cliente (email, teléfono,
+    // dirección de envío) se muestra al expandir la fila.
+    const deOnline = (ordenes || []).map((o) => ({
+      key: 'o' + o.id, orderId: o.id, tipo: 'online', price: Number(o.total) || 0, when: o.created_at, costo: 0,
+      concepto: (o.items || []).map((i) => (i.qty > 1 ? `${i.qty}× ${i.name}` : i.name)).join(', ') || 'Compra web',
+      items: o.items || [],
+      cliente: o.customer_name || null, email: o.email || null, telefono: o.phone || null, direccion: o.address || null,
+      quien: null, cp: chicagoParts(new Date(o.created_at)),
+    }));
+    return [...deReparacion, ...deMostrador, ...deOnline];
+  }, [tickets, directas, ordenes]);
 
   const expensesCp = useMemo(() => (expenses || []).map((e) => ({ ...e, cp: chicagoParts(new Date(e.created_at)) })), [expenses]);
 
@@ -473,26 +487,56 @@ export default function Sales() {
                   <thead><tr><th>Fecha</th><th>Detalle</th><th>Tipo</th><th className="hide-sm">Atendió</th><th style={{ textAlign: 'right' }}>Precio</th><th></th></tr></thead>
                   <tbody>
                     {shown.map((s) => (
-                      <tr key={s.key}>
-                        <td className="muted">{fmtDay(s.when)}</td>
-                        <td>
-                          <strong>{s.tipo === 'reparacion' ? (s.cliente || '—') : s.concepto}</strong>
-                          <div className="muted" style={{ fontSize: 12 }}>
-                            {s.tipo === 'reparacion' ? s.concepto : (s.pago || 'mostrador')}
-                          </div>
-                        </td>
-                        <td><span className={'badge ' + (s.tipo === 'venta' ? 'badge-on' : 'badge-worker')}>{s.tipo === 'venta' ? 'venta' : 'reparación'}</span></td>
-                        <td className="muted hide-sm">{s.quien || '—'}</td>
-                        <td style={{ textAlign: 'right' }}><strong>{usd.format(s.price)}</strong></td>
-                        <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                          <button className="btn btn-ghost btn-sm"
-                            onClick={() => navigate(s.tipo === 'venta' ? `/facturas?venta=${s.ventaId}` : `/facturas?reparacion=${s.repairId}`)}
-                            title="Crear factura (Bill of Sale)">Facturar</button>
-                          {s.tipo === 'venta' && (
-                            <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => anular(s)} title="Anular venta (repone stock)">Anular</button>
-                          )}
-                        </td>
-                      </tr>
+                      <Fragment key={s.key}>
+                        <tr>
+                          <td className="muted">{fmtDay(s.when)}</td>
+                          <td>
+                            <strong>{s.tipo === 'reparacion' ? (s.cliente || '—') : (s.tipo === 'online' ? (s.cliente || s.concepto) : s.concepto)}</strong>
+                            <div className="muted" style={{ fontSize: 12 }}>
+                              {s.tipo === 'reparacion' ? s.concepto : s.tipo === 'online' ? (s.email || 'compra web') : (s.pago || 'mostrador')}
+                            </div>
+                          </td>
+                          <td><span className={'badge ' + (s.tipo === 'venta' ? 'badge-on' : s.tipo === 'online' ? 'badge-online' : 'badge-worker')}>{s.tipo === 'venta' ? 'venta' : s.tipo === 'online' ? 'online' : 'reparación'}</span></td>
+                          <td className="muted hide-sm">{s.quien || '—'}</td>
+                          <td style={{ textAlign: 'right' }}><strong>{usd.format(s.price)}</strong></td>
+                          <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                            {s.tipo === 'online' ? (
+                              <button className="btn btn-ghost btn-sm"
+                                onClick={() => setOpenOrder(openOrder === s.key ? null : s.key)}
+                                title="Ver datos del cliente y envío">{openOrder === s.key ? 'Cerrar' : 'Detalle'}</button>
+                            ) : (
+                              <>
+                                <button className="btn btn-ghost btn-sm"
+                                  onClick={() => navigate(s.tipo === 'venta' ? `/facturas?venta=${s.ventaId}` : `/facturas?reparacion=${s.repairId}`)}
+                                  title="Crear factura (Bill of Sale)">Facturar</button>
+                                {s.tipo === 'venta' && (
+                                  <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => anular(s)} title="Anular venta (repone stock)">Anular</button>
+                                )}
+                              </>
+                            )}
+                          </td>
+                        </tr>
+                        {s.tipo === 'online' && openOrder === s.key && (
+                          <tr>
+                            <td colSpan="6" style={{ background: '#f8f9fb' }}>
+                              <div className="order-detail">
+                                <div><span className="muted">Cliente:</span> <strong>{s.cliente || '—'}</strong></div>
+                                <div><span className="muted">Email:</span> {s.email || '—'}</div>
+                                <div><span className="muted">Teléfono:</span> {s.telefono || '—'}</div>
+                                <div><span className="muted">Dirección de envío:</span> {s.direccion || '—'}</div>
+                                <div>
+                                  <span className="muted">Artículos:</span>
+                                  <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
+                                    {s.items.map((i, idx) => (
+                                      <li key={idx}>{i.qty > 1 ? `${i.qty}× ` : ''}{i.name} — {usd.format(Number(i.price) || 0)}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
                     ))}
                     <tr>
                       <td colSpan="4" style={{ textAlign: 'right' }}><strong>Total del período</strong></td>
