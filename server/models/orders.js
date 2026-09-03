@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const { pool } = require('../db');
 const invoices = require('./invoices');
 const { getItem } = require('../catalog');
+const trackEvents = require('../lib/trackEvents');
 
 // Toda orden nueva (web o FB) genera su factura automáticamente con los
 // datos del cliente ya llenos, lista para adjuntar en el correo de
@@ -168,6 +169,7 @@ async function updateTracking(id, { tracking_number, carrier, tracking_id }) {
      WHERE id = $1 RETURNING *`,
     [id, tracking_number || null, carrier || null, tracking_id || null]
   );
+  trackEvents.emit('update', id);
   return r.rows[0] || null;
 }
 
@@ -184,7 +186,13 @@ async function updateShipStatus(id, status) {
     'UPDATE online_orders SET ship_status = $2 WHERE id = $1 RETURNING *',
     [id, status]
   );
+  trackEvents.emit('update', id);
   return r.rows[0] || null;
+}
+
+// Fecha estimada de entrega reportada por AfterShip ('YYYY-MM-DD').
+async function updateExpectedDelivery(id, date) {
+  await pool.query('UPDATE online_orders SET expected_delivery = $2 WHERE id = $1', [id, date || null]);
 }
 
 // Órdenes con tracking activo que aún no se marcan entregadas: el job de
@@ -214,6 +222,12 @@ async function findByTrackingNumber(num) {
   return r.rows[0] || null;
 }
 
+// El webhook de AfterShip identifica el paquete por su tracking id.
+async function findByTrackingId(trackingId) {
+  const r = await pool.query('SELECT * FROM online_orders WHERE tracking_id = $1', [String(trackingId || '')]);
+  return r.rows[0] || null;
+}
+
 async function findById(id) {
   const r = await pool.query('SELECT * FROM online_orders WHERE id = $1', [id]);
   return r.rows[0] || null;
@@ -234,6 +248,6 @@ async function markEmailSent(id, flag) {
 
 module.exports = {
   createFromStripe, createManual, listAll, listSessionIds,
-  updateTracking, updateShipStatus, updateShipTag, listInTransit,
-  findByTrackToken, findByTrackingNumber, findById, setCosto, markEmailSent, applySaleToInventory, backfillCosts, SHIP_STATUSES,
+  updateTracking, updateShipStatus, updateShipTag, updateExpectedDelivery, listInTransit,
+  findByTrackToken, findByTrackingNumber, findByTrackingId, findById, setCosto, markEmailSent, applySaleToInventory, backfillCosts, SHIP_STATUSES,
 };

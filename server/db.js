@@ -326,6 +326,9 @@ async function initDb() {
     // Tag fino de AfterShip (InTransit, OutForDelivery, Delivered…) para la
     // barra de progreso de 4 pasos del panel y de la página del cliente.
     await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS ship_tag TEXT;`);
+    // Fecha estimada de entrega que reporta AfterShip (alimenta el texto
+    // "Llega el …" de track.html).
+    await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS expected_delivery DATE;`);
     // Costo de lo vendido online (catálogo ligado al inventario por invId):
     // sin esto la ganancia mensual salía inflada porque las ventas web
     // contaban costo 0.

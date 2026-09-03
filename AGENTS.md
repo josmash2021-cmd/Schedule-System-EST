@@ -22,7 +22,7 @@ cambies estructura, flujos o convenciones.
 - Páginas: `index.html`, `products.html`, `macbook-air-13.html`,
   `iphone-15-pro.html`, `book-appointment.html`, `cart.html`, `success.html`,
   `track.html` (seguimiento público del pedido del cliente: `?t=<track_token>`,
-  consulta `/api/track/:token` cada 30 s; **animación de entrada del camión**
+  consulta `/api/track/:token` cada 30 s y en tiempo real por SSE; **animación de entrada del camión**
   (vista cenital con foto real `assets/img/truck-top.png`, flip horizontal
   para mirar a la derecha: aparece la línea de dashes (sin caja ni fondo,
   directo sobre la página) → el camión entra y frena → aparece la caja
@@ -37,7 +37,11 @@ cambies estructura, flujos o convenciones.
   lento y suave; la animación del camión y los datos entran con fundido
   fluido (doble rAF + clase .in, nunca de golpe); un fallo transitorio del
   API nunca muestra "Order not found" si ya hay datos); el título de la
-  página es fijo ("Order tracking", sin nombre del producto); **layout PC de
+  página es fijo ("Order tracking", sin nombre del producto); **el badge bajo
+  el título muestra la fecha estimada de llegada** ("Llega el jue, 8 may" /
+  "Arriving Thu, May 8" — de `expected_delivery` de AfterShip; "Entregado" al
+  llegar; si no hay fecha, el número de orden como antes) y la página se
+  actualiza en tiempo real por SSE (`/api/track/:token/stream`); **layout PC de
   ancho completo (máx. 1240px) en 3 columnas: Rastreo a la izquierda (300px),
   mapa de ruta al centro con la dirección de envío debajo del mapa, y resumen
   del pedido a la derecha (340px)** (el
@@ -148,9 +152,15 @@ cambies estructura, flujos o convenciones.
   `track.html`).
 - **Tracking de envíos:** `server/lib/tracking.js` (AfterShip API v4, solo si
   hay `AFTERSHIP_API_KEY` en el entorno). Al guardar tracking la orden pasa a
-  'enviado' sola; un job cada 15 min en `server/index.js` marca 'entregado'
-  cuando AfterShip reporta la entrega. Sin la key, 'entregado' se marca
-  manual desde el panel (botón en el detalle de la orden).
+  'enviado' sola. **Webhook en tiempo real:** `POST /api/track/webhook`
+  (registrar la URL en el dashboard de AfterShip) aplica el cambio al instante
+  vía `tracking.applyUpdate` (tag, `expected_delivery`, correos de
+  tránsito/entrega con flags) y emite por el bus `server/lib/trackEvents.js`;
+  `GET /api/track/:token/stream` (SSE) empuja el aviso a track.html, que se
+  recarga al segundo (el polling de 30 s queda de respaldo). Un job cada 15
+  min en `server/index.js` es el respaldo si el webhook falla. Sin la key,
+  'entregado' se marca manual desde el panel (botón en el detalle de la
+  orden).
 - **Ventas del panel = 3 fuentes** (misma definición en `Sales.jsx` y
   `Dashboard.jsx`): reparaciones entregadas + ventas de mostrador + órdenes
   de envío (website + FB Marketplace). Las órdenes no se anulan ni borran

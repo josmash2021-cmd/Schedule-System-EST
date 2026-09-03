@@ -4,6 +4,8 @@
    email ni teléfono del cliente. */
 const express = require('express');
 const orders = require('../models/orders');
+const tracking = require('../lib/tracking');
+const trackEvents = require('../lib/trackEvents');
 const { CATALOG } = require('../catalog');
 
 const router = express.Router();
@@ -51,11 +53,63 @@ function publicOrder(o) {
     address: o.address || null,
     ship_status: o.ship_status || 'pendiente',
     ship_tag: o.ship_tag || null,
+    expected_delivery: o.expected_delivery
+      ? new Date(o.expected_delivery).toISOString().slice(0, 10)
+      : null,
     tracking_number: o.tracking_number || null,
     carrier: o.carrier || null,
     created_at: o.created_at,
   };
 }
+
+// Webhook de AfterShip: avisa al instante cuando el paquete cambia de estado.
+// Se registra la URL https://<dominio>/api/track/webhook en el dashboard de
+// AfterShip. Siempre responde 200 rápido (AfterShip reintenta si no).
+router.post('/webhook', async (req, res) => {
+  try {
+    const msg = req.body && req.body.msg;
+    if (msg) {
+      let o = msg.id ? await orders.findByTrackingId(msg.id) : null;
+      if (!o && msg.tracking_number) o = await orders.findByTrackingNumber(msg.tracking_number);
+      if (o) {
+        await tracking.applyUpdate(o, { tag: msg.tag, expectedDelivery: msg.expected_delivery });
+      }
+    }
+  } catch (err) {
+    console.error('[tracking] webhook error:', err.message);
+  }
+  res.json({ ok: true });
+});
+
+// Stream SSE por pedido: el cliente (track.html) se entera al segundo de un
+// cambio de estado sin esperar al polling. El polling de 30 s sigue activo
+// como respaldo si el stream se cae.
+router.get('/:token/stream', async (req, res) => {
+  const token = String(req.params.token || '');
+  if (!/^[a-f0-9]{32,96}$/.test(token)) return res.status(404).end();
+  try {
+    const o = await orders.findByTrackToken(token);
+    if (!o) return res.status(404).end();
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    });
+    res.write(`data: ${JSON.stringify({ type: 'hello' })}\n\n`);
+    const onUpdate = (id) => {
+      if (id === o.id) res.write(`data: ${JSON.stringify({ type: 'update' })}\n\n`);
+    };
+    trackEvents.on('update', onUpdate);
+    const hb = setInterval(() => res.write(': hb\n\n'), 25000);
+    req.on('close', () => {
+      clearInterval(hb);
+      trackEvents.off('update', onUpdate);
+    });
+  } catch (err) {
+    console.error('track stream error:', err.message);
+    res.status(500).end();
+  }
+});
 
 // Búsqueda por número de rastreo (lo escribe el cliente en "Mi pedido").
 router.get('/lookup/:number', rateLimit, async (req, res) => {

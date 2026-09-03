@@ -58,15 +58,59 @@ async function register(trackingNumber, carrier) {
 // Tag actual del paquete ('InTransit', 'OutForDelivery', 'Delivered', …) o
 // null si no se pudo saber. Se consulta por tracking id (guardado al registrar).
 async function getTag(trackingId) {
+  const s = await getStatus(trackingId);
+  return s ? s.tag : null;
+}
+
+// Estado completo del paquete: tag + fecha estimada de entrega
+// ('YYYY-MM-DD' o null). Usado por el job de respaldo.
+async function getStatus(trackingId) {
   if (!enabled() || !trackingId) return null;
   try {
     const d = await call(`/trackings/${encodeURIComponent(trackingId)}`);
     const t = d && d.data && d.data.tracking;
-    return t ? (t.tag || null) : null;
+    return t ? { tag: t.tag || null, expectedDelivery: t.expected_delivery || null } : null;
   } catch (e) {
     console.error('AfterShip check error:', e.message);
     return null;
   }
 }
 
-module.exports = { enabled, register, getTag };
+// Aplica un cambio de estado a la orden (lo llaman el webhook de AfterShip y
+// el job de respaldo): guarda ship_tag y la fecha estimada, manda los correos
+// de tránsito/entrega (una sola vez, con flags) y emite el aviso SSE para que
+// track.html se actualice al instante. Los requires van dentro para no crear
+// un ciclo con models/orders al arrancar.
+async function applyUpdate(o, { tag, expectedDelivery }) {
+  if (!o) return;
+  const orders = require('../models/orders');
+  const emailLib = require('./email');
+  const trackEvents = require('./trackEvents');
+  let changed = false;
+  if (tag && tag !== o.ship_tag) {
+    await orders.updateShipTag(o.id, tag);
+    changed = true;
+  }
+  const eta = expectedDelivery ? String(expectedDelivery).slice(0, 10) : null;
+  const cur = o.expected_delivery ? new Date(o.expected_delivery).toISOString().slice(0, 10) : null;
+  if (eta && eta !== cur) {
+    await orders.updateExpectedDelivery(o.id, eta);
+    changed = true;
+  }
+  if ((tag === 'InTransit' || tag === 'OutForDelivery') && !o.email_transit) {
+    const ok = await emailLib.sendTransitEmail(o);
+    if (ok) await orders.markEmailSent(o.id, 'email_transit');
+  }
+  if (tag === 'Delivered' && o.ship_status !== 'entregado') {
+    await orders.updateShipStatus(o.id, 'entregado');
+    changed = true;
+    console.log(`[tracking] Orden #${o.id} marcada como entregada.`);
+    if (!o.email_delivered) {
+      const ok = await emailLib.sendDeliveredEmail(o);
+      if (ok) await orders.markEmailSent(o.id, 'email_delivered');
+    }
+  }
+  if (changed) trackEvents.emit('update', o.id);
+}
+
+module.exports = { enabled, register, getTag, getStatus, applyUpdate };

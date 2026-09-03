@@ -256,7 +256,7 @@
         <section class="container track-wrap">
             <div class="track-head">
                 <h1><span data-en="Order tracking">Seguimiento de pedido</span></h1>
-                <div class="track-num"><span data-en="Order">Orden</span> <strong id="trackNum">—</strong></div>
+                <div class="track-num"><span id="trackNumLabel">Orden</span> <strong id="trackNum">—</strong></div>
             </div>
 
             <div id="trackLoading" class="track-loading" data-en="Loading your order…">Cargando tu pedido…</div>
@@ -774,8 +774,24 @@
 
         function render(d) {
             var en = window.EST_LANG === 'en';
-            document.getElementById('trackNum').textContent = d.order_number;
             var step = shipStep(d);
+            // El badge bajo el título muestra la fecha estimada de llegada
+            // (AfterShip). Sin fecha aún: el número de orden como antes.
+            var lbl = document.getElementById('trackNumLabel');
+            var num = document.getElementById('trackNum');
+            var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d.expected_delivery || ''));
+            if (step === 4) {
+                lbl.textContent = en ? 'Delivered' : 'Entregado';
+                num.textContent = d.order_number;
+            } else if (m) {
+                var dt = new Date(+m[1], +m[2] - 1, +m[3]);
+                lbl.textContent = en ? 'Arriving' : 'Llega el';
+                num.textContent = dt.toLocaleDateString(en ? 'en-US' : 'es-US',
+                    { weekday: 'short', month: 'short', day: 'numeric' });
+            } else {
+                lbl.textContent = en ? 'Order' : 'Orden';
+                num.textContent = d.order_number;
+            }
             // En PC el estado es una curva SVG; en móvil, la barra horizontal.
             var pct = (step / 4 * 100) + '%';
             if (window.matchMedia('(min-width: 981px)').matches) {
@@ -863,6 +879,15 @@
         }
         load();
         setInterval(load, 30000);
+        // Tiempo real: el server empuja un aviso por SSE en cuanto el webhook
+        // de AfterShip (o el panel) cambia el estado del pedido. El intervalo
+        // de 30 s queda como respaldo; EventSource reconecta solo si se cae.
+        if (window.EventSource) {
+            var es = new EventSource('/api/track/' + encodeURIComponent(token) + '/stream');
+            es.onmessage = function (e) {
+                try { if (JSON.parse(e.data).type === 'update') load(); } catch (_) { /* heartbeat */ }
+            };
+        }
 
         // Carrusel: flechas con scroll suave.
         var car = document.getElementById('trackCarousel');

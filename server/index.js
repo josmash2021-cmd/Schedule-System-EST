@@ -219,30 +219,18 @@ async function start() {
   });
 
   // Job de rastreo de envíos (AfterShip): cada 15 min revisa las órdenes con
-  // tracking activo. En tránsito → correo al cliente (una vez); entregado →
-  // estado 'entregado' + correo (una vez). Solo corre si hay AFTERSHIP_API_KEY;
-  // un fallo no tumba el server.
+  // tracking activo. Es el RESPALDO del webhook de AfterShip (que actualiza
+  // al instante vía tracking.applyUpdate): si el webhook no está registrado o
+  // un evento se pierde, este job cierra la brecha. Solo corre si hay
+  // AFTERSHIP_API_KEY; un fallo no tumba el server.
   if (tracking.enabled()) {
-    const emailLib = require('./lib/email');
     const checkDeliveries = async () => {
       try {
         const inTransit = await orders.listInTransit();
         for (const o of inTransit) {
-          const tag = await tracking.getTag(o.tracking_id);
-          if (!tag) continue;
-          if (tag !== o.ship_tag) await orders.updateShipTag(o.id, tag);
-          if ((tag === 'InTransit' || tag === 'OutForDelivery') && !o.email_transit) {
-            const ok = await emailLib.sendTransitEmail(o);
-            if (ok) await orders.markEmailSent(o.id, 'email_transit');
-          }
-          if (tag === 'Delivered') {
-            await orders.updateShipStatus(o.id, 'entregado');
-            console.log(`[tracking] Orden #${o.id} marcada como entregada.`);
-            if (!o.email_delivered) {
-              const ok = await emailLib.sendDeliveredEmail(o);
-              if (ok) await orders.markEmailSent(o.id, 'email_delivered');
-            }
-          }
+          const s = await tracking.getStatus(o.tracking_id);
+          if (!s || !s.tag) continue;
+          await tracking.applyUpdate(o, s);
         }
       } catch (e) {
         console.error('[tracking] Error revisando entregas:', e.message);
