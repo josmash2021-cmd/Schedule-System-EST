@@ -36,7 +36,13 @@ cambies estructura, flujos o convenciones.
   cuando la barra lo alcanza — delays escalonados); el paso actual pulsa
   lento y suave; la animación del camión y los datos entran con fundido
   fluido (doble rAF + clase .in, nunca de golpe); un fallo transitorio del
-  API nunca muestra "Order not found" si ya hay datos), **resumen tipo
+  API nunca muestra "Order not found" si ya hay datos); **el título de la
+  página es el producto comprado** (foto + nombre; el span `#trackTitle` NO
+  lleva data-en para que i18n no lo pise en cargas rápidas); **layout en
+  grid: mapa de ruta al centro + resumen angosto (340px) a la derecha** (el
+  mapa es Google Maps embed sin API key: `?saddr=<tienda>&daddr=<cliente>&
+  output=embed`, se inyecta una vez; sin dirección se oculta y el grid cae a
+  una columna), **resumen tipo
   recibo** (productos con foto/desc + Subtotal/Tax/
   Shipping FREE-o-cobrado/Total — las líneas Tax/Shipping del JSONB se separan
   por nombre en el JS, textos dinámicos bilingües vía `window.EST_LANG`) +
