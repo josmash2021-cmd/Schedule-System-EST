@@ -22,27 +22,38 @@
         .track-num { display: inline-block; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px; }
         .track-num strong { color: #f5f5f7; font-weight: 700; }
 
-        /* Línea de progreso animada: Enviado → En tránsito → En reparto →
-           Entregado (estado 0 = preparando, sin barra activa). */
+        /* Línea de progreso con puntos EN las puntas: Creating label (0%) →
+           Shipped (25%) → In transit (50%) → Out for delivery (75%) →
+           Delivered (100%). El punto actual pulsa lento y suave; el relleno
+           avanza fluido y despacio. */
         .track-bar { margin: 10px 0 26px; }
-        .track-bar-line { position: relative; height: 4px; border-radius: 999px; background: rgba(255,255,255,.1); margin: 14px 10px 0; }
+        .track-bar-line { position: relative; height: 4px; border-radius: 999px; background: rgba(255,255,255,.1); margin: 14px 6px 44px; }
         .track-bar-fill {
             position: absolute; left: 0; top: 0; height: 100%; border-radius: 999px;
-            background: #d4af37; transition: width .9s cubic-bezier(.22,1,.36,1);
+            background: #d4af37; transition: width 1.8s cubic-bezier(.22,1,.36,1);
             transform-origin: left; animation: trackBarIn .9s cubic-bezier(.22,1,.36,1);
         }
         @keyframes trackBarIn { from { transform: scaleX(0); } }
-        .track-bar-steps { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: -11px; }
-        .track-bar-step { text-align: center; }
+        .track-bar-steps { position: absolute; left: 0; right: 0; top: 50%; }
+        .track-bar-step { position: absolute; top: 0; width: 110px; transform: translate(-50%, -50%); text-align: center; }
+        .track-bar-step.first { transform: translate(0, -50%); text-align: left; }
+        .track-bar-step.last { transform: translate(-100%, -50%); text-align: right; }
+        .track-bar-step.first .track-bar-dot { margin-left: 0; }
+        .track-bar-step.last .track-bar-dot { margin-left: auto; margin-right: 0; }
         .track-bar-dot {
-            width: 14px; height: 14px; margin: 0 auto 5px; border-radius: 50%;
+            width: 14px; height: 14px; margin: 0 auto; border-radius: 50%;
             background: #0c0c0f; border: 2px solid var(--line);
-            transition: background .4s, border-color .4s, transform .4s;
+            transition: background .5s, border-color .5s;
         }
-        .track-bar-step span { font-size: 11.5px; color: var(--muted); transition: color .4s; }
+        .track-bar-step span { display: block; margin-top: 12px; font-size: 11.5px; color: var(--muted); transition: color .5s; white-space: nowrap; }
         .track-bar-step.on .track-bar-dot { background: #d4af37; border-color: #d4af37; }
         .track-bar-step.on span { color: #f5f5f7; font-weight: 600; }
-        .track-bar-step.current .track-bar-dot { transform: scale(1.3); box-shadow: 0 0 0 5px rgba(212,175,55,.15); }
+        /* Pulso latente: lento y suave, marca el paso actual. */
+        .track-bar-step.current .track-bar-dot { animation: trackPulse 2.6s ease-in-out infinite; }
+        @keyframes trackPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,.35); }
+            50% { box-shadow: 0 0 0 9px rgba(212,175,55,.07); }
+        }
         .track-pre { text-align: center; font-size: 13px; color: var(--muted); margin-top: 8px; }
 
         .track-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; margin-bottom: 16px; }
@@ -191,12 +202,15 @@
 
                 <div id="trackData" class="hidden">
                 <div class="track-bar">
-                    <div class="track-bar-line"><div class="track-bar-fill" id="trackFill" style="width:0%"></div></div>
-                    <div class="track-bar-steps" id="trackSteps">
-                        <div class="track-bar-step"><div class="track-bar-dot"></div><span data-en="Shipped">Enviado</span></div>
-                        <div class="track-bar-step"><div class="track-bar-dot"></div><span data-en="In transit">En tránsito</span></div>
-                        <div class="track-bar-step"><div class="track-bar-dot"></div><span data-en="Out for delivery">En reparto</span></div>
-                        <div class="track-bar-step"><div class="track-bar-dot"></div><span data-en="Delivered">Entregado</span></div>
+                    <div class="track-bar-line">
+                        <div class="track-bar-fill" id="trackFill" style="width:0%"></div>
+                        <div class="track-bar-steps" id="trackSteps">
+                            <div class="track-bar-step first" style="left:0%"><div class="track-bar-dot"></div><span data-en="Creating label">Creando etiqueta</span></div>
+                            <div class="track-bar-step" style="left:25%"><div class="track-bar-dot"></div><span data-en="Shipped">Enviado</span></div>
+                            <div class="track-bar-step" style="left:50%"><div class="track-bar-dot"></div><span data-en="In transit">En tránsito</span></div>
+                            <div class="track-bar-step" style="left:75%"><div class="track-bar-dot"></div><span data-en="Out for delivery">En reparto</span></div>
+                            <div class="track-bar-step last" style="left:100%"><div class="track-bar-dot"></div><span data-en="Delivered">Entregado</span></div>
+                        </div>
                     </div>
                     <div class="track-pre" id="trackPre"></div>
                 </div>
@@ -290,6 +304,9 @@
         var noTokenBox = document.getElementById('trackNoToken');
         var body = document.getElementById('trackBody');
         var trackData = document.getElementById('trackData');
+        var hasData = false; // true tras la primera carga: un fallo transitorio
+                             // del API NUNCA muestra "Order not found" encima
+                             // de un pedido ya visible.
 
         /* Animación del camión: corre UNA vez al aparecer el pedido (válido
            por link del correo o por número de rastreo). Al final queda
@@ -319,6 +336,7 @@
             }, 4000);
         }
         function showOrder(d) {
+            hasData = true;
             errBox.classList.add('hidden');
             body.classList.remove('hidden');
             if (!introDone) { introDone = true; truckIntro(); }
@@ -363,9 +381,9 @@
                 return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
             });
         }
-        // Paso 0 = preparando; 1..4 = enviado, en tránsito, en reparto,
-        // entregado. Usa ship_tag (AfterShip) cuando existe; si no, el estado
-        // interno. El relleno de la barra se anima solo (CSS).
+        // Paso 0 = creando etiqueta (pendiente); 1 = enviado (tracking puesto
+        // en el panel); 2 en tránsito, 3 en reparto, 4 entregado. Usa ship_tag
+        // (AfterShip) cuando existe; si no, el estado interno.
         function shipStep(d) {
             if (d.ship_status === 'entregado' || d.ship_tag === 'Delivered') return 4;
             if (d.ship_tag === 'OutForDelivery') return 3;
@@ -379,11 +397,11 @@
             var step = shipStep(d);
             document.getElementById('trackFill').style.width = (step / 4 * 100) + '%';
             document.querySelectorAll('#trackSteps .track-bar-step').forEach(function (el, i) {
-                el.classList.toggle('on', step >= i + 1);
-                el.classList.toggle('current', step === i + 1);
+                el.classList.toggle('on', step >= i);
+                el.classList.toggle('current', step === i);
             });
             document.getElementById('trackPre').textContent = step === 0
-                ? (en ? 'We are preparing your order. As soon as it ships, you will see the progress here.' : 'Estamos preparando tu pedido. En cuanto se envíe, verás aquí el progreso.')
+                ? (en ? 'We are creating the shipping label for your order. As soon as it ships, you will see the progress here.' : 'Estamos creando la etiqueta de envío de tu pedido. En cuanto se envíe, verás aquí el progreso.')
                 : '';
             // Las líneas Tax/Shipping del pago NO son productos: se separan
             // para el desglose tipo recibo (como en el correo de confirmación).
@@ -426,7 +444,7 @@
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (d) {
                     loading.classList.add('hidden');
-                    if (!d) { errBox.classList.remove('hidden'); return; }
+                    if (!d) { if (!hasData) errBox.classList.remove('hidden'); return; }
                     showOrder(d);
                 })
                 .catch(function () { loading.textContent = 'Sin conexión. Reintentando…'; });
