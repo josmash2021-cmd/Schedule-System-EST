@@ -28,8 +28,12 @@ cambies estructura, flujos o convenciones.
   aparece la caja dorada → se sube atrás y se esconde (z-index bajo la foto)
   → rebote de suspensión → prenden las luces (conos dorados CSS) → queda
   conduciendo en loop; se salta con
-  `prefers-reduced-motion`; los datos se revelan al arrancar); línea de
-  progreso, **resumen tipo recibo** (productos con foto/desc + Subtotal/Tax/
+  `prefers-reduced-motion`; los datos se revelan al arrancar); **barra de 5
+  pasos con puntos en las puntas** (Creating label 0% → Shipped 25% → In
+  transit 50% → Out for delivery 75% → Delivered 100%; el paso actual pulsa
+  lento y suave, el relleno avanza fluido en 1.8 s; un fallo transitorio del
+  API nunca muestra "Order not found" si ya hay datos), **resumen tipo
+  recibo** (productos con foto/desc + Subtotal/Tax/
   Shipping FREE-o-cobrado/Total — las líneas Tax/Shipping del JSONB se separan
   por nombre en el JS, textos dinámicos bilingües vía `window.EST_LANG`) +
   carrusel de productos; CSS inline propio — define `.hidden`, que
