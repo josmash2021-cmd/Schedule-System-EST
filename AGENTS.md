@@ -36,9 +36,8 @@ cambies estructura, flujos o convenciones.
   cuando la barra lo alcanza — delays escalonados); el paso actual pulsa
   lento y suave; la animación del camión y los datos entran con fundido
   fluido (doble rAF + clase .in, nunca de golpe); un fallo transitorio del
-  API nunca muestra "Order not found" si ya hay datos); **el título de la
-  página es el producto comprado** (foto + nombre; el span `#trackTitle` NO
-  lleva data-en para que i18n no lo pise en cargas rápidas); **layout PC de
+  API nunca muestra "Order not found" si ya hay datos); el título de la
+  página es fijo ("Order tracking", sin nombre del producto); **layout PC de
   ancho completo (máx. 1240px) en 3 columnas: Rastreo a la izquierda (300px),
   mapa de ruta al centro con la dirección de envío debajo del mapa, y resumen
   del pedido a la derecha (340px)** (el

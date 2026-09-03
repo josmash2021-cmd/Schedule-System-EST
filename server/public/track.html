@@ -255,8 +255,6 @@
     <main>
         <section class="container track-wrap">
             <div class="track-head">
-                <!-- Sin data-en: el JS escribe aquí el nombre del producto. -->
-                <span class="eyebrow" id="trackEyebrow"></span>
                 <h1><span data-en="Order tracking">Seguimiento de pedido</span></h1>
                 <div class="track-num"><span data-en="Order">Orden</span> <strong id="trackNum">—</strong></div>
             </div>
@@ -827,10 +825,7 @@
                 document.getElementById('trackAddr').textContent = '—';
             }
 
-            // El eyebrow muestra el producto comprado; el título grande es
-            // fijo: "Order Tracking".
-            var firstProd = prods[0];
-            document.getElementById('trackEyebrow').textContent = firstProd ? firstProd.name : '';
+            // Título grande fijo: "Order Tracking" (sin nombre del producto).
 
             // Mapa Mapbox oscuro: ruta tienda (origen) → dirección del
             // cliente, encuadrada completa. Se inicializa una sola vez; sin
