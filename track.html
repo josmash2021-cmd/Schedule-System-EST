@@ -106,7 +106,7 @@
         /* Todas las columnas terminan a la MISMA altura: la tarjeta de
            Status baja hasta donde termina Shipping Address, y el mapa crece
            para llenar su columna. */
-        .track-status-card { height: 100%; box-sizing: border-box; margin-bottom: 0; }
+        .track-status-card { height: 100%; box-sizing: border-box; margin-bottom: 0; background: transparent; border: 0; padding: 0; }
         .track-curve { display: none; } /* solo visible en PC */
         .track-center .track-card { margin-bottom: 0; }
         .track-map-card { flex: 1; display: flex; flex-direction: column; }
@@ -143,8 +143,7 @@
         @media (max-width: 980px) {
             .track-grid, .track-grid.no-map { grid-template-columns: 1fr;
                 grid-template-areas: "status" "summary" "map" "tracking"; }
-            /* Móvil: la tarjeta de estado se ve como antes (sin marco). */
-            .track-status-card { background: transparent; border: 0; padding: 0; }
+            /* Móvil: sin el encabezado "Estado" (el estado ya es obvio). */
             .track-status-card h2 { display: none; }
             .track-map { height: 300px; }
         }
