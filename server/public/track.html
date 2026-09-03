@@ -479,23 +479,40 @@
                             });
                             var b = new mapboxgl.LngLatBounds();
                             coords.forEach(function (c) { b.extend(c); });
-                            // Animación de cámara en dos tiempos:
+                            // Animación de cámara en dos tiempos, disparada
+                            // SOLO cuando el mapa entra en pantalla (si corre
+                            // antes, el usuario nunca la ve):
                             // 1) Cenital (pitch 0, norte arriba): encuadre de
                             //    la ruta COMPLETA, ajustada al cuadro.
                             // 2) Al terminar, la cámara se inclina a 55° y
                             //    gira al rumbo del viaje.
-                            map.resize();
                             var brg = Math.atan2(to[0] - from[0], to[1] - from[1]) * 180 / Math.PI;
-                            map.fitBounds(b, {
-                                padding: { top: 80, bottom: 60, left: 50, right: 50 },
-                                pitch: 0,
-                                bearing: 0,
-                                maxZoom: 11,
-                                duration: 1200
-                            });
-                            map.once('moveend', function () {
-                                map.easeTo({ pitch: 55, bearing: brg, duration: 2200 });
-                            });
+                            var pad = { top: 80, bottom: 60, left: 50, right: 50 };
+                            // Encuadre cenital inmediato (sin animación) para
+                            // que nunca se vea un zoom random.
+                            map.fitBounds(b, { padding: pad, pitch: 0, bearing: 0, maxZoom: 11, duration: 0 });
+                            var cameraDone = false;
+                            function runCamera() {
+                                if (cameraDone) return;
+                                cameraDone = true;
+                                io && io.disconnect();
+                                // Repite el encuadre cenital con animación y
+                                // luego inclina a 55°.
+                                map.fitBounds(b, { padding: pad, pitch: 0, bearing: 0, maxZoom: 11, duration: 1400 });
+                                map.once('moveend', function () {
+                                    map.easeTo({ pitch: 55, bearing: brg, duration: 2400 });
+                                });
+                            }
+                            var card = document.getElementById('trackMapCard');
+                            var io = null;
+                            if ('IntersectionObserver' in window) {
+                                io = new IntersectionObserver(function (entries) {
+                                    if (entries[0].isIntersecting) runCamera();
+                                }, { threshold: 0.35 });
+                                io.observe(card);
+                            } else {
+                                runCamera();
+                            }
                         });
                 }).catch(function () {
                     // Si Mapbox falla, se oculta la tarjeta del mapa.
