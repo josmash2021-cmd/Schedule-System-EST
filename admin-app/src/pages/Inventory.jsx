@@ -197,7 +197,7 @@ export default function Inventory() {
                 {!resumenMes ? <span className="spinner" /> : (
                   <div className="stat-grid" style={{ margin: 0 }}>
                     <div className="stat-card">
-                      <div className="k">Inversión en inventario</div>
+                      <div className="k">Inversión del mes</div>
                       <div className="v">{money(resumenMes.inversion)}</div>
                       <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>{resumenMes.unidadesCompradas} unidades compradas</div>
                     </div>
@@ -209,6 +209,10 @@ export default function Inventory() {
                     <div className="stat-card">
                       <div className="k">Ganancia del mes</div>
                       <div className="v">{money(resumenMes.ganancia)}</div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="k">Gastos del mes</div>
+                      <div className="v">{money(resumenMes.gastos)}</div>
                     </div>
                     <div className="stat-card">
                       <div className="k">Quedó en inventario</div>
