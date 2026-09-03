@@ -4,6 +4,7 @@
    email ni teléfono del cliente. */
 const express = require('express');
 const orders = require('../models/orders');
+const { CATALOG } = require('../catalog');
 
 const router = express.Router();
 
@@ -29,10 +30,22 @@ function rateLimit(req, res, next) {
 }
 
 // Lo público del pedido: NUNCA email ni teléfono del cliente.
+// Los items se enriquecen EN VIVO con la foto/descripción del catálogo
+// (emparejando por nombre) para que el resumen siempre muestre el producto
+// con imagen, aunque la orden se haya guardado sin esos datos.
+const CAT_LIST = Object.values(CATALOG);
+function enrichItems(items) {
+  return (items || []).map((l) => {
+    if (l.img) return l;
+    const name = String(l.name || '');
+    const p = CAT_LIST.find((c) => name === c.name || name.startsWith(c.name + ' ('));
+    return p ? { ...l, img: p.img || null, desc: l.desc || p.descEn || p.desc || null } : l;
+  });
+}
 function publicOrder(o) {
   return {
     order_number: `EST-${1000 + o.id}`,
-    items: o.items || [],
+    items: enrichItems(o.items),
     total: Number(o.total) || 0,
     currency: o.currency || 'usd',
     address: o.address || null,

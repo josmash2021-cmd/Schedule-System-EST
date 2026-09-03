@@ -121,8 +121,11 @@
         .track-map .mapboxgl-ctrl-attrib { display: none !important; }
         @media (max-width: 980px) {
             .track-grid, .track-grid.no-map { grid-template-columns: 1fr; }
+            /* Teléfono: Resumen del pedido arriba, luego mapa+dirección y
+               al final el rastreo. */
+            .track-side { order: 1; }
+            .track-center { order: 2; }
             .track-side-left { order: 3; }
-            .track-side { order: 2; }
             .track-map { height: 300px; }
         }
         .track-addr { font-size: 14px; line-height: 1.55; color: #d5d5da; }
@@ -420,7 +423,8 @@
                 style: 'mapbox://styles/mapbox/dark-v11',
                 center: [-86.8, 33.4],
                 zoom: 5,
-                attributionControl: false
+                attributionControl: false,
+                interactive: false // el mapa no responde a arrastre/zoom/clics
             });
             // TODO dentro del 'load': si el fetch de la ruta tarda más que el
             // estilo, un listener registrado después nunca se dispara (bug:
