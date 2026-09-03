@@ -6,6 +6,13 @@ const mes = process.argv[2] || null;
 (async () => {
   console.log('== purchasesByMonth (lo que ve el panel) ==');
   console.table(await inventory.purchasesByMonth());
+  const dbg = await pool.query(
+    `SELECT m.id, i.name, m.note, m.purchased_at,
+            (m.purchased_at IS NULL AND m.note = 'Stock inicial (registrado retroactivamente)') AS excluida
+     FROM inventory_movements m JOIN inventory_items i ON i.id = m.item_id
+     WHERE m.delta > 0 ORDER BY m.id`);
+  console.log('== filas positivas y si la nueva lógica las excluye ==');
+  console.table(dbg.rows);
   console.log('== movimientos crudos por mes/razón ==');
   const params = [];
   let where = "m.delta > 0 AND (m.reason IS NULL OR m.reason <> 'venta anulada')";
