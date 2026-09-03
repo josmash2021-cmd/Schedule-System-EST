@@ -100,7 +100,10 @@
         .track-grid { display: grid; grid-template-columns: 300px 1fr 340px; gap: 16px; align-items: start; }
         .track-side, .track-side-left { min-width: 0; }
         .track-map-card { margin-bottom: 16px; }
-        .track-map { height: 400px; border-radius: 10px; overflow: hidden; background: #15161d; }
+        .track-map { height: 400px; border-radius: 10px; overflow: hidden; background: #15161d; position: relative; }
+        /* Horas de manejo: esquina superior derecha del mapa. */
+        .map-eta { position: absolute; top: 12px; right: 12px; z-index: 5; background: rgba(12,12,15,.85); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font-size: 13px; color: #f5f5f7; backdrop-filter: blur(4px); }
+        .map-eta strong { color: #d4af37; font-weight: 600; }
         /* NO forzar el tamaño del canvas por CSS: Mapbox calcula las
            posiciones de los pines con su tamaño interno; si el canvas se
            estira por CSS, la línea y los pines no coinciden. Que el tamaño
@@ -483,6 +486,16 @@
                         .then(function (j) {
                             var route = j.routes && j.routes[0];
                             var coords = route ? route.geometry.coordinates : [from, to];
+                            // Horas de manejo (duration de la Directions API)
+                            // en la esquina del mapa.
+                            if (route && route.duration) {
+                                var mins = Math.round(route.duration / 60);
+                                var etaTxt = Math.floor(mins / 60) + ' hr ' + (mins % 60) + ' min';
+                                var eta = document.createElement('div');
+                                eta.className = 'map-eta';
+                                eta.innerHTML = (en ? 'Driving: ' : 'Manejando: ') + '<strong>' + etaTxt + '</strong>';
+                                document.getElementById('trackMap').appendChild(eta);
+                            }
                             map.addSource('route', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } } });
                             map.addLayer({
                                 id: 'route', type: 'line', source: 'route',
@@ -709,13 +722,12 @@
                 (tax > 0 ? '<div class="track-mini"><span>Tax</span><span class="v">' + money(tax) + '</span></div>' : '') +
                 '<div class="track-mini"><span>' + (en ? 'Shipping' : 'Envío') + '</span>' + shipTxt + '</div>';
             document.getElementById('trackTotal').textContent = money(d.total, d.currency);
-            // Dirección con formato postal: calle en una línea y
-            // "Ciudad, ST 12345" en la siguiente.
+            // Dirección en una sola línea horizontal:
+            // "Calle, Ciudad, ST 12345".
             if (d.address) {
                 var seg = d.address.split('|').map(function (s) { return s.trim(); });
-                var street = seg[0];
-                var loc = seg.slice(1).join(', ').replace(/,\s*([A-Z]{2})\s*,\s*(\d{5}(-\d{4})?)/, ', $1 $2');
-                document.getElementById('trackAddr').innerHTML = esc(street) + (loc ? '<br>' + esc(loc) : '');
+                var addrLine = seg.join(', ').replace(/,\s*([A-Z]{2})\s*,\s*(\d{5}(-\d{4})?)/, ', $1 $2');
+                document.getElementById('trackAddr').textContent = addrLine;
             } else {
                 document.getElementById('trackAddr').textContent = '—';
             }
