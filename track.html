@@ -494,11 +494,14 @@
                             // Etiquetas SOLO de origen y destino: "Ciudad, ST".
                             // Se derivan de las direcciones (parte tras la coma).
                             function cityState(addr) {
-                                var parts = addr.split(',');
-                                if (parts.length < 2) return addr;
-                                var city = parts[parts.length - 2].trim();
-                                var st = parts[parts.length - 1].trim().split(' ')[0];
-                                return city + ', ' + st;
+                                var parts = addr.split(',').map(function (s) { return s.trim(); });
+                                // El estado es la parte "ST" o "ST 12345"; la
+                                // ciudad es la parte inmediatamente anterior.
+                                for (var i = 0; i < parts.length; i++) {
+                                    var m = parts[i].match(/^([A-Z]{2})(\s+\d{5})?$/);
+                                    if (m && i > 0) return parts[i - 1] + ', ' + m[1];
+                                }
+                                return parts.length > 1 ? parts[parts.length - 2] + ', ' + parts[parts.length - 1] : addr;
                             }
                             map.addSource('endpoints', {
                                 type: 'geojson',
