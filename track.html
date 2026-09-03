@@ -97,8 +97,35 @@
         /* Layout PC (ancho completo): 3 columnas — Rastreo a la izquierda,
            mapa + dirección de envío (debajo del mapa) al centro, resumen del
            pedido a la derecha. */
-        .track-grid { display: grid; grid-template-columns: 300px 1fr 340px; gap: 16px; align-items: start; }
-        .track-side, .track-side-left { min-width: 0; }
+        .track-grid { display: grid; grid-template-columns: 300px 1fr 340px; gap: 16px; align-items: start;
+            grid-template-areas: "status map summary" "status map tracking"; }
+        .track-side-left { grid-area: status; min-width: 0; }
+        .track-center { grid-area: map; min-width: 0; }
+        .track-side-summary { grid-area: summary; min-width: 0; }
+        .track-side-tracking { grid-area: tracking; min-width: 0; }
+
+        /* Barra de estado VERTICAL en PC (columna izquierda): la línea baja
+           de arriba a abajo, puntos a la izquierda y etiqueta a la derecha. */
+        @media (min-width: 981px) {
+            .track-bar { margin: 0; }
+            .track-bar-line { width: 4px; height: 330px; margin: 12px 0 6px 22px; }
+            .track-bar-fill { width: 100% !important; height: 0; transition: height 1.8s cubic-bezier(.22,1,.36,1); transform-origin: top; animation: trackBarInY .9s cubic-bezier(.22,1,.36,1); }
+            .track-bar-steps { left: 50%; right: auto; top: 0; bottom: 0; width: 0; height: auto; }
+            .track-bar-step { left: 0 !important; width: auto; transform: translateY(-50%); text-align: left; }
+            .track-bar-step.first { transform: translateY(0); }
+            .track-bar-step.last { transform: translateY(-100%); text-align: left; }
+            .track-bar-step:nth-child(1) { top: 0; }
+            .track-bar-step:nth-child(2) { top: 25%; }
+            .track-bar-step:nth-child(3) { top: 50%; }
+            .track-bar-step:nth-child(4) { top: 75%; }
+            .track-bar-step:nth-child(5) { top: 100%; }
+            .track-bar-step .track-bar-dot { left: 0; top: 50%; transform: translate(-50%, -50%); }
+            .track-bar-step.first .track-bar-dot { top: 0; transform: translate(-50%, 0); }
+            .track-bar-step.last .track-bar-dot { top: 100%; transform: translate(-50%, -100%); }
+            .track-bar-step span { padding: 0 0 0 20px; font-size: 12px; white-space: normal; line-height: 1.3; }
+            .track-pre { text-align: left; margin: 8px 0 0 40px; }
+        }
+        @keyframes trackBarInY { from { transform: scaleY(0); } }
         .track-map-card { margin-bottom: 16px; background: transparent; border: 0; padding: 0; position: relative; }
         /* Sombra que simula 3D: el mapa "flota" sobre la página, con una
            sombra grande difusa + una elipse de piso detrás. */
@@ -123,12 +150,11 @@
         .track-map .mapboxgl-ctrl-logo,
         .track-map .mapboxgl-ctrl-attrib { display: none !important; }
         @media (max-width: 980px) {
-            .track-grid, .track-grid.no-map { grid-template-columns: 1fr; }
-            /* Teléfono: Resumen del pedido arriba, luego mapa+dirección y
-               al final el rastreo. */
-            .track-side { order: 1; }
-            .track-center { order: 2; }
-            .track-side-left { order: 3; }
+            .track-grid, .track-grid.no-map { grid-template-columns: 1fr;
+                grid-template-areas: "status" "summary" "map" "tracking"; }
+            /* Móvil: la tarjeta de estado se ve como antes (sin marco). */
+            .track-status-card { background: transparent; border: 0; padding: 0; }
+            .track-status-card h2 { display: none; }
             .track-map { height: 300px; }
         }
         .track-addr { font-size: 14px; line-height: 1.55; color: #d5d5da; }
@@ -277,27 +303,24 @@
                 </div>
 
                 <div id="trackData" class="hidden">
-                <div class="track-bar">
-                    <div class="track-bar-line">
-                        <div class="track-bar-fill" id="trackFill" style="width:0%"></div>
-                        <div class="track-bar-steps" id="trackSteps">
-                            <div class="track-bar-step first" style="left:0%"><div class="track-bar-dot"></div><span data-en="Creating label">Creando etiqueta</span></div>
-                            <div class="track-bar-step" style="left:25%"><div class="track-bar-dot"></div><span data-en="Shipped">Enviado</span></div>
-                            <div class="track-bar-step" style="left:50%"><div class="track-bar-dot"></div><span data-en="In transit">En tránsito</span></div>
-                            <div class="track-bar-step" style="left:75%"><div class="track-bar-dot"></div><span data-en="Out for delivery">En reparto</span></div>
-                            <div class="track-bar-step last" style="left:100%"><div class="track-bar-dot"></div><span data-en="Delivered">Entregado</span></div>
-                        </div>
-                    </div>
-                    <div class="track-pre" id="trackPre"></div>
-                </div>
-
                 <div class="track-grid" id="trackGrid">
-                    <!-- Izquierda: número de rastreo / paquetería. -->
+                    <!-- Izquierda: barra de estado (vertical en PC). -->
                     <div class="track-side-left">
-                        <div class="track-card">
-                            <h2 data-en="Tracking">Rastreo</h2>
-                            <!-- Sin data-en: el contenido lo escribe el JS (i18n lo pisaría). -->
-                            <div class="track-ship" id="trackShip">En cuanto tu paquete sea enviado, aquí aparecerá el número de rastreo.</div>
+                        <div class="track-card track-status-card">
+                            <h2 data-en="Status">Estado</h2>
+                            <div class="track-bar">
+                                <div class="track-bar-line">
+                                    <div class="track-bar-fill" id="trackFill" style="width:0%"></div>
+                                    <div class="track-bar-steps" id="trackSteps">
+                                        <div class="track-bar-step first" style="left:0%"><div class="track-bar-dot"></div><span data-en="Creating label">Creando etiqueta</span></div>
+                                        <div class="track-bar-step" style="left:25%"><div class="track-bar-dot"></div><span data-en="Shipped">Enviado</span></div>
+                                        <div class="track-bar-step" style="left:50%"><div class="track-bar-dot"></div><span data-en="In transit">En tránsito</span></div>
+                                        <div class="track-bar-step" style="left:75%"><div class="track-bar-dot"></div><span data-en="Out for delivery">En reparto</span></div>
+                                        <div class="track-bar-step last" style="left:100%"><div class="track-bar-dot"></div><span data-en="Delivered">Entregado</span></div>
+                                    </div>
+                                </div>
+                                <div class="track-pre" id="trackPre"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -315,14 +338,18 @@
                         </div>
                     </div>
 
-                    <!-- Derecha: resumen del pedido. -->
-                    <div class="track-side">
-                        <div class="track-card">
-                            <h2 data-en="Order summary">Resumen del pedido</h2>
-                            <div id="trackItems"></div>
-                            <div id="trackTotals"></div>
-                            <div class="track-total"><span data-en="Total paid">Total pagado</span><strong id="trackTotal">—</strong></div>
-                        </div>
+                    <!-- Derecha: resumen del pedido y debajo el rastreo. -->
+                    <div class="track-card track-side-summary">
+                        <h2 data-en="Order summary">Resumen del pedido</h2>
+                        <div id="trackItems"></div>
+                        <div id="trackTotals"></div>
+                        <div class="track-total"><span data-en="Total paid">Total pagado</span><strong id="trackTotal">—</strong></div>
+                    </div>
+
+                    <div class="track-card track-side-tracking">
+                        <h2 data-en="Tracking">Rastreo</h2>
+                        <!-- Sin data-en: el contenido lo escribe el JS (i18n lo pisaría). -->
+                        <div class="track-ship" id="trackShip">En cuanto tu paquete sea enviado, aquí aparecerá el número de rastreo.</div>
                     </div>
                 </div>
                 </div><!-- /trackData -->
@@ -696,7 +723,13 @@
             var en = window.EST_LANG === 'en';
             document.getElementById('trackNum').textContent = d.order_number;
             var step = shipStep(d);
-            document.getElementById('trackFill').style.width = (step / 4 * 100) + '%';
+            // En PC la barra es vertical (se rellena en alto); en móvil, horizontal.
+            var pct = (step / 4 * 100) + '%';
+            if (window.matchMedia('(min-width: 981px)').matches) {
+                document.getElementById('trackFill').style.height = pct;
+            } else {
+                document.getElementById('trackFill').style.width = pct;
+            }
             document.querySelectorAll('#trackSteps .track-bar-step').forEach(function (el, i) {
                 el.classList.toggle('on', step >= i);
                 el.classList.toggle('current', step === i);
