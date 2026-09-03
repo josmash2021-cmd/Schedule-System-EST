@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.9.4/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.9.4/mapbox-gl.js"></script>
+<style>
+  body { margin: 0; background: #0c0c0f; }
+  #trackMap { width: 700px; height: 400px; margin: 40px auto; border-radius: 10px; overflow: hidden; }
+  .map-pin { width: 22px; height: 31px; position: relative; }
+  .map-pin .h { display: block; width: 22px; height: 22px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,.55); position: relative; }
+  .map-pin .h::after { content: ''; position: absolute; inset: 6px; border-radius: 50%; background: #0c0c0f; }
+  .map-pin::before { content: ''; position: absolute; left: 50%; top: 19px; transform: translateX(-50%); border: 6px solid transparent; border-top-width: 10px; }
+  .map-pin.store .h { background: #d4af37; }
+  .map-pin.store::before { border-top-color: #d4af37; }
+  .map-pin.dest .h { background: #f5f5f7; }
+  .map-pin.dest::before { border-top-color: #f5f5f7; }
+  .map-pin.dest .h::before { content: ''; position: absolute; inset: -8px; border-radius: 50%; border: 2px solid rgba(245,245,247,.5); animation: pinPulse 2.2s ease-out infinite; }
+  @keyframes pinPulse { 0% { transform: scale(.6); opacity: .9; } 100% { transform: scale(1.4); opacity: 0; } }
+</style>
+</head>
+<body>
+<div id="trackMap"></div>
+<script>
+  var MAPBOX_TOKEN = 'pk.eyJ1Ijoicm95YWxwdXJwbGVjb3JwIiwiYSI6ImNtdGwxcXptNzBtMHkyeW9rZGVrc2p1MnkifQ.RJxI_ihU92XRkJA5UWXY9A';
+  mapboxgl.accessToken = MAPBOX_TOKEN;
+  var from = [-86.799418, 33.38088];   // tienda, Hoover AL
+  var to = [-84.566226, 41.908482];    // cliente, Hillsdale MI
+  var map = new mapboxgl.Map({ container: 'trackMap', style: 'mapbox://styles/mapbox/dark-v11', center: [-86.8, 33.4], zoom: 5, attributionControl: false });
+  map.on('load', function () {
+    map.resize();
+    fetch('https://api.mapbox.com/directions/v5/mapbox/driving/' + from.join(',') + ';' + to.join(',') + '?geometries=geojson&overview=full&access_token=' + MAPBOX_TOKEN)
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        var coords = j.routes[0].geometry.coordinates;
+        function pin(cls) { var el = document.createElement('div'); el.className = 'map-pin ' + cls; el.innerHTML = '<span class="h"></span>'; return el; }
+        new mapboxgl.Marker({ element: pin('store'), anchor: 'bottom' }).setLngLat(from).addTo(map);
+        new mapboxgl.Marker({ element: pin('dest'), anchor: 'bottom' }).setLngLat(to).addTo(map);
+        map.addSource('route', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } } });
+        map.addLayer({ id: 'route', type: 'line', source: 'route', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#d4af37', 'line-width': 4, 'line-opacity': .9 } });
+        var b = new mapboxgl.LngLatBounds();
+        coords.forEach(function (c) { b.extend(c); });
+        var brg = Math.atan2(to[0] - from[0], to[1] - from[1]) * 180 / Math.PI;
+        map.fitBounds(b, { padding: { top: 90, bottom: 60, left: 50, right: 50 }, pitch: 45, bearing: brg, maxZoom: 11, duration: 0 });
+        window.__done = true;
+      });
+  });
+</script>
+</body>
+</html>
