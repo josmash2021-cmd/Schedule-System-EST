@@ -307,6 +307,8 @@ select option { background: #fff; color: #111; }
 
 /* Layout del dashboard: contenido a la izquierda, pastel a la derecha. */
 .content:has(> .dashboard) { max-width: none; }
+/* Inventario: página de ancho completo (sin límite de 1140px). */
+.content:has(> .inventory-page) { max-width: none; }
 .dash-layout { display: grid; grid-template-columns: 1fr 300px; gap: 16px; align-items: start; }
 .dash-layout .stat-grid { grid-template-columns: 1fr; margin-bottom: 0; }
 .dash-main { min-width: 0; }

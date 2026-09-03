@@ -167,7 +167,7 @@ export default function Inventory() {
   }
 
   return (
-    <>
+    <div className="inventory-page">
       <div className="section-head">
         <div className="spacer" />
         <button className="btn btn-primary" onClick={() => setDetail({ id: null })}>+ Nuevo producto</button>
@@ -336,6 +336,6 @@ export default function Inventory() {
                 )}
             </>
           )}
-    </>
+    </div>
   );
 }
