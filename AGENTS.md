@@ -76,8 +76,8 @@ cambies estructura, flujos o convenciones.
   `/x/s/inventory/stock-by-month`; la inversión se agrupa por la fecha REAL
   de compra (`inventory_movements.purchased_at`, editable por el admin en la
   ficha del producto con `PATCH /x/s/inventory/movements/:id`; sin ella cuenta
-  la fecha de registro, y las entradas retroactivas "Stock inicial
-  (registrado retroactivamente)" sin fecha de compra NO cuentan),
+  la fecha de registro — TODAS las entradas cuentan, incluidas las
+  retroactivas de stock inicial),
   `Invoices.jsx` (Facturas: Bill of Sale por venta/reparación, formulario +
   documento imprimible con `window.print()`, sin librerías de PDF; datos del
   vendedor recordados en localStorage `est_invoice_seller`; **vista previa en

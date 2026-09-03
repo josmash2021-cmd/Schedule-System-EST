@@ -217,16 +217,13 @@ export default function Inventory() {
                       <div className="v">{resumenMes.valorCierre == null ? '—' : money(resumenMes.valorCierre)}</div>
                       {resumenMes.valorCierre != null && (
                         <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>
-                          {resumenMes.stockCierre} unidades (a costo, lo que te costaron)
+                          {resumenMes.stockCierre} {resumenMes.stockCierre === 1 ? 'unidad' : 'unidades'} (a costo, lo que te costaron)
                         </div>
                       )}
                     </div>
                     <div className="stat-card">
                       <div className="k">Total: ganancia + inventario</div>
                       <div className="v">{resumenMes.valorCierre == null ? '—' : money(resumenMes.ganancia + resumenMes.valorCierre)}</div>
-                      {resumenMes.valorCierre != null && (
-                        <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>ganancia del mes + inventario restante a costo</div>
-                      )}
                     </div>
                   </div>
                 )}

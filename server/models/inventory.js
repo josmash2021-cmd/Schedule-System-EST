@@ -141,8 +141,9 @@ async function listMovements(itemId, limit = 50) {
 // timestamps están en UTC). No hay foto del costo en el movimiento: si el
 // costo del producto cambia después, los meses viejos reflejan el costo nuevo.
 // El mes es el de la fecha REAL de compra (purchased_at) cuando existe; si
-// no, el del registro. Las entradas retroactivas sin fecha de compra no
-// cuentan: solo suman cuando el dueño les ponga su fecha real.
+// no, el del registro. Todas las entradas cuentan (incluidas las de stock
+// inicial retroactivo, que caen en su mes de registro salvo que el dueño les
+// ponga su fecha real de compra en la ficha del producto).
 async function purchasesByMonth() {
   const r = await pool.query(
     `SELECT to_char(date_trunc('month', COALESCE(m.purchased_at, (m.created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Chicago')), 'YYYY-MM') AS mes,
@@ -150,9 +151,6 @@ async function purchasesByMonth() {
             SUM(m.delta * COALESCE(i.cost, 0)) AS total
      FROM inventory_movements m JOIN inventory_items i ON i.id = m.item_id
      WHERE m.delta > 0 AND (m.reason IS NULL OR m.reason <> 'venta anulada')
-       -- NOT(... = '...') excluiría también los note NULL (SQL 3 valores):
-       -- con IS DISTINCT FROM los NULL cuentan como "distinto" y sí pasan.
-       AND (m.purchased_at IS NOT NULL OR m.note IS DISTINCT FROM 'Stock inicial (registrado retroactivamente)')
      GROUP BY 1 ORDER BY 1 DESC`
   );
   return r.rows.map((x) => ({ mes: x.mes, unidades: Number(x.unidades) || 0, total: Number(x.total) || 0 }));
