@@ -447,7 +447,6 @@
                 } catch (e) { /* si la capa de anclaje no existe, sin 3D */ }
                 Promise.all([geocode(STORE_ADDR), geocode(destAddr)]).then(function (pts) {
                     var from = pts[0], to = pts[1];
-                    window.__trackMap = map; window.__trackPts = { from: from, to: to }; // depuración
                     function pin(cls) {
                         var el = document.createElement('div');
                         el.className = 'map-pin ' + cls;
