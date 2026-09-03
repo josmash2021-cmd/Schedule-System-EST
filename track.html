@@ -514,7 +514,7 @@
                                 map.once('moveend', function () {
                                     // Inclina a 55°, rota 33° a un lado del
                                     // rumbo y acerca 1.5 niveles de zoom.
-                                    map.easeTo({ pitch: 55, bearing: brg + 33, zoom: map.getZoom() + 1.5, duration: 2400 });
+                                    map.easeTo({ pitch: 55, bearing: brg + 33, zoom: map.getZoom() + 0.8, duration: 2400 });
                                 });
                             }
                             var card = document.getElementById('trackMapCard');
