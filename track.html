@@ -18,7 +18,7 @@
         .hidden { display: none !important; } /* site-v3.css no la define */
         .track-wrap { max-width: 720px; margin: 0 auto; padding: 56px 0 70px; }
         .track-head { text-align: center; margin-bottom: 26px; }
-        .track-head h1 { margin: 10px 0 6px; }
+        .track-head h1 { margin: 10px 0 6px; display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
         .track-num { display: inline-block; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px; }
         .track-num strong { color: #f5f5f7; font-weight: 700; }
 
@@ -90,6 +90,20 @@
         .track-mini .free { color: #d4af37; font-weight: 600; }
         .track-total { display: flex; justify-content: space-between; padding-top: 12px; margin-top: 4px; border-top: 1px solid var(--line); font-size: 16px; }
         .track-total strong { color: #d4af37; }
+        /* Título: el producto comprado (foto + nombre). */
+        .track-prod-head { width: 46px; height: 46px; border-radius: 10px; object-fit: cover; border: 1px solid var(--line); flex: 0 0 auto; }
+        /* Layout: mapa de ruta al centro; resumen angosto a la derecha. */
+        .track-grid { display: grid; grid-template-columns: 1fr 340px; gap: 16px; align-items: start; }
+        .track-grid.no-map { grid-template-columns: 1fr; }
+        .track-side { min-width: 0; }
+        .track-map-card { margin-bottom: 0; }
+        .track-map { height: 330px; border-radius: 10px; overflow: hidden; background: #15161d; }
+        .track-map iframe { width: 100%; height: 100%; border: 0; display: block; }
+        @media (max-width: 760px) {
+            .track-grid { grid-template-columns: 1fr; }
+            .track-map-card { margin-bottom: 16px; }
+            .track-map { height: 260px; }
+        }
         .track-addr { font-size: 14px; line-height: 1.55; color: #d5d5da; }
         .track-ship { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; font-size: 14px; }
         .track-ship strong { color: #f5f5f7; }
@@ -198,7 +212,9 @@
         <section class="container track-wrap">
             <div class="track-head">
                 <span class="eyebrow" data-en="Order tracking">Seguimiento de pedido</span>
-                <h1 data-en="Your order">Tu pedido</h1>
+                <!-- El título lo escribe el JS (nombre del producto); SIN
+                     data-en para que i18n nunca lo pise en una carga rápida. -->
+                <h1><img id="trackProdImg" class="track-prod-head hidden" alt=""><span id="trackTitle">Tu pedido</span></h1>
                 <div class="track-num"><span data-en="Order">Orden</span> <strong id="trackNum">—</strong></div>
             </div>
 
@@ -248,22 +264,33 @@
                     <div class="track-pre" id="trackPre"></div>
                 </div>
 
-                <div class="track-card">
-                    <h2 data-en="Order summary">Resumen del pedido</h2>
-                    <div id="trackItems"></div>
-                    <div id="trackTotals"></div>
-                    <div class="track-total"><span data-en="Total paid">Total pagado</span><strong id="trackTotal">—</strong></div>
-                </div>
+                <div class="track-grid" id="trackGrid">
+                    <!-- Mapa punto a punto: tienda (origen) → dirección del
+                         cliente (entrega), con la línea de ruta dibujada. -->
+                    <div class="track-card track-map-card" id="trackMapCard">
+                        <h2 data-en="Delivery route">Ruta de entrega</h2>
+                        <div class="track-map" id="trackMap"></div>
+                    </div>
 
-                <div class="track-card">
-                    <h2 data-en="Shipping address">Dirección de envío</h2>
-                    <div class="track-addr" id="trackAddr">—</div>
-                </div>
+                    <div class="track-side">
+                        <div class="track-card">
+                            <h2 data-en="Order summary">Resumen del pedido</h2>
+                            <div id="trackItems"></div>
+                            <div id="trackTotals"></div>
+                            <div class="track-total"><span data-en="Total paid">Total pagado</span><strong id="trackTotal">—</strong></div>
+                        </div>
 
-                <div class="track-card">
-                    <h2 data-en="Tracking">Rastreo</h2>
-                    <!-- Sin data-en: el contenido lo escribe el JS (i18n lo pisaría). -->
-                    <div class="track-ship" id="trackShip">En cuanto tu paquete sea enviado, aquí aparecerá el número de rastreo.</div>
+                        <div class="track-card">
+                            <h2 data-en="Shipping address">Dirección de envío</h2>
+                            <div class="track-addr" id="trackAddr">—</div>
+                        </div>
+
+                        <div class="track-card">
+                            <h2 data-en="Tracking">Rastreo</h2>
+                            <!-- Sin data-en: el contenido lo escribe el JS (i18n lo pisaría). -->
+                            <div class="track-ship" id="trackShip">En cuanto tu paquete sea enviado, aquí aparecerá el número de rastreo.</div>
+                        </div>
+                    </div>
                 </div>
                 </div><!-- /trackData -->
             </div>
@@ -340,6 +367,8 @@
         var hasData = false; // true tras la primera carga: un fallo transitorio
                              // del API NUNCA muestra "Order not found" encima
                              // de un pedido ya visible.
+        var mapLoaded = false; // el iframe de Google Maps se inyecta una vez
+        var STORE_ADDR = '3659 Lorna Rd Suite 157, Hoover, AL 35216';
 
         /* Animación del camión: corre UNA vez al aparecer el pedido (válido
            por link del correo o por número de rastreo). Todo entra con
@@ -475,6 +504,36 @@
                 '<div class="track-mini"><span>' + (en ? 'Shipping' : 'Envío') + '</span>' + shipTxt + '</div>';
             document.getElementById('trackTotal').textContent = money(d.total, d.currency);
             document.getElementById('trackAddr').textContent = d.address || '—';
+
+            // El título de la página ES el producto comprado (foto + nombre).
+            var firstProd = prods[0];
+            if (firstProd) {
+                document.getElementById('trackTitle').textContent = firstProd.name;
+                if (firstProd.img) {
+                    var pi = document.getElementById('trackProdImg');
+                    pi.src = firstProd.img;
+                    pi.classList.remove('hidden');
+                }
+            } else {
+                document.getElementById('trackTitle').textContent = en ? 'Your order' : 'Tu pedido';
+            }
+
+            // Mapa punto a punto: desde la tienda (origen) hasta la dirección
+            // de entrega, con la línea de ruta dibujada (Google Maps embed,
+            // sin API key). Se inyecta una sola vez; sin dirección se oculta.
+            var mapCard = document.getElementById('trackMapCard');
+            if (d.address) {
+                if (!mapLoaded) {
+                    mapLoaded = true;
+                    var dest = d.address.split('|').map(function (s) { return s.trim(); }).join(', ');
+                    document.getElementById('trackMap').innerHTML =
+                        '<iframe title="Delivery route" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?saddr=' +
+                        encodeURIComponent(STORE_ADDR) + '&daddr=' + encodeURIComponent(dest) + '&output=embed"></iframe>';
+                }
+            } else {
+                mapCard.style.display = 'none';
+                document.getElementById('trackGrid').classList.add('no-map');
+            }
             var ship = document.getElementById('trackShip');
             if (d.tracking_number) {
                 var url = CARRIER_URLS[String(d.carrier || '').toLowerCase()];
