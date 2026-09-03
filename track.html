@@ -97,12 +97,19 @@
         /* Layout PC (ancho completo): 3 columnas — Rastreo a la izquierda,
            mapa + dirección de envío (debajo del mapa) al centro, resumen del
            pedido a la derecha. */
-        .track-grid { display: grid; grid-template-columns: 300px 1fr 340px; gap: 16px; align-items: start;
+        .track-grid { display: grid; grid-template-columns: 300px 1fr 340px; gap: 16px; align-items: stretch;
             grid-template-areas: "status map summary" "status map tracking"; }
         .track-side-left { grid-area: status; min-width: 0; }
-        .track-center { grid-area: map; min-width: 0; }
+        .track-center { grid-area: map; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
         .track-side-summary { grid-area: summary; min-width: 0; }
         .track-side-tracking { grid-area: tracking; min-width: 0; }
+        /* Todas las columnas terminan a la MISMA altura: la tarjeta de
+           Status baja hasta donde termina Shipping Address, y el mapa crece
+           para llenar su columna. */
+        .track-status-card { height: 100%; box-sizing: border-box; margin-bottom: 0; }
+        .track-center .track-card { margin-bottom: 0; }
+        .track-map-card { flex: 1; display: flex; flex-direction: column; }
+        .track-map { flex: 1; min-height: 400px; }
 
         /* Barra de estado VERTICAL en PC (columna izquierda): la línea baja
            de arriba a abajo, puntos a la izquierda y etiqueta a la derecha. */
