@@ -42,8 +42,10 @@ cambies estructura, flujos o convenciones.
   ancho completo (máx. 1240px) en 3 columnas: Rastreo a la izquierda (300px),
   mapa de ruta al centro con la dirección de envío debajo del mapa, y resumen
   del pedido a la derecha (340px)** (el
-  mapa es Google Maps embed sin API key: `?saddr=<tienda>&daddr=<cliente>&
-  output=embed`, se inyecta una vez; sin dirección se oculta; en ≤980px todo
+  mapa es **Mapbox GL JS oscuro** (`dark-v11`, token público `MAPBOX_TOKEN`
+  en el propio archivo): geocodifica tienda y destino, dibuja la ruta con la
+  Directions API y encuadra el trayecto completo con `fitBounds`
+  (padding 70, maxZoom 10); sin dirección o si Mapbox falla se oculta; en ≤980px todo
   cae a una columna: mapa+dirección → resumen → rastreo), **resumen tipo
   recibo** (productos con foto/desc + Subtotal/Tax/
   Shipping FREE-o-cobrado/Total — las líneas Tax/Shipping del JSONB se separan
