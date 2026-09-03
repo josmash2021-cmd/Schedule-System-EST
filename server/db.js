@@ -373,6 +373,9 @@ async function initDb() {
     // los datos del cliente al registrarse la orden.
     await client.query(`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS order_id INTEGER REFERENCES online_orders(id) ON DELETE SET NULL;`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_invoices_order ON invoices(order_id);`);
+    // Envío de la orden (flat $16 web): va en su columna, no como línea de
+    // artículo, para que los totales del recibo cuadren.
+    await client.query(`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS shipping_total NUMERIC(10,2) NOT NULL DEFAULT 0;`);
 
     // Sembrar el primer admin desde ADMIN_PASSWORD (idempotente): solo si aún
     // no existe ningún admin. Nace con must_change_password para forzar rotación.

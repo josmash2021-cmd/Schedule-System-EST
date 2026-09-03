@@ -21,6 +21,7 @@ function normalizeItems(raw) {
   const arr = Array.isArray(raw) ? raw : [];
   return arr.slice(0, 50).map((it) => ({
     description: trim(it.description, 200) || '',
+    ...(it.desc ? { desc: trim(it.desc, 200) } : {}),
     qty: Number(it.qty) || 1,
     price: num(it.price) || 0,
   })).filter((it) => it.description || it.qty !== 1 || it.price !== 0);
@@ -44,6 +45,7 @@ function normalizeFields(body) {
   if (b.tax_rate !== undefined) fields.tax_rate = num(b.tax_rate) || 0;
   if (b.subtotal !== undefined) fields.subtotal = num(b.subtotal) || 0;
   if (b.tax_total !== undefined) fields.tax_total = num(b.tax_total) || 0;
+  if (b.shipping_total !== undefined) fields.shipping_total = num(b.shipping_total) || 0;
   if (b.total !== undefined) fields.total = num(b.total) || 0;
   if (b.items !== undefined) fields.items = JSON.stringify(normalizeItems(b.items));
   return fields;
@@ -137,15 +139,28 @@ async function createFromOrder(order) {
     hour: '2-digit', minute: '2-digit', hour12: false,
   }).formatToParts(when).reduce((a, x) => { a[x.type] = x.value; return a; }, {});
 
+  // Las líneas de Tax/Envío que Stripe guarda como artículos se EXTRAEN a sus
+  // columnas: si no, el recibo mostraría Subtotal inflado y Tax $0.00.
   // desc (opcional): descripción corta del producto del catálogo, va debajo
   // del título en el PDF del recibo.
-  const items = (order.items || []).map((i) => ({
-    description: String(i.name || '').slice(0, 200),
-    ...(i.desc ? { desc: String(i.desc).slice(0, 200) } : {}),
-    qty: Number(i.qty) || 1,
-    price: Number(i.price) || 0,
-  }));
-  const total = Number(order.total) || items.reduce((a, i) => a + i.qty * i.price, 0);
+  const items = [];
+  let taxTotal = 0;
+  let shippingTotal = 0;
+  for (const i of order.items || []) {
+    const name = String(i.name || '').trim();
+    const n = name.toLowerCase();
+    const price = Number(i.price) || 0;
+    if (n === 'impuestos' || n === 'tax') { taxTotal += price; continue; }
+    if (n === 'envío' || n === 'envio' || n === 'shipping') { shippingTotal += price; continue; }
+    items.push({
+      description: name.slice(0, 200),
+      ...(i.desc ? { desc: String(i.desc).slice(0, 200) } : {}),
+      qty: Number(i.qty) || 1,
+      price,
+    });
+  }
+  const subtotal = items.reduce((a, i) => a + i.qty * i.price, 0);
+  const total = Number(order.total) || (subtotal + taxTotal + shippingTotal);
 
   return create({
     order_id: order.id,
@@ -162,9 +177,10 @@ async function createFromOrder(order) {
     // Las compras web son tarjeta vía Stripe; las de FB Marketplace se cobran
     // fuera — quedan como 'otro' para no inventar el método.
     payment_method: order.origen === 'fb_marketplace' ? 'otro' : 'tarjeta',
-    tax_rate: 0, // el impuesto ya viene como línea dentro de items
-    subtotal: total,
-    tax_total: 0,
+    tax_rate: 0, // el impuesto ya viene calculado dentro del pedido
+    subtotal,
+    tax_total: taxTotal,
+    shipping_total: shippingTotal,
     total,
     items,
     warranty_text: '30-Day Limited Warranty',

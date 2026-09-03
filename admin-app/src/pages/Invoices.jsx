@@ -56,8 +56,11 @@ function vacio() {
 function InvoiceDoc({ inv, items }) {
   const subtotal = items.reduce((a, it) => a + (Number(it.qty) || 0) * (Number(it.price) || 0), 0);
   const rate = Number(inv.tax_rate) || 0;
-  const taxTotal = Math.round(subtotal * rate) / 100;
-  const total = Math.round((subtotal + taxTotal) * 100) / 100;
+  // Facturas de órdenes: tax_rate 0 y el impuesto viene en tax_total (la
+  // línea "Tax" de Stripe se extrae a su columna al crear la factura).
+  const taxTotal = rate > 0 ? Math.round(subtotal * rate) / 100 : (Number(inv.tax_total) || 0);
+  const shipTotal = Number(inv.shipping_total) || 0;
+  const total = Math.round((subtotal + taxTotal + shipTotal) * 100) / 100;
   const pago = PAGOS.find(([v]) => v === inv.payment_method)?.[1] || inv.payment_method || '—';
   return (
     <div className="invoice-doc">
@@ -119,7 +122,8 @@ function InvoiceDoc({ inv, items }) {
         </table>
         <div className="idoc-totals">
           <div className="idoc-trow"><span>Subtotal</span><span>{usd.format(subtotal)}</span></div>
-          <div className="idoc-trow"><span>Tax ({rate}%)</span><span>{usd.format(taxTotal)}</span></div>
+          <div className="idoc-trow"><span>Tax{rate > 0 ? ` (${rate}%)` : ''}</span><span>{usd.format(taxTotal)}</span></div>
+          {shipTotal > 0 && <div className="idoc-trow"><span>Shipping</span><span>{usd.format(shipTotal)}</span></div>}
           <div className="idoc-trow idoc-grand"><span>Total</span><span>{usd.format(total)}</span></div>
         </div>
       </div>

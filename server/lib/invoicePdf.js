@@ -158,8 +158,9 @@ function buildInvoicePdf(inv) {
     const rowH = conDesc ? 34 : 20; // filas más altas cuando hay descripción
     const subtotal = Number(inv.subtotal) || items.reduce((a, i) => a + (Number(i.qty) || 1) * (Number(i.price) || 0), 0);
     const taxTotal = Number(inv.tax_total) || 0;
-    const total = Number(inv.total) || (subtotal + taxTotal);
-    const totalsH = 3 * 18 + 14;
+    const shipTotal = Number(inv.shipping_total) || 0;
+    const total = Number(inv.total) || (subtotal + taxTotal + shipTotal);
+    const totalsH = (shipTotal > 0 ? 4 : 3) * 18 + 14;
     const boxH2 = 34 + headH + items.length * rowH + totalsH + 16;
 
     caja(doc, M, y, CW, boxH2);
@@ -202,6 +203,10 @@ function buildInvoicePdf(inv) {
     doc.text(money(subtotal), cAmt, ry, { width: 86, align: 'right' }); ry += 18;
     doc.text('Tax', totX, ry, { width: 100, align: 'right' });
     doc.text(money(taxTotal), cAmt, ry, { width: 86, align: 'right' }); ry += 18;
+    if (shipTotal > 0) {
+      doc.text('Shipping', totX, ry, { width: 100, align: 'right' });
+      doc.text(money(shipTotal), cAmt, ry, { width: 86, align: 'right' }); ry += 18;
+    }
     doc.moveTo(totX, ry).lineTo(PW - M - 14, ry).lineWidth(1.2).strokeColor('#111111').stroke();
     ry += 6;
     doc.font('Helvetica-Bold').fontSize(13).fillColor('#111');
