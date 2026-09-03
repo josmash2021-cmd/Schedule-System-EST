@@ -500,7 +500,7 @@
                                 var etaTxt = Math.floor(mins / 60) + ' hr ' + (mins % 60) + ' min';
                                 var eta = document.createElement('div');
                                 eta.className = 'map-eta';
-                                eta.innerHTML = (window.EST_LANG === 'en' ? 'Driving: ' : 'Manejando: ') + '<strong>' + etaTxt + '</strong>';
+                                eta.innerHTML = '<strong>' + etaTxt + '</strong>';
                                 document.getElementById('trackMap').appendChild(eta);
                             }
                             map.addSource('route', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } } });
