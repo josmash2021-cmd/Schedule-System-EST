@@ -709,7 +709,16 @@
                 (tax > 0 ? '<div class="track-mini"><span>Tax</span><span class="v">' + money(tax) + '</span></div>' : '') +
                 '<div class="track-mini"><span>' + (en ? 'Shipping' : 'Envío') + '</span>' + shipTxt + '</div>';
             document.getElementById('trackTotal').textContent = money(d.total, d.currency);
-            document.getElementById('trackAddr').textContent = d.address || '—';
+            // Dirección con formato postal: calle en una línea y
+            // "Ciudad, ST 12345" en la siguiente.
+            if (d.address) {
+                var seg = d.address.split('|').map(function (s) { return s.trim(); });
+                var street = seg[0];
+                var loc = seg.slice(1).join(', ').replace(/,\s*([A-Z]{2})\s*,\s*(\d{5}(-\d{4})?)/, ', $1 $2');
+                document.getElementById('trackAddr').innerHTML = esc(street) + (loc ? '<br>' + esc(loc) : '');
+            } else {
+                document.getElementById('trackAddr').textContent = '—';
+            }
 
             // El título de la página ES el producto comprado (foto + nombre).
             var firstProd = prods[0];
