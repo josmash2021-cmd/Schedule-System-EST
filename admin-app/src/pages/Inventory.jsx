@@ -134,8 +134,7 @@ export default function Inventory() {
       ventas,
       ganancia: ventas - costoVendido - gastos,
       stockCierre: stock ? stock.unidades : null,
-      valorCierre: stock ? stock.valorCosto : null,
-      valorCierreVenta: stock ? stock.valorVenta : null,
+      valorCierre: stock ? stock.valorCosto : null, // siempre a COSTO (lo que costó), no a precio de venta
     };
   }, [compras, stockMes, datosVentas, comprasOffset]);
 
@@ -214,8 +213,15 @@ export default function Inventory() {
                       <div className="v">{resumenMes.valorCierre == null ? '—' : money(resumenMes.valorCierre)}</div>
                       {resumenMes.valorCierre != null && (
                         <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>
-                          {resumenMes.stockCierre} unidades a costo · {money(resumenMes.valorCierreVenta)} a precio de venta
+                          {resumenMes.stockCierre} unidades (a costo, lo que te costaron)
                         </div>
+                      )}
+                    </div>
+                    <div className="stat-card">
+                      <div className="k">Total: ganancia + inventario</div>
+                      <div className="v">{resumenMes.valorCierre == null ? '—' : money(resumenMes.ganancia + resumenMes.valorCierre)}</div>
+                      {resumenMes.valorCierre != null && (
+                        <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>ganancia del mes + inventario restante a costo</div>
                       )}
                     </div>
                   </div>
