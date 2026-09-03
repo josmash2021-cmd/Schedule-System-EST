@@ -712,12 +712,14 @@
             return 0;
         }
         var SVGNS = 'http://www.w3.org/2000/svg';
+        var lastStep = 0;
         // Curva de estado (PC): serpente centrada en la tarjeta, de arriba
         // hasta abajo. Puntos dorados = pasos cumplidos; etiquetas alternan
         // de lado. Se redibuja en cada render (es barato).
         function drawStatusCurve(step) {
             var svg = document.getElementById('trackCurve');
             if (!svg) return;
+            lastStep = step;
             var labels = Array.prototype.map.call(
                 document.querySelectorAll('#trackSteps .track-bar-step span'),
                 function (s) { return s.textContent; });
@@ -764,6 +766,13 @@
                 t.textContent = labels[j] || '';
                 svg.appendChild(t);
             }
+        }
+        // La tarjeta estira su altura al acomodarse el grid: redibuja la
+        // curva cuando cambie de tamaño para que siempre llegue hasta abajo.
+        if (window.ResizeObserver) {
+            new ResizeObserver(function () {
+                if (window.matchMedia('(min-width: 981px)').matches) drawStatusCurve(lastStep);
+            }).observe(document.getElementById('trackCurve'));
         }
 
         function render(d) {
