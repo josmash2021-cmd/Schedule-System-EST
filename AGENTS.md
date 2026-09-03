@@ -22,13 +22,20 @@ cambies estructura, flujos o convenciones.
 - Páginas: `index.html`, `products.html`, `macbook-air-13.html`,
   `iphone-15-pro.html`, `book-appointment.html`, `cart.html`, `success.html`,
   `track.html` (seguimiento público del pedido del cliente: `?t=<track_token>`,
-  consulta `/api/track/:token` cada 30 s; línea de progreso, **resumen tipo
-  recibo** (productos con foto/desc + Subtotal/Tax/Shipping FREE-o-cobrado/
-  Total — las líneas Tax/Shipping del JSONB se separan por nombre en el JS,
-  textos dinámicos bilingües vía `window.EST_LANG`) + carrusel de
-  productos; CSS inline propio — define `.hidden`, que `site-v3.css` no tiene;
+  consulta `/api/track/:token` cada 30 s; **animación de entrada del camión**
+  (vista cenital en CSS/JS puro: aparece la vía → el camión entra y frena →
+  aparece la caja dorada → se sube atrás y se esconde → cierra la puerta →
+  prenden las luces → queda conduciendo en loop; se salta con
+  `prefers-reduced-motion`; los datos se revelan al arrancar); línea de
+  progreso, **resumen tipo recibo** (productos con foto/desc + Subtotal/Tax/
+  Shipping FREE-o-cobrado/Total — las líneas Tax/Shipping del JSONB se separan
+  por nombre en el JS, textos dinámicos bilingües vía `window.EST_LANG`) +
+  carrusel de productos; CSS inline propio — define `.hidden`, que
+  `site-v3.css` no tiene;
   enlazada desde el menú principal como "Mi pedido" / `data-en="My order"` en
-  todas las páginas — sin token muestra el bloque `#trackNoToken`, no el error),
+  todas las páginas — sin token muestra el bloque `#trackNoToken` con
+  **formulario de búsqueda por número de rastreo** (`GET
+  /api/track/lookup/:number`, mismo payload público), no el error),
   `terms.html`, `privacy.html`.
 - JS/CSS compartido: `assets/` (`site.js`, `cart.js`, `site-v3.css`,
   `transitions.js`, `i18n.js`, `security.js`).
