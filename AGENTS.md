@@ -108,7 +108,9 @@ cambies estructura, flujos o convenciones.
 - Modelos (SQL directo con `pg`): `server/models/` — `users.js`,
   `repairs.js`, `inventory.js`, `tasks.js`, `timeEntries.js`, `audit.js`,
   `invoices.js` (tabla `invoices`: Bill of Sale ligado a `sale_id` o
-  `repair_id`; `items` JSONB; número auto `EST-0001`), `orders.js` (tabla
+  `repair_id`; `items` JSONB solo productos — las líneas Tax/Shipping de
+  Stripe se extraen a `tax_total`/`shipping_total` al crear la factura desde
+  una orden; número auto `EST-0001`), `orders.js` (tabla
   `online_orders`: envíos; `stripe_session_id` UNIQUE nullable como dedupe;
   `items` JSONB; email/teléfono/dirección del cliente; `origen`
   website/fb_marketplace; `ship_status` pendiente→enviado→entregado;
