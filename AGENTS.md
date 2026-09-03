@@ -23,9 +23,11 @@ cambies estructura, flujos o convenciones.
   `iphone-15-pro.html`, `book-appointment.html`, `cart.html`, `success.html`,
   `track.html` (seguimiento público del pedido del cliente: `?t=<track_token>`,
   consulta `/api/track/:token` cada 30 s; **animación de entrada del camión**
-  (vista cenital en CSS/JS puro: aparece la vía → el camión entra y frena →
-  aparece la caja dorada → se sube atrás y se esconde → cierra la puerta →
-  prenden las luces → queda conduciendo en loop; se salta con
+  (vista cenital con foto real `assets/img/truck-top.png`, flip horizontal
+  para mirar a la derecha: aparece la vía → el camión entra y frena →
+  aparece la caja dorada → se sube atrás y se esconde (z-index bajo la foto)
+  → rebote de suspensión → prenden las luces (conos dorados CSS) → queda
+  conduciendo en loop; se salta con
   `prefers-reduced-motion`; los datos se revelan al arrancar); línea de
   progreso, **resumen tipo recibo** (productos con foto/desc + Subtotal/Tax/
   Shipping FREE-o-cobrado/Total — las líneas Tax/Shipping del JSONB se separan
