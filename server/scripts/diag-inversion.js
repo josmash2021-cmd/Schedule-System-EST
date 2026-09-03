@@ -1,8 +1,12 @@
 /* Diagnóstico: movimientos de inventario positivos por mes y razón.
    Uso: railway run --service "Schedule-System-EST" node server/scripts/diag-inversion.js [YYYY-MM] */
 const { pool } = require('../db');
+const inventory = require('../models/inventory');
 const mes = process.argv[2] || null;
 (async () => {
+  console.log('== purchasesByMonth (lo que ve el panel) ==');
+  console.table(await inventory.purchasesByMonth());
+  console.log('== movimientos crudos por mes/razón ==');
   const params = [];
   let where = "m.delta > 0 AND (m.reason IS NULL OR m.reason <> 'venta anulada')";
   if (mes) { params.push(mes); where += ` AND to_char(date_trunc('month', (m.created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Chicago'), 'YYYY-MM') = $1`; }
