@@ -104,8 +104,10 @@
         .track-map .mapboxgl-canvas { display: block; width: 100% !important; height: 100% !important; }
         /* Pines: cabeza circular + punta triangular. El elemento mide lo
            mismo que el pin completo y se ancla por la PUNTA (anchor bottom),
-           así cae en la dirección exacta. */
-        .map-pin { width: 22px; height: 31px; position: relative; }
+           así cae en la dirección exacta. OJO: debe ser absolute/top-0/left-0
+           como todo .mapboxgl-marker; con position:relative Mapbox pierde el
+           anclaje y el pin queda desplazado. */
+        .map-pin { width: 22px; height: 31px; position: absolute; top: 0; left: 0; }
         .map-pin .h { display: block; width: 22px; height: 22px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,.55); position: relative; }
         .map-pin .h::after { content: ''; position: absolute; inset: 6px; border-radius: 50%; background: #0c0c0f; }
         .map-pin::before { content: ''; position: absolute; left: 50%; top: 19px; transform: translateX(-50%); border: 6px solid transparent; border-top-width: 10px; }
