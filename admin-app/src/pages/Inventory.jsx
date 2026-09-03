@@ -204,13 +204,11 @@ export default function Inventory() {
                     <div className="stat-card">
                       <div className="k">Ventas del mes</div>
                       <div className="v">{money(resumenMes.ventas)}</div>
+                      <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>mercancía vendida que costó {money(resumenMes.costoVendido)}</div>
                     </div>
                     <div className="stat-card">
                       <div className="k">Ganancia del mes</div>
                       <div className="v">{money(resumenMes.ganancia)}</div>
-                      <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>
-                        ventas − costo de lo vendido ({money(resumenMes.costoVendido)}) − gastos ({money(resumenMes.gastos)})
-                      </div>
                     </div>
                     <div className="stat-card">
                       <div className="k">Quedó en inventario</div>
