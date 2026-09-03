@@ -434,10 +434,10 @@
                         .observe(document.getElementById('trackMap'));
                 }
                 window.addEventListener('resize', function () { map.resize(); });
-                // Solo nombres de estados y ciudades: ocultar el resto de
-                // etiquetas (carreteras, POIs, países, agua, etc.).
+                // Sin NINGUNA etiqueta del estilo: solo pondremos las de
+                // origen y destino (ciudad, estado) como capa propia.
                 map.getStyle().layers.forEach(function (l) {
-                    if (l.type === 'symbol' && l.id !== 'state-label' && l.id !== 'settlement-label') {
+                    if (l.type === 'symbol') {
                         map.setLayoutProperty(l.id, 'visibility', 'none');
                     }
                 });
@@ -491,6 +491,40 @@
                             });
                             var b = new mapboxgl.LngLatBounds();
                             coords.forEach(function (c) { b.extend(c); });
+                            // Etiquetas SOLO de origen y destino: "Ciudad, ST".
+                            // Se derivan de las direcciones (parte tras la coma).
+                            function cityState(addr) {
+                                var parts = addr.split(',');
+                                if (parts.length < 2) return addr;
+                                var city = parts[parts.length - 2].trim();
+                                var st = parts[parts.length - 1].trim().split(' ')[0];
+                                return city + ', ' + st;
+                            }
+                            map.addSource('endpoints', {
+                                type: 'geojson',
+                                data: {
+                                    type: 'FeatureCollection',
+                                    features: [
+                                        { type: 'Feature', properties: { label: cityState(STORE_ADDR) }, geometry: { type: 'Point', coordinates: from } },
+                                        { type: 'Feature', properties: { label: cityState(destAddr) }, geometry: { type: 'Point', coordinates: to } }
+                                    ]
+                                }
+                            });
+                            map.addLayer({
+                                id: 'endpoint-labels', type: 'symbol', source: 'endpoints',
+                                layout: {
+                                    'text-field': ['get', 'label'],
+                                    'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'],
+                                    'text-size': 13,
+                                    'text-anchor': 'top',
+                                    'text-offset': [0, 1.1]
+                                },
+                                paint: {
+                                    'text-color': '#d5d5da',
+                                    'text-halo-color': '#0c0c0f',
+                                    'text-halo-width': 1.5
+                                }
+                            });
                             // Animación de cámara en dos tiempos, disparada
                             // SOLO cuando el mapa entra en pantalla (si corre
                             // antes, el usuario nunca la ve):
@@ -500,21 +534,24 @@
                             //    gira al rumbo del viaje.
                             var brg = Math.atan2(to[0] - from[0], to[1] - from[1]) * 180 / Math.PI;
                             var pad = { top: 80, bottom: 60, left: 50, right: 50 };
-                            // Encuadre cenital inmediato (sin animación) para
-                            // que nunca se vea un zoom random.
-                            map.fitBounds(b, { padding: pad, pitch: 0, bearing: 0, maxZoom: 11, duration: 0 });
+                            // Encuadres calculados con cameraForBounds: el
+                            // FINAL ya considera pitch 55° + rotación 33°, así
+                            // la ruta completa SIEMPRE queda dentro del cuadro.
+                            var cam0 = map.cameraForBounds(b, { padding: pad, pitch: 0, bearing: 0, maxZoom: 11 });
+                            var cam1 = map.cameraForBounds(b, { padding: pad, pitch: 55, bearing: brg + 33, maxZoom: 11 });
+                            // Cenital inmediato (sin animación) para que nunca
+                            // se vea un zoom random.
+                            map.jumpTo({ center: cam0.center, zoom: cam0.zoom, pitch: 0, bearing: 0 });
                             var cameraDone = false;
                             function runCamera() {
                                 if (cameraDone) return;
                                 cameraDone = true;
                                 io && io.disconnect();
                                 // Repite el encuadre cenital con animación y
-                                // luego inclina a 55°.
-                                map.fitBounds(b, { padding: pad, pitch: 0, bearing: 0, maxZoom: 11, duration: 1400 });
+                                // luego inclina a 55° + rotación 33°.
+                                map.easeTo({ center: cam0.center, zoom: cam0.zoom, pitch: 0, bearing: 0, duration: 1400 });
                                 map.once('moveend', function () {
-                                    // Inclina a 55°, rota 33° a un lado del
-                                    // rumbo y acerca 1.5 niveles de zoom.
-                                    map.easeTo({ pitch: 55, bearing: brg + 33, zoom: map.getZoom() + 0.8, duration: 2400 });
+                                    map.easeTo({ center: cam1.center, zoom: cam1.zoom, pitch: 55, bearing: brg + 33, duration: 2400 });
                                 });
                             }
                             var card = document.getElementById('trackMapCard');
