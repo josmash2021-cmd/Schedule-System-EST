@@ -221,10 +221,6 @@ export default function Inventory() {
                         </div>
                       )}
                     </div>
-                    <div className="stat-card">
-                      <div className="k">Total: ganancia + inventario</div>
-                      <div className="v">{resumenMes.valorCierre == null ? '—' : money(resumenMes.ganancia + resumenMes.valorCierre)}</div>
-                    </div>
                   </div>
                 )}
               </div>
