@@ -432,8 +432,13 @@
                 // resize(): el contenedor entra con fundido y puede medir mal
                 // al crear el mapa — esto lo ajusta al cuadro real.
                 map.resize();
-                setTimeout(function () { map.resize(); }, 450);
-                setTimeout(function () { map.resize(); }, 1500);
+                // ResizeObserver: cada vez que el contenedor cambie de tamaño
+                // (fuentes, barra de scroll, animaciones, zoom del navegador)
+                // Mapbox re-mide y el canvas siempre llena el cuadro.
+                if (window.ResizeObserver) {
+                    new ResizeObserver(function () { map.resize(); })
+                        .observe(document.getElementById('trackMap'));
+                }
                 window.addEventListener('resize', function () { map.resize(); });
                 // Edificios 3D (se aprecian al acercar con la inclinación).
                 try {
