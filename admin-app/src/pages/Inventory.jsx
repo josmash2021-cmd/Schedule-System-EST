@@ -132,6 +132,8 @@ export default function Inventory() {
       inversion: found ? found.total : 0,
       unidadesCompradas: found ? found.unidades : 0,
       ventas,
+      costoVendido,
+      gastos,
       ganancia: ventas - costoVendido - gastos,
       stockCierre: stock ? stock.unidades : null,
       valorCierre: stock ? stock.valorCosto : null, // siempre a COSTO (lo que costó), no a precio de venta
@@ -206,7 +208,9 @@ export default function Inventory() {
                     <div className="stat-card">
                       <div className="k">Ganancia del mes</div>
                       <div className="v">{money(resumenMes.ganancia)}</div>
-                      <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>ventas − costo − gastos</div>
+                      <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>
+                        ventas − costo de lo vendido ({money(resumenMes.costoVendido)}) − gastos ({money(resumenMes.gastos)})
+                      </div>
                     </div>
                     <div className="stat-card">
                       <div className="k">Quedó en inventario</div>
