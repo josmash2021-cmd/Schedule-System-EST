@@ -228,7 +228,7 @@ async function start() {
       try {
         const inTransit = await orders.listInTransit();
         for (const o of inTransit) {
-          const s = await tracking.getStatus(o.tracking_id);
+          const s = await tracking.getStatus(o.tracking_id || o.tracking_number);
           if (!s || !s.tag) continue;
           await tracking.applyUpdate(o, s);
         }

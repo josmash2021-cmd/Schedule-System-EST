@@ -196,12 +196,12 @@ async function updateExpectedDelivery(id, date) {
 }
 
 // Órdenes con tracking activo que aún no se marcan entregadas: el job de
-// AfterShip las consulta periódicamente (trayendo todo lo que necesita para
-// los correos de tránsito/entrega).
+// rastreo las consulta periódicamente. Con USPS no hay registro previo, así
+// que basta el tracking_number (se usa tracking_id si existe, si no el número).
 async function listInTransit() {
   const r = await pool.query(
     `SELECT * FROM online_orders
-     WHERE tracking_id IS NOT NULL AND ship_status <> 'entregado'`
+     WHERE tracking_number IS NOT NULL AND ship_status <> 'entregado'`
   );
   return r.rows;
 }

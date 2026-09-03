@@ -40,6 +40,10 @@ const TWILIO_SMS_FROM = process.env.TWILIO_SMS_FROM;
 // AfterShip (rastreo de envíos, opcional): sin key, el estado 'entregado' de
 // las órdenes se marca manual en el panel.
 const AFTERSHIP_API_KEY = process.env.AFTERSHIP_API_KEY;
+// USPS Tracking API v3 (developers.usps.com, gratis): proveedor principal de
+// rastreo. Se registra una app y dan Consumer Key + Secret (OAuth2).
+const USPS_CLIENT_ID = process.env.USPS_CLIENT_ID;
+const USPS_CLIENT_SECRET = process.env.USPS_CLIENT_SECRET;
 
 // Resend (correos transaccionales, opcional): sin key, los correos se loguean
 // y no se envían — el resto del flujo sigue igual. EMAIL_FROM debe ser un
@@ -95,6 +99,8 @@ module.exports = {
   TWILIO_AUTH_TOKEN,
   TWILIO_SMS_FROM,
   AFTERSHIP_API_KEY,
+  USPS_CLIENT_ID,
+  USPS_CLIENT_SECRET,
   RESEND_API_KEY,
   EMAIL_FROM,
   OWNER_EMAIL,

@@ -150,17 +150,19 @@ cambies estructura, flujos o convenciones.
   progreso animada centrada de 5 pasos en Órdenes — Label generado → Enviado →
   En tránsito → En reparto → Delivered — y la línea de progreso de
   `track.html`).
-- **Tracking de envíos:** `server/lib/tracking.js` (AfterShip API v4, solo si
-  hay `AFTERSHIP_API_KEY` en el entorno). Al guardar tracking la orden pasa a
-  'enviado' sola. **Webhook en tiempo real:** `POST /api/track/webhook`
-  (registrar la URL en el dashboard de AfterShip) aplica el cambio al instante
-  vía `tracking.applyUpdate` (tag, `expected_delivery`, correos de
+- **Tracking de envíos:** `server/lib/tracking.js` con dos proveedores (gana
+  el configurado): **USPS Tracking API v3** (`USPS_CLIENT_ID` +
+  `USPS_CLIENT_SECRET`, gratis permanente, OAuth2; se consulta por número, sin
+  registro previo; el job cada 15 min trae estado + `expectedDeliveryDate`) o
+  **AfterShip API v4** (`AFTERSHIP_API_KEY`, pago/trial; además tiene webhook
+  push). Al guardar tracking la orden pasa a 'enviado' sola. **Webhook en
+  tiempo real (solo AfterShip):** `POST /api/track/webhook` aplica el cambio al
+  instante vía `tracking.applyUpdate` (tag, `expected_delivery`, correos de
   tránsito/entrega con flags) y emite por el bus `server/lib/trackEvents.js`;
-  `GET /api/track/:token/stream` (SSE) empuja el aviso a track.html, que se
-  recarga al segundo (el polling de 30 s queda de respaldo). Un job cada 15
-  min en `server/index.js` es el respaldo si el webhook falla. Sin la key,
-  'entregado' se marca manual desde el panel (botón en el detalle de la
-  orden).
+  `GET /api/track/:token/stream` (SSE) empuja el aviso a track.html (también
+  cuando el dueño guarda tracking o marca entregado en el panel). El job de
+  15 min en `server/index.js` cubre USPS y es el respaldo del webhook. Sin
+  keys, 'entregado' se marca manual desde el panel.
 - **Ventas del panel = 3 fuentes** (misma definición en `Sales.jsx` y
   `Dashboard.jsx`): reparaciones entregadas + ventas de mostrador + órdenes
   de envío (website + FB Marketplace). Las órdenes no se anulan ni borran
