@@ -91,18 +91,20 @@
         .track-form-err { color: #e0b64a; font-size: 13px; margin-top: 10px; }
 
         /* ---- Animación del camión (vista cenital) al abrir el pedido ----
-           Secuencia: aparece la vía → entra el camión y frena → aparece la
-           caja → la caja se sube atrás (se esconde) → se cierra la puerta →
-           prenden las luces → el camión queda conduciendo (dashes en loop). */
-        .rd-anim { display: flex; justify-content: center; margin: 4px 0 30px; }
-        .rd-road { position: relative; width: min(520px, 100%); height: 128px; background: #15161d; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; opacity: 0; transform: scale(.92); transition: opacity .5s, transform .5s; }
-        .rd-road.show { opacity: 1; transform: scale(1); }
-        .rd-road::before { /* línea central de dashes: solo visible al conducir */
-            content: ''; position: absolute; left: 22px; right: 22px; top: 50%; height: 3px; margin-top: -1.5px; border-radius: 2px;
-            background: repeating-linear-gradient(90deg, rgba(255,255,255,.22) 0 24px, transparent 24px 48px);
-            opacity: 0; transition: opacity .4s;
+           Secuencia: aparece la línea de la vía → entra el camión y frena →
+           aparece la caja → la caja se sube atrás (se esconde) → rebote de
+           suspensión → prenden las luces (resplandor difuminado) → el camión
+           queda conduciendo (dashes en loop). SIN caja ni fondo gris: la vía
+           es solo la línea de dashes sobre el fondo de la página. */
+        .rd-anim { display: flex; justify-content: center; margin: 4px 0 30px; overflow: hidden; }
+        .rd-road { position: relative; width: min(620px, 100%); height: 128px; }
+        .rd-road::before { /* línea central de dashes, directo sobre el fondo */
+            content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 3px; margin-top: -1.5px; border-radius: 2px;
+            background: repeating-linear-gradient(90deg, rgba(255,255,255,.25) 0 24px, transparent 24px 48px);
+            opacity: 0; transition: opacity .5s;
         }
-        .rd-road.driving::before { opacity: 1; animation: rdDashes .8s linear infinite; }
+        .rd-road.show::before { opacity: 1; }
+        .rd-road.driving::before { animation: rdDashes .8s linear infinite; }
         @keyframes rdDashes { from { background-position-x: 0; } to { background-position-x: -48px; } }
 
         /* Camión: foto real en vista cenital (assets/img/truck-top.png),
@@ -116,12 +118,18 @@
         .rd-truck-img.settle { animation: rdSettle .45s ease-in-out; }
         @keyframes rdSettle { 0% { rotate: 0deg; } 30% { rotate: -2deg; } 60% { rotate: 1.2deg; } 100% { rotate: 0deg; } }
 
-        /* Luces delanteras: dos conos dorados desde el frente (derecha). */
-        .rd-beams { position: absolute; left: 168px; top: 50%; width: 150px; height: 96px; transform: translateY(-50%); opacity: 0; transition: opacity .5s; z-index: 2; pointer-events: none; }
+        /* Luces delanteras: resplandor DIFUMINADO (sin formas cuadradas ni
+           conos simétricos): dos manchas alargadas con blur, ligeramente
+           rotadas, más un brillo intenso junto a cada foco. */
+        .rd-beams { position: absolute; left: 158px; top: 50%; width: 200px; height: 116px; transform: translateY(-50%); opacity: 0; transition: opacity .9s; z-index: 2; pointer-events: none; }
         .rd-beams.on { opacity: 1; }
-        .rd-beam { position: absolute; left: 0; width: 150px; height: 48px; background: linear-gradient(90deg, rgba(255,214,90,.55), rgba(255,214,90,0)); }
-        .rd-beam.t { top: 0; clip-path: polygon(0% 66%, 100% 0%, 100% 55%, 0% 86%); }
-        .rd-beam.b { top: 48px; clip-path: polygon(0% 14%, 100% 45%, 100% 100%, 0% 34%); }
+        .rd-beam { position: absolute; border-radius: 50%; filter: blur(13px); }
+        .rd-beam.t { left: 8px; top: 14px; width: 168px; height: 30px; background: radial-gradient(ellipse at 0% 50%, rgba(255,216,96,.8), rgba(255,216,96,0) 72%); transform: rotate(-11deg); }
+        .rd-beam.b { left: 22px; top: 70px; width: 150px; height: 26px; background: radial-gradient(ellipse at 0% 50%, rgba(255,216,96,.7), rgba(255,216,96,0) 70%); transform: rotate(8deg); }
+        /* Brillo intenso pegado a cada foco del camión. */
+        .rd-beams::before, .rd-beams::after { content: ''; position: absolute; left: -6px; width: 26px; height: 13px; border-radius: 50%; background: rgba(255,228,140,.95); filter: blur(5px); }
+        .rd-beams::before { top: 38px; }
+        .rd-beams::after { bottom: 38px; }
 
         /* La caja: dorada, aparece a la izquierda y se sube al camión
            (z-index menor que la caja blanca del camión → se "esconde" dentro). */
