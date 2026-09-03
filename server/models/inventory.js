@@ -150,7 +150,9 @@ async function purchasesByMonth() {
             SUM(m.delta * COALESCE(i.cost, 0)) AS total
      FROM inventory_movements m JOIN inventory_items i ON i.id = m.item_id
      WHERE m.delta > 0 AND (m.reason IS NULL OR m.reason <> 'venta anulada')
-       AND NOT (m.purchased_at IS NULL AND m.note = 'Stock inicial (registrado retroactivamente)')
+       -- NOT(... = '...') excluiría también los note NULL (SQL 3 valores):
+       -- con IS DISTINCT FROM los NULL cuentan como "distinto" y sí pasan.
+       AND (m.purchased_at IS NOT NULL OR m.note IS DISTINCT FROM 'Stock inicial (registrado retroactivamente)')
      GROUP BY 1 ORDER BY 1 DESC`
   );
   return r.rows.map((x) => ({ mes: x.mes, unidades: Number(x.unidades) || 0, total: Number(x.total) || 0 }));
