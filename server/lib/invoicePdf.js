@@ -200,7 +200,7 @@ function buildInvoicePdf(inv) {
     doc.font('Helvetica').fontSize(10).fillColor('#111');
     doc.text('Subtotal', totX, ry, { width: 100, align: 'right' });
     doc.text(money(subtotal), cAmt, ry, { width: 86, align: 'right' }); ry += 18;
-    doc.text(`Tax (${Number(inv.tax_rate || 0)}%)`, totX, ry, { width: 100, align: 'right' });
+    doc.text('Tax', totX, ry, { width: 100, align: 'right' });
     doc.text(money(taxTotal), cAmt, ry, { width: 86, align: 'right' }); ry += 18;
     doc.moveTo(totX, ry).lineTo(PW - M - 14, ry).lineWidth(1.2).strokeColor('#111111').stroke();
     ry += 6;
