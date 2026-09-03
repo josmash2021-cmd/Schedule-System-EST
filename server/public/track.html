@@ -479,16 +479,22 @@
                             });
                             var b = new mapboxgl.LngLatBounds();
                             coords.forEach(function (c) { b.extend(c); });
-                            // Encuadre ajustado a la ruta (sin tanto aire) con
-                            // inclinación 3D y el rumbo alineado al trayecto.
+                            // Animación de cámara en dos tiempos:
+                            // 1) Cenital (pitch 0, norte arriba): encuadre de
+                            //    la ruta COMPLETA, ajustada al cuadro.
+                            // 2) Al terminar, la cámara se inclina a 55° y
+                            //    gira al rumbo del viaje.
                             map.resize();
                             var brg = Math.atan2(to[0] - from[0], to[1] - from[1]) * 180 / Math.PI;
                             map.fitBounds(b, {
-                                padding: { top: 90, bottom: 60, left: 50, right: 50 },
-                                pitch: 45,
-                                bearing: brg,
+                                padding: { top: 80, bottom: 60, left: 50, right: 50 },
+                                pitch: 0,
+                                bearing: 0,
                                 maxZoom: 11,
-                                duration: 1600
+                                duration: 1200
+                            });
+                            map.once('moveend', function () {
+                                map.easeTo({ pitch: 55, bearing: brg, duration: 2200 });
                             });
                         });
                 }).catch(function () {
