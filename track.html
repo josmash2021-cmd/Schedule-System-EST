@@ -49,7 +49,14 @@
         .track-card h2 { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; font-weight: 700; }
         .track-line { display: flex; justify-content: space-between; gap: 14px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.07); font-size: 14px; }
         .track-line:last-child { border-bottom: 0; }
-        .track-line .p { color: #f5f5f7; }
+        .track-line .p { color: #f5f5f7; white-space: nowrap; }
+        .track-thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid var(--line); flex: 0 0 auto; }
+        .track-prod-info { flex: 1; min-width: 0; }
+        .track-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+        /* Filas del desglose tipo recibo: Subtotal / Tax / Shipping */
+        .track-mini { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; color: var(--muted); }
+        .track-mini .v { color: #d5d5da; }
+        .track-mini .free { color: #d4af37; font-weight: 600; }
         .track-total { display: flex; justify-content: space-between; padding-top: 12px; margin-top: 4px; border-top: 1px solid var(--line); font-size: 16px; }
         .track-total strong { color: #d4af37; }
         .track-addr { font-size: 14px; line-height: 1.55; color: #d5d5da; }
@@ -123,17 +130,18 @@
                 <div class="track-bar">
                     <div class="track-bar-line"><div class="track-bar-fill" id="trackFill" style="width:0%"></div></div>
                     <div class="track-bar-steps" id="trackSteps">
-                        <div class="track-bar-step"><div class="track-bar-dot"></div><span>Enviado</span></div>
-                        <div class="track-bar-step"><div class="track-bar-dot"></div><span>En tránsito</span></div>
-                        <div class="track-bar-step"><div class="track-bar-dot"></div><span>En reparto</span></div>
-                        <div class="track-bar-step"><div class="track-bar-dot"></div><span>Entregado</span></div>
+                        <div class="track-bar-step"><div class="track-bar-dot"></div><span data-en="Shipped">Enviado</span></div>
+                        <div class="track-bar-step"><div class="track-bar-dot"></div><span data-en="In transit">En tránsito</span></div>
+                        <div class="track-bar-step"><div class="track-bar-dot"></div><span data-en="Out for delivery">En reparto</span></div>
+                        <div class="track-bar-step"><div class="track-bar-dot"></div><span data-en="Delivered">Entregado</span></div>
                     </div>
                     <div class="track-pre" id="trackPre"></div>
                 </div>
 
                 <div class="track-card">
-                    <h2 data-en="Products">Productos</h2>
+                    <h2 data-en="Order summary">Resumen del pedido</h2>
                     <div id="trackItems"></div>
+                    <div id="trackTotals"></div>
                     <div class="track-total"><span data-en="Total paid">Total pagado</span><strong id="trackTotal">—</strong></div>
                 </div>
 
@@ -248,6 +256,7 @@
             return 0;
         }
         function render(d) {
+            var en = window.EST_LANG === 'en';
             document.getElementById('trackNum').textContent = d.order_number;
             var step = shipStep(d);
             document.getElementById('trackFill').style.width = (step / 4 * 100) + '%';
@@ -255,10 +264,33 @@
                 el.classList.toggle('on', step >= i + 1);
                 el.classList.toggle('current', step === i + 1);
             });
-            document.getElementById('trackPre').textContent = step === 0 ? 'Estamos preparando tu pedido. En cuanto se envíe, verás aquí el progreso.' : '';
-            document.getElementById('trackItems').innerHTML = (d.items || []).map(function (i) {
-                return '<div class="track-line"><span>' + (i.qty > 1 ? i.qty + '× ' : '') + esc(i.name) + '</span><span class="p">' + money(i.price) + '</span></div>';
+            document.getElementById('trackPre').textContent = step === 0
+                ? (en ? 'We are preparing your order. As soon as it ships, you will see the progress here.' : 'Estamos preparando tu pedido. En cuanto se envíe, verás aquí el progreso.')
+                : '';
+            // Las líneas Tax/Shipping del pago NO son productos: se separan
+            // para el desglose tipo recibo (como en el correo de confirmación).
+            var prods = [], tax = 0, ship = 0, shipCobrado = false;
+            (d.items || []).forEach(function (i) {
+                var n = String(i.name || '').trim().toLowerCase();
+                if (n === 'impuestos' || n === 'tax') { tax += Number(i.price) || 0; return; }
+                if (n === 'envío' || n === 'envio' || n === 'shipping') { ship += Number(i.price) || 0; shipCobrado = true; return; }
+                prods.push(i);
+            });
+            document.getElementById('trackItems').innerHTML = prods.map(function (i) {
+                var thumb = i.img ? '<img class="track-thumb" src="' + esc(i.img) + '" alt="" loading="lazy">' : '';
+                var desc = i.desc ? '<div class="track-desc">' + esc(i.desc) + '</div>' : '';
+                return '<div class="track-line">' + thumb +
+                    '<span class="track-prod-info">' + (i.qty > 1 ? i.qty + '× ' : '') + esc(i.name) + desc + '</span>' +
+                    '<span class="p">' + money(i.price) + '</span></div>';
             }).join('');
+            var subtotal = prods.reduce(function (a, i) { return a + (Number(i.price) || 0); }, 0);
+            var shipTxt = (shipCobrado && ship > 0)
+                ? '<span class="v">' + money(ship) + '</span>'
+                : '<span class="free">' + (en ? 'FREE' : 'GRATIS') + '</span>';
+            document.getElementById('trackTotals').innerHTML =
+                '<div class="track-mini"><span>Subtotal</span><span class="v">' + money(subtotal) + '</span></div>' +
+                (tax > 0 ? '<div class="track-mini"><span>Tax</span><span class="v">' + money(tax) + '</span></div>' : '') +
+                '<div class="track-mini"><span>' + (en ? 'Shipping' : 'Envío') + '</span>' + shipTxt + '</div>';
             document.getElementById('trackTotal').textContent = money(d.total, d.currency);
             document.getElementById('trackAddr').textContent = d.address || '—';
             var ship = document.getElementById('trackShip');
@@ -266,7 +298,9 @@
                 var url = CARRIER_URLS[String(d.carrier || '').toLowerCase()];
                 ship.innerHTML = '<span>Tracking: <strong>' + esc(d.tracking_number) + '</strong>' +
                     (d.carrier ? ' · ' + esc(String(d.carrier).toUpperCase()) : '') + '</span>' +
-                    (url ? '<a href="' + url + encodeURIComponent(d.tracking_number) + '" target="_blank" rel="noopener">Ver en la paquetería →</a>' : '');
+                    (url ? '<a href="' + url + encodeURIComponent(d.tracking_number) + '" target="_blank" rel="noopener">' + (en ? 'View on carrier site →' : 'Ver en la paquetería →') + '</a>' : '');
+            } else {
+                ship.textContent = en ? 'As soon as your package ships, the tracking number will appear here.' : 'En cuanto tu paquete sea enviado, aquí aparecerá el número de rastreo.';
             }
         }
         function load() {
