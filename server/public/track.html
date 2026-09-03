@@ -34,22 +34,36 @@
             transform-origin: left; animation: trackBarIn .9s cubic-bezier(.22,1,.36,1);
         }
         @keyframes trackBarIn { from { transform: scaleX(0); } }
-        .track-bar-steps { position: absolute; left: 0; right: 0; top: 50%; }
-        .track-bar-step { position: absolute; top: 0; width: 110px; transform: translate(-50%, -50%); text-align: center; }
-        .track-bar-step.first { transform: translate(0, -50%); text-align: left; }
-        .track-bar-step.last { transform: translate(-100%, -50%); text-align: right; }
-        .track-bar-step.first .track-bar-dot { margin-left: 0; }
-        .track-bar-step.last .track-bar-dot { margin-left: auto; margin-right: 0; }
+        .track-bar-steps { position: absolute; left: 0; right: 0; top: 50%; height: 0; }
+        .track-bar-step { position: absolute; top: 0; width: 110px; transform: translateX(-50%); text-align: center; }
+        .track-bar-step.first { transform: translateX(0); text-align: left; }
+        .track-bar-step.last { transform: translateX(-100%); text-align: right; }
+        /* El círculo va CENTRADO sobre la línea; la barra pasa por detrás. */
         .track-bar-dot {
-            width: 14px; height: 14px; margin: 0 auto; border-radius: 50%;
+            position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%);
+            width: 14px; height: 14px; border-radius: 50%;
             background: #0c0c0f; border: 2px solid var(--line);
             transition: background .5s, border-color .5s;
         }
-        .track-bar-step span { display: block; margin-top: 12px; font-size: 11.5px; color: var(--muted); transition: color .5s; white-space: nowrap; }
+        .track-bar-step.first .track-bar-dot { left: 0; transform: translate(0, -50%); }
+        .track-bar-step.last .track-bar-dot { left: 100%; transform: translate(-100%, -50%); }
+        .track-bar-step span { display: block; padding-top: 16px; font-size: 11.5px; color: var(--muted); transition: color .5s; white-space: nowrap; }
         .track-bar-step.on .track-bar-dot { background: #d4af37; border-color: #d4af37; }
         .track-bar-step.on span { color: #f5f5f7; font-weight: 600; }
+        /* El círculo se anima CUANDO el relleno lo alcanza: el relleno tarda
+           1.8s en cruzar; cada punto salta con el retraso de su posición. */
+        .track-bar-step.on .track-bar-dot { animation: trackDotPop .5s cubic-bezier(.34,1.56,.64,1) both; }
+        .track-bar-step:nth-child(2).on .track-bar-dot,
+        .track-bar-step:nth-child(2).on span { animation-delay: .45s; transition-delay: .45s; }
+        .track-bar-step:nth-child(3).on .track-bar-dot,
+        .track-bar-step:nth-child(3).on span { animation-delay: .9s; transition-delay: .9s; }
+        .track-bar-step:nth-child(4).on .track-bar-dot,
+        .track-bar-step:nth-child(4).on span { animation-delay: 1.35s; transition-delay: 1.35s; }
+        .track-bar-step:nth-child(5).on .track-bar-dot,
+        .track-bar-step:nth-child(5).on span { animation-delay: 1.8s; transition-delay: 1.8s; }
+        @keyframes trackDotPop { 0% { scale: .6; } 60% { scale: 1.25; } 100% { scale: 1; } }
         /* Pulso latente: lento y suave, marca el paso actual. */
-        .track-bar-step.current .track-bar-dot { animation: trackPulse 2.6s ease-in-out infinite; }
+        .track-bar-step.current .track-bar-dot { animation: trackDotPop .5s cubic-bezier(.34,1.56,.64,1) both, trackPulse 2.6s ease-in-out .6s infinite; }
         @keyframes trackPulse {
             0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,.35); }
             50% { box-shadow: 0 0 0 9px rgba(212,175,55,.07); }
@@ -96,7 +110,12 @@
            suspensión → prenden las luces (resplandor difuminado) → el camión
            queda conduciendo (dashes en loop). SIN caja ni fondo gris: la vía
            es solo la línea de dashes sobre el fondo de la página. */
-        .rd-anim { display: flex; justify-content: center; margin: 4px 0 30px; overflow: hidden; }
+        /* Entrada fluida: la animación del camión y los datos de la orden
+           aparecen con fundido + deslizamiento, nunca de golpe. */
+        .rd-anim { display: flex; justify-content: center; margin: 4px 0 30px; overflow: hidden; opacity: 0; transform: translateY(12px); transition: opacity .7s ease, transform .7s ease; }
+        .rd-anim.in { opacity: 1; transform: none; }
+        #trackData { opacity: 0; transform: translateY(16px); transition: opacity .8s ease, transform .8s ease; }
+        #trackData.in { opacity: 1; transform: none; }
         .rd-road { position: relative; width: min(620px, 100%); height: 128px; }
         .rd-road::before { /* línea central de dashes, directo sobre el fondo */
             content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 3px; margin-top: -1.5px; border-radius: 2px;
@@ -323,31 +342,44 @@
                              // de un pedido ya visible.
 
         /* Animación del camión: corre UNA vez al aparecer el pedido (válido
-           por link del correo o por número de rastreo). Al final queda
-           conduciendo en loop y se revela la información de la orden. */
+           por link del correo o por número de rastreo). Todo entra con
+           fundido fluido; al final el camión queda conduciendo en loop y la
+           información de la orden se revela animada, nunca de golpe. */
         var introDone = false;
+        function revealSmooth(el) {
+            el.classList.remove('hidden');
+            // doble rAF: el navegador pinta el estado inicial antes de la
+            // clase .in, así la transición CSS corre suave.
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () { el.classList.add('in'); });
+            });
+        }
         function truckIntro() {
+            var rdAnim = document.querySelector('.rd-anim');
             if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                rdAnim.classList.add('in');
+                trackData.classList.add('in');
                 trackData.classList.remove('hidden');
                 return;
             }
+            revealSmooth(rdAnim); // la animación entra con fundido, no de golpe
             var road = document.getElementById('rdRoad');
             var truck = document.getElementById('rdTruck');
             var box = document.getElementById('rdBox');
             var beams = document.getElementById('rdBeams');
-            setTimeout(function () { road.classList.add('show'); }, 60);          // aparece la vía
-            setTimeout(function () { truck.classList.add('enter'); }, 650);       // el camión rueda y se detiene
-            setTimeout(function () { box.classList.add('show'); }, 1750);         // aparece la caja
-            setTimeout(function () { box.classList.add('load'); }, 2300);         // se sube atrás y se esconde
-            setTimeout(function () { document.getElementById('rdTruckImg').classList.add('settle'); }, 3100); // rebote al cerrarse la carga
+            setTimeout(function () { road.classList.add('show'); }, 350);         // aparece la vía
+            setTimeout(function () { truck.classList.add('enter'); }, 950);       // el camión rueda y se detiene
+            setTimeout(function () { box.classList.add('show'); }, 2050);         // aparece la caja
+            setTimeout(function () { box.classList.add('load'); }, 2600);         // se sube atrás y se esconde
+            setTimeout(function () { document.getElementById('rdTruckImg').classList.add('settle'); }, 3400); // rebote al cerrarse la carga
             setTimeout(function () {                                              // prende las luces
                 beams.classList.add('on');
-            }, 3500);
+            }, 3800);
             setTimeout(function () {                                              // empieza a conducir (loop)
                 road.classList.add('driving');
                 truck.classList.add('driving');
-                trackData.classList.remove('hidden');
-            }, 4000);
+                revealSmooth(trackData); // los datos cargan animados y fluidos
+            }, 4300);
         }
         function showOrder(d) {
             hasData = true;
