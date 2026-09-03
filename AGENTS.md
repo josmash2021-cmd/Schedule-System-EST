@@ -38,11 +38,13 @@ cambies estructura, flujos o convenciones.
   fluido (doble rAF + clase .in, nunca de golpe); un fallo transitorio del
   API nunca muestra "Order not found" si ya hay datos); **el título de la
   página es el producto comprado** (foto + nombre; el span `#trackTitle` NO
-  lleva data-en para que i18n no lo pise en cargas rápidas); **layout en
-  grid: mapa de ruta al centro + resumen angosto (340px) a la derecha** (el
+  lleva data-en para que i18n no lo pise en cargas rápidas); **layout PC de
+  ancho completo (máx. 1240px) en 3 columnas: Rastreo a la izquierda (300px),
+  mapa de ruta al centro con la dirección de envío debajo del mapa, y resumen
+  del pedido a la derecha (340px)** (el
   mapa es Google Maps embed sin API key: `?saddr=<tienda>&daddr=<cliente>&
-  output=embed`, se inyecta una vez; sin dirección se oculta y el grid cae a
-  una columna), **resumen tipo
+  output=embed`, se inyecta una vez; sin dirección se oculta; en ≤980px todo
+  cae a una columna: mapa+dirección → resumen → rastreo), **resumen tipo
   recibo** (productos con foto/desc + Subtotal/Tax/
   Shipping FREE-o-cobrado/Total — las líneas Tax/Shipping del JSONB se separan
   por nombre en el JS, textos dinámicos bilingües vía `window.EST_LANG`) +
