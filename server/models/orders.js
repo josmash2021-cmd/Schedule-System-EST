@@ -204,6 +204,16 @@ async function findByTrackToken(token) {
   return r.rows[0] || null;
 }
 
+// Búsqueda pública por número de rastreo (el cliente lo escribe en track.html
+// cuando entra a "Mi pedido" sin el link del correo).
+async function findByTrackingNumber(num) {
+  const r = await pool.query(
+    'SELECT * FROM online_orders WHERE tracking_number = $1 ORDER BY id DESC LIMIT 1',
+    [String(num || '').trim()]
+  );
+  return r.rows[0] || null;
+}
+
 async function findById(id) {
   const r = await pool.query('SELECT * FROM online_orders WHERE id = $1', [id]);
   return r.rows[0] || null;
@@ -225,5 +235,5 @@ async function markEmailSent(id, flag) {
 module.exports = {
   createFromStripe, createManual, listAll, listSessionIds,
   updateTracking, updateShipStatus, updateShipTag, listInTransit,
-  findByTrackToken, findById, setCosto, markEmailSent, applySaleToInventory, backfillCosts, SHIP_STATUSES,
+  findByTrackToken, findByTrackingNumber, findById, setCosto, markEmailSent, applySaleToInventory, backfillCosts, SHIP_STATUSES,
 };

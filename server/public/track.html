@@ -67,6 +67,62 @@
         .track-err { text-align: center; color: var(--muted); padding: 60px 0; }
         .track-loading { text-align: center; color: var(--muted); padding: 60px 0; font-size: 14px; }
 
+        /* Formulario "Mi pedido" sin token: buscar por número de rastreo */
+        .track-form { display: flex; gap: 10px; justify-content: center; margin: 18px auto 0; max-width: 420px; }
+        .track-form input { flex: 1; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 11px 14px; color: #f5f5f7; font-size: 14px; outline: none; }
+        .track-form input:focus { border-color: #d4af37; }
+        .track-form-err { color: #e0b64a; font-size: 13px; margin-top: 10px; }
+
+        /* ---- Animación del camión (vista cenital) al abrir el pedido ----
+           Secuencia: aparece la vía → entra el camión y frena → aparece la
+           caja → la caja se sube atrás (se esconde) → se cierra la puerta →
+           prenden las luces → el camión queda conduciendo (dashes en loop). */
+        .rd-anim { display: flex; justify-content: center; margin: 4px 0 30px; }
+        .rd-road { position: relative; width: min(520px, 100%); height: 128px; background: #15161d; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; opacity: 0; transform: scale(.92); transition: opacity .5s, transform .5s; }
+        .rd-road.show { opacity: 1; transform: scale(1); }
+        .rd-road::before { /* línea central de dashes: solo visible al conducir */
+            content: ''; position: absolute; left: 22px; right: 22px; top: 50%; height: 3px; margin-top: -1.5px; border-radius: 2px;
+            background: repeating-linear-gradient(90deg, rgba(255,255,255,.22) 0 24px, transparent 24px 48px);
+            opacity: 0; transition: opacity .4s;
+        }
+        .rd-road.driving::before { opacity: 1; animation: rdDashes .8s linear infinite; }
+        @keyframes rdDashes { from { background-position-x: 0; } to { background-position-x: -48px; } }
+
+        /* Camión: 150×60, mirando a la derecha. Entra desde la izquierda. */
+        .rd-truck { position: absolute; top: 50%; left: 50%; width: 150px; height: 60px; z-index: 3; transform: translate(-50%, -50%) translateX(-380px); transition: transform .9s cubic-bezier(.25,.8,.3,1); }
+        .rd-truck.enter { transform: translate(-50%, -50%) translateX(0); }
+        .rd-truck.driving { animation: rdBob .45s ease-in-out infinite alternate; }
+        @keyframes rdBob { from { margin-top: -1px; } to { margin-top: 1px; } }
+        .rd-cargo { position: absolute; left: 0; top: 2px; width: 86px; height: 56px; background: linear-gradient(#ffffff, #e7e7ec); border-radius: 6px; z-index: 3; }
+        /* Puerta trasera: nace abierta (rotada) y cierra al subir la caja. */
+        .rd-door { position: absolute; left: -3px; top: 2px; width: 5px; height: 56px; background: #dcdce2; border-radius: 2px; z-index: 4; transform-origin: 50% 0; transform: rotate(-65deg); transition: transform .3s ease-in; }
+        .rd-door.closed { transform: rotate(0deg); }
+        .rd-cab { position: absolute; left: 88px; top: 8px; width: 42px; height: 44px; background: #2563eb; border-radius: 8px 10px 10px 8px; z-index: 3; }
+        .rd-glass { position: absolute; left: 8px; top: 6px; width: 26px; height: 32px; background: #0f1420; border-radius: 3px; clip-path: polygon(0 0, 100% 14%, 100% 86%, 0 100%); }
+        .rd-lamp { position: absolute; right: -2px; width: 5px; height: 9px; border-radius: 2px; background: #565a66; transition: background .3s, box-shadow .3s; }
+        .rd-lamp.t { top: 7px; }
+        .rd-lamp.b { bottom: 7px; }
+        .rd-lamp.on { background: #ffd75e; box-shadow: 0 0 8px rgba(255,215,94,.9); }
+        .rd-mirror { position: absolute; width: 4px; height: 10px; background: #e8e8ec; border-radius: 2px; z-index: 3; }
+        .rd-mirror.m1 { left: 84px; top: -8px; }
+        .rd-mirror.m2 { left: 84px; bottom: -8px; }
+        .rd-mirror.m3 { left: 122px; top: -8px; }
+        .rd-mirror.m4 { left: 122px; bottom: -8px; }
+
+        /* Luces delanteras: dos conos dorados hacia adelante (derecha). */
+        .rd-beams { position: absolute; left: 128px; top: 50%; width: 150px; height: 96px; transform: translateY(-50%); opacity: 0; transition: opacity .5s; z-index: 2; pointer-events: none; }
+        .rd-beams.on { opacity: 1; }
+        .rd-beam { position: absolute; left: 0; width: 150px; height: 48px; background: linear-gradient(90deg, rgba(255,214,90,.55), rgba(255,214,90,0)); }
+        .rd-beam.t { top: 0; clip-path: polygon(0% 68%, 100% 0%, 100% 58%, 0% 88%); }
+        .rd-beam.b { top: 48px; clip-path: polygon(0% 12%, 100% 42%, 100% 100%, 0% 32%); }
+
+        /* La caja: dorada, aparece a la izquierda y se sube al camión
+           (z-index menor que la caja blanca del camión → se "esconde" dentro). */
+        .rd-box { position: absolute; left: max(14px, calc(50% - 172px)); top: 50%; margin-top: -17px; width: 34px; height: 34px; border-radius: 5px; z-index: 2; background: linear-gradient(90deg, #d4af37 42%, #a8842c 42% 58%, #d4af37 58%); opacity: 0; transform: scale(.5); transition: opacity .35s, transform .35s, left .7s ease-in; }
+        .rd-box.show { opacity: 1; transform: scale(1); }
+        .rd-box.load { left: calc(50% - 49px); opacity: 0; transition: left .7s ease-in, opacity .3s .45s; transform: scale(1); }
+
+
         /* Carrusel "También te puede interesar" */
         .track-more { margin-top: 44px; }
         .track-more-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
@@ -122,11 +178,36 @@
             <!-- Se muestra al entrar desde el menú ("Mi pedido") sin token. -->
             <div id="trackNoToken" class="track-err hidden">
                 <h2 data-en="Find your order">Encuentra tu pedido</h2>
-                <p data-en="When you placed your order we emailed you a tracking link — open it to see the status here.">Cuando hiciste tu compra te enviamos un enlace de seguimiento por correo — ábrelo para ver el estado de tu pedido aquí.</p>
-                <a href="/products" class="btn btn-blue" data-en="View products">Ver productos</a>
+                <p data-en="Enter your tracking number or open the link we emailed you.">Escribe tu número de rastreo o abre el enlace que te enviamos por correo.</p>
+                <form class="track-form" id="trackForm">
+                    <input id="trackInput" autocomplete="off" spellcheck="false" placeholder="Número de rastreo" data-en-placeholder="Tracking number">
+                    <button class="btn btn-blue" type="submit" data-en="Track">Rastrear</button>
+                </form>
+                <p id="trackFormErr" class="track-form-err hidden" data-en="We couldn't find an order with that tracking number.">No encontramos un pedido con ese número de rastreo.</p>
             </div>
 
             <div id="trackBody" class="hidden">
+                <!-- Animación de entrada (vista cenital): el camión recoge la
+                     caja, cierra la puerta, prende las luces y queda rodando. -->
+                <div class="rd-anim" aria-hidden="true">
+                    <div class="rd-road" id="rdRoad">
+                        <div class="rd-box" id="rdBox"></div>
+                        <div class="rd-truck" id="rdTruck">
+                            <div class="rd-cargo"></div>
+                            <div class="rd-door" id="rdDoor"></div>
+                            <div class="rd-cab">
+                                <div class="rd-glass"></div>
+                                <div class="rd-lamp t"></div>
+                                <div class="rd-lamp b"></div>
+                            </div>
+                            <div class="rd-mirror m1"></div><div class="rd-mirror m2"></div>
+                            <div class="rd-mirror m3"></div><div class="rd-mirror m4"></div>
+                            <div class="rd-beams" id="rdBeams"><div class="rd-beam t"></div><div class="rd-beam b"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="trackData" class="hidden">
                 <div class="track-bar">
                     <div class="track-bar-line"><div class="track-bar-fill" id="trackFill" style="width:0%"></div></div>
                     <div class="track-bar-steps" id="trackSteps">
@@ -155,6 +236,7 @@
                     <!-- Sin data-en: el contenido lo escribe el JS (i18n lo pisaría). -->
                     <div class="track-ship" id="trackShip">En cuanto tu paquete sea enviado, aquí aparecerá el número de rastreo.</div>
                 </div>
+                </div><!-- /trackData -->
             </div>
 
             <div class="track-more">
@@ -225,6 +307,62 @@
         var errBox = document.getElementById('trackError');
         var noTokenBox = document.getElementById('trackNoToken');
         var body = document.getElementById('trackBody');
+        var trackData = document.getElementById('trackData');
+
+        /* Animación del camión: corre UNA vez al aparecer el pedido (válido
+           por link del correo o por número de rastreo). Al final queda
+           conduciendo en loop y se revela la información de la orden. */
+        var introDone = false;
+        function truckIntro() {
+            if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                trackData.classList.remove('hidden');
+                return;
+            }
+            var road = document.getElementById('rdRoad');
+            var truck = document.getElementById('rdTruck');
+            var box = document.getElementById('rdBox');
+            var door = document.getElementById('rdDoor');
+            var beams = document.getElementById('rdBeams');
+            setTimeout(function () { road.classList.add('show'); }, 60);          // aparece la vía
+            setTimeout(function () { truck.classList.add('enter'); }, 650);       // el camión rueda y se detiene
+            setTimeout(function () { box.classList.add('show'); }, 1750);         // aparece la caja
+            setTimeout(function () { box.classList.add('load'); }, 2300);         // se sube atrás y se esconde
+            setTimeout(function () { door.classList.add('closed'); }, 3100);      // cierra la puerta trasera
+            setTimeout(function () {                                              // prende las luces
+                beams.classList.add('on');
+                document.querySelectorAll('.rd-lamp').forEach(function (l) { l.classList.add('on'); });
+            }, 3500);
+            setTimeout(function () {                                              // empieza a conducir (loop)
+                road.classList.add('driving');
+                truck.classList.add('driving');
+                trackData.classList.remove('hidden');
+            }, 4000);
+        }
+        function showOrder(d) {
+            errBox.classList.add('hidden');
+            body.classList.remove('hidden');
+            if (!introDone) { introDone = true; truckIntro(); }
+            render(d);
+        }
+
+        // Formulario del estado sin token: buscar por número de rastreo.
+        var form = document.getElementById('trackForm');
+        var formErr = document.getElementById('trackFormErr');
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var num = document.getElementById('trackInput').value.trim();
+            if (!num) return;
+            formErr.classList.add('hidden');
+            fetch('/api/track/lookup/' + encodeURIComponent(num))
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (d) {
+                    if (!d) { formErr.classList.remove('hidden'); return; }
+                    noTokenBox.classList.add('hidden');
+                    showOrder(d);
+                })
+                .catch(function () { formErr.classList.remove('hidden'); });
+        });
+
         if (!token) {
             // Entró desde el menú ("Mi pedido"): mensaje amable, no error.
             loading.classList.add('hidden');
@@ -309,9 +447,7 @@
                 .then(function (d) {
                     loading.classList.add('hidden');
                     if (!d) { errBox.classList.remove('hidden'); return; }
-                    errBox.classList.add('hidden');
-                    body.classList.remove('hidden');
-                    render(d);
+                    showOrder(d);
                 })
                 .catch(function () { loading.textContent = 'Sin conexión. Reintentando…'; });
         }

@@ -28,6 +28,38 @@ function rateLimit(req, res, next) {
   return next();
 }
 
+// Lo público del pedido: NUNCA email ni teléfono del cliente.
+function publicOrder(o) {
+  return {
+    order_number: `EST-${1000 + o.id}`,
+    items: o.items || [],
+    total: Number(o.total) || 0,
+    currency: o.currency || 'usd',
+    address: o.address || null,
+    ship_status: o.ship_status || 'pendiente',
+    ship_tag: o.ship_tag || null,
+    tracking_number: o.tracking_number || null,
+    carrier: o.carrier || null,
+    created_at: o.created_at,
+  };
+}
+
+// Búsqueda por número de rastreo (lo escribe el cliente en "Mi pedido").
+router.get('/lookup/:number', rateLimit, async (req, res) => {
+  const num = String(req.params.number || '');
+  if (!/^[A-Za-z0-9-]{6,40}$/.test(num)) {
+    return res.status(404).json({ error: 'Pedido no encontrado.' });
+  }
+  try {
+    const o = await orders.findByTrackingNumber(num);
+    if (!o) return res.status(404).json({ error: 'Pedido no encontrado.' });
+    res.json(publicOrder(o));
+  } catch (err) {
+    console.error('track lookup error:', err.message);
+    res.status(500).json({ error: 'Error al consultar el pedido.' });
+  }
+});
+
 router.get('/:token', rateLimit, async (req, res) => {
   const token = String(req.params.token || '');
   // Tokens nuevos: 48 hex; backfill viejo: 64 hex. Nada más se acepta.
@@ -37,18 +69,7 @@ router.get('/:token', rateLimit, async (req, res) => {
   try {
     const o = await orders.findByTrackToken(token);
     if (!o) return res.status(404).json({ error: 'Pedido no encontrado.' });
-    res.json({
-      order_number: `EST-${1000 + o.id}`,
-      items: o.items || [],
-      total: Number(o.total) || 0,
-      currency: o.currency || 'usd',
-      address: o.address || null,
-      ship_status: o.ship_status || 'pendiente',
-      ship_tag: o.ship_tag || null,
-      tracking_number: o.tracking_number || null,
-      carrier: o.carrier || null,
-      created_at: o.created_at,
-    });
+    res.json(publicOrder(o));
   } catch (err) {
     console.error('track error:', err.message);
     res.status(500).json({ error: 'Error al consultar el pedido.' });
