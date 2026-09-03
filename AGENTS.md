@@ -87,9 +87,7 @@ cambies estructura, flujos o convenciones.
   por el sitio público). La confirmación muestra cada producto con **foto y
   descripción** (los items se enriquecen en el webhook/sync con
   `catalog.enrichLineItems`, que guarda `img`/`desc` en inglés en el JSONB) y
-  el desglose Subtotal / Tax / Shipping / Total paid. El borde inferior de la
-  tarjeta es una sierra tipo recibo **gris** (`assets/img/receipt-edge.png`,
-  dientes #e5e5e8 del color del fondo, sutiles también en modo oscuro) y la
+  el desglose Subtotal / Tax / Shipping / Total paid. La
   confirmación adjunta el **recibo PDF** sola (la factura se crea con
   `await autoInvoice` antes de los correos; el PDF va **todo en inglés**:
   fecha MM/DD/YYYY, método de pago traducido, footer "Thank you…").

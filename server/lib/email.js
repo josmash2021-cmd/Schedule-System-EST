@@ -52,14 +52,12 @@ async function sendEmail({ to, subject, html, text, attachments }) {
 }
 
 // Plantilla base: fondo blanco, logo negro (assets/img/logo-black.png servido
-// por el sitio público), borde inferior con dientes de sierra tipo recibo
-// (receipt-edge.png) y acento dorado del brazo del logo.
+// por el sitio público) y acento dorado del brazo del logo.
 function plantilla(titulo, cuerpoHtml) {
   const logo = `${siteBase()}/assets/img/logo-black.png`;
-  const sierra = `${siteBase()}/assets/img/receipt-edge.png`;
   return `<!doctype html><html><body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;color:#111111;">
   <div style="max-width:560px;margin:0 auto;padding:32px 20px;">
-    <div style="background:#ffffff;border:1px solid #e5e5e8;border-radius:12px 12px 0 0;padding:32px 28px;">
+    <div style="background:#ffffff;border:1px solid #e5e5e8;border-radius:12px;padding:32px 28px;">
       <div style="text-align:center;padding-bottom:20px;border-bottom:1px solid #e5e5e8;">
         <img src="${logo}" alt="ElectronicST" width="170" style="display:block;margin:0 auto;max-width:170px;height:auto;">
         <div style="font-size:10px;letter-spacing:.2em;color:#8a8a92;text-transform:uppercase;margin-top:10px;">Electronic Service Technology</div>
@@ -67,7 +65,6 @@ function plantilla(titulo, cuerpoHtml) {
       <h1 style="font-size:18px;color:#111;margin:26px 0 10px;">${titulo}</h1>
       ${cuerpoHtml}
     </div>
-    <img src="${sierra}" alt="" width="520" style="display:block;width:100%;max-width:520px;height:auto;margin:0 auto;">
     <div style="margin-top:20px;font-size:11px;color:#8a8a92;text-align:center;">
       ElectronicST · 3659 Lorna Rd Suite 157, Hoover, AL 35216 · (385) 461-2042
     </div>
