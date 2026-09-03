@@ -406,18 +406,24 @@
                 attributionControl: false
             });
             map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'bottom-right');
-            Promise.all([geocode(STORE_ADDR), geocode(destAddr)]).then(function (pts) {
-                var from = pts[0], to = pts[1];
-                new mapboxgl.Marker({ color: '#d4af37' }).setLngLat(from).addTo(map);
-                new mapboxgl.Marker({ color: '#f5f5f7' }).setLngLat(to).addTo(map);
-                return fetch('https://api.mapbox.com/directions/v5/mapbox/driving/' +
-                    from.join(',') + ';' + to.join(',') +
-                    '?geometries=geojson&overview=full&access_token=' + MAPBOX_TOKEN)
-                    .then(function (r) { return r.json(); })
-                    .then(function (j) {
-                        var route = j.routes && j.routes[0];
-                        var coords = route ? route.geometry.coordinates : [from, to];
-                        map.on('load', function () {
+            // TODO dentro del 'load': si el fetch de la ruta tarda más que el
+            // estilo, un listener registrado después nunca se dispara (bug:
+            // no se dibujaba la línea ni se hacía fitBounds).
+            map.on('load', function () {
+                // resize(): el contenedor entra con fundido y puede medir mal
+                // al crear el mapa — esto lo ajusta al cuadro real.
+                map.resize();
+                Promise.all([geocode(STORE_ADDR), geocode(destAddr)]).then(function (pts) {
+                    var from = pts[0], to = pts[1];
+                    new mapboxgl.Marker({ color: '#d4af37' }).setLngLat(from).addTo(map);
+                    new mapboxgl.Marker({ color: '#f5f5f7' }).setLngLat(to).addTo(map);
+                    return fetch('https://api.mapbox.com/directions/v5/mapbox/driving/' +
+                        from.join(',') + ';' + to.join(',') +
+                        '?geometries=geojson&overview=full&access_token=' + MAPBOX_TOKEN)
+                        .then(function (r) { return r.json(); })
+                        .then(function (j) {
+                            var route = j.routes && j.routes[0];
+                            var coords = route ? route.geometry.coordinates : [from, to];
                             map.addSource('route', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } } });
                             map.addLayer({
                                 id: 'route', type: 'line', source: 'route',
@@ -427,13 +433,14 @@
                             var b = new mapboxgl.LngLatBounds();
                             coords.forEach(function (c) { b.extend(c); });
                             // Encuadre holgado: se ve la ruta completa de punta a punta.
+                            map.resize();
                             map.fitBounds(b, { padding: { top: 70, bottom: 70, left: 70, right: 70 }, maxZoom: 10, duration: 1200 });
                         });
-                    });
-            }).catch(function () {
-                // Si Mapbox falla, se oculta la tarjeta del mapa.
-                document.getElementById('trackMapCard').style.display = 'none';
-                document.getElementById('trackGrid').classList.add('no-map');
+                }).catch(function () {
+                    // Si Mapbox falla, se oculta la tarjeta del mapa.
+                    document.getElementById('trackMapCard').style.display = 'none';
+                    document.getElementById('trackGrid').classList.add('no-map');
+                });
             });
         }
 
