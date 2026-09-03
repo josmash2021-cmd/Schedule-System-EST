@@ -101,7 +101,10 @@
         .track-side, .track-side-left { min-width: 0; }
         .track-map-card { margin-bottom: 16px; }
         .track-map { height: 400px; border-radius: 10px; overflow: hidden; background: #15161d; }
-        .track-map .mapboxgl-canvas { display: block; width: 100% !important; height: 100% !important; }
+        /* NO forzar el tamaño del canvas por CSS: Mapbox calcula las
+           posiciones de los pines con su tamaño interno; si el canvas se
+           estira por CSS, la línea y los pines no coinciden. Que el tamaño
+           lo ponga Mapbox vía map.resize(). */
         /* Pines: cabeza circular + punta triangular. El elemento mide lo
            mismo que el pin completo y se ancla por la PUNTA (anchor bottom),
            así cae en la dirección exacta. OJO: debe ser absolute/top-0/left-0
@@ -430,6 +433,7 @@
                 // al crear el mapa — esto lo ajusta al cuadro real.
                 map.resize();
                 setTimeout(function () { map.resize(); }, 450);
+                setTimeout(function () { map.resize(); }, 1500);
                 window.addEventListener('resize', function () { map.resize(); });
                 // Edificios 3D (se aprecian al acercar con la inclinación).
                 try {
