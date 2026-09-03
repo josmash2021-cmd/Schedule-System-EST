@@ -214,15 +214,19 @@ export default function Inventory() {
                       <div className="k">Gastos del mes</div>
                       <div className="v">{money(resumenMes.gastos)}</div>
                     </div>
-                    <div className="stat-card">
-                      <div className="k">Quedó en inventario</div>
-                      <div className="v">{resumenMes.valorCierre == null ? '—' : money(resumenMes.valorCierre)}</div>
-                      {resumenMes.valorCierre != null && (
-                        <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>
-                          {resumenMes.stockCierre} {resumenMes.stockCierre === 1 ? 'unidad' : 'unidades'} (a costo, lo que te costaron)
-                        </div>
-                      )}
-                    </div>
+                    {/* "Quedó en inventario" solo aplica a meses ya cerrados:
+                        el mes en curso aún no tiene cierre. */}
+                    {comprasOffset < 0 && (
+                      <div className="stat-card">
+                        <div className="k">Quedó en inventario</div>
+                        <div className="v">{resumenMes.valorCierre == null ? '—' : money(resumenMes.valorCierre)}</div>
+                        {resumenMes.valorCierre != null && (
+                          <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>
+                            {resumenMes.stockCierre} {resumenMes.stockCierre === 1 ? 'unidad' : 'unidades'} (a costo, lo que te costaron)
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
