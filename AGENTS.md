@@ -31,8 +31,11 @@ cambies estructura, flujos o convenciones.
   formas simétricas) → queda conduciendo en loop; se salta con
   `prefers-reduced-motion`; los datos se revelan al arrancar); **barra de 5
   pasos con puntos en las puntas** (Creating label 0% → Shipped 25% → In
-  transit 50% → Out for delivery 75% → Delivered 100%; el paso actual pulsa
-  lento y suave, el relleno avanza fluido en 1.8 s; un fallo transitorio del
+  transit 50% → Out for delivery 75% → Delivered 100%; círculos CENTRADOS
+  sobre la línea (el relleno pasa por detrás y cada círculo salta con pop
+  cuando la barra lo alcanza — delays escalonados); el paso actual pulsa
+  lento y suave; la animación del camión y los datos entran con fundido
+  fluido (doble rAF + clase .in, nunca de golpe); un fallo transitorio del
   API nunca muestra "Order not found" si ya hay datos), **resumen tipo
   recibo** (productos con foto/desc + Subtotal/Tax/
   Shipping FREE-o-cobrado/Total — las líneas Tax/Shipping del JSONB se separan
