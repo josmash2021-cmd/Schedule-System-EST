@@ -65,6 +65,17 @@ function extractItem(b) {
   return { fields: f };
 }
 
+// Valida "YYYY-MM-DD" (o null para quitar la fecha). Devuelve la fecha o null;
+// false si el formato es inválido.
+function fechaCompra(v) {
+  if (v === null || v === undefined || v === '') return null;
+  const s = String(v).trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const d = new Date(s + 'T00:00:00Z');
+  if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== s) return false;
+  return s;
+}
+
 router.get('/', async (req, res) => {
   try {
     res.json({ items: await inventory.listItems(req.query.search) });
@@ -95,6 +106,22 @@ router.get('/purchases-by-month', requireRole('admin'), async (_req, res) => {
   }
 });
 
+// Pone/quita la fecha real de compra de un movimiento de entrada (admin).
+router.patch('/movements/:id', requireRole('admin'), async (req, res) => {
+  const id = parseId(req, res); if (id === null) return;
+  const fecha = fechaCompra(req.body ? req.body.purchased_at : undefined);
+  if (fecha === false) return res.status(400).json({ error: 'Fecha inválida (formato YYYY-MM-DD).' });
+  try {
+    const mov = await inventory.setMovementPurchaseDate(id, fecha);
+    if (!mov) return res.status(404).json({ error: 'Movimiento no encontrado.' });
+    audit.logAction(req.user.id, 'inventory.movement_purchase_date', { targetType: 'inventory', targetId: mov.item_id, ip: getClientIp(req), metadata: { movementId: id, purchased_at: fecha } });
+    res.json({ movement: mov });
+  } catch (err) {
+    console.error('inventory movement purchase date error:', err.message);
+    res.status(500).json({ error: 'No se pudo guardar la fecha de compra.' });
+  }
+});
+
 router.get('/:id', async (req, res) => {
   const id = parseId(req, res); if (id === null) return;
   try {
@@ -114,6 +141,7 @@ router.post('/', requireRole('admin'), async (req, res) => {
   if (error) return res.status(400).json({ error });
   if (!fields.name) return res.status(400).json({ error: 'El nombre es obligatorio.' });
   if (b.stock !== undefined) { const r = num(b.stock, { int: true, min: 0 }); if (!r.ok) return res.status(400).json({ error: 'Stock inicial inválido.' }); fields.stock = r.val == null ? 0 : r.val; }
+  if (b.purchased_at !== undefined) { const fc = fechaCompra(b.purchased_at); if (fc === false) return res.status(400).json({ error: 'Fecha de compra inválida (formato YYYY-MM-DD).' }); fields.purchased_at = fc; }
   try {
     const item = await inventory.create(fields, req.user.id);
     audit.logAction(req.user.id, 'inventory.create', { targetType: 'inventory', targetId: item.id, ip: getClientIp(req) });
@@ -134,6 +162,11 @@ router.patch('/:id', requireRole('admin'), async (req, res) => {
     const r = num(req.body.stock, { int: true, min: 0 });
     if (!r.ok) return res.status(400).json({ error: 'Cantidad inválida.' });
     fields.stock = r.val == null ? 0 : r.val;
+  }
+  if (req.body && req.body.purchased_at !== undefined) {
+    const fc = fechaCompra(req.body.purchased_at);
+    if (fc === false) return res.status(400).json({ error: 'Fecha de compra inválida (formato YYYY-MM-DD).' });
+    fields.purchased_at = fc;
   }
   try {
     const existing = await inventory.findById(id);
@@ -168,8 +201,10 @@ router.post('/:id/adjust', async (req, res) => {
   if (!Number.isInteger(delta) || delta === 0) return res.status(400).json({ error: 'Cantidad inválida (un entero distinto de 0).' });
   const reason = b.reason ? String(b.reason).slice(0, 40) : null;
   const note = b.note ? String(b.note).slice(0, 500) : null;
+  const fc = fechaCompra(b.purchased_at);
+  if (fc === false) return res.status(400).json({ error: 'Fecha de compra inválida (formato YYYY-MM-DD).' });
   try {
-    const item = await inventory.adjustStock(id, delta, reason, note, req.user.id);
+    const item = await inventory.adjustStock(id, delta, reason, note, req.user.id, fc);
     if (!item) return res.status(404).json({ error: 'Producto no encontrado.' });
     audit.logAction(req.user.id, 'inventory.adjust', { targetType: 'inventory', targetId: id, ip: getClientIp(req), metadata: { delta, reason } });
     res.json({ item });

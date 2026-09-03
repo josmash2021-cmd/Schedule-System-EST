@@ -41,8 +41,8 @@ async function create(fields, userId) {
     // de entrada, si no la inversión del mes no lo cuenta.
     if (Number(item.stock) > 0) {
       await client.query(
-        'INSERT INTO inventory_movements (item_id, delta, reason, note, user_id) VALUES ($1, $2, $3, $4, $5)',
-        [item.id, Number(item.stock), 'entrada', 'Stock inicial', userId || null]
+        'INSERT INTO inventory_movements (item_id, delta, reason, note, user_id, purchased_at) VALUES ($1, $2, $3, $4, $5, $6)',
+        [item.id, Number(item.stock), 'entrada', 'Stock inicial', userId || null, fields.purchased_at || null]
       );
     }
     await client.query('COMMIT');
@@ -78,8 +78,8 @@ async function update(id, fields, userId) {
         const delta = Number(fields.stock) - Number(prev.rows[0].stock || 0);
         if (delta !== 0) {
           await client.query(
-            'INSERT INTO inventory_movements (item_id, delta, reason, note, user_id) VALUES ($1, $2, $3, $4, $5)',
-            [id, delta, delta > 0 ? 'entrada' : 'ajuste', 'Corrección de cantidad', userId || null]
+            'INSERT INTO inventory_movements (item_id, delta, reason, note, user_id, purchased_at) VALUES ($1, $2, $3, $4, $5, $6)',
+            [id, delta, delta > 0 ? 'entrada' : 'ajuste', 'Corrección de cantidad', userId || null, delta > 0 ? (fields.purchased_at || null) : null]
           );
         }
       }
@@ -103,7 +103,7 @@ async function softDelete(id) {
 
 // Ajuste de stock ATÓMICO: actualiza el stock y registra el movimiento en una
 // sola transacción (nunca queda un stock cambiado sin su movimiento).
-async function adjustStock(itemId, delta, reason, note, userId) {
+async function adjustStock(itemId, delta, reason, note, userId, purchasedAt) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -113,8 +113,8 @@ async function adjustStock(itemId, delta, reason, note, userId) {
     );
     if (u.rowCount === 0) { await client.query('ROLLBACK'); return null; }
     await client.query(
-      'INSERT INTO inventory_movements (item_id, delta, reason, note, user_id) VALUES ($1, $2, $3, $4, $5)',
-      [itemId, delta, reason || null, note || null, userId || null]
+      'INSERT INTO inventory_movements (item_id, delta, reason, note, user_id, purchased_at) VALUES ($1, $2, $3, $4, $5, $6)',
+      [itemId, delta, reason || null, note || null, userId || null, delta > 0 ? (purchasedAt || null) : null]
     );
     await client.query('COMMIT');
     return u.rows[0];
@@ -128,7 +128,7 @@ async function adjustStock(itemId, delta, reason, note, userId) {
 
 async function listMovements(itemId, limit = 50) {
   const r = await pool.query(
-    `SELECT m.id, m.delta, m.reason, m.note, m.created_at, u.username
+    `SELECT m.id, m.delta, m.reason, m.note, m.created_at, m.purchased_at, u.username
      FROM inventory_movements m LEFT JOIN users u ON u.id = m.user_id
      WHERE m.item_id = $1 ORDER BY m.created_at DESC LIMIT $2`,
     [itemId, limit]
@@ -140,16 +140,29 @@ async function listMovements(itemId, limit = 50) {
 // del producto, agrupado por mes calendario en hora de Chicago (los
 // timestamps están en UTC). No hay foto del costo en el movimiento: si el
 // costo del producto cambia después, los meses viejos reflejan el costo nuevo.
+// El mes es el de la fecha REAL de compra (purchased_at) cuando existe; si
+// no, el del registro. Las entradas retroactivas sin fecha de compra no
+// cuentan: solo suman cuando el dueño les ponga su fecha real.
 async function purchasesByMonth() {
   const r = await pool.query(
-    `SELECT to_char(date_trunc('month', (m.created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Chicago'), 'YYYY-MM') AS mes,
+    `SELECT to_char(date_trunc('month', COALESCE(m.purchased_at, (m.created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Chicago')), 'YYYY-MM') AS mes,
             SUM(m.delta) AS unidades,
             SUM(m.delta * COALESCE(i.cost, 0)) AS total
      FROM inventory_movements m JOIN inventory_items i ON i.id = m.item_id
      WHERE m.delta > 0 AND (m.reason IS NULL OR m.reason <> 'venta anulada')
+       AND NOT (m.purchased_at IS NULL AND m.note = 'Stock inicial (registrado retroactivamente)')
      GROUP BY 1 ORDER BY 1 DESC`
   );
   return r.rows.map((x) => ({ mes: x.mes, unidades: Number(x.unidades) || 0, total: Number(x.total) || 0 }));
+}
+
+// Pone (o quita, con null) la fecha real de compra de un movimiento.
+async function setMovementPurchaseDate(movementId, date) {
+  const r = await pool.query(
+    'UPDATE inventory_movements SET purchased_at = $2 WHERE id = $1 RETURNING id, item_id, purchased_at',
+    [movementId, date || null]
+  );
+  return r.rows[0] || null;
 }
 
 // Inventario que quedaba al CIERRE de cada mes (para la contabilidad mensual
@@ -184,4 +197,4 @@ async function stockAtMonthEnds() {
   }));
 }
 
-module.exports = { FIELDS, listItems, findById, create, update, softDelete, adjustStock, listMovements, purchasesByMonth, stockAtMonthEnds };
+module.exports = { FIELDS, listItems, findById, create, update, softDelete, adjustStock, listMovements, purchasesByMonth, setMovementPurchaseDate, stockAtMonthEnds };

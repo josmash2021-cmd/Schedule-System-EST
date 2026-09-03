@@ -73,7 +73,11 @@ cambies estructura, flujos o convenciones.
   hoy/semana/mes/año con count-up, gráfica por período, tabla detalle, y
   **Resumen por mes**: ventas, ganancia, inversión en inventario e inventario
   al cierre de cada mes — vía `/x/s/inventory/purchases-by-month` y
-  `/x/s/inventory/stock-by-month`),
+  `/x/s/inventory/stock-by-month`; la inversión se agrupa por la fecha REAL
+  de compra (`inventory_movements.purchased_at`, editable por el admin en la
+  ficha del producto con `PATCH /x/s/inventory/movements/:id`; sin ella cuenta
+  la fecha de registro, y las entradas retroactivas "Stock inicial
+  (registrado retroactivamente)" sin fecha de compra NO cuentan),
   `Invoices.jsx` (Facturas: Bill of Sale por venta/reparación, formulario +
   documento imprimible con `window.print()`, sin librerías de PDF; datos del
   vendedor recordados en localStorage `est_invoice_seller`; **vista previa en

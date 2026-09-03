@@ -216,6 +216,8 @@ async function initDb() {
       );
     `);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_inv_mov_item ON inventory_movements(item_id);`);
+    // Fecha real de compra de la mercancía (si difiere del registro).
+    await client.query(`ALTER TABLE inventory_movements ADD COLUMN IF NOT EXISTS purchased_at DATE;`);
 
     // ----- Ventas directas (mostrador): cabecera + líneas -----
     // Una venta puede mezclar productos del inventario (item_id, descuenta

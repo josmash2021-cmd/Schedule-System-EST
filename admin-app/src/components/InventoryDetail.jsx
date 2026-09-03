@@ -95,6 +95,21 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const fileRef = useRef(null);
+  // Fecha real de compra de la mercancía (opcional; va al movimiento de entrada).
+  const [purchaseDate, setPurchaseDate] = useState('');
+
+  // La fecha llega como "YYYY-MM-DDT00:00:00.000Z" (DATE de Postgres).
+  const dateOnly = (v) => (v ? String(v).slice(0, 10) : '');
+  const fmtFecha = (v) => new Date(dateOnly(v) + 'T12:00:00').toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' });
+
+  // Guarda (o quita, con fecha vacía) la fecha de compra de un movimiento.
+  const savePurchaseDate = async (movId, val) => {
+    setErr('');
+    try {
+      await api('/inventory/movements/' + movId, { method: 'PATCH', body: { purchased_at: val || null } });
+      load(id);
+    } catch (e) { setErr(e.message); }
+  };
 
   const setField = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.value }));
 
@@ -168,11 +183,14 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
       description: buildDescription(specs, currentCategory),
     };
     if (!body.name) { setErr('El nombre es obligatorio.'); setSaving(false); return; }
+    // Solo viaja si el dueño la llenó (se aplica al movimiento de entrada).
+    if (purchaseDate) body.purchased_at = purchaseDate;
 
     try {
       if (id) {
         await api('/inventory/' + id, { method: 'PATCH', body });
         await uploadPendingPhoto(id);
+        setPurchaseDate('');
         load(id);
         setOk('Cambios guardados.');
       } else {
@@ -238,6 +256,10 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
           </div>
           <label className="field inv-c1"><span>Cantidad</span><input inputMode="numeric" value={f.stock}
             onChange={(e) => setF((s) => ({ ...s, stock: e.target.value.replace(/[^\d]/g, '') }))} /></label>
+          <label className="field inv-c1"><span>Fecha de compra (opcional)</span>
+            <input type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} />
+            <span className="muted" style={{ fontSize: 12 }}>Se aplica solo si esta cantidad suma unidades (stock nuevo o re-stock).</span>
+          </label>
 
           {currentCategory && (
             <div className="rd-photos inv-c1">
@@ -317,7 +339,21 @@ export default function InventoryDetail({ itemId, isAdmin, onClose, onSaved }) {
               <div key={m.id} className="activity-row">
                 <span className={'mov-delta ' + (m.delta > 0 ? 'pos' : 'neg')}>{m.delta > 0 ? '+' : ''}{m.delta}</span>
                 <span className="activity-text">{m.reason || 'ajuste'}{m.note ? ' · ' + m.note : ''}{m.username ? ' · ' + m.username : ''}</span>
-                <span className="activity-time muted">{new Date(m.created_at).toLocaleString('es', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                {m.delta > 0 ? (
+                  <span className="activity-time muted">
+                    {isAdmin ? (
+                      <label className="mov-compra">
+                        Compra:
+                        <input type="date" key={m.id + ':' + dateOnly(m.purchased_at)} defaultValue={dateOnly(m.purchased_at)}
+                          title="Fecha real de compra (dejar vacía para quitar)"
+                          onChange={(e) => savePurchaseDate(m.id, e.target.value)} />
+                      </label>
+                    ) : (m.purchased_at ? 'Comprado el ' + fmtFecha(m.purchased_at)
+                      : new Date(m.created_at).toLocaleString('es', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }))}
+                  </span>
+                ) : (
+                  <span className="activity-time muted">{new Date(m.created_at).toLocaleString('es', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                )}
               </div>
             ))}
           </div>
