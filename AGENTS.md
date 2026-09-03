@@ -24,10 +24,11 @@ cambies estructura, flujos o convenciones.
   `track.html` (seguimiento público del pedido del cliente: `?t=<track_token>`,
   consulta `/api/track/:token` cada 30 s; **animación de entrada del camión**
   (vista cenital con foto real `assets/img/truck-top.png`, flip horizontal
-  para mirar a la derecha: aparece la vía → el camión entra y frena →
-  aparece la caja dorada → se sube atrás y se esconde (z-index bajo la foto)
-  → rebote de suspensión → prenden las luces (conos dorados CSS) → queda
-  conduciendo en loop; se salta con
+  para mirar a la derecha: aparece la línea de dashes (sin caja ni fondo,
+  directo sobre la página) → el camión entra y frena → aparece la caja
+  dorada → se sube atrás y se esconde (z-index bajo la foto) → rebote de
+  suspensión → prenden las luces (resplandor difuminado con blur, sin
+  formas simétricas) → queda conduciendo en loop; se salta con
   `prefers-reduced-motion`; los datos se revelan al arrancar); **barra de 5
   pasos con puntos en las puntas** (Creating label 0% → Shipped 25% → In
   transit 50% → Out for delivery 75% → Delivered 100%; el paso actual pulsa
