@@ -105,22 +105,14 @@
            posiciones de los pines con su tamaño interno; si el canvas se
            estira por CSS, la línea y los pines no coinciden. Que el tamaño
            lo ponga Mapbox vía map.resize(). */
-        /* Pines: cabeza circular + punta triangular. El elemento mide lo
-           mismo que el pin completo y se ancla por la PUNTA (anchor bottom),
-           así cae en la dirección exacta. OJO: debe ser absolute/top-0/left-0
-           como todo .mapboxgl-marker; con position:relative Mapbox pierde el
-           anclaje y el pin queda desplazado. */
-        .map-pin { width: 22px; height: 31px; position: absolute; top: 0; left: 0; }
-        .map-pin .h { display: block; width: 22px; height: 22px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,.55); position: relative; }
-        .map-pin .h::after { content: ''; position: absolute; inset: 6px; border-radius: 50%; background: #0c0c0f; }
-        .map-pin::before { content: ''; position: absolute; left: 50%; top: 19px; transform: translateX(-50%); border: 6px solid transparent; border-top-width: 10px; }
-        .map-pin.store .h { background: #d4af37; }
-        .map-pin.store::before { border-top-color: #d4af37; }
-        .map-pin.dest .h { background: #f5f5f7; }
-        .map-pin.dest::before { border-top-color: #f5f5f7; }
-        /* Anillo pulsante suave en el destino. */
-        .map-pin.dest .h::before { content: ''; position: absolute; inset: -8px; border-radius: 50%; border: 2px solid rgba(245,245,247,.5); animation: pinPulse 2.2s ease-out infinite; }
-        @keyframes pinPulse { 0% { transform: scale(.6); opacity: .9; } 100% { transform: scale(1.4); opacity: 0; } }
+        /* Pines modernos: gota de capas (borde → anillo de color → centro
+           oscuro con punto) hecha en SVG inline. El elemento mide lo mismo
+           que el SVG y se ancla por la PUNTA (anchor bottom), así cae en la
+           dirección exacta. OJO: debe ser absolute/top-0/left-0 como todo
+           .mapboxgl-marker; con position:relative Mapbox pierde el anclaje
+           y el pin queda desplazado. */
+        .map-pin { width: 34px; height: 46px; position: absolute; top: 0; left: 0; filter: drop-shadow(0 5px 8px rgba(0,0,0,.55)); }
+        .map-pin svg { display: block; }
         @media (max-width: 980px) {
             .track-grid, .track-grid.no-map { grid-template-columns: 1fr; }
             .track-side-left { order: 3; }
@@ -457,9 +449,20 @@
                 Promise.all([geocode(STORE_ADDR), geocode(destAddr)]).then(function (pts) {
                     var from = pts[0], to = pts[1];
                     function pin(cls) {
+                        // Gota de capas tipo referencia: borde claro/oscuro,
+                        // anillo de color, centro oscuro y punto del color.
+                        var c = cls === 'store'
+                            ? { shell: '#f4f4f6', ring: '#d4af37' }   // tienda: anillo dorado
+                            : { shell: '#3d3e47', ring: '#f4f4f6' };  // destino: anillo blanco
                         var el = document.createElement('div');
                         el.className = 'map-pin ' + cls;
-                        el.innerHTML = '<span class="h"></span>';
+                        el.innerHTML =
+                            '<svg width="34" height="46" viewBox="0 0 34 46">' +
+                            '<path d="M17 1 C8.4 1 1.5 8 1.5 16.5 C1.5 27.5 17 44.5 17 44.5 C17 44.5 32.5 27.5 32.5 16.5 C32.5 8 25.6 1 17 1 Z" fill="' + c.shell + '"/>' +
+                            '<path d="M17 4.8 C10.6 4.8 5.3 9.9 5.3 16.2 C5.3 24.6 17 38.6 17 38.6 C17 38.6 28.7 24.6 28.7 16.2 C28.7 9.9 23.4 4.8 17 4.8 Z" fill="' + c.ring + '"/>' +
+                            '<path d="M17 9 C12.6 9 8.9 12.4 8.9 16.6 C8.9 22.6 17 31.5 17 31.5 C17 31.5 25.1 22.6 25.1 16.6 C25.1 12.4 21.4 9 17 9 Z" fill="#101116"/>' +
+                            '<circle cx="17" cy="16.6" r="3.4" fill="' + c.ring + '"/>' +
+                            '</svg>';
                         return el;
                     }
                     new mapboxgl.Marker({ element: pin('store'), anchor: 'bottom' }).setLngLat(from).addTo(map);
@@ -475,7 +478,7 @@
                             map.addLayer({
                                 id: 'route', type: 'line', source: 'route',
                                 layout: { 'line-cap': 'round', 'line-join': 'round' },
-                                paint: { 'line-color': '#d4af37', 'line-width': 4, 'line-opacity': .9 }
+                                paint: { 'line-color': '#d4af37', 'line-width': 2.5, 'line-opacity': .9 }
                             });
                             var b = new mapboxgl.LngLatBounds();
                             coords.forEach(function (c) { b.extend(c); });
