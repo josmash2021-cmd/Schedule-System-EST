@@ -434,6 +434,13 @@
                         .observe(document.getElementById('trackMap'));
                 }
                 window.addEventListener('resize', function () { map.resize(); });
+                // Solo nombres de estados y ciudades: ocultar el resto de
+                // etiquetas (carreteras, POIs, países, agua, etc.).
+                map.getStyle().layers.forEach(function (l) {
+                    if (l.type === 'symbol' && l.id !== 'state-label' && l.id !== 'settlement-label') {
+                        map.setLayoutProperty(l.id, 'visibility', 'none');
+                    }
+                });
                 // Edificios 3D (se aprecian al acercar con la inclinación).
                 try {
                     map.addLayer({
@@ -505,9 +512,9 @@
                                 // luego inclina a 55°.
                                 map.fitBounds(b, { padding: pad, pitch: 0, bearing: 0, maxZoom: 11, duration: 1400 });
                                 map.once('moveend', function () {
-                                    // Inclina a 55° y rota 33° a un lado del
-                                    // rumbo del viaje.
-                                    map.easeTo({ pitch: 55, bearing: brg + 33, duration: 2400 });
+                                    // Inclina a 55°, rota 33° a un lado del
+                                    // rumbo y acerca 1.5 niveles de zoom.
+                                    map.easeTo({ pitch: 55, bearing: brg + 33, zoom: map.getZoom() + 1.5, duration: 2400 });
                                 });
                             }
                             var card = document.getElementById('trackMapCard');
