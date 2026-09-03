@@ -22,7 +22,10 @@ cambies estructura, flujos o convenciones.
 - Páginas: `index.html`, `products.html`, `macbook-air-13.html`,
   `iphone-15-pro.html`, `book-appointment.html`, `cart.html`, `success.html`,
   `track.html` (seguimiento público del pedido del cliente: `?t=<track_token>`,
-  consulta `/api/track/:token` cada 30 s; línea de progreso + carrusel de
+  consulta `/api/track/:token` cada 30 s; línea de progreso, **resumen tipo
+  recibo** (productos con foto/desc + Subtotal/Tax/Shipping FREE-o-cobrado/
+  Total — las líneas Tax/Shipping del JSONB se separan por nombre en el JS,
+  textos dinámicos bilingües vía `window.EST_LANG`) + carrusel de
   productos; CSS inline propio — define `.hidden`, que `site-v3.css` no tiene;
   enlazada desde el menú principal como "Mi pedido" / `data-en="My order"` en
   todas las páginas — sin token muestra el bloque `#trackNoToken`, no el error),
