@@ -255,10 +255,9 @@
     <main>
         <section class="container track-wrap">
             <div class="track-head">
-                <span class="eyebrow" data-en="Order tracking">Seguimiento de pedido</span>
-                <!-- El título lo escribe el JS (nombre del producto); SIN
-                     data-en para que i18n nunca lo pise en una carga rápida. -->
-                <h1><img id="trackProdImg" class="track-prod-head hidden" alt=""><span id="trackTitle">Tu pedido</span></h1>
+                <!-- Sin data-en: el JS escribe aquí el nombre del producto. -->
+                <span class="eyebrow" id="trackEyebrow"></span>
+                <h1><span data-en="Order tracking">Seguimiento de pedido</span></h1>
                 <div class="track-num"><span data-en="Order">Orden</span> <strong id="trackNum">—</strong></div>
             </div>
 
@@ -828,18 +827,10 @@
                 document.getElementById('trackAddr').textContent = '—';
             }
 
-            // El título de la página ES el producto comprado (foto + nombre).
+            // El eyebrow muestra el producto comprado; el título grande es
+            // fijo: "Order Tracking".
             var firstProd = prods[0];
-            if (firstProd) {
-                document.getElementById('trackTitle').textContent = firstProd.name;
-                if (firstProd.img) {
-                    var pi = document.getElementById('trackProdImg');
-                    pi.src = firstProd.img;
-                    pi.classList.remove('hidden');
-                }
-            } else {
-                document.getElementById('trackTitle').textContent = en ? 'Your order' : 'Tu pedido';
-            }
+            document.getElementById('trackEyebrow').textContent = firstProd ? firstProd.name : '';
 
             // Mapa Mapbox oscuro: ruta tienda (origen) → dirección del
             // cliente, encuadrada completa. Se inicializa una sola vez; sin
