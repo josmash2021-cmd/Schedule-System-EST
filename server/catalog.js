@@ -64,6 +64,7 @@ const CATALOG = {
     condEn: 'Excellent',
     price: 350,
     img: 'assets/img/macbook-pro-2020.jpg',
+    freeShip: true,
   },
   'macbook-neo-2026-openbox': {
     name: 'MacBook Neo 2026',
