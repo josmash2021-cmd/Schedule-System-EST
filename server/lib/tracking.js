@@ -179,6 +179,13 @@ async function getTag(trackingId) {
   return s ? s.tag : null;
 }
 
+// Jerarquía de estados: un reporte nunca hace RETROCEDER la barra (p. ej.
+// AfterShip reporta "Pending" justo al registrar un tracking, antes de su
+// primera consulta al carrier). Tags desconocidos (Exception, AttemptFail…)
+// solo aplican si la orden aún no tiene tag.
+const TAG_RANK = { Pending: 0, InfoReceived: 0, InTransit: 1, OutForDelivery: 2, Delivered: 3 };
+const tagRank = (t) => (t && Object.prototype.hasOwnProperty.call(TAG_RANK, t) ? TAG_RANK[t] : -1);
+
 // Aplica un cambio de estado a la orden (lo llaman el webhook de AfterShip y
 // el job de respaldo): guarda ship_tag y la fecha estimada, manda los correos
 // de tránsito/entrega (una sola vez, con flags) y emite el aviso SSE para que
@@ -190,7 +197,7 @@ async function applyUpdate(o, { tag, expectedDelivery }) {
   const emailLib = require('./email');
   const trackEvents = require('./trackEvents');
   let changed = false;
-  if (tag && tag !== o.ship_tag) {
+  if (tag && tag !== o.ship_tag && tagRank(tag) >= tagRank(o.ship_tag)) {
     await orders.updateShipTag(o.id, tag);
     changed = true;
   }
