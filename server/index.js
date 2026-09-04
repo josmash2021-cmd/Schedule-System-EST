@@ -231,6 +231,17 @@ async function start() {
       const inTransit = await orders.listInTransit();
       for (const o of inTransit) {
         if (tracking.enabled()) {
+          // Con AfterShip, órdenes viejas sin tracking_id (guardadas antes de
+          // configurar la key) se auto-registran aquí para empezar a sincronizar.
+          if (!o.tracking_id && process.env.AFTERSHIP_API_KEY) {
+            const tid = await tracking.register(o.tracking_number, o.carrier);
+            if (tid) {
+              const upd = await orders.updateTracking(o.id, {
+                tracking_number: o.tracking_number, carrier: o.carrier, tracking_id: tid,
+              });
+              if (upd) o.tracking_id = upd.tracking_id;
+            }
+          }
           const s = await tracking.getStatus(o.tracking_id || o.tracking_number);
           if (s && s.tag) {
             await tracking.applyUpdate(o, s);

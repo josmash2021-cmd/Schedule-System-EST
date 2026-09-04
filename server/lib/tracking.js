@@ -3,8 +3,9 @@
       USPS_CLIENT_ID + USPS_CLIENT_SECRET (OAuth2). El job consulta cada 15 min
       cada paquete activo: estado, "out for delivery", "delivered" y la fecha
       estimada de entrega (expectedDeliveryDate).
-   2) AfterShip API v4 (trial/pago): activa con AFTERSHIP_API_KEY; además tiene
-      webhook push (POST /api/track/webhook) para aviso inmediato.
+   2) AfterShip Tracking API 2025-07 (trial/pago): activa con AFTERSHIP_API_KEY
+      (llave asat_*, header as-api-key); además tiene webhook push
+      (POST /api/track/webhook) para aviso inmediato.
    Sin ninguna key, el flujo manual sigue funcionando (pendiente → enviado al
    poner tracking, y 'entregado' se marca a mano desde el panel). */
 const { AFTERSHIP_API_KEY, USPS_CLIENT_ID, USPS_CLIENT_SECRET } = require('../config');
@@ -69,7 +70,9 @@ async function uspsGetStatus(trackingNumber) {
 }
 
 // ============================ AfterShip (pago/trial) ============================
-const AS_API = 'https://api.aftership.com/v4';
+// API NUEVA (tracking/2025-07): las llaves actuales (asat_*) usan el header
+// as-api-key; la v4 vieja (aftership-api-key) ya no las acepta (devuelve 404).
+const AS_API = 'https://api.aftership.com/tracking/2025-07';
 
 // Paqueterías frecuentes → slug de AfterShip. 'otro' = autodetección (sin slug).
 const CARRIER_SLUGS = { usps: 'usps', ups: 'ups', fedex: 'fedex', dhl: 'dhl' };
@@ -82,7 +85,7 @@ async function asCall(path, options = {}) {
   const res = await fetch(AS_API + path, {
     ...options,
     headers: {
-      'aftership-api-key': AFTERSHIP_API_KEY,
+      'as-api-key': AFTERSHIP_API_KEY,
       'Content-Type': 'application/json',
       ...(options.headers || {}),
     },
@@ -93,6 +96,26 @@ async function asCall(path, options = {}) {
     throw new Error(msg);
   }
   return data;
+}
+
+// Fecha estimada en la API nueva: varios campos posibles y con dos formas
+// (string ISO u objeto { datetime } / { estimated_delivery_date }).
+function asExpectedDelivery(t) {
+  const pick = (v) => {
+    if (!v) return null;
+    if (typeof v === 'string') return v;
+    return v.datetime || v.estimated_delivery_date || null;
+  };
+  return pick(t.latest_estimated_delivery) || pick(t.first_estimated_delivery) ||
+    pick(t.courier_estimated_delivery_date) || pick(t.aftership_estimated_delivery_date);
+}
+
+// Recupera el id de un tracking ya registrado buscándolo por número (cuando el
+// alta devuelve "ya existe" o el paquete se registró fuera del server).
+async function asFindByNumber(num) {
+  const d = await asCall(`/trackings?tracking_number=${encodeURIComponent(num)}&limit=1`);
+  const list = d && d.data && d.data.trackings;
+  return list && list[0] ? list[0].id : null;
 }
 
 // ============================ API unificada ============================
@@ -106,8 +129,7 @@ function enabled() {
 
 // Registra el tracking en el proveedor. Con USPS no hay nada que registrar
 // (se consulta directo por número): devuelve el propio número como id. Con
-// AfterShip devuelve su tracking id, o null si ya existía (4003) — la orden
-// igual pasa a enviado.
+// AfterShip devuelve su tracking id; si ya existía, lo recupera por número.
 async function register(trackingNumber, carrier) {
   if (!trackingNumber) return null;
   if (AFTERSHIP_API_KEY) {
@@ -115,14 +137,15 @@ async function register(trackingNumber, carrier) {
     try {
       const d = await asCall('/trackings', {
         method: 'POST',
-        body: JSON.stringify({ tracking: { tracking_number: trackingNumber, ...(slug ? { slug } : {}) } }),
+        body: JSON.stringify({ tracking_number: trackingNumber, ...(slug ? { slug } : {}) }),
       });
-      return d && d.data && d.data.tracking ? d.data.tracking.id : null;
+      const t = d && d.data;
+      return t ? (t.id || (t.tracking && t.tracking.id) || null) : null;
     } catch (e) {
-      // 4003 = tracking ya registrado: lo reusamos, no es error para el dueño.
-      if (!/4003|already exists/i.test(e.message)) {
-        console.error('AfterShip register error:', e.message);
+      if (/already exists|duplicate|4003|4008/i.test(e.message)) {
+        try { return await asFindByNumber(trackingNumber); } catch (_) { return null; }
       }
+      console.error('AfterShip register error:', e.message);
       return null;
     }
   }
@@ -139,8 +162,8 @@ async function getStatus(trackingId) {
   if (AFTERSHIP_API_KEY) {
     try {
       const d = await asCall(`/trackings/${encodeURIComponent(trackingId)}`);
-      const t = d && d.data && d.data.tracking;
-      return t ? { tag: t.tag || null, expectedDelivery: t.expected_delivery || null } : null;
+      const t = d && d.data;
+      return t ? { tag: t.tag || null, expectedDelivery: asExpectedDelivery(t) } : null;
     } catch (e) {
       console.error('AfterShip check error:', e.message);
       return null;
