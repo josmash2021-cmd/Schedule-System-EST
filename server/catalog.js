@@ -64,7 +64,7 @@ const CATALOG = {
     condEn: 'Open box',
     price: 500,
     img: 'assets/img/macbook-neo-pink.jpg',
-    invId: 19,
+    invId: 38,
   },
   'victus-gaming-excelente': {
     name: 'Victus Gaming 15.6" Ryzen 5',
