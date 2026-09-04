@@ -29,12 +29,12 @@ cambies estructura, flujos o convenciones.
   dorada → se sube atrás y se esconde (z-index bajo la foto) → rebote de
   suspensión → prenden las luces (resplandor difuminado con blur, sin
   formas simétricas) → queda conduciendo en loop; se salta con
-  `prefers-reduced-motion`; los datos se revelan al arrancar); **estado de 5
-  pasos como curva serpenteante SVG** (Creating label → Shipped → In transit →
-  Out for delivery → Delivered; la MISMA curva en PC y teléfono — la barra
-  horizontal vieja quedó oculta; los textos se leen del markup de la barra;
-  círculos centrados sobre la curva; el paso actual pulsa lento y suave); la
-  animación del camión y los datos entran con fundido
+  `prefers-reduced-motion`; los datos se revelan al arrancar); **barra de 5
+  pasos con puntos en las puntas** (Creating label 0% → Shipped 25% → In
+  transit 50% → Out for delivery 75% → Delivered 100%; círculos CENTRADOS
+  sobre la línea (el relleno pasa por detrás y cada círculo salta con pop
+  cuando la barra lo alcanza — delays escalonados); el paso actual pulsa
+  lento y suave; la animación del camión y los datos entran con fundido
   fluido (doble rAF + clase .in, nunca de golpe); un fallo transitorio del
   API nunca muestra "Order not found" si ya hay datos); el título de la
   página es fijo ("Order tracking", sin nombre del producto); **el badge bajo

@@ -110,14 +110,16 @@
            Status baja hasta donde termina Shipping Address, y el mapa crece
            para llenar su columna. */
         .track-status-card { height: 100%; box-sizing: border-box; margin-bottom: 0; background: transparent; border: 0; padding: 0; }
-        /* La curva serpenteante es la misma en PC y teléfono (la barra recta
-           ya no se usa). */
-        .track-bar { display: none; }
-        .track-curve { display: block; flex: 1; width: 100%; min-height: 340px; }
-        .track-status-card { display: flex; flex-direction: column; }
+        .track-curve { display: none; } /* solo visible en PC */
         .track-center .track-card { margin-bottom: 0; }
         .track-map-card { flex: 1; display: flex; flex-direction: column; }
         .track-map { flex: 1; min-height: 400px; }
+        /* Estado en PC: curva serpenteante SVG centrada que llega hasta abajo de la tarjeta. */
+        @media (min-width: 981px) {
+            .track-bar { display: none; } /* la barra recta es solo para móvil */
+            .track-curve { display: block; flex: 1; width: 100%; min-height: 340px; }
+            .track-status-card { display: flex; flex-direction: column; }
+        }
         .track-map-card { margin-bottom: 16px; background: transparent; border: 0; padding: 0; position: relative; }
         /* Sombra que simula 3D: el mapa "flota" sobre la página, con una
            sombra grande difusa + una elipse de piso detrás. */
@@ -726,7 +728,7 @@
         // curva cuando cambie de tamaño para que siempre llegue hasta abajo.
         if (window.ResizeObserver) {
             new ResizeObserver(function () {
-                drawStatusCurve(lastStep);
+                if (window.matchMedia('(min-width: 981px)').matches) drawStatusCurve(lastStep);
             }).observe(document.getElementById('trackCurve'));
         }
 
@@ -750,8 +752,13 @@
                 lbl.textContent = en ? 'Order' : 'Orden';
                 num.textContent = d.order_number;
             }
-            // La curva SVG es la misma en PC y teléfono.
-            drawStatusCurve(step);
+            // En PC el estado es una curva SVG; en móvil, la barra horizontal.
+            var pct = (step / 4 * 100) + '%';
+            if (window.matchMedia('(min-width: 981px)').matches) {
+                drawStatusCurve(step);
+            } else {
+                document.getElementById('trackFill').style.width = pct;
+            }
             document.querySelectorAll('#trackSteps .track-bar-step').forEach(function (el, i) {
                 el.classList.toggle('on', step >= i);
                 el.classList.toggle('current', step === i);
