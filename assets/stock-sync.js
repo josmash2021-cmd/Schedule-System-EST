@@ -13,6 +13,16 @@
     var LANG = window.EST_LANG || (document.documentElement.lang || 'es');
     var SOLD = LANG === 'en' ? 'Sold' : 'Vendido';
     var SOLD_NOTE = LANG === 'en' ? 'sold' : 'vendido';
+    var LAST = LANG === 'en' ? 'Last one in stock' : 'Última unidad en stock';
+
+    // Stock 1: badge "Última unidad en stock" (estilo caliente pulsante).
+    function markLast(el) {
+        var badge = el.querySelector('.card-badge');
+        if (badge) {
+            badge.textContent = LAST;
+            badge.classList.add('card-badge-hot');
+        }
+    }
 
     function markSold(el) {
         // Badge: "Disponible"/"Última unidad" → "Vendido" (sin el rojo pulsante)
@@ -45,7 +55,9 @@
             });
             document.querySelectorAll('[data-inv]').forEach(function (el) {
                 var item = map[String(el.dataset.inv || '').trim().toLowerCase()];
-                if (item && Number(item.stock) <= 0) markSold(el);
+                if (!item) return;
+                if (Number(item.stock) <= 0) markSold(el);
+                else if (Number(item.stock) === 1) markLast(el);
             });
         })
         .catch(function () { /* sin conexión: la página queda como está */ });
