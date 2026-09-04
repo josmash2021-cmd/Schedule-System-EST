@@ -18,6 +18,9 @@
         /* Seguimiento de pedido (track.html): monocromo oscuro, acento dorado
            solo en la línea de progreso, coherente con success.html. */
         .hidden { display: none !important; } /* site-v3.css no la define */
+        /* Footer siempre pegado abajo aunque el contenido sea corto. */
+        body { display: flex; flex-direction: column; min-height: 100vh; }
+        main { flex: 1; }
         .track-wrap { max-width: 1240px; margin: 0 auto; padding: 56px 24px 70px; }
         .track-head { text-align: center; margin-bottom: 26px; }
         .track-head h1 { margin: 10px 0 6px; display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
