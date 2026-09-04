@@ -56,6 +56,15 @@ const CATALOG = {
     img: 'assets/img/macbook-air-13.jpg',
     invId: 22,
   },
+  'macbook-pro-2020-excelente': {
+    name: 'MacBook Pro 2020',
+    desc: 'Intel i5 · 16 GB RAM · 256 GB SSD · Sin daños',
+    descEn: 'Intel i5 · 16 GB RAM · 256 GB SSD · No damage',
+    cond: 'Excelente',
+    condEn: 'Excellent',
+    price: 350,
+    img: 'assets/img/macbook-pro-2020.jpg',
+  },
   'macbook-neo-2026-openbox': {
     name: 'MacBook Neo 2026',
     desc: '256 GB · 8 GB RAM · Open box',
