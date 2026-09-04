@@ -526,8 +526,11 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   `tracking_number`/`carrier`/`tracking_id`). POST `/x/s/orders` crea la
   orden manual (total server-side); PATCH `/:id` guarda tracking (→ 'enviado'
   automático) o marca 'entregado' manual. `server/lib/tracking.js` integra
-  AfterShip v4 solo si existe `AFTERSHIP_API_KEY` (plan gratis,
-  aftership.com): registra el tracking y un job cada 15 min en `index.js`
+  AfterShip (plan gratis,
+  aftership.com; **desde 2026-09-03 la API nueva 2025-07**: llaves `asat_*`
+  con header `as-api-key` — la v4 vieja ya no las acepta; órdenes viejas sin
+  `tracking_id` se auto-registran en el job y un tag nunca hace retroceder el
+  estado): registra el tracking y un job cada 15 min en `index.js`
   marca 'entregado' cuando el paquete llega; sin key todo funciona igual pero
   el 'entregado' es manual. **Regla 24 h (2026-09-03):** sin proveedor (o
   mientras no reporta tag), el job marca 'InTransit' SOLO 24 h después de

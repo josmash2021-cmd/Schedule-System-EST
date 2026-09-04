@@ -159,8 +159,8 @@ cambies estructura, flujos o convenciones.
   el configurado): **USPS Tracking API v3** (`USPS_CLIENT_ID` +
   `USPS_CLIENT_SECRET`, gratis permanente, OAuth2; se consulta por número, sin
   registro previo; el job cada 15 min trae estado + `expectedDeliveryDate`) o
-  **AfterShip API v4** (`AFTERSHIP_API_KEY`, pago/trial; además tiene webhook
-  push). Al guardar tracking la orden pasa a 'enviado' sola. **Webhook en
+  **AfterShip Tracking API 2025-07** (`AFTERSHIP_API_KEY` llave `asat_*`,
+  header `as-api-key`, trial/pago; además tiene webhook push). Al guardar tracking la orden pasa a 'enviado' sola. **Webhook en
   tiempo real (solo AfterShip):** `POST /api/track/webhook` aplica el cambio al
   instante vía `tracking.applyUpdate` (tag, `expected_delivery`, correos de
   tránsito/entrega con flags) y emite por el bus `server/lib/trackEvents.js`;
