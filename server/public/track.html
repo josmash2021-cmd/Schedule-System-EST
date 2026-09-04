@@ -110,11 +110,14 @@
            Status baja hasta donde termina Shipping Address, y el mapa crece
            para llenar su columna. */
         .track-status-card { height: 100%; box-sizing: border-box; margin-bottom: 0; background: transparent; border: 0; padding: 0; }
-        /* La curva serpenteante es la misma en PC y teléfono (la barra recta
-           ya no se usa). */
+        /* Estado: el mismo SVG dorado en ambos — en PC serpente vertical,
+           en teléfono la MISMA línea pero horizontal (una fila). */
         .track-bar { display: none; }
-        .track-curve { display: block; flex: 1; width: 100%; min-height: 340px; }
-        .track-status-card { display: flex; flex-direction: column; }
+        .track-curve { display: block; width: 100%; height: 96px; }
+        @media (min-width: 981px) {
+            .track-curve { flex: 1; min-height: 340px; height: auto; }
+            .track-status-card { display: flex; flex-direction: column; }
+        }
         .track-center .track-card { margin-bottom: 0; }
         .track-map-card { flex: 1; display: flex; flex-direction: column; }
         .track-map { flex: 1; min-height: 400px; }
@@ -668,9 +671,8 @@
         }
         var SVGNS = 'http://www.w3.org/2000/svg';
         var lastStep = 0;
-        // Curva de estado (PC): serpente centrada en la tarjeta, de arriba
-        // hasta abajo. Puntos dorados = pasos cumplidos; etiquetas alternan
-        // de lado. Se redibuja en cada render (es barato).
+        // Curva de estado. PC: serpente vertical centrada. Teléfono: la MISMA
+        // línea dorada con puntos y etiquetas, pero horizontal (una sola fila).
         function drawStatusCurve(step) {
             var svg = document.getElementById('trackCurve');
             if (!svg) return;
@@ -678,18 +680,25 @@
             var labels = Array.prototype.map.call(
                 document.querySelectorAll('#trackSteps .track-bar-step span'),
                 function (s) { return s.textContent; });
+            var horiz = !window.matchMedia('(min-width: 981px)').matches;
             var w = svg.clientWidth || 240;
-            var h = Math.max(svg.clientHeight || 0, 340);
+            var h = horiz ? 96 : Math.max(svg.clientHeight || 0, 340);
             svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
-            var cx = w / 2, A = Math.min(46, w * 0.22);
-            var y0 = 16, y1 = h - 16, dy = y1 - y0;
-            var d = 'M ' + cx + ' ' + y0;
-            for (var i = 1; i <= 4; i++) {
-                var s = i % 2 ? 1 : -1;
-                var ya = y0 + dy * (i - 1) / 4, yb = y0 + dy * i / 4;
-                d += ' C ' + (cx + s * A) + ' ' + (ya + (yb - ya) * 0.3).toFixed(1) +
-                     ', ' + (cx - s * A) + ' ' + (ya + (yb - ya) * 0.7).toFixed(1) +
-                     ', ' + cx + ' ' + yb.toFixed(1);
+            var d;
+            if (horiz) {
+                var x0 = 20, x1 = w - 20, yy = 22;
+                d = 'M ' + x0 + ' ' + yy + ' L ' + x1 + ' ' + yy;
+            } else {
+                var cx = w / 2, A = Math.min(46, w * 0.22);
+                var y0 = 16, y1 = h - 16, dy = y1 - y0;
+                d = 'M ' + cx + ' ' + y0;
+                for (var i = 1; i <= 4; i++) {
+                    var s = i % 2 ? 1 : -1;
+                    var ya = y0 + dy * (i - 1) / 4, yb = y0 + dy * i / 4;
+                    d += ' C ' + (cx + s * A) + ' ' + (ya + (yb - ya) * 0.3).toFixed(1) +
+                         ', ' + (cx - s * A) + ' ' + (ya + (yb - ya) * 0.7).toFixed(1) +
+                         ', ' + cx + ' ' + yb.toFixed(1);
+                }
             }
             while (svg.firstChild) svg.removeChild(svg.firstChild);
             function el(tag, attrs) {
@@ -711,13 +720,25 @@
                     fill: on ? '#d4af37' : '#0c0c0f',
                     stroke: on ? '#d4af37' : 'rgba(255,255,255,.25)', 'stroke-width': 2
                 }));
-                var right = j % 2 === 0; // etiquetas alternan de lado
-                var t = el('text', {
-                    x: p.x + (right ? 16 : -16), y: p.y + 4,
-                    'text-anchor': right ? 'start' : 'end',
-                    fill: on ? '#f5f5f7' : '#8a8a92',
-                    'font-size': '13', 'font-weight': on ? '600' : '400'
-                });
+                var t;
+                if (horiz) {
+                    // Etiqueta debajo del punto; las de las orillas se anclan
+                    // hacia adentro para no cortarse.
+                    var anchor = j === 0 ? 'start' : j === 4 ? 'end' : 'middle';
+                    t = el('text', {
+                        x: p.x, y: p.y + 30, 'text-anchor': anchor,
+                        fill: on ? '#f5f5f7' : '#8a8a92',
+                        'font-size': '10.5', 'font-weight': on ? '600' : '400'
+                    });
+                } else {
+                    var right = j % 2 === 0; // etiquetas alternan de lado
+                    t = el('text', {
+                        x: p.x + (right ? 16 : -16), y: p.y + 4,
+                        'text-anchor': right ? 'start' : 'end',
+                        fill: on ? '#f5f5f7' : '#8a8a92',
+                        'font-size': '13', 'font-weight': on ? '600' : '400'
+                    });
+                }
                 t.textContent = labels[j] || '';
                 svg.appendChild(t);
             }
