@@ -529,7 +529,11 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   AfterShip v4 solo si existe `AFTERSHIP_API_KEY` (plan gratis,
   aftership.com): registra el tracking y un job cada 15 min en `index.js`
   marca 'entregado' cuando el paquete llega; sin key todo funciona igual pero
-  el 'entregado' es manual. Nueva página del panel `/ordenes`
+  el 'entregado' es manual. **Regla 24 h (2026-09-03):** sin proveedor (o
+  mientras no reporta tag), el job marca 'InTransit' SOLO 24 h después de
+  cargar el tracking (`online_orders.shipped_at`, sellado en
+  `updateTracking` la primera vez); el correo de tránsito sale con la misma
+  pasada. OutForDelivery/Delivered los pone el dueño a mano. Nueva página del panel `/ordenes`
   (`pages/Orders.jsx`): tabla de envíos con badges de origen/estado, detalle
   expandible con formulario de tracking, formulario de nueva orden FB,
   polling de 30 s para reflejar cambios en tiempo real. Las FB también

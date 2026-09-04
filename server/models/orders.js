@@ -161,10 +161,13 @@ async function createManual({ customer_name, email, phone, address, items, total
 
 // Guardar el número de tracking: la orden pasa automáticamente a 'enviado'
 // (sin tracking no hay envío). tracking_id es el id en AfterShip (si hay API).
+// shipped_at queda en la PRIMERA vez que se carga tracking: de esa fecha
+// cuentan las 24 h para que el job lo marque 'InTransit' solo.
 async function updateTracking(id, { tracking_number, carrier, tracking_id }) {
   const r = await pool.query(
     `UPDATE online_orders
      SET tracking_number = $2, carrier = $3, tracking_id = COALESCE($4, tracking_id),
+         shipped_at = COALESCE(shipped_at, NOW()),
          ship_status = CASE WHEN ship_status = 'pendiente' THEN 'enviado' ELSE ship_status END
      WHERE id = $1 RETURNING *`,
     [id, tracking_number || null, carrier || null, tracking_id || null]

@@ -166,8 +166,10 @@ cambies estructura, flujos o convenciones.
   tránsito/entrega con flags) y emite por el bus `server/lib/trackEvents.js`;
   `GET /api/track/:token/stream` (SSE) empuja el aviso a track.html (también
   cuando el dueño guarda tracking o marca entregado en el panel). El job de
-  15 min en `server/index.js` cubre USPS y es el respaldo del webhook. Sin
-  keys, 'entregado' se marca manual desde el panel.
+  15 min en `server/index.js` corre SIEMPRE: con keys es el respaldo del
+  webhook; sin keys aplica la regla de 24 h — `online_orders.shipped_at`
+  (sellado al cargar tracking) + 24 h sin tag → 'InTransit' automático con su
+  correo de tránsito. OutForDelivery/Delivered los marca el dueño a mano.
 - **Ventas del panel = 3 fuentes** (misma definición en `Sales.jsx` y
   `Dashboard.jsx`): reparaciones entregadas + ventas de mostrador + órdenes
   de envío (website + FB Marketplace). Las órdenes no se anulan ni borran

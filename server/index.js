@@ -219,27 +219,38 @@ async function start() {
     console.log(`Server listening on port ${PORT}`);
   });
 
-  // Job de rastreo de envíos (AfterShip): cada 15 min revisa las órdenes con
-  // tracking activo. Es el RESPALDO del webhook de AfterShip (que actualiza
-  // al instante vía tracking.applyUpdate): si el webhook no está registrado o
-  // un evento se pierde, este job cierra la brecha. Solo corre si hay
-  // AFTERSHIP_API_KEY; un fallo no tumba el server.
-  if (tracking.enabled()) {
-    const checkDeliveries = async () => {
-      try {
-        const inTransit = await orders.listInTransit();
-        for (const o of inTransit) {
+  // Job de rastreo de envíos: cada 15 min revisa las órdenes con tracking
+  // activo. Con proveedor configurado (AfterShip/USPS) es el RESPALDO de su
+  // webhook; sin proveedor, aplica la regla del dueño: 24 h después de cargar
+  // el tracking (shipped_at), la orden se marca 'InTransit' sola — de ahí en
+  // adelante (OutForDelivery/Delivered) el dueño lo actualiza a mano.
+  // Un fallo no tumba el server.
+  const AUTO_TRANSIT_MS = 24 * 60 * 60 * 1000;
+  const checkDeliveries = async () => {
+    try {
+      const inTransit = await orders.listInTransit();
+      for (const o of inTransit) {
+        if (tracking.enabled()) {
           const s = await tracking.getStatus(o.tracking_id || o.tracking_number);
-          if (!s || !s.tag) continue;
-          await tracking.applyUpdate(o, s);
+          if (s && s.tag) {
+            await tracking.applyUpdate(o, s);
+            continue;
+          }
         }
-      } catch (e) {
-        console.error('[tracking] Error revisando entregas:', e.message);
+        // Sin dato del proveedor: 24 h tras 'enviado' → 'InTransit' (una vez;
+        // applyUpdate manda el correo de tránsito y avisa por SSE).
+        if (!o.ship_tag && o.shipped_at &&
+            Date.now() - new Date(o.shipped_at).getTime() >= AUTO_TRANSIT_MS) {
+          await tracking.applyUpdate(o, { tag: 'InTransit' });
+          console.log(`[tracking] Orden #${o.id} marcada 'InTransit' por regla de 24 h.`);
+        }
       }
-    };
-    setInterval(checkDeliveries, 15 * 60 * 1000).unref();
-    setTimeout(checkDeliveries, 60 * 1000).unref(); // primera pasada al minuto
-  }
+    } catch (e) {
+      console.error('[tracking] Error revisando entregas:', e.message);
+    }
+  };
+  setInterval(checkDeliveries, 15 * 60 * 1000).unref();
+  setTimeout(checkDeliveries, 60 * 1000).unref(); // primera pasada al minuto
 
   // Bot de WhatsApp (Angel): corre en el mismo proceso (ver server/wa-bot/).
   // Se puede desactivar con BOT_ENABLED=false. Un fallo del bot no tumba la web.

@@ -331,6 +331,9 @@ async function initDb() {
     // Fecha estimada de entrega que reporta AfterShip (alimenta el texto
     // "Llega el …" de track.html).
     await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS expected_delivery DATE;`);
+    // Momento en que se cargó el tracking (orden 'enviado'): el job marca
+    // 'InTransit' automáticamente 24 h después si ningún proveedor lo reporta.
+    await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS shipped_at TIMESTAMPTZ;`);
     // Costo de lo vendido online (catálogo ligado al inventario por invId):
     // sin esto la ganancia mensual salía inflada porque las ventas web
     // contaban costo 0.
