@@ -211,22 +211,14 @@
         .rd-box.show { opacity: 1; transform: scale(1); }
         .rd-box.load { left: calc(50% - 42px); opacity: 0; transition: left .7s ease-in, opacity .3s .45s; transform: scale(1); }
 
-
-        /* Carrusel "También te puede interesar" */
-        .track-more { margin-top: 44px; }
-        .track-more-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-        .track-more-head h2 { font-size: 17px; margin: 0; }
-        .track-arrows { display: flex; gap: 8px; }
-        .track-arrow { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: #f5f5f7; cursor: pointer; font-size: 15px; line-height: 1; }
-        .track-arrow:hover { border-color: #d4af37; color: #d4af37; }
-        .track-carousel { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding-bottom: 6px; }
-        .track-carousel::-webkit-scrollbar { display: none; }
-        .track-prod { flex: 0 0 190px; scroll-snap-align: start; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; text-decoration: none; color: inherit; display: block; transition: border-color .2s; }
-        .track-prod:hover { border-color: rgba(212,175,55,.5); }
-        .track-prod img { width: 100%; height: 150px; object-fit: cover; display: block; }
-        .track-prod div { padding: 10px 12px 12px; }
-        .track-prod b { display: block; font-size: 13px; font-weight: 600; }
-        .track-prod span { font-size: 12.5px; color: #d4af37; font-weight: 600; }
+        /* Página compacta en PC: todo cabe sin scroll (una pantalla). */
+        @media (min-width: 981px) {
+            .track-wrap { padding: 30px 24px 34px; }
+            .track-head { margin-bottom: 16px; }
+            .rd-anim { margin: 0 0 18px; }
+            .track-map { min-height: 320px; height: 320px; }
+            .track-curve { min-height: 300px; }
+        }
     </style>
 </head>
 <body>
@@ -339,38 +331,6 @@
                     </div>
                 </div>
                 </div><!-- /trackData -->
-            </div>
-
-            <div class="track-more">
-                <div class="track-more-head">
-                    <h2 data-en="You may also like">También te puede interesar</h2>
-                    <div class="track-arrows">
-                        <button class="track-arrow" id="carPrev" aria-label="Anterior">‹</button>
-                        <button class="track-arrow" id="carNext" aria-label="Siguiente">›</button>
-                    </div>
-                </div>
-                <div class="track-carousel" id="trackCarousel">
-                    <a class="track-prod" href="/macbook-neo-2026">
-                        <img src="assets/img/macbook-neo-pink.jpg" alt="MacBook Neo 2026" loading="lazy">
-                        <div><b>MacBook Neo 2026</b><span>$499.99</span></div>
-                    </a>
-                    <a class="track-prod" href="/iphone-15-pro">
-                        <img src="assets/img/iphone-15-pro.jpg" alt="iPhone 15 Pro" loading="lazy">
-                        <div><b>iPhone 15 Pro</b><span>$899.00</span></div>
-                    </a>
-                    <a class="track-prod" href="/ipad-10-2022">
-                        <img src="assets/img/ipad-10-pink.jpg" alt="iPad 10 (2022)" loading="lazy">
-                        <div><b>iPad 10 (2022)</b><span>$329.00</span></div>
-                    </a>
-                    <a class="track-prod" href="/macbook-air-13">
-                        <img src="assets/img/macbook-air-13.jpg" alt="MacBook Air 13" loading="lazy">
-                        <div><b>MacBook Air 13</b><span>$749.00</span></div>
-                    </a>
-                    <a class="track-prod" href="/alienware-16-aurora">
-                        <img src="assets/img/alienware-16-aurora.jpg" alt="Alienware 16 Aurora" loading="lazy">
-                        <div><b>Alienware 16 Aurora</b><span>$1,199.00</span></div>
-                    </a>
-                </div>
             </div>
         </section>
     </main>
@@ -885,11 +845,6 @@
                 try { if (JSON.parse(e.data).type === 'update') load(); } catch (_) { /* heartbeat */ }
             };
         }
-
-        // Carrusel: flechas con scroll suave.
-        var car = document.getElementById('trackCarousel');
-        document.getElementById('carPrev').addEventListener('click', function () { car.scrollBy({ left: -220, behavior: 'smooth' }); });
-        document.getElementById('carNext').addEventListener('click', function () { car.scrollBy({ left: 220, behavior: 'smooth' }); });
     })();
     </script>
 

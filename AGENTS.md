@@ -52,8 +52,9 @@ cambies estructura, flujos o convenciones.
   cae a una columna: mapa+dirección → resumen → rastreo), **resumen tipo
   recibo** (productos con foto/desc + Subtotal/Tax/
   Shipping FREE-o-cobrado/Total — las líneas Tax/Shipping del JSONB se separan
-  por nombre en el JS, textos dinámicos bilingües vía `window.EST_LANG`) +
-  carrusel de productos; CSS inline propio — define `.hidden`, que
+  por nombre en el JS, textos dinámicos bilingües vía `window.EST_LANG`);
+  **página compacta sin scroll en PC** (sin carrusel de productos; paddings y
+  mapa reducidos en ≥981px); CSS inline propio — define `.hidden`, que
   `site-v3.css` no tiene;
   enlazada desde el menú principal como "Mi pedido" / `data-en="My order"` en
   todas las páginas — sin token muestra el bloque `#trackNoToken` con
