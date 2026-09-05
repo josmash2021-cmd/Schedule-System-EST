@@ -127,8 +127,16 @@ cambies estructura, flujos o convenciones.
   `electronicservicetechnology@gmail.com`, que tiene el logo como foto de
   perfil → Gmail se la muestra al cliente. Sin credenciales solo loguea y
   sigue. Otras env: `EMAIL_FROM`, `OWNER_EMAIL`. **En
-  inglés, fondo blanco y logo negro** (`assets/img/logo-black.png`, servido
-  por el sitio público). La confirmación muestra cada producto con **foto y
+  inglés; diseño premium: tarjeta blanca con encabezado NEGRO y logo
+  blanco/dorado** (`assets/img/logo-cruise.png`, servido por el sitio
+  público) con línea dorada, títulos en serif (Georgia), totales en caja
+  gris, datos clave (tracking/cliente) en caja con borde dorado
+  (`cajaDato`) y botones píldora negros con filo dorado. El transporter
+  SMTP es un **pool compartido** (una sola conexión autenticada; un login
+  por correo hace que Google rechace con 535). OJO: varios logins SMTP
+  seguidos pueden hacer que Google bloquee la contraseña de aplicación un
+  rato (error 535) — se resuelve aprobando el aviso de seguridad de Google
+  o esperando. La confirmación muestra cada producto con **foto y
   descripción** (los items se enriquecen en el webhook/sync con
   `catalog.enrichLineItems`, que guarda `img`/`desc` en inglés en el JSONB) y
   el desglose Subtotal / Tax / Shipping / Total paid. La
