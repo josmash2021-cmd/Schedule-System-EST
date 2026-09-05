@@ -13,23 +13,25 @@
     var LANG = window.EST_LANG || (document.documentElement.lang || 'es');
     var SOLD = LANG === 'en' ? 'Sold' : 'Vendido';
     var SOLD_NOTE = LANG === 'en' ? 'sold' : 'vendido';
-    var LAST = LANG === 'en' ? 'Last one in stock' : 'Última unidad en stock';
+    var LAST = LANG === 'en' ? '1 Left' : 'Queda 1';
 
-    // Stock 1: badge "Última unidad en stock" (estilo caliente pulsante).
+    // Stock 1: badge "Queda 1" (texto dorado, sin caja).
     function markLast(el) {
         var badge = el.querySelector('.card-badge');
         if (badge) {
             badge.textContent = LAST;
+            badge.classList.remove('card-badge-sold');
             badge.classList.add('card-badge-hot');
         }
     }
 
     function markSold(el) {
-        // Badge: "Disponible"/"Última unidad" → "Vendido" (sin el rojo pulsante)
+        // Badge: "Disponible"/"Queda 1" → "Vendido" (texto rojo, sin caja)
         var badge = el.querySelector('.card-badge');
         if (badge) {
             badge.textContent = SOLD;
             badge.classList.remove('card-badge-hot');
+            badge.classList.add('card-badge-sold');
         }
         // Botón de carrito deshabilitado
         var btn = el.querySelector('.add-cart-card, #addToCart');

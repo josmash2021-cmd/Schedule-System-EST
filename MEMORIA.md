@@ -140,6 +140,16 @@ seleccionado (las tarjetas de otras categorías traen `hidden` +
 filtro inicial sin animación). La píldora blanca se recoloca con
 `document.fonts.ready` y `window load` — sin eso medía los botones con la
 fuente de respaldo y quedaba más ancha/corrida que el botón activo.
+**Badges de estado sin caja (2026-09-04):** "Vendido/Sold"
+(`.card-badge-sold`, texto ROJO a la izquierda) y "Queda 1 / 1 Left"
+(`.card-badge-hot`, texto dorado a la derecha) ya no son píldoras: solo
+texto con sombra sobre la foto (petición del dueño). "Disponible/Available"
+conserva su píldora oscura. Los mismos textos los escribe `stock-sync.js`
+según el stock del panel. **MacBook Neo 2026 marcada como vendida**
+(tarjeta del catálogo + página de detalle: badge sold, botón deshabilitado,
+nota "vendido"); ojo: si en el panel el SKU `macbook-neo-2026` (invId 38)
+sigue con stock ≥1, `stock-sync.js` la volverá a mostrar como "Queda 1" —
+poner el stock en 0 en Inventario.
 
 ### `macbook-air-13.html` — página del producto (misma hoja oscura)
 Detalle (foto + info + precio), sección "Componentes" con 4 tarjetas

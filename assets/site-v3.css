@@ -615,14 +615,20 @@ a { -webkit-tap-highlight-color: transparent; }
     letter-spacing: .06em; padding: 5px 11px; border-radius: 999px; text-transform: uppercase;
 }
 .card-badge.new { background: #fff; border-color: transparent; color: #0a0a0c; }
-/* Badge de urgencia (última unidad): a la derecha, cristal oscuro con acento dorado */
+/* Badges de estado sin caja: solo el texto sobre la foto */
+.card-badge-hot, .card-badge-sold {
+    background: none; border: none; backdrop-filter: none;
+    padding: 5px 0; border-radius: 0;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, .8);
+}
+/* "Queda 1": a la derecha, dorado */
 .card-badge-hot {
     left: auto; right: 14px;
-    background: rgba(16, 14, 9, .6); backdrop-filter: blur(10px);
-    border-color: rgba(212, 175, 55, .55);
     color: #e7c76a;
     animation: none;
 }
+/* "Vendido": a la izquierda, rojo */
+.card-badge-sold { color: #ef4444; }
 @keyframes badgePulse {
     0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, .55); }
     50% { transform: scale(1.08); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }

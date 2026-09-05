@@ -44,7 +44,7 @@
     <main>
         <section class="product-detail container" data-inv="macbook-neo-2026">
             <div class="product-media reveal">
-                <span class="card-badge card-badge-hot" data-en="Last unit">Última unidad</span>
+                <span class="card-badge card-badge-sold" data-en="Sold">Vendido</span>
                 <img draggable="false" src="assets/img/macbook-neo-pink.jpg" alt="MacBook Neo 2026 color rosa" fetchpriority="high" data-en-alt="MacBook Neo 2026 in pink">
             </div>
             <div class="product-info reveal">
@@ -62,7 +62,7 @@
                 <div class="price-detail">
                     <small data-en="price">precio</small>
                     <span class="amount" id="priceAmount" data-en="$500">$500</span>
-                    <small id="priceNote" data-en="last unit available for pickup">última unidad disponible para pick up</small>
+                    <small id="priceNote" data-en="sold">vendido</small>
                 </div>
 
                 <p class="product-desc" data-en="MacBook Neo 2026 in pink with A18 Pro chip, 8 GB of RAM and 256 GB SSD. Open box: it is new, the box was only opened. Includes everything: box, charger and manuals. Warranty included. Last unit — schedule a visit and try it with no obligation.">
@@ -75,12 +75,8 @@
 
                 <div class="product-actions">
                     <a href="/book-appointment" class="btn btn-blue" data-en="Schedule a visit">Agendar visita</a>
-                    <button type="button" id="addToCart" class="btn btn-ghost"
-                            data-id="macbook-neo-2026" data-name="MacBook Neo 2026"
-                            data-desc="256 GB · 8 GB RAM · Open box" data-desc-en="256 GB · 8 GB RAM · Open box" data-price="500"
-                            data-cond="Open box"
-                            data-img="assets/img/macbook-neo-pink.jpg">
-                        <span data-en="Add to cart">Agregar al carrito</span>
+                    <button type="button" class="btn btn-ghost" disabled>
+                        <span data-en="Sold">Vendido</span>
                     </button>
                 </div>
             </div>
