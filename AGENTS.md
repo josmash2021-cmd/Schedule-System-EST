@@ -128,8 +128,11 @@ cambies estructura, flujos o convenciones.
   perfil → Gmail se la muestra al cliente. Sin credenciales solo loguea y
   sigue. Otras env: `EMAIL_FROM`, `OWNER_EMAIL`. **En
   inglés; diseño premium: tarjeta blanca con encabezado NEGRO y logo
-  blanco/dorado** (`assets/img/logo-cruise.png`, servido por el sitio
-  público) con línea dorada, títulos en serif (Georgia), totales en caja
+  blanco/dorado** (`assets/img/logo-email.png` — logo con fondo negro
+  HORNEADO en la imagen porque el modo oscuro de Gmail invierte los
+  colores del correo y un logo transparente desaparece; el contenido de
+  las imágenes NO se invierte; encabezado con `<table bgcolor>`), línea
+  dorada, títulos en serif (Georgia), totales en caja
   gris, datos clave (tracking/cliente) en caja con borde dorado
   (`cajaDato`) y botones píldora negros con filo dorado. El transporter
   SMTP es un **pool compartido** (una sola conexión autenticada; un login
