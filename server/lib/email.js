@@ -77,12 +77,14 @@ function plantilla(titulo, cuerpoHtml, preheader) {
   ${preheader ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${preheader}</div>` : ''}
   <div style="max-width:560px;margin:0 auto;padding:36px 16px;">
     <div style="background:#ffffff;border:1px solid #e8e8ec;border-radius:16px;overflow:hidden;box-shadow:0 6px 28px rgba(0,0,0,.07);">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#0b0b0c" style="background:#0b0b0c;border-bottom:3px solid ${DORADO};">
-        <tr><td align="center" style="padding:26px 24px 22px;">
-          <img src="${logo}" alt="ElectronicST" width="200" style="display:block;margin:0 auto;width:200px;max-width:70%;height:auto;">
-          <div style="font-size:10px;letter-spacing:.28em;color:${DORADO};text-transform:uppercase;margin-top:12px;">Electronic Service Technology</div>
-        </td></tr>
-      </table>
+      <div style="padding:14px 14px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#0b0b0c" style="background:#0b0b0c;border-radius:14px;overflow:hidden;border-bottom:3px solid ${DORADO};">
+          <tr><td align="center" style="padding:26px 24px 22px;border-radius:14px;">
+            <img src="${logo}" alt="ElectronicST" width="200" style="display:block;margin:0 auto;width:200px;max-width:70%;height:auto;">
+            <div style="font-size:10px;letter-spacing:.28em;color:${DORADO};text-transform:uppercase;margin-top:12px;">Electronic Service Technology</div>
+          </td></tr>
+        </table>
+      </div>
       <div style="padding:34px 30px 30px;">
         <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:400;color:#111;margin:0 0 16px;">${titulo}</h1>
         ${cuerpoHtml}
