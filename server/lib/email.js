@@ -23,6 +23,25 @@ function trackLink(order) {
   return `${siteBase()}/track?t=${order.track_token}`;
 }
 
+// Transporter compartido (pool): abrir una conexión SMTP + login por correo
+// hace que Google rechace logins seguidos (535 BadCredentials); el pool
+// reutiliza una sola conexión autenticada para todos los envíos.
+let transporter;
+function getTransporter() {
+  if (!transporter) {
+    const nodemailer = require('nodemailer');
+    transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      pool: true,
+      maxConnections: 1,
+      auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
+    });
+  }
+  return transporter;
+}
+
 async function sendEmail({ to, subject, html, text, attachments }) {
   if (!to) return false;
   if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
@@ -30,14 +49,7 @@ async function sendEmail({ to, subject, html, text, attachments }) {
     return false;
   }
   try {
-    const nodemailer = require('nodemailer');
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
-    });
-    await transporter.sendMail({
+    await getTransporter().sendMail({
       from: EMAIL_FROM.includes('@gmail.com') ? EMAIL_FROM : `ElectronicST <${GMAIL_USER}>`,
       to, subject, html, text,
       ...(attachments && attachments.length
@@ -51,22 +63,30 @@ async function sendEmail({ to, subject, html, text, attachments }) {
   }
 }
 
-// Plantilla base: fondo blanco, logo negro (assets/img/logo-black.png servido
-// por el sitio público) y acento dorado del brazo del logo.
-function plantilla(titulo, cuerpoHtml) {
-  const logo = `${siteBase()}/assets/img/logo-black.png`;
+// Dorado del brazo del logo, acento de toda la plantilla.
+const DORADO = '#c8a24b';
+
+// Plantilla base: tarjeta blanca con encabezado negro (logo blanco/dorado
+// assets/img/logo-cruise.png servido por el sitio público) y línea dorada.
+function plantilla(titulo, cuerpoHtml, preheader) {
+  const logo = `${siteBase()}/assets/img/logo-cruise.png`;
   return `<!doctype html><html><body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;color:#111111;">
-  <div style="max-width:560px;margin:0 auto;padding:32px 20px;">
-    <div style="background:#ffffff;border:1px solid #e5e5e8;border-radius:12px;padding:32px 28px;">
-      <div style="text-align:center;padding-bottom:20px;border-bottom:1px solid #e5e5e8;">
-        <img src="${logo}" alt="ElectronicST" width="170" style="display:block;margin:0 auto;max-width:170px;height:auto;">
-        <div style="font-size:10px;letter-spacing:.2em;color:#8a8a92;text-transform:uppercase;margin-top:10px;">Electronic Service Technology</div>
+  ${preheader ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${preheader}</div>` : ''}
+  <div style="max-width:560px;margin:0 auto;padding:36px 16px;">
+    <div style="background:#ffffff;border:1px solid #e8e8ec;border-radius:16px;overflow:hidden;box-shadow:0 6px 28px rgba(0,0,0,.07);">
+      <div style="background:#0b0b0c;padding:30px 24px 26px;text-align:center;border-bottom:3px solid ${DORADO};">
+        <img src="${logo}" alt="ElectronicST" width="190" style="display:block;margin:0 auto;max-width:190px;height:auto;">
+        <div style="font-size:10px;letter-spacing:.28em;color:${DORADO};text-transform:uppercase;margin-top:14px;">Electronic Service Technology</div>
       </div>
-      <h1 style="font-size:18px;color:#111;margin:26px 0 10px;">${titulo}</h1>
-      ${cuerpoHtml}
+      <div style="padding:34px 30px 30px;">
+        <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:400;color:#111;margin:0 0 16px;">${titulo}</h1>
+        ${cuerpoHtml}
+      </div>
     </div>
-    <div style="margin-top:20px;font-size:11px;color:#8a8a92;text-align:center;">
-      ElectronicST · 3659 Lorna Rd Suite 157, Hoover, AL 35216 · (385) 461-2042
+    <div style="margin-top:26px;text-align:center;font-size:11px;line-height:1.8;color:#9a9aa2;">
+      <span style="color:#6a6a72;font-weight:700;letter-spacing:.06em;">ELECTRONICST</span><br>
+      3659 Lorna Rd Suite 157, Hoover, AL 35216<br>
+      (385) 461-2042 · <a href="${siteBase()}" style="color:#9a9aa2;text-decoration:underline;">electronicservicetechnology.com</a>
     </div>
   </div></body></html>`;
 }
@@ -90,36 +110,46 @@ function splitItems(items) {
 // descripción y precio. Sin foto (órdenes manuales FB) solo el texto.
 const filaProducto = (i) => {
   const foto = i.img
-    ? `<img src="${siteBase()}/${String(i.img).replace(/^\/+/, '')}" alt="" width="56" style="display:block;width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid #e5e5e8;">`
+    ? `<img src="${siteBase()}/${String(i.img).replace(/^\/+/, '')}" alt="" width="60" style="display:block;width:60px;height:60px;object-fit:cover;border-radius:10px;border:1px solid #ececf0;">`
     : '';
   return `<tr>
-    <td style="padding:10px 10px 10px 0;border-bottom:1px solid #e5e5e8;width:60px;vertical-align:top;">${foto}</td>
-    <td style="padding:10px 0;border-bottom:1px solid #e5e5e8;vertical-align:top;">
+    <td style="padding:12px 14px 12px 0;border-bottom:1px solid #f0f0f3;width:64px;vertical-align:top;">${foto}</td>
+    <td style="padding:12px 0;border-bottom:1px solid #f0f0f3;vertical-align:top;">
       <div style="font-size:14px;color:#111;font-weight:700;">${i.qty > 1 ? `${i.qty}× ` : ''}${i.name}</div>
-      ${i.desc ? `<div style="font-size:12px;color:#8a8a92;margin-top:3px;">${i.desc}</div>` : ''}
+      ${i.desc ? `<div style="font-size:12px;color:#9a9aa2;margin-top:4px;line-height:1.5;">${i.desc}</div>` : ''}
     </td>
-    <td style="padding:10px 0;border-bottom:1px solid #e5e5e8;text-align:right;vertical-align:top;font-size:14px;color:#3a3a40;white-space:nowrap;">${usd(i.price)}</td>
+    <td style="padding:12px 0;border-bottom:1px solid #f0f0f3;text-align:right;vertical-align:top;font-size:14px;color:#3a3a40;white-space:nowrap;">${usd(i.price)}</td>
   </tr>`;
 };
 
-// Resumen del pedido: tabla de productos + bloque de totales
+// Resumen del pedido: tabla de productos + bloque de totales en caja gris
 // (Subtotal / Tax / Shipping / Total). Tax y Shipping solo si existen.
 function resumenPedido(order) {
   const { products, extras } = splitItems(order.items);
   const subtotal = products.reduce((a, i) => a + (Number(i.price) || 0), 0);
   const cargo = (label, val) =>
-    `<tr><td style="padding:4px 0;font-size:13px;color:#55555c;">${label}</td><td style="padding:4px 0;text-align:right;font-size:13px;color:#55555c;">${usd(val)}</td></tr>`;
+    `<tr><td style="padding:5px 0;font-size:13px;color:#6a6a72;">${label}</td><td style="padding:5px 0;text-align:right;font-size:13px;color:#6a6a72;">${usd(val)}</td></tr>`;
   let totales = cargo('Subtotal', subtotal);
   if (extras.tax > 0) totales += cargo('Tax', extras.tax);
   if (extras.ship > 0) totales += cargo('Shipping', extras.ship);
-  totales += `<tr><td style="padding:10px 0 0;font-size:16px;color:#111;border-top:1px solid #e5e5e8;"><strong>Total paid</strong></td><td style="padding:10px 0 0;text-align:right;font-size:16px;color:#111;border-top:1px solid #e5e5e8;"><strong>${usd(order.total)}</strong></td></tr>`;
+  totales += `<tr><td style="padding:12px 0 2px;font-size:16px;color:#111;border-top:2px solid #0b0b0c;"><strong>Total paid</strong></td><td style="padding:12px 0 2px;text-align:right;font-size:16px;color:#111;border-top:2px solid #0b0b0c;"><strong>${usd(order.total)}</strong></td></tr>`;
   return `
     <table style="width:100%;border-collapse:collapse;">${products.map(filaProducto).join('')}</table>
-    <table style="width:100%;border-collapse:collapse;margin-top:8px;">${totales}</table>`;
+    <div style="background:#fafafa;border:1px solid #f0f0f3;border-radius:12px;padding:14px 18px;margin-top:16px;">
+      <table style="width:100%;border-collapse:collapse;">${totales}</table>
+    </div>`;
 }
 
 const boton = (url, texto) =>
-  `<div style="text-align:center;margin:26px 0;"><a href="${url}" style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 28px;border-radius:8px;">${texto}</a></div>`;
+  `<div style="text-align:center;margin:30px 0 6px;"><a href="${url}" style="display:inline-block;background:#0b0b0c;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:.03em;padding:14px 36px;border-radius:999px;border-bottom:3px solid ${DORADO};">${texto}</a></div>`;
+
+// Caja destacada (p. ej. número de tracking) con etiqueta en dorado.
+const cajaDato = (etiqueta, valor, detalle) =>
+  `<div style="background:#fafafa;border:1px solid #ececf0;border-left:3px solid ${DORADO};border-radius:10px;padding:16px 20px;margin:18px 0;">
+    <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:${DORADO};font-weight:700;">${etiqueta}</div>
+    <div style="font-size:17px;font-weight:700;color:#111;margin-top:5px;">${valor}</div>
+    ${detalle ? `<div style="font-size:12px;color:#9a9aa2;margin-top:3px;">${detalle}</div>` : ''}
+  </div>`;
 
 // --- Correos de pedido ---
 
@@ -137,7 +167,8 @@ async function sendNewOrderEmails(order) {
       text: `New order ${num}\nCustomer: ${order.customer_name || order.email || '—'}\nTotal: ${total}\nAddress: ${order.address || '—'}`,
       html: plantilla(`New order ${num}`, `
         ${resumenPedido(order)}
-        <p style="font-size:13px;color:#55555c;margin-top:18px;">Customer: ${order.customer_name || '—'}<br>Email: ${order.email || '—'}<br>Phone: ${order.phone || '—'}<br>Address: ${order.address || '—'}</p>`),
+        ${cajaDato('Customer', order.customer_name || '—', `Email: ${order.email || '—'} · Phone: ${order.phone || '—'}<br>Address: ${order.address || '—'}`)}`,
+        `New order ${num} — ${total}`),
     }));
   }
 
@@ -161,10 +192,11 @@ async function sendNewOrderEmails(order) {
       subject: `Thanks for your purchase! Order ${num}`,
       text: `Hi${order.customer_name ? ' ' + order.customer_name : ''},\n\nYour order ${num} is confirmed. Total: ${total}.\nYour receipt is attached as a PDF.\nTrack your shipment here: ${link}`,
       html: plantilla(`Thanks for your purchase!`, `
-        <p style="font-size:14px;color:#3a3a40;">Hi${order.customer_name ? ' <strong>' + order.customer_name + '</strong>' : ''}, your order <strong style="color:#111;">${num}</strong> is confirmed.</p>
+        <p style="font-size:14px;line-height:1.6;color:#3a3a40;margin:0 0 20px;">Hi${order.customer_name ? ' <strong>' + order.customer_name + '</strong>' : ''}, your order <strong style="color:#111;">${num}</strong> is confirmed.</p>
         ${resumenPedido(order)}
         ${notaRecibo}
-        ${boton(link, 'Track my package')}`),
+        ${boton(link, 'Track my package')}`,
+        `Your order ${num} is confirmed — track your package`),
       attachments,
     }));
   }
@@ -182,8 +214,10 @@ async function sendTrackingEmail(order) {
     subject: `Your order ${num} is on its way`,
     text: `Your order ${num} is on its way.\nTracking: ${order.tracking_number}${carrier ? ' (' + carrier + ')' : ''}\nFollow it here: ${trackLink(order)}`,
     html: plantilla(`Your order ${num} is on its way`, `
-      <p style="font-size:14px;color:#3a3a40;">Tracking number: <strong style="color:#111;">${order.tracking_number}</strong>${carrier ? ` · ${carrier}` : ''}</p>
-      ${boton(trackLink(order), 'View my order')}`),
+      <p style="font-size:14px;line-height:1.6;color:#3a3a40;margin:0;">Good news — your package has shipped.</p>
+      ${cajaDato('Tracking number', order.tracking_number, carrier ? `Carrier: ${carrier}` : '')}
+      ${boton(trackLink(order), 'View my order')}`,
+      `Your order ${num} is on its way — track it here`),
   });
 }
 
@@ -196,8 +230,9 @@ async function sendTransitEmail(order) {
     subject: `Your order ${num} is in transit`,
     text: `Your order ${num} is in transit to your address.\nFollow it here: ${trackLink(order)}`,
     html: plantilla(`Your order ${num} is in transit`, `
-      <p style="font-size:14px;color:#3a3a40;">Your package is on the move toward your address.</p>
-      ${boton(trackLink(order), 'Track my order')}`),
+      <p style="font-size:14px;line-height:1.6;color:#3a3a40;margin:0;">Your package is on the move toward your address.</p>
+      ${boton(trackLink(order), 'Track my order')}`,
+      `Your order ${num} is in transit`),
   });
 }
 
@@ -210,8 +245,9 @@ async function sendDeliveredEmail(order) {
     subject: `Your order ${num} was delivered`,
     text: `Your order ${num} was delivered. Thanks for your purchase!`,
     html: plantilla(`Your order ${num} was delivered`, `
-      <p style="font-size:14px;color:#3a3a40;">Your package has arrived at your address. Thanks for your purchase!</p>
-      ${boton(trackLink(order), 'View my order')}`),
+      <p style="font-size:14px;line-height:1.6;color:#3a3a40;margin:0;">Your package has arrived at your address. Thanks for your purchase!</p>
+      ${boton(trackLink(order), 'View my order')}`,
+      `Your order ${num} was delivered`),
   });
 }
 
