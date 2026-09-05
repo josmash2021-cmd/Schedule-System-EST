@@ -231,6 +231,8 @@ select option { background: #fff; color: #111; }
 
 /* ---------- Cards / stats ---------- */
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 26px; }
+/* Ventas: 6 tarjetas en una sola fila usando todo el ancho */
+.sales-page .stat-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
 .stat-card {
   color: #111;
   background: #fff;
@@ -583,7 +585,7 @@ table.data tbody tr:hover td { background: #f5f5f6; }
   .content { padding: 10px 14px 22px; }
   .topbar h2 { font-size: 17px; }
   /* Tarjetas de stats en 2 columnas y más chicas */
-  .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat-grid, .sales-page .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .stat-card, .dashboard .stat-card { padding: 14px 15px; border-radius: 14px; }
   .stat-card .v, .dashboard .stat-card .v { font-size: 24px; margin-top: 6px; }
   .dashboard .stat-card .k { font-size: 12px; }

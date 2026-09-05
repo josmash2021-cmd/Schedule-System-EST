@@ -235,7 +235,6 @@ export default function Sales() {
     ano: { total: sum(sales.filter((s) => s.cp.y === now.y)), count: sales.filter((s) => s.cp.y === now.y).length },
   } : null;
 
-  const ingresos = cargado ? sum(sales.filter((s) => inPeriod(s, period))) : 0;
   const gastos = cargado ? sumAmount(expensesCp.filter((e) => inPeriod(e, period))) : 0;
 
   // La tarjeta de Ganancia rota al tocarla: semanal → mensual → anual.
@@ -415,32 +414,24 @@ export default function Sales() {
       </div>
 
       <div className="stat-grid">
-        {kpis == null
-          ? PERIODS.map((p) => <div key={p.v} className="stat-card"><div className="stat-top"><div className="k">{p.l}</div></div><div className="v"><span className="spinner" /></div></div>)
+        {!cargado
+          ? ['Hoy', 'Esta semana', 'Este mes', 'Gastos', 'Ganancia', 'Este año'].map((l) => (
+            <div key={l} className="stat-card"><div className="stat-top"><div className="k">{l}</div></div><div className="v"><span className="spinner" /></div></div>
+          ))
           : (
             <>
               <Kpi label="Hoy" total={kpis.dia.total} count={kpis.dia.count} />
               <Kpi label="Esta semana" total={kpis.semana.total} count={kpis.semana.count} />
               <Kpi label="Este mes" total={kpis.mes.total} count={kpis.mes.count} />
+              <Kpi label="Gastos" total={gastos} count={-1} />
+              <GananciaCard sub={gv.l} value={ganValor}
+                onCycle={() => { setGanVista((v) => v + 1); setGanOffset(0); }}
+                onPrev={() => setGanOffset((o) => o - 1)}
+                onNext={() => setGanOffset((o) => o + 1)}
+                canNext={ganOffset < 0} />
               <Kpi label="Este año" total={kpis.ano.total} count={kpis.ano.count} />
             </>
           )}
-      </div>
-
-      <div className="stat-grid" style={{ marginTop: 16 }}>
-        {!cargado ? (
-          <><div className="stat-card"><div className="k">Ingresos</div><div className="v"><span className="spinner" /></div></div><div className="stat-card"><div className="k">Gastos</div><div className="v"><span className="spinner" /></div></div><div className="stat-card"><div className="k">Ganancia</div><div className="v"><span className="spinner" /></div></div></>
-        ) : (
-          <>
-            <Kpi label="Ingresos" total={ingresos} count={-1} />
-            <Kpi label="Gastos" total={gastos} count={-1} />
-            <GananciaCard sub={gv.l} value={ganValor}
-              onCycle={() => { setGanVista((v) => v + 1); setGanOffset(0); }}
-              onPrev={() => setGanOffset((o) => o - 1)}
-              onNext={() => setGanOffset((o) => o + 1)}
-              canNext={ganOffset < 0} />
-          </>
-        )}
       </div>
 
       <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 16, alignItems: 'center' }}>

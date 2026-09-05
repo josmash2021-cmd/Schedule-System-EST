@@ -362,6 +362,11 @@ pertenece a su propio mes (si la semana empieza el 31 de agosto, ese día
 suma a agosto, no a septiembre). En la Ganancia con flechitas, una semana
 pasada pertenece al mes de su jueves (convención ISO).
 
+**Ventas — fila única de KPIs (2026-09-04):** las 6 tarjetas van en una
+sola fila a todo lo ancho (`.sales-page .stat-grid`): Hoy → Esta semana →
+Este mes → Gastos → Ganancia → Este año. Se eliminó la tarjeta "Ingresos"
+(petición del dueño; el total del período sigue en "Total ventas: …").
+
 ### `terminos.html` / `politicas.html` — legales (tema claro, CSS inline duplicado)
 Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolsos
 (solo garantía del fabricante). Fechadas "18 de julio de 2026".
