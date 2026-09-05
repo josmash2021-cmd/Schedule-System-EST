@@ -135,35 +135,55 @@
             pill.style.transform = 'translateX(' + btn.offsetLeft + 'px)';
         };
 
-        movePill(filterWrap.querySelector('.filter-btn.active'));
-        window.addEventListener('resize', function () {
+        var placePill = function () {
             movePill(filterWrap.querySelector('.filter-btn.active'));
-        });
+        };
+
+        placePill();
+        // Al cargar la fuente web cambian las medidas de los botones: sin
+        // esto la píldora blanca queda más ancha o corrida respecto al botón.
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(placePill);
+        window.addEventListener('load', placePill);
+        window.addEventListener('resize', placePill);
+
+        var applyFilter = function (cat, animate) {
+            var shown = 0;
+            cards.forEach(function (card) {
+                var match = cat === 'all' || card.dataset.cat === cat;
+                if (match) {
+                    card.hidden = false;
+                    card.style.transitionDelay = animate ? (shown++ * 45) + 'ms' : '0ms';
+                    if (animate) {
+                        requestAnimationFrame(function () {
+                            requestAnimationFrame(function () { card.classList.remove('hide'); });
+                        });
+                    } else {
+                        card.classList.remove('hide');
+                    }
+                } else {
+                    card.style.transitionDelay = '0ms';
+                    card.classList.add('hide');
+                    if (animate) {
+                        setTimeout(function () {
+                            if (card.classList.contains('hide')) card.hidden = true;
+                        }, 260);
+                    } else {
+                        card.hidden = true;
+                    }
+                }
+            });
+        };
+
+        // Filtro inicial: el que traiga el HTML como activo (sin animación).
+        var initialBtn = filterWrap.querySelector('.filter-btn.active');
+        if (initialBtn) applyFilter(initialBtn.dataset.filter, false);
 
         btns.forEach(function (btn) {
             btn.addEventListener('click', function () {
                 btns.forEach(function (b) { b.classList.remove('active'); });
                 btn.classList.add('active');
                 movePill(btn);
-
-                var cat = btn.dataset.filter;
-                var shown = 0;
-                cards.forEach(function (card) {
-                    var match = cat === 'all' || card.dataset.cat === cat;
-                    if (match) {
-                        card.hidden = false;
-                        card.style.transitionDelay = (shown++ * 45) + 'ms';
-                        requestAnimationFrame(function () {
-                            requestAnimationFrame(function () { card.classList.remove('hide'); });
-                        });
-                    } else {
-                        card.style.transitionDelay = '0ms';
-                        card.classList.add('hide');
-                        setTimeout(function () {
-                            if (card.classList.contains('hide')) card.hidden = true;
-                        }, 260);
-                    }
-                });
+                applyFilter(btn.dataset.filter, true);
             });
         });
     }

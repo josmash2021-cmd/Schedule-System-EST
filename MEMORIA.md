@@ -134,6 +134,12 @@ Hoy el catálogo tiene **1 solo producto** hardcodeado: MacBook Air 13"
 "Windows" reemplazó a "iOS" el 2026-07-20; las categorías sin productos
 simplemente muestran el grid vacío. Cada tarjeta lleva a
 `/solicitud-servicio`.
+**Filtro predeterminado MacOS (2026-09-04):** el catálogo abre con MacOS
+seleccionado (las tarjetas de otras categorías traen `hidden` +
+`.hide` en el HTML para que no parpadeen antes del JS; `site.js` aplica el
+filtro inicial sin animación). La píldora blanca se recoloca con
+`document.fonts.ready` y `window load` — sin eso medía los botones con la
+fuente de respaldo y quedaba más ancha/corrida que el botón activo.
 
 ### `macbook-air-13.html` — página del producto (misma hoja oscura)
 Detalle (foto + info + precio), sección "Componentes" con 4 tarjetas
