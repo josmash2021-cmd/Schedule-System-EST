@@ -208,8 +208,14 @@ export default function Sales() {
   }, [cargado, sales, expensesCp, comprasMes, stockMes]);
 
   const now = chicagoParts();
-  const wk = weekKeys();
   const curMonthKey = now.key.slice(0, 7);
+  // Semana actual lun–dom, pero solo con los días que caen en el mes en
+  // curso: cada día cuenta para su propio mes (si la semana empieza el 31
+  // de agosto, ese día es de agosto, no de "esta semana" de septiembre).
+  const wkFull = weekKeys();
+  const wkIdx = wkFull.map((k, i) => i).filter((i) => wkFull[i].startsWith(curMonthKey));
+  const wk = wkIdx.map((i) => wkFull[i]);
+  const wkLabels = wkIdx.map((i) => DAY_LABELS[i]);
   const [selY, selM] = month.split('-').map(Number);
   const monthLabel = `${MONTH_LABELS[selM - 1]} ${selY}`;
 
@@ -240,7 +246,7 @@ export default function Sales() {
 
   // Semana lun–dom desplazada `off` semanas desde la actual.
   const weekKeysOff = (off) => {
-    const monday = new Date(wk[0] + 'T00:00:00Z');
+    const monday = new Date(wkFull[0] + 'T00:00:00Z');
     monday.setUTCDate(monday.getUTCDate() + off * 7);
     const keys = [];
     for (let i = 0; i < 7; i++) {
@@ -258,8 +264,12 @@ export default function Sales() {
   const gv = (() => {
     const v = ganVista % 3;
     if (v === 0) {
-      const keys = weekKeysOff(ganOffset);
-      const [sy, sm, sd] = keys[0].split('-').map(Number);
+      const keysFull = weekKeysOff(ganOffset);
+      // La semana pertenece al mes de su jueves: los días del mes vecino
+      // no cuentan (cada día se suma a su propio mes).
+      const wkMonth = keysFull[3].slice(0, 7);
+      const keys = keysFull.filter((k) => k.startsWith(wkMonth));
+      const [sy, sm, sd] = keysFull[0].split('-').map(Number);
       return {
         l: ganOffset === 0 ? 'esta semana' : `sem. ${sd}/${sm}/${sy}`,
         match: (x) => keys.includes(x.cp.key),
@@ -300,7 +310,7 @@ export default function Sales() {
     } else if (period === 'semana') {
       const data = wk.map(() => 0);
       for (const s of sales.filter((x) => inPeriod(x, 'semana'))) data[wk.indexOf(s.cp.key)] += s.price;
-      chart = { data, keys: wk, labels: DAY_LABELS, highlight: now.key };
+      chart = { data, keys: wk, labels: wkLabels, highlight: now.key };
     } else if (period === 'mes') {
       const days = new Date(Date.UTC(selY, selM, 0)).getUTCDate();
       const keys = []; const labels = [];

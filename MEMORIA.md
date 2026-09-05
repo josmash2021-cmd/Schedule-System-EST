@@ -355,6 +355,12 @@ tarjeta "Ganancia" es clicable (`GananciaCard`) y rota al tocarla:
 semanal → mensual → anual; con flechitas ‹ › se navega a la
 semana/mes/año anterior o siguiente (sin ir al futuro; al rotar vuelve
 al período actual).
+**Ventas — semana dentro del mes (2026-09-04):** "Esta semana" (KPI,
+gráfica, filtro Semana, Ingresos/Gastos y Ganancia semanal) solo cuenta
+los días de la semana lun–dom que caen en el mes en curso: cada día
+pertenece a su propio mes (si la semana empieza el 31 de agosto, ese día
+suma a agosto, no a septiembre). En la Ganancia con flechitas, una semana
+pasada pertenece al mes de su jueves (convención ISO).
 
 ### `terminos.html` / `politicas.html` — legales (tema claro, CSS inline duplicado)
 Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolsos
