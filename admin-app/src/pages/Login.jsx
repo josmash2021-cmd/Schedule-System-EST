@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth.jsx';
 
 export default function Login() {
   const { login } = useAuth();
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -15,6 +17,8 @@ export default function Login() {
     setLoading(true);
     try {
       await login(username.trim(), password);
+      // Entrar siempre al Dashboard, aunque la URL traiga otra página (#/…).
+      navigate('/', { replace: true });
     } catch (err) {
       // Con solo 3 intentos, avisar cuántos quedan evita el bloqueo por sorpresa.
       const left = err.data && err.data.remainingAttempts;
