@@ -1,8 +1,13 @@
-/* Correos transaccionales con Resend (https://resend.com) — se llama por HTTP
-   con fetch, sin dependencias nuevas. Sin RESEND_API_KEY solo loguea y sigue
-   (patrón Twilio: un correo fallido NUNCA tumba un pago o una orden).
+/* Correos transaccionales. Dos proveedores (gana Gmail si está configurado):
+   - Gmail SMTP (GMAIL_USER + GMAIL_APP_PASSWORD): el remitente es la cuenta
+     real electronicservicetechnology@gmail.com, así Gmail muestra su foto de
+     perfil (el logo de EST) en la bandeja del cliente.
+   - Resend (https://resend.com) vía fetch con RESEND_API_KEY: respaldo; no
+     puede enviar como @gmail.com (solo dominios verificados propios).
+   Sin ninguna de las dos solo loguea y sigue (patrón Twilio: un correo
+   fallido NUNCA tumba un pago o una orden).
    Los correos van en INGLÉS, fondo blanco y logo negro (petición del dueño). */
-const { RESEND_API_KEY, EMAIL_FROM, OWNER_EMAIL, SITE_URL } = require('../config');
+const { RESEND_API_KEY, EMAIL_FROM, OWNER_EMAIL, SITE_URL, GMAIL_USER, GMAIL_APP_PASSWORD } = require('../config');
 const invoices = require('../models/invoices');
 const { buildInvoicePdf } = require('./invoicePdf');
 
@@ -22,11 +27,40 @@ function trackLink(order) {
 }
 
 async function sendEmail({ to, subject, html, text, attachments }) {
-  if (!RESEND_API_KEY) {
-    console.log(`[email] (sin RESEND_API_KEY, no enviado) → ${to}: ${subject}`);
+  if (!to) return false;
+  if (GMAIL_USER && GMAIL_APP_PASSWORD) return sendViaGmail({ to, subject, html, text, attachments });
+  return sendViaResend({ to, subject, html, text, attachments });
+}
+
+// Gmail SMTP: el correo sale de la cuenta real, con su foto de perfil.
+async function sendViaGmail({ to, subject, html, text, attachments }) {
+  try {
+    const nodemailer = require('nodemailer');
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
+    });
+    await transporter.sendMail({
+      from: EMAIL_FROM.includes('@gmail.com') ? EMAIL_FROM : `ElectronicST <${GMAIL_USER}>`,
+      to, subject, html, text,
+      ...(attachments && attachments.length
+        ? { attachments: attachments.map((a) => ({ filename: a.filename, content: a.content, encoding: 'base64' })) }
+        : {}),
+    });
+    return true;
+  } catch (e) {
+    console.error('[email] Error Gmail SMTP a', to, '-', e.message);
     return false;
   }
-  if (!to) return false;
+}
+
+async function sendViaResend({ to, subject, html, text, attachments }) {
+  if (!RESEND_API_KEY) {
+    console.log(`[email] (sin Gmail ni RESEND_API_KEY, no enviado) → ${to}: ${subject}`);
+    return false;
+  }
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
