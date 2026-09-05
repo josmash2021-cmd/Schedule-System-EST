@@ -45,16 +45,12 @@ const AFTERSHIP_API_KEY = process.env.AFTERSHIP_API_KEY;
 const USPS_CLIENT_ID = process.env.USPS_CLIENT_ID;
 const USPS_CLIENT_SECRET = process.env.USPS_CLIENT_SECRET;
 
-// Resend (correos transaccionales, opcional): sin key, los correos se loguean
-// y no se envían — el resto del flujo sigue igual. EMAIL_FROM debe ser un
-// remitente de un dominio verificado en Resend (onboarding@resend.dev solo
-// sirve para pruebas hacia el propio correo de la cuenta).
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
+// Gmail SMTP (correos transaccionales): envía desde la cuenta real
+// electronicservicetechnology@gmail.com, que tiene el logo como foto de
+// perfil → Gmail se la muestra al cliente. Requiere verificación en 2
+// pasos y una "contraseña de aplicación" de Google. Sin credenciales los
+// correos se loguean y no se envían — el resto del flujo sigue igual.
 const EMAIL_FROM = process.env.EMAIL_FROM || 'ElectronicST <pedidos@electronicservicetechnology.com>';
-// Gmail SMTP (proveedor principal si está configurado): envía desde la cuenta
-// real electronicservicetechnology@gmail.com, que ya tiene el logo como foto
-// de perfil → Gmail se la muestra al cliente. Requiere verificación en 2
-// pasos y una "contraseña de aplicación" de Google.
 const GMAIL_USER = process.env.GMAIL_USER;
 const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
 const OWNER_EMAIL = process.env.OWNER_EMAIL;
@@ -107,7 +103,6 @@ module.exports = {
   AFTERSHIP_API_KEY,
   USPS_CLIENT_ID,
   USPS_CLIENT_SECRET,
-  RESEND_API_KEY,
   EMAIL_FROM,
   GMAIL_USER,
   GMAIL_APP_PASSWORD,

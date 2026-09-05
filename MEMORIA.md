@@ -578,8 +578,11 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   `GET /api/track/:token` (`routes/track.js`, rate limit, sin email/teléfono)
   cada 30 s y muestra número de orden (`EST-{1000+id}`, derivado del id, sin
   columna), productos, total, dirección, progreso y carrusel de productos.
-  Correos con Resend (`server/lib/email.js`, fetch sin dependencias; env
-  `RESEND_API_KEY`, `EMAIL_FROM`, `OWNER_EMAIL`): nuevo pedido (dueño +
+  Correos por Gmail SMTP (`server/lib/email.js`, nodemailer; env
+  `GMAIL_USER`, `GMAIL_APP_PASSWORD` — contraseña de aplicación de Google —,
+  `EMAIL_FROM`, `OWNER_EMAIL`; envía desde electronicservicetechnology@gmail.com
+  que tiene el logo como foto de perfil → Gmail se la muestra al cliente):
+  nuevo pedido (dueño +
   confirmación al cliente con el link), "va en camino" al guardar tracking,
   "en tránsito" y "entregado" (job AfterShip; flags `email_shipped/transit/
   delivered` para no reenviar). **Diseño de los correos (2026-09-02): van en
@@ -594,9 +597,8 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   se espera con `await` antes de mandar correos; el PDF sale de
   `invoices.createFromOrder` + `buildInvoicePdf`, y si falla el PDF el correo
   sale igual sin adjunto). Teléfono del pie de los correos: (385) 461-2042.
-  OJO Resend: sin dominio verificado, el plan
-  gratis solo envía al correo de la propia cuenta; para clientes hay que
-  verificar el dominio (DNS) en resend.com.
+  (Historial: hasta 2026-05 se usó Resend; se eliminó porque no puede enviar
+  como @gmail.com y Gmail SMTP muestra la foto de perfil del remitente.)
   **Facturas automáticas + PDF (2026-09-02):** cada orden nueva (web o FB)
   genera su factura sola (`invoices.order_id`, `createFromOrder`: buyer con
   nombre/email/teléfono/dirección de la orden, items tal cual — incluidas las
@@ -609,7 +611,7 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   negrita + `desc` del catálogo debajo — `createFromOrder` guarda `desc` en
   los items de la factura), `GET /x/s/invoices/:id/pdf` lo descarga
   (botón "Descargar PDF" en la vista de factura) y
-  `POST /x/s/orders/:id/send-invoice` lo adjunta en un correo Resend al
+  `POST /x/s/orders/:id/send-invoice` lo adjunta en un correo al
   cliente (botón "Enviar factura por correo" en el detalle de la orden; las
   órdenes viejas crean su factura al vuelo aquí). Ventas y Dashboard suman 3 fuentes
   (reparaciones entregadas + mostrador + online; costo 0 en online porque el

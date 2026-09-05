@@ -185,7 +185,7 @@ router.patch('/:id', requireRole('admin'), async (req, res) => {
     });
     if (!order) return res.status(404).json({ error: 'Orden no encontrada.' });
     // Correo "tu pedido va en camino" al cliente, una sola vez (el flag se
-    // marca solo si el correo realmente salió; sin RESEND_API_KEY no se marca
+    // marca solo si el correo realmente salió; si falla el envío no se marca
     // y se reintenta en el próximo guardado de tracking).
     if (!order.email_shipped) {
       email.sendTrackingEmail(order)
@@ -214,7 +214,7 @@ router.post('/:id/send-invoice', requireRole('admin'), async (req, res) => {
     const pdf = await buildInvoicePdf(invoice);
     const ok = await email.sendInvoiceEmail(order, invoice, pdf);
     if (!ok) {
-      return res.status(502).json({ error: 'No se pudo enviar el correo (revisa RESEND_API_KEY y el dominio verificado).' });
+      return res.status(502).json({ error: 'No se pudo enviar el correo (revisa GMAIL_USER/GMAIL_APP_PASSWORD en Railway).' });
     }
     res.json({ ok: true, invoice_number: invoice.invoice_number });
   } catch (err) {

@@ -121,13 +121,12 @@ cambies estructura, flujos o convenciones.
   dirección de envío US en la sesión), `track.js` (seguimiento público:
   `GET /api/track/:token` por `track_token`, sin PII de contacto),
   `auth.js` (login viejo, sin frontend).
-- **Correos transaccionales:** `server/lib/email.js`. Proveedor principal:
+- **Correos transaccionales:** `server/lib/email.js`. Único proveedor:
   **Gmail SMTP con nodemailer** (env `GMAIL_USER` + `GMAIL_APP_PASSWORD` —
   contraseña de aplicación de Google) enviando desde
   `electronicservicetechnology@gmail.com`, que tiene el logo como foto de
-  perfil → Gmail se la muestra al cliente. Respaldo: Resend vía fetch (env
-  `RESEND_API_KEY`; no puede enviar como @gmail.com). Sin credenciales solo
-  loguea y sigue. Otras env: `EMAIL_FROM`, `OWNER_EMAIL`. **En
+  perfil → Gmail se la muestra al cliente. Sin credenciales solo loguea y
+  sigue. Otras env: `EMAIL_FROM`, `OWNER_EMAIL`. **En
   inglés, fondo blanco y logo negro** (`assets/img/logo-black.png`, servido
   por el sitio público). La confirmación muestra cada producto con **foto y
   descripción** (los items se enriquecen en el webhook/sync con

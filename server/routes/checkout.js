@@ -324,7 +324,7 @@ async function webhookHandler(req, res) {
         console.error('No se pudo guardar la orden online:', e.message);
       }
 
-      // Correos (Resend): al dueño "nuevo pedido" y al cliente la
+      // Correos: al dueño "nuevo pedido" y al cliente la
       // confirmación con su link de seguimiento. No bloqueantes.
       if (savedOrder) {
         sendNewOrderEmails(savedOrder).catch((e) => console.error('Order emails failed:', e.message));

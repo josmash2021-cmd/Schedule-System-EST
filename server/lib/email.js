@@ -1,13 +1,10 @@
-/* Correos transaccionales. Dos proveedores (gana Gmail si está configurado):
-   - Gmail SMTP (GMAIL_USER + GMAIL_APP_PASSWORD): el remitente es la cuenta
-     real electronicservicetechnology@gmail.com, así Gmail muestra su foto de
-     perfil (el logo de EST) en la bandeja del cliente.
-   - Resend (https://resend.com) vía fetch con RESEND_API_KEY: respaldo; no
-     puede enviar como @gmail.com (solo dominios verificados propios).
-   Sin ninguna de las dos solo loguea y sigue (patrón Twilio: un correo
-   fallido NUNCA tumba un pago o una orden).
+/* Correos transaccionales por Gmail SMTP (nodemailer): el remitente es la
+   cuenta real electronicservicetechnology@gmail.com, así Gmail muestra su
+   foto de perfil (el logo de EST) en la bandeja del cliente.
+   Sin GMAIL_USER/GMAIL_APP_PASSWORD solo loguea y sigue (patrón Twilio: un
+   correo fallido NUNCA tumba un pago o una orden).
    Los correos van en INGLÉS, fondo blanco y logo negro (petición del dueño). */
-const { RESEND_API_KEY, EMAIL_FROM, OWNER_EMAIL, SITE_URL, GMAIL_USER, GMAIL_APP_PASSWORD } = require('../config');
+const { EMAIL_FROM, OWNER_EMAIL, SITE_URL, GMAIL_USER, GMAIL_APP_PASSWORD } = require('../config');
 const invoices = require('../models/invoices');
 const { buildInvoicePdf } = require('./invoicePdf');
 
@@ -28,12 +25,10 @@ function trackLink(order) {
 
 async function sendEmail({ to, subject, html, text, attachments }) {
   if (!to) return false;
-  if (GMAIL_USER && GMAIL_APP_PASSWORD) return sendViaGmail({ to, subject, html, text, attachments });
-  return sendViaResend({ to, subject, html, text, attachments });
-}
-
-// Gmail SMTP: el correo sale de la cuenta real, con su foto de perfil.
-async function sendViaGmail({ to, subject, html, text, attachments }) {
+  if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
+    console.log(`[email] (sin GMAIL_USER/GMAIL_APP_PASSWORD, no enviado) → ${to}: ${subject}`);
+    return false;
+  }
   try {
     const nodemailer = require('nodemailer');
     const transporter = nodemailer.createTransport({
@@ -52,35 +47,6 @@ async function sendViaGmail({ to, subject, html, text, attachments }) {
     return true;
   } catch (e) {
     console.error('[email] Error Gmail SMTP a', to, '-', e.message);
-    return false;
-  }
-}
-
-async function sendViaResend({ to, subject, html, text, attachments }) {
-  if (!RESEND_API_KEY) {
-    console.log(`[email] (sin Gmail ni RESEND_API_KEY, no enviado) → ${to}: ${subject}`);
-    return false;
-  }
-  try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: EMAIL_FROM, to: [to], subject, html, text,
-        ...(attachments && attachments.length ? { attachments } : {}),
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      console.error(`[email] Resend HTTP ${res.status} → ${to}:`, body.slice(0, 300));
-      return false;
-    }
-    return true;
-  } catch (e) {
-    console.error('[email] Error enviando a', to, '-', e.message);
     return false;
   }
 }
