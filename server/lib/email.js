@@ -66,18 +66,23 @@ async function sendEmail({ to, subject, html, text, attachments }) {
 // Dorado del brazo del logo, acento de toda la plantilla.
 const DORADO = '#c8a24b';
 
-// Plantilla base: tarjeta blanca con encabezado negro (logo blanco/dorado
-// assets/img/logo-cruise.png servido por el sitio público) y línea dorada.
+// Plantilla base: tarjeta blanca con encabezado negro (logo con fondo negro
+// HORNEADO en la imagen — assets/img/logo-email.png — porque el modo oscuro
+// de Gmail invierte los colores del correo y un logo transparente sobre div
+// negro "desaparece"; el contenido de las imágenes NO se invierte).
+// El encabezado usa <table bgcolor> por compatibilidad con clientes de correo.
 function plantilla(titulo, cuerpoHtml, preheader) {
-  const logo = `${siteBase()}/assets/img/logo-cruise.png`;
+  const logo = `${siteBase()}/assets/img/logo-email.png`;
   return `<!doctype html><html><body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;color:#111111;">
   ${preheader ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${preheader}</div>` : ''}
   <div style="max-width:560px;margin:0 auto;padding:36px 16px;">
     <div style="background:#ffffff;border:1px solid #e8e8ec;border-radius:16px;overflow:hidden;box-shadow:0 6px 28px rgba(0,0,0,.07);">
-      <div style="background:#0b0b0c;padding:30px 24px 26px;text-align:center;border-bottom:3px solid ${DORADO};">
-        <img src="${logo}" alt="ElectronicST" width="190" style="display:block;margin:0 auto;max-width:190px;height:auto;">
-        <div style="font-size:10px;letter-spacing:.28em;color:${DORADO};text-transform:uppercase;margin-top:14px;">Electronic Service Technology</div>
-      </div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#0b0b0c" style="background:#0b0b0c;border-bottom:3px solid ${DORADO};">
+        <tr><td align="center" style="padding:26px 24px 22px;">
+          <img src="${logo}" alt="ElectronicST" width="200" style="display:block;margin:0 auto;width:200px;max-width:70%;height:auto;">
+          <div style="font-size:10px;letter-spacing:.28em;color:${DORADO};text-transform:uppercase;margin-top:12px;">Electronic Service Technology</div>
+        </td></tr>
+      </table>
       <div style="padding:34px 30px 30px;">
         <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:400;color:#111;margin:0 0 16px;">${titulo}</h1>
         ${cuerpoHtml}
