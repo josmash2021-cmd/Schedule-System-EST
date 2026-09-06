@@ -24,6 +24,7 @@ const adminOrdersRouter = require('./routes/adminOrders');
 const orders = require('./models/orders');
 const tracking = require('./lib/tracking');
 const adminInvoicesRouter = require('./routes/adminInvoices');
+const adminCustomersRouter = require('./routes/adminCustomers');
 const adminDemoDataRouter = require('./routes/adminDemoData'); // limpieza de datos demo
 
 const app = express();
@@ -179,6 +180,8 @@ app.use('/x/s/expenses', adminExpensesRouter);
 // Órdenes online (Stripe): solo lectura, solo admin.
 app.use('/x/s/orders', adminOrdersRouter);
 app.use('/x/s/invoices', adminInvoicesRouter);
+// Clientes: base de datos de compradores agregada desde las facturas.
+app.use('/x/s/customers', adminCustomersRouter);
 app.use('/x/s/demo-data', adminDemoDataRouter); // solo consulta/borra los datos demo
 
 // Entrada del panel tras el slug secreto. Slug incorrecto → next() → 404 por

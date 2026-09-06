@@ -89,6 +89,11 @@ cambies estructura, flujos o convenciones.
   órdenes manuales de FB Marketplace; tracking number → estado
   pendiente→enviado→entregado; polling 30 s),
   `Inventory.jsx`, `Appointments.jsx`, `Settings.jsx`,
+  `Customers.jsx` (Clientes: base de datos de compradores agregada
+  automáticamente desde las facturas — una ficha por cliente agrupando por
+  email (o nombre si no hay email), con contacto de su factura más reciente,
+  # de facturas, total comprado y última compra; buscador por
+  nombre/correo/teléfono; vía `GET /x/s/customers`),
   `Login.jsx`, `WorkerHome.jsx`/`WorkerApp.jsx` (app móvil del trabajador).
 - Componentes: `admin-app/src/components/` (`Layout.jsx`, `FormPage.jsx`,
   `BarChart.jsx` compartido, `RepairDetail.jsx`, `InventoryDetail.jsx`,
@@ -101,7 +106,8 @@ cambies estructura, flujos o convenciones.
 - Estilos: `admin-app/src/styles.css` (páginas blancas con pelotitas sutiles,
   tarjetas blancas con sombras 3D; shell y modales/login oscuros).
 - Rutas internas del panel: `admin-app/src/App.jsx` (`/`, `/trabajadores`,
-  `/tareas`, `/equipo`, `/reparaciones`, `/ventas`, `/facturas`, `/ordenes`,
+  `/tareas`, `/equipo`, `/reparaciones`, `/ventas`, `/facturas`,
+  `/clientes`, `/ordenes`,
   `/inventario`, `/citas`, `/ajustes`).
 - **Build obligatorio tras cualquier cambio:** `cd admin-app && npm run build`
   → genera `server/admin-dist/` (commiteado; Railway solo despliega `server/`).
@@ -113,6 +119,8 @@ cambies estructura, flujos o convenciones.
 - Rutas del panel (`/x/s/*`): `server/routes/adminAuth.js`, `adminUsers.js`,
   `adminTime.js`, `adminTasks.js`, `adminMonitor.js`, `adminRepairs.js`,
   `adminInventory.js`, `adminInvoices.js` (facturas, solo admin),
+  `adminCustomers.js` (clientes agregados desde facturas, solo admin,
+  modelo `server/models/customers.js`),
   `adminOrders.js` (órdenes de envío: website vía Stripe + manuales FB
   Marketplace; GET sincroniza con Stripe máx. 1 vez/min, POST crea manual,
   PATCH tracking → 'enviado' o 'entregado' manual).

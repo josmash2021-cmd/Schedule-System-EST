@@ -12,6 +12,7 @@ import Repairs from './pages/Repairs.jsx';
 import Sales from './pages/Sales.jsx';
 import Inventory from './pages/Inventory.jsx';
 import Invoices from './pages/Invoices.jsx';
+import Customers from './pages/Customers.jsx';
 import Orders from './pages/Orders.jsx';
 import WorkerApp from './pages/WorkerApp.jsx';
 
@@ -40,6 +41,7 @@ export default function App() {
         <Route path="/reparaciones" element={<Repairs />} />
         <Route path="/ventas" element={<Sales />} />
         <Route path="/facturas" element={<Invoices />} />
+        <Route path="/clientes" element={<Customers />} />
         <Route path="/ordenes" element={<Orders />} />
         <Route path="/inventario" element={<Inventory />} />
         <Route path="/citas" element={<Appointments />} />
