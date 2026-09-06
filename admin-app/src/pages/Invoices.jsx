@@ -437,7 +437,7 @@ export default function Invoices() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Factura-${viewInv.invoice_number || viewInv.id}.pdf`;
+      a.download = `Receipt-${viewInv.invoice_number || viewInv.id}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) { setErr(e.message); }

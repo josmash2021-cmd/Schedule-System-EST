@@ -30,7 +30,7 @@ router.post('/preview-pdf', requireRole('admin'), async (req, res) => {
     // el generador de PDF los necesita como array.
     const pdf = await buildInvoicePdf({ ...f, items: f.items ? JSON.parse(f.items) : [] });
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline; filename="Factura-borrador.pdf"');
+    res.setHeader('Content-Disposition', 'inline; filename="Receipt-draft.pdf"');
     res.send(pdf);
   } catch (err) {
     console.error('invoice preview-pdf error:', err.message);
@@ -47,7 +47,7 @@ router.get('/:id/pdf', requireRole('admin'), async (req, res) => {
     if (!inv) return res.status(404).json({ error: 'Factura no encontrada.' });
     const pdf = await buildInvoicePdf(inv);
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="Factura-${inv.invoice_number || id}.pdf"`);
+    res.setHeader('Content-Disposition', `inline; filename="Receipt-${inv.invoice_number || id}.pdf"`);
     res.send(pdf);
   } catch (err) {
     console.error('invoice pdf error:', err.message);

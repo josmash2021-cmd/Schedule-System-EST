@@ -263,7 +263,7 @@ async function sendDeliveredEmail(order) {
 async function sendInvoiceEmail(order, invoice, pdfBuffer) {
   if (!order.email) return false;
   const num = invoice.invoice_number || orderNumber(order);
-  const filename = `Invoice-${num}.pdf`;
+  const filename = `Receipt-${num}.pdf`;
   return sendEmail({
     to: order.email,
     subject: `Your invoice ${num} — ElectronicST`,
