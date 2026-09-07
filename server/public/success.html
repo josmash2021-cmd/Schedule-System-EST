@@ -86,13 +86,17 @@
         try { localStorage.removeItem('est_cart'); } catch (e) {}
         var params = new URLSearchParams(location.search);
         var sid = params.get('session_id');
-        if (!sid) return;
+        var pp = params.get('pp'); // pago con PayPal
+        var endpoint = sid ? '/api/checkout/session?id=' + encodeURIComponent(sid)
+            : pp ? '/api/paypal/order?id=' + encodeURIComponent(pp) : null;
+        if (!endpoint) return;
+        var refText = (sid || pp || '').slice(-12).toUpperCase();
         function money(cents, cur) {
             var n = (Number(cents) || 0) / 100;
             return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
                 ' ' + String(cur || 'usd').toUpperCase();
         }
-        fetch('/api/checkout/session?id=' + encodeURIComponent(sid))
+        fetch(endpoint)
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (d) {
                 if (!d || d.payment_status !== 'paid') return;
@@ -100,7 +104,7 @@
                 var ref = document.getElementById('orderRef');
                 var box = document.getElementById('orderSummary');
                 if (tot && d.amount_total != null) tot.textContent = money(d.amount_total, d.currency);
-                if (ref) ref.textContent = sid.slice(-12).toUpperCase();
+                if (ref) ref.textContent = refText;
                 if (box) box.classList.remove('hidden');
             })
             .catch(function () {});

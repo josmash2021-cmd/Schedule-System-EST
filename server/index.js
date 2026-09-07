@@ -7,6 +7,7 @@ const { initDb } = require('./db');
 const slotsRouter = require('./routes/slots');
 const appointmentsRouter = require('./routes/appointments');
 const stockRouter = require('./routes/publicStock');
+const paypalRouter = require('./routes/paypal');
 const trackRouter = require('./routes/track');
 const authRouter = require('./routes/auth');
 const { router: checkoutRouter, webhookHandler } = require('./routes/checkout');
@@ -151,6 +152,8 @@ app.get('/bot-qr.png', async (req, res) => {
 app.use('/api/slots', slotsRouter);
 app.use('/api/appointments', appointmentsRouter);
 app.use('/api/stock', stockRouter);
+// Pagos con PayPal / PayPal Credit (alternativa al checkout de Stripe).
+app.use('/api/paypal', paypalRouter);
 // Seguimiento público de pedidos (link secreto que recibe el cliente).
 app.use('/api/track', trackRouter);
 app.use('/api/auth', authRouter);

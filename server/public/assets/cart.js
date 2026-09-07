@@ -391,6 +391,7 @@
                 '<button type="button" class="btn btn-blue cd-pay"><svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span>' + T('Finalizar compra', 'Checkout') + '</span></button>' +
                 '<a href="/cart" class="btn btn-ghost"><svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>' + T('Ir al carrito', 'Go to cart') + '</a>' +
             '</div>' +
+            '<div class="cd-paypal paypal-buttons hidden"></div>' +
             '<p class="cd-error hidden" role="alert"></p>' +
             '<button type="button" class="cd-continue">' + T('Seguir comprando', 'Continue shopping') + '</button>';
         drawer.querySelector('.cd-close').addEventListener('click', closeDrawer);
@@ -399,6 +400,7 @@
         if (payBtn) payBtn.addEventListener('click', function () {
             startCheckout(payBtn, drawer.querySelector('.cd-error'));
         });
+        renderPayPalButtons(drawer.querySelector('.cd-paypal'), drawer.querySelector('.cd-error'));
         var pMsg = drawer.querySelector('.cd-promo-msg');
         if (getPromo() && pMsg) {
             pMsg.classList.remove('hidden', 'ok', 'bad');
@@ -473,6 +475,83 @@
         btn.addEventListener('click', function () {
             startCheckout(btn, document.getElementById('checkoutError'));
         });
+        renderPayPalButtons(document.getElementById('paypalButtons'), document.getElementById('checkoutError'));
+    }
+
+    /* ---------- Checkout con PayPal / PayPal Credit ----------
+       El client-id es público (lo pide el SDK); los totales se calculan
+       server-side en /api/paypal/create-order, igual que con Stripe.
+       Sin credenciales configuradas el contenedor queda oculto. */
+    var paypalSdkPromise = null;
+    function loadPayPalSdk(cfg) {
+        if (paypalSdkPromise) return paypalSdkPromise;
+        paypalSdkPromise = new Promise(function (resolve, reject) {
+            var s = document.createElement('script');
+            s.src = 'https://www.paypal.com/sdk/js?client-id=' + encodeURIComponent(cfg.clientId) +
+                '&currency=' + encodeURIComponent(cfg.currency || 'USD') +
+                '&components=buttons&enable-funding=credit&locale=' + (LANG === 'en' ? 'en_US' : 'es_US');
+            s.onload = function () { window.paypal ? resolve(window.paypal) : reject(new Error('sdk')); };
+            s.onerror = function () { paypalSdkPromise = null; reject(new Error('sdk')); };
+            document.head.appendChild(s);
+        });
+        return paypalSdkPromise;
+    }
+
+    function paypalError(errEl, msg) {
+        if (errEl) { errEl.textContent = msg; errEl.classList.remove('hidden'); }
+    }
+
+    function renderPayPalButtons(container, errEl) {
+        if (!container) return;
+        fetch('/api/paypal/config')
+            .then(function (r) { return r.json().catch(function () { return {}; }); })
+            .then(function (cfg) {
+                if (!cfg || !cfg.clientId) return; // sin PayPal configurado: oculto
+                return loadPayPalSdk(cfg).then(function (pp) {
+                    container.innerHTML = '';
+                    container.classList.remove('hidden');
+                    pp.Buttons({
+                        style: { layout: 'vertical', color: 'gold', shape: 'pill', label: 'paypal', height: 44 },
+                        createOrder: function () {
+                            var items = getCart().map(function (i) { return { id: i.id, qty: i.qty }; });
+                            return fetch('/api/paypal/create-order', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ items: items, lang: LANG, promo: promoValid() ? getPromo().trim() : '' })
+                            }).then(function (r) {
+                                return r.json().catch(function () { return {}; }).then(function (d) {
+                                    if (r.ok && d.id) return d.id;
+                                    throw new Error(d.error || T('No se pudo iniciar el pago.', 'Could not start payment.'));
+                                });
+                            }).catch(function (err) {
+                                paypalError(errEl, err.message);
+                                throw err;
+                            });
+                        },
+                        onApprove: function (data) {
+                            return fetch('/api/paypal/capture-order', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ orderId: data.orderID })
+                            }).then(function (r) {
+                                return r.json().catch(function () { return {}; }).then(function (d) {
+                                    if (r.ok && d.ok) {
+                                        window.location.href = '/success?pp=' + encodeURIComponent(data.orderID);
+                                        return;
+                                    }
+                                    throw new Error(d.error || T('No se pudo confirmar el pago.', 'Could not confirm payment.'));
+                                });
+                            }).catch(function (err) {
+                                paypalError(errEl, err.message);
+                            });
+                        },
+                        onError: function () {
+                            paypalError(errEl, T('PayPal no está disponible ahora. Intenta con tarjeta.', 'PayPal is unavailable right now. Try card checkout.'));
+                        }
+                    }).render(container);
+                });
+            })
+            .catch(function () { /* PayPal oculto si falla la config/SDK */ });
     }
 
     /* ---------- Página del carrito ---------- */

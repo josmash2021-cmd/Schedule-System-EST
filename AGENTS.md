@@ -126,7 +126,16 @@ cambies estructura, flujos o convenciones.
   PATCH tracking → 'enviado' o 'entregado' manual).
 - Rutas públicas (`/api/*`): `appointments.js`, `slots.js`, `checkout.js`
   (Stripe; su webhook guarda cada pago en la tabla `online_orders` y pide
-  dirección de envío US en la sesión), `track.js` (seguimiento público:
+  dirección de envío US en la sesión), `paypal.js` (PayPal y PayPal Credit:
+  `GET /api/paypal/config` entrega el client-id público al carrito, `POST
+  /create-order` cotiza server-side con la MISMA lógica que Stripe — promo
+  welcome26, tax, envío flat —, `POST /capture-order` captura y registra la
+  orden igual que el webhook: correos, factura automática, descuento de
+  inventario con costo; dedupe por `stripe_session_id = 'pp_<orderId>'`;
+  `GET /order?id=` alimenta success.html con `?pp=`; el botón aparece en el
+  carrito y en el cajón solo si hay credenciales; env `PAYPAL_CLIENT_ID`,
+  `PAYPAL_CLIENT_SECRET`, `PAYPAL_ENV=sandbox` solo para pruebas),
+  `track.js` (seguimiento público:
   `GET /api/track/:token` por `track_token`, sin PII de contacto),
   `auth.js` (login viejo, sin frontend).
 - **Correos transaccionales:** `server/lib/email.js`. Único proveedor:

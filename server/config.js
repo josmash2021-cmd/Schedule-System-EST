@@ -58,6 +58,13 @@ const OWNER_EMAIL = process.env.OWNER_EMAIL;
 // Stripe (pagos)
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
+// PayPal (pagos alternativos: PayPal y PayPal Credit). App de
+// developer.paypal.com sobre la cuenta Business; sin credenciales el botón
+// de PayPal simplemente no aparece en el carrito. PAYPAL_ENV='sandbox' para
+// probar; producción es 'live' (default).
+const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
+const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET;
+const PAYPAL_ENV = process.env.PAYPAL_ENV === 'sandbox' ? 'sandbox' : 'live';
 // URL pública del sitio (para las redirecciones de éxito/cancelación de Stripe).
 // Importante en producción: el server corre en Railway detrás del proxy de Vercel,
 // por lo que req.host apunta a Railway, no al dominio real. Configura SITE_URL.
@@ -109,6 +116,9 @@ module.exports = {
   OWNER_EMAIL,
   STRIPE_SECRET_KEY,
   STRIPE_WEBHOOK_SECRET,
+  PAYPAL_CLIENT_ID,
+  PAYPAL_CLIENT_SECRET,
+  PAYPAL_ENV,
   SITE_URL,
   CURRENCY,
   TAX_RATE,
