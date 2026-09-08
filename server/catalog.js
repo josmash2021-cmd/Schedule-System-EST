@@ -72,7 +72,7 @@ const CATALOG = {
     descEn: '512 GB · 8 GB RAM · Touch ID · Open box',
     cond: 'Open box',
     condEn: 'Open box',
-    price: 500,
+    price: 650,
     img: 'assets/img/macbook-neo-green.jpg',
     invId: 38,
   },
