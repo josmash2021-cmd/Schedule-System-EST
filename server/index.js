@@ -67,6 +67,7 @@ const htmlRoutes = {
   '/victus-gaming': 'victus-gaming.html',
   '/alienware-16-aurora': 'alienware-16-aurora.html',
   '/iphone-15-pro': 'iphone-15-pro.html',
+  '/airpods-max-pink': 'airpods-max-pink.html',
   '/cart': 'cart.html',
   '/success': 'success.html',
   '/track': 'track.html',

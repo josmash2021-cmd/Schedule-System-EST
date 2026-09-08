@@ -96,6 +96,18 @@ const CATALOG = {
     img: 'assets/img/alienware-16-aurora.jpg',
     freeShip: true,
   },
+  // Sin invId por ahora: la venta no toca inventario y su costo cuenta 0.
+  // Cuando el dueño cree el item en el inventario del panel (SKU
+  // "airpods-max-pink"), agregar aquí su invId.
+  'airpods-max-pink-likenew': {
+    name: 'AirPods Max',
+    desc: 'Pink · Cancelación de ruido · Batería 20 h',
+    descEn: 'Pink · Noise cancellation · 20-hour battery',
+    cond: 'Like New',
+    condEn: 'Like New',
+    price: 350,
+    img: 'assets/img/airpods-max-pink.jpg',
+  },
 };
 
 function getItem(id) {
