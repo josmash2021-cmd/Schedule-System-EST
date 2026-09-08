@@ -68,12 +68,12 @@ const CATALOG = {
   },
   'macbook-neo-2026-openbox': {
     name: 'MacBook Neo 2026',
-    desc: '256 GB · 8 GB RAM · Open box',
-    descEn: '256 GB · 8 GB RAM · Open box',
+    desc: '512 GB · 8 GB RAM · Touch ID · Open box',
+    descEn: '512 GB · 8 GB RAM · Touch ID · Open box',
     cond: 'Open box',
     condEn: 'Open box',
     price: 500,
-    img: 'assets/img/macbook-neo-pink.jpg',
+    img: 'assets/img/macbook-neo-green.jpg',
     invId: 38,
   },
   'victus-gaming-excelente': {
