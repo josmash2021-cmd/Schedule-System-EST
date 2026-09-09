@@ -638,12 +638,6 @@
                 .catch(function () { formErr.classList.remove('hidden'); });
         });
 
-        if (!token) {
-            // Entró desde el menú ("Mi pedido"): mensaje amable, no error.
-            loading.classList.add('hidden');
-            noTokenBox.classList.remove('hidden');
-            return;
-        }
         var CARRIER_URLS = {
             usps: 'https://tools.usps.com/go/TrackConfirmAction?tLabels=',
             ups: 'https://www.ups.com/track?tracknum=',
@@ -836,6 +830,16 @@
                     showOrder(d);
                 })
                 .catch(function () { loading.textContent = 'Sin conexión. Reintentando…'; });
+        }
+        // Sin token el cliente entró desde el menú ("Mi pedido") a buscar por
+        // número de rastreo: mensaje amable, no error. OJO: este return va AL
+        // FINAL, después de definir todo lo que render() necesita (SVGNS,
+        // CARRIER_URLS…) — si va arriba, la búsqueda por número truena a
+        // medias y la página sale vacía.
+        if (!token) {
+            loading.classList.add('hidden');
+            noTokenBox.classList.remove('hidden');
+            return;
         }
         load();
         setInterval(load, 30000);
