@@ -1,4 +1,5 @@
 /* Reparaciones (repair_tickets) + fotos (repair_photos). */
+const crypto = require('node:crypto');
 const { pool } = require('../db');
 
 const STATUSES = ['recibido', 'diagnostico', 'reparacion', 'listo', 'entregado'];
@@ -8,10 +9,11 @@ const SERVICE_TYPES = ['revision', 'reparacion', 'mantenimiento'];
 const FIELDS = [
   'device_type', 'service_type',
   'device_brand', 'device_model', 'device_serial',
-  'customer_name', 'customer_phone',
+  'customer_name', 'customer_phone', 'customer_email',
   'problem', 'diagnosis',
   'quoted_price', 'final_price',
   'assigned_to',
+  'tracking_number', 'carrier',
 ];
 
 async function listAll() {
@@ -51,6 +53,8 @@ async function create(fields, createdBy) {
   for (const k of FIELDS) if (fields[k] !== undefined) { cols.push(k); vals.push(fields[k]); ph.push(`$${i++}`); }
   if (fields.status !== undefined) { cols.push('status'); vals.push(fields.status); ph.push(`$${i++}`); }
   cols.push('created_by'); vals.push(createdBy || null); ph.push(`$${i++}`);
+  // Token público de seguimiento (link de track.html para el cliente).
+  cols.push('track_token'); vals.push(crypto.randomBytes(24).toString('hex')); ph.push(`$${i++}`);
   const r = await pool.query(
     `INSERT INTO repair_tickets (${cols.join(', ')}) VALUES (${ph.join(', ')}) RETURNING *`,
     vals
@@ -115,7 +119,23 @@ async function removePhoto(photoId) {
   await pool.query('DELETE FROM repair_photos WHERE id = $1', [photoId]);
 }
 
+// Página pública de seguimiento (track.html): por token secreto o por número
+// de rastreo, igual que las órdenes de envío.
+async function findByTrackToken(token) {
+  const r = await pool.query('SELECT * FROM repair_tickets WHERE track_token = $1', [token]);
+  return r.rows[0] || null;
+}
+
+async function findByTrackingNumber(num) {
+  const r = await pool.query(
+    'SELECT * FROM repair_tickets WHERE tracking_number = $1 ORDER BY updated_at DESC',
+    [num]
+  );
+  return r.rows[0] || null;
+}
+
 module.exports = {
   STATUSES, DEVICE_TYPES, SERVICE_TYPES, FIELDS, listAll, findById, getWithPhotos, create, update, remove, removeMany,
   listPhotoFilenames, addPhoto, getPhoto, removePhoto,
+  findByTrackToken, findByTrackingNumber,
 };

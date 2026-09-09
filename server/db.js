@@ -171,6 +171,14 @@ async function initDb() {
     await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS device_type TEXT;`);
     await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS service_type TEXT;`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_repairs_device_type ON repair_tickets(device_type);`);
+    // Envío de vuelta al cliente: número de rastreo, paquetería, correo del
+    // cliente (para mandarle el link) y token público para track.html.
+    await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS customer_email TEXT;`);
+    await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS tracking_number TEXT;`);
+    await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS carrier TEXT;`);
+    await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS track_token TEXT;`);
+    await client.query(`UPDATE repair_tickets SET track_token = md5(random()::text || ':' || id::text) || md5(random()::text) WHERE track_token IS NULL;`);
+    await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_repairs_track_token ON repair_tickets(track_token);`);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS repair_photos (

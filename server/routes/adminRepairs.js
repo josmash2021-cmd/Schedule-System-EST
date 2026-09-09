@@ -8,6 +8,7 @@ const multer = require('multer');
 const repairs = require('../models/repairs');
 const users = require('../models/users');
 const audit = require('../models/audit');
+const email = require('../lib/email');
 const { verifyToken, loadUser, requireRole } = require('../middleware/auth');
 const { getClientIp } = require('../lib/rateLimit');
 const { REPAIRS_DIR } = require('../config');
@@ -54,9 +55,14 @@ function num(v) {
 // Extrae y valida los campos de texto/precio del body.
 function extractFields(b) {
   const f = {};
-  const textMax = { device_brand: 120, device_model: 120, device_serial: 120, customer_name: 120, customer_phone: 40, problem: 4000, diagnosis: 4000 };
+  const textMax = { device_brand: 120, device_model: 120, device_serial: 120, customer_name: 120, customer_phone: 40, problem: 4000, diagnosis: 4000, tracking_number: 60, carrier: 40 };
   for (const [k, max] of Object.entries(textMax)) {
     if (b[k] !== undefined) { const s = b[k] == null ? null : String(b[k]).trim(); f[k] = s ? s.slice(0, max) : null; }
+  }
+  if (b.customer_email !== undefined) {
+    const s = b.customer_email == null ? null : String(b.customer_email).trim().slice(0, 160);
+    if (s && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return { error: 'Correo del cliente inválido.' };
+    f.customer_email = s || null;
   }
   for (const k of ['quoted_price', 'final_price']) {
     if (b[k] !== undefined) { const r = num(b[k]); if (!r.ok) return { error: 'Precio inválido.' }; f[k] = r.val; }
@@ -159,6 +165,24 @@ router.patch('/:id', async (req, res) => {
   } catch (err) {
     console.error('repair update error:', err.message);
     res.status(500).json({ error: 'No se pudo actualizar la reparación.' });
+  }
+});
+
+// Enviar al cliente el correo con el link de seguimiento de su reparación
+// (track.html). Requiere tracking_number y customer_email guardados.
+router.post('/:id/send-tracking', async (req, res) => {
+  const id = parseId(req, res); if (id === null) return;
+  try {
+    const t = await repairs.findById(id);
+    if (!t) return res.status(404).json({ error: 'Reparación no encontrada.' });
+    if (!t.tracking_number) return res.status(400).json({ error: 'Guarda primero el número de seguimiento.' });
+    if (!t.customer_email) return res.status(400).json({ error: 'El cliente no tiene correo guardado.' });
+    const sent = await email.sendRepairTrackingEmail(t);
+    audit.logAction(req.user.id, 'repair.send_tracking', { targetType: 'repair', targetId: id, ip: getClientIp(req) });
+    res.json({ ok: true, sent });
+  } catch (err) {
+    console.error('repair send-tracking error:', err.message);
+    res.status(500).json({ error: 'No se pudo enviar el correo.' });
   }
 });
 

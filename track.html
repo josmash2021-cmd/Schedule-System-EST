@@ -247,7 +247,7 @@
     <main>
         <section class="container track-wrap">
             <div class="track-head">
-                <h1><span data-en="Order tracking">Seguimiento de pedido</span></h1>
+                <h1><span id="trackTitle" data-en="Order tracking">Seguimiento de pedido</span></h1>
                 <div class="track-num"><span id="trackNumLabel">Orden</span> <strong id="trackNum">—</strong></div>
             </div>
 
@@ -728,6 +728,14 @@
 
         function render(d) {
             var en = window.EST_LANG === 'en';
+            var isRepair = d.kind === 'repair';
+            if (isRepair) {
+                // Reparación: título y textos adaptados (la barra de pasos y
+                // el resumen funcionan igual que con un pedido).
+                var tt = document.getElementById('trackTitle');
+                tt.textContent = en ? 'Repair tracking' : 'Seguimiento de reparación';
+                document.title = (en ? 'Repair tracking' : 'Seguimiento de reparación') + ' — ElectronicST';
+            }
             var step = shipStep(d);
             // El badge bajo el título muestra la fecha estimada de llegada
             // (AfterShip). Sin fecha aún: el número de orden como antes.
@@ -758,7 +766,9 @@
                 el.classList.toggle('current', step === i);
             });
             document.getElementById('trackPre').textContent = step === 0
-                ? (en ? 'We are creating the shipping label for your order. As soon as it ships, you will see the progress here.' : 'Estamos creando la etiqueta de envío de tu pedido. En cuanto se envíe, verás aquí el progreso.')
+                ? (isRepair
+                    ? (en ? 'Your device is at our shop. As soon as it ships back to you, the progress will appear here.' : 'Tu equipo está en nuestro taller. En cuanto te lo enviemos de vuelta, aquí verás el progreso.')
+                    : (en ? 'We are creating the shipping label for your order. As soon as it ships, you will see the progress here.' : 'Estamos creando la etiqueta de envío de tu pedido. En cuanto se envíe, verás aquí el progreso.'))
                 : '';
             // Las líneas Tax/Shipping del pago NO son productos: se separan
             // para el desglose tipo recibo (como en el correo de confirmación).

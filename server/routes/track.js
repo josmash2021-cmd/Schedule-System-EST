@@ -4,6 +4,7 @@
    email ni teléfono del cliente. */
 const express = require('express');
 const orders = require('../models/orders');
+const repairs = require('../models/repairs');
 const tracking = require('../lib/tracking');
 const trackEvents = require('../lib/trackEvents');
 const { CATALOG } = require('../catalog');
@@ -62,6 +63,29 @@ function publicOrder(o) {
   };
 }
 
+// Reparación con la MISMA forma que un pedido para que track.html la muestre
+// sin cambios: el "producto" es el equipo reparado; sin dirección (el mapa
+// se oculta solo). kind:'repair' solo ajusta textos en la página.
+const SERVICE_ES = { revision: 'Revisión', reparacion: 'Reparación', mantenimiento: 'Mantenimiento' };
+function publicRepair(t) {
+  const device = [t.device_brand, t.device_model].filter(Boolean).join(' ') || 'Equipo';
+  const price = t.final_price != null ? Number(t.final_price) : (t.quoted_price != null ? Number(t.quoted_price) : 0);
+  return {
+    kind: 'repair',
+    order_number: `REP-${1000 + t.id}`,
+    items: [{ name: device + (t.service_type ? ` — ${SERVICE_ES[t.service_type] || t.service_type}` : ''), price, qty: 1 }],
+    total: price,
+    currency: 'usd',
+    address: null,
+    ship_status: t.status === 'entregado' ? 'entregado' : (t.tracking_number ? 'enviado' : 'pendiente'),
+    ship_tag: null,
+    expected_delivery: null,
+    tracking_number: t.tracking_number || null,
+    carrier: t.carrier || null,
+    created_at: t.created_at,
+  };
+}
+
 // Webhook de AfterShip: avisa al instante cuando el paquete cambia de estado.
 // Se registra la URL https://<dominio>/api/track/webhook en el dashboard de
 // AfterShip. Siempre responde 200 rápido (AfterShip reintenta si no).
@@ -88,8 +112,12 @@ router.get('/:token/stream', async (req, res) => {
   const token = String(req.params.token || '');
   if (!/^[a-f0-9]{32,96}$/.test(token)) return res.status(404).end();
   try {
+    // Órdenes y reparaciones comparten el stream. Las reparaciones no tienen
+    // webhook: el stream solo mantiene la conexión viva (el polling de 30 s
+    // de track.html cubre los cambios).
     const o = await orders.findByTrackToken(token);
-    if (!o) return res.status(404).end();
+    const isOrder = !!o;
+    if (!o && !(await repairs.findByTrackToken(token))) return res.status(404).end();
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
@@ -97,7 +125,7 @@ router.get('/:token/stream', async (req, res) => {
     });
     res.write(`data: ${JSON.stringify({ type: 'hello' })}\n\n`);
     const onUpdate = (id) => {
-      if (id === o.id) res.write(`data: ${JSON.stringify({ type: 'update' })}\n\n`);
+      if (isOrder && id === o.id) res.write(`data: ${JSON.stringify({ type: 'update' })}\n\n`);
     };
     trackEvents.on('update', onUpdate);
     const hb = setInterval(() => res.write(': hb\n\n'), 25000);
@@ -112,6 +140,7 @@ router.get('/:token/stream', async (req, res) => {
 });
 
 // Búsqueda por número de rastreo (lo escribe el cliente en "Mi pedido").
+// Busca primero en órdenes de envío y luego en reparaciones.
 router.get('/lookup/:number', rateLimit, async (req, res) => {
   const num = String(req.params.number || '');
   if (!/^[A-Za-z0-9-]{6,40}$/.test(num)) {
@@ -119,8 +148,10 @@ router.get('/lookup/:number', rateLimit, async (req, res) => {
   }
   try {
     const o = await orders.findByTrackingNumber(num);
-    if (!o) return res.status(404).json({ error: 'Pedido no encontrado.' });
-    res.json(publicOrder(o));
+    if (o) return res.json(publicOrder(o));
+    const t = await repairs.findByTrackingNumber(num);
+    if (t) return res.json(publicRepair(t));
+    return res.status(404).json({ error: 'Pedido no encontrado.' });
   } catch (err) {
     console.error('track lookup error:', err.message);
     res.status(500).json({ error: 'Error al consultar el pedido.' });
@@ -135,8 +166,10 @@ router.get('/:token', rateLimit, async (req, res) => {
   }
   try {
     const o = await orders.findByTrackToken(token);
-    if (!o) return res.status(404).json({ error: 'Pedido no encontrado.' });
-    res.json(publicOrder(o));
+    if (o) return res.json(publicOrder(o));
+    const t = await repairs.findByTrackToken(token);
+    if (t) return res.json(publicRepair(t));
+    return res.status(404).json({ error: 'Pedido no encontrado.' });
   } catch (err) {
     console.error('track error:', err.message);
     res.status(500).json({ error: 'Error al consultar el pedido.' });

@@ -211,6 +211,26 @@ async function sendNewOrderEmails(order) {
   await Promise.all(tasks);
 }
 
+// Reparación enviada de vuelta al cliente: correo con el número de rastreo
+// y el link de track.html (el token del ticket abre la vista de reparación).
+async function sendRepairTrackingEmail(ticket) {
+  if (!ticket.customer_email) return false;
+  const num = `REP-${1000 + Number(ticket.id)}`;
+  const link = `${siteBase()}/track?t=${ticket.track_token}`;
+  const device = [ticket.device_brand, ticket.device_model].filter(Boolean).join(' ') || 'device';
+  const carrier = ticket.carrier ? String(ticket.carrier).toUpperCase() : '';
+  return sendEmail({
+    to: ticket.customer_email,
+    subject: `Your repair ${num} is on its way back`,
+    text: `Hi${ticket.customer_name ? ' ' + ticket.customer_name : ''},\n\nYour ${device} has been shipped back to you.\nTracking: ${ticket.tracking_number}${carrier ? ' (' + carrier + ')' : ''}\nFollow it here: ${link}`,
+    html: plantilla(`Your repair ${num} is on its way back`, `
+      <p style="font-size:14px;line-height:1.6;color:#3a3a40;margin:0;">Hi${ticket.customer_name ? ' <strong>' + ticket.customer_name + '</strong>' : ''}, your <strong style="color:#111;">${device}</strong> has been shipped back to you.</p>
+      ${cajaDato('Tracking number', ticket.tracking_number, carrier ? `Carrier: ${carrier}` : '')}
+      ${boton(link, 'Track my repair')}`,
+      `Your repair ${num} is on its way back — track it here`),
+  });
+}
+
 // El admin guardó el tracking: "tu pedido va en camino".
 async function sendTrackingEmail(order) {
   if (!order.email) return;
@@ -275,4 +295,4 @@ async function sendInvoiceEmail(order, invoice, pdfBuffer) {
   });
 }
 
-module.exports = { sendEmail, sendNewOrderEmails, sendTrackingEmail, sendTransitEmail, sendDeliveredEmail, sendInvoiceEmail, orderNumber, trackLink };
+module.exports = { sendEmail, sendNewOrderEmails, sendTrackingEmail, sendTransitEmail, sendDeliveredEmail, sendInvoiceEmail, sendRepairTrackingEmail, orderNumber, trackLink };

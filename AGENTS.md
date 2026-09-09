@@ -117,7 +117,12 @@ cambies estructura, flujos o convenciones.
 ### Backend (`server/`)
 - Entrada: `server/index.js` — monta routers y sirve estáticos.
 - Rutas del panel (`/x/s/*`): `server/routes/adminAuth.js`, `adminUsers.js`,
-  `adminTime.js`, `adminTasks.js`, `adminMonitor.js`, `adminRepairs.js`,
+  `adminTime.js`, `adminTasks.js`, `adminMonitor.js`, `adminRepairs.js`
+  (reparaciones; el ticket tiene `tracking_number`/`carrier`/`customer_email`/
+  `track_token` para el envío de vuelta al cliente — la ficha del panel tiene
+  la sección "Seguimiento del envío al cliente" con botón de correo
+  (`POST /:id/send-tracking`, plantilla `sendRepairTrackingEmail`) y botón de
+  WhatsApp (wa.me con el mensaje y el link ya escritos)),
   `adminInventory.js`, `adminInvoices.js` (facturas, solo admin),
   `adminCustomers.js` (clientes agregados desde facturas, solo admin,
   modelo `server/models/customers.js`),
@@ -136,7 +141,10 @@ cambies estructura, flujos o convenciones.
   carrito y en el cajón solo si hay credenciales; env `PAYPAL_CLIENT_ID`,
   `PAYPAL_CLIENT_SECRET`, `PAYPAL_ENV=sandbox` solo para pruebas),
   `track.js` (seguimiento público:
-  `GET /api/track/:token` por `track_token`, sin PII de contacto),
+  `GET /api/track/:token` por `track_token`, sin PII de contacto; si el token
+  (o el número en `lookup/:number`) no es de una orden busca en
+  `repair_tickets` y devuelve el payload con `kind:'repair'` — el "producto"
+  es el equipo reparado y, sin dirección, el mapa se oculta solo),
   `auth.js` (login viejo, sin frontend).
 - **Correos transaccionales:** `server/lib/email.js`. Único proveedor:
   **Gmail SMTP con nodemailer** (env `GMAIL_USER` + `GMAIL_APP_PASSWORD` —
@@ -219,7 +227,9 @@ cambies estructura, flujos o convenciones.
   (telefono/tablet/laptop), `service_type` (revision/reparacion/mantenimiento),
   `final_price`, `quoted_price`, `status`
   (recibido→diagnostico→reparacion→listo→entregado), `created_at`,
-  `delivered_at`.
+  `delivered_at`, y para el envío de vuelta: `tracking_number`, `carrier`,
+  `customer_email` y `track_token` (48 hex, backfill automático en tickets
+  viejos).
 - Bots: `server/wa-bot/` (WhatsApp), `server/ig-bot/` (Instagram) —
   artefactos locales gitignored.
 

@@ -55,9 +55,26 @@ async function compressImage(file, maxDim = 1600, quality = 0.85) {
 
 const EMPTY = {
   device_type: 'telefono', service_type: 'reparacion',
-  device_brand: '', device_model: '', device_serial: '', customer_name: '', customer_phone: '',
+  device_brand: '', device_model: '', device_serial: '', customer_name: '', customer_phone: '', customer_email: '',
   problem: '', diagnosis: '', quoted_price: '', final_price: '', status: 'recibido', assigned_to: '',
+  tracking_number: '', carrier: '',
 };
+
+// Paqueterías para el envío de vuelta al cliente.
+const CARRIERS = [
+  { v: '', l: '—' },
+  { v: 'usps', l: 'USPS' },
+  { v: 'ups', l: 'UPS' },
+  { v: 'fedex', l: 'FedEx' },
+  { v: 'dhl', l: 'DHL' },
+  { v: 'otra', l: 'Otra' },
+];
+
+// Teléfono a formato internacional para wa.me (US: 10 dígitos → +1).
+function phoneIntl(p) {
+  const d = String(p || '').replace(/\D/g, '');
+  return d.length === 10 ? '1' + d : d;
+}
 
 export default function RepairDetail({ ticketId, workers = [], isAdmin, onClose, onSaved, onCreated }) {
   const [id, setId] = useState(ticketId || null);
@@ -68,6 +85,8 @@ export default function RepairDetail({ ticketId, workers = [], isAdmin, onClose,
   const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState('');
   const [ok, setOk] = useState('');
+  const [sendingTrack, setSendingTrack] = useState(false); // correo de seguimiento
+  const [trackToken, setTrackToken] = useState(null); // token público del link track.html
   const fileRef = useRef(null);
 
   const set = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.value }));
@@ -78,19 +97,27 @@ export default function RepairDetail({ ticketId, workers = [], isAdmin, onClose,
       setF({
         device_type: ticket.device_type || 'telefono', service_type: ticket.service_type || 'reparacion',
         device_brand: ticket.device_brand || '', device_model: ticket.device_model || '', device_serial: ticket.device_serial || '',
-        customer_name: ticket.customer_name || '', customer_phone: ticket.customer_phone || '',
+        customer_name: ticket.customer_name || '', customer_phone: ticket.customer_phone || '', customer_email: ticket.customer_email || '',
         problem: ticket.problem || '', diagnosis: ticket.diagnosis || '',
         quoted_price: ticket.quoted_price != null ? ticket.quoted_price : '', final_price: ticket.final_price != null ? ticket.final_price : '',
         status: ticket.status, assigned_to: ticket.assigned_to != null ? String(ticket.assigned_to) : '',
+        tracking_number: ticket.tracking_number || '', carrier: ticket.carrier || '',
       });
+      setTrackToken(ticket.track_token || null);
       setPhotos(ticket.photos || []);
     }).catch((e) => setErr(e.message)).finally(() => setLoading(false));
   };
   useEffect(() => { if (ticketId) load(ticketId); }, [ticketId]);
 
+  const bodyPayload = () => ({
+    ...f, assigned_to: f.assigned_to || null,
+    quoted_price: f.quoted_price === '' ? null : f.quoted_price,
+    final_price: f.final_price === '' ? null : f.final_price,
+  });
+
   const save = async () => {
     setErr(''); setOk(''); setSaving(true);
-    const body = { ...f, assigned_to: f.assigned_to || null, quoted_price: f.quoted_price === '' ? null : f.quoted_price, final_price: f.final_price === '' ? null : f.final_price };
+    const body = bodyPayload();
     try {
       if (id) {
         await api('/repairs/' + id, { method: 'PATCH', body });
@@ -101,11 +128,44 @@ export default function RepairDetail({ ticketId, workers = [], isAdmin, onClose,
         // reparación). Sin él: quedarse para subir fotos de una vez.
         if (onCreated) { if (onSaved) onSaved(); onCreated(ticket); return; }
         setId(ticket.id); // ahora se pueden agregar fotos
+        setTrackToken(ticket.track_token || null);
         setOk('Reparación creada. Ya puedes agregar fotos.');
       }
       if (onSaved) onSaved();
     } catch (e) { setErr(e.message); }
     finally { setSaving(false); }
+  };
+
+  // Guarda la ficha (para que el tracking quede registrado) y manda al
+  // cliente el correo con el link de seguimiento de su reparación.
+  const sendTrackEmail = async () => {
+    setErr(''); setOk(''); setSendingTrack(true);
+    try {
+      await api('/repairs/' + id, { method: 'PATCH', body: bodyPayload() });
+      const r = await api('/repairs/' + id + '/send-tracking', { method: 'POST' });
+      setOk(r.sent
+        ? 'Correo de seguimiento enviado al cliente.'
+        : 'El servidor no envió el correo (revisa las credenciales de Gmail).');
+      if (onSaved) onSaved();
+    } catch (e) { setErr(e.message); }
+    finally { setSendingTrack(false); }
+  };
+
+  // WhatsApp: abre wa.me con el mensaje ya escrito (número de rastreo + link
+  // de track.html). También guarda la ficha primero.
+  const sendTrackWhatsApp = async () => {
+    setErr(''); setOk('');
+    try {
+      await api('/repairs/' + id, { method: 'PATCH', body: bodyPayload() });
+      if (onSaved) onSaved();
+    } catch (e) { setErr(e.message); return; }
+    const device = [f.device_brand, f.device_model].filter(Boolean).join(' ') || 'equipo';
+    const link = window.location.origin + '/track?t=' + trackToken;
+    const msg = `Hola${f.customer_name ? ' ' + f.customer_name : ''}, tu ${device} ya fue enviado de vuelta.\n` +
+      `Número de rastreo: ${f.tracking_number}${f.carrier && f.carrier !== 'otra' ? ' (' + f.carrier.toUpperCase() + ')' : ''}\n` +
+      `Sigue tu paquete aquí: ${link}`;
+    window.open('https://wa.me/' + phoneIntl(f.customer_phone) + '?text=' + encodeURIComponent(msg), '_blank');
+    setOk('Se abrió WhatsApp con el mensaje listo para enviar.');
   };
 
   const onPick = async (e) => {
@@ -158,6 +218,7 @@ export default function RepairDetail({ ticketId, workers = [], isAdmin, onClose,
         <label className="field"><span>Cliente</span><input value={f.customer_name} onChange={set('customer_name')} /></label>
         <label className="field"><span>Teléfono</span><input value={f.customer_phone} onChange={set('customer_phone')} /></label>
       </div>
+      <label className="field"><span>Correo del cliente (para enviarle el seguimiento)</span><input type="email" value={f.customer_email} onChange={set('customer_email')} placeholder="cliente@correo.com" /></label>
       <label className="field"><span>Problema (reporta el cliente)</span><textarea rows="2" value={f.problem} onChange={set('problem')} /></label>
       <label className="field"><span>Diagnóstico (técnico)</span><textarea rows="2" value={f.diagnosis} onChange={set('diagnosis')} /></label>
       <div className="rd-grid">
@@ -175,6 +236,40 @@ export default function RepairDetail({ ticketId, workers = [], isAdmin, onClose,
               {workers.map((u) => <option key={u.id} value={u.id}>{u.username}</option>)}
             </select>
           </label>
+        )}
+      </div>
+
+      {/* Seguimiento del envío de vuelta al cliente: número de rastreo +
+          paquetería, y botones para mandar el link de track.html por correo
+          o WhatsApp. Los botones guardan la ficha antes de enviar. */}
+      <div className="rd-ship">
+        <strong style={{ fontSize: 14 }}>Seguimiento del envío al cliente</strong>
+        <div className="rd-grid" style={{ marginTop: 10 }}>
+          <label className="field"><span>Número de seguimiento</span><input value={f.tracking_number} onChange={set('tracking_number')} placeholder="ej. 9400 1000 0000 0000 0000 00" /></label>
+          <label className="field"><span>Paquetería</span>
+            <select value={f.carrier} onChange={set('carrier')}>{CARRIERS.map((c) => <option key={c.v} value={c.v}>{c.l}</option>)}</select>
+          </label>
+        </div>
+        {id ? (
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
+            <button className="btn btn-secondary btn-sm" onClick={sendTrackEmail}
+              disabled={sendingTrack || !f.tracking_number || !f.customer_email}
+              title={!f.customer_email ? 'Falta el correo del cliente' : (!f.tracking_number ? 'Falta el número de seguimiento' : 'Enviar correo con el link de seguimiento')}>
+              {sendingTrack ? <span className="spinner" /> : '✉ Enviar por correo'}
+            </button>
+            <button className="btn btn-secondary btn-sm" onClick={sendTrackWhatsApp}
+              disabled={!f.tracking_number || !f.customer_phone || !trackToken}
+              title={!f.customer_phone ? 'Falta el teléfono del cliente' : (!f.tracking_number ? 'Falta el número de seguimiento' : 'Abrir WhatsApp con el mensaje listo')}>
+              Enviar por WhatsApp
+            </button>
+            {f.tracking_number && (!f.customer_email || !f.customer_phone) && (
+              <span className="muted" style={{ fontSize: 12 }}>
+                {!f.customer_email ? 'Sin correo guardado. ' : ''}{!f.customer_phone ? 'Sin teléfono guardado.' : ''}
+              </span>
+            )}
+          </div>
+        ) : (
+          <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>Guarda primero la reparación para poder enviar el seguimiento.</div>
         )}
       </div>
 
