@@ -50,7 +50,7 @@ cambies estructura, flujos o convenciones.
   `assets/img/screwdriver.png` — OJO: el mango negro lleva brightness+halo
   para verse sobre la tarjeta oscura; y `.rp-card .rp-anim` lleva width:100%
   porque sin ella la escena colapsa a 0 y max-width:100% de site-v3.css
-  borra la imagen); crédito CC BY-SA en `.rp-credit` dentro de la tarjeta)**; título
+  borra la imagen); crédito CC BY-SA solo en comentario del código (sin texto visible, decisión del dueño))**; título
   "Seguimiento de reparación", badge "Reparación REP-1xxx", resumen sin
   líneas Subtotal/Shipping y "Total de la reparación"; el título de la
   página es fijo ("Order tracking", sin nombre del producto); **el badge bajo

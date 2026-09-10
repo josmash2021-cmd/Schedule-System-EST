@@ -777,7 +777,7 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   (`assets/img/screwdriver.png`, Wiha2013, CC BY-SA 4.0 — mango negro con
   brightness+halo; `.rp-card .rp-anim` lleva width:100% porque sin ella la
   escena colapsa a 0 y max-width:100% de site-v3.css borra la imagen);
-  crédito CC BY-SA visible en `.rp-credit`; resumen sin
+  crédito CC BY-SA solo en comentario del código (sin texto visible, decisión del dueño); resumen sin
   Subtotal/Shipping y "Total de la reparación". Verificación visual de
   track.html: `node admin-app/.visual-test/track-shot.cjs` (API mockeada,
   capturas reparación + pedido).
