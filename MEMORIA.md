@@ -807,6 +807,17 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   padding: 0`, flota como la curva de la pieza) —, luego
   REPAIR SUMMARY (equipo + Abonado por el cliente + Restante por pagar, de
   `amount_paid` del payload) y TRACKING (número + link de paquetería).
+  AUTO-TRACKING DEL REPUESTO (2026-09-10, petición del dueño): el estado de
+  la pieza se actualiza SOLO por el número de rastreo — `repair_tickets`
+  ganó `ship_tag`/`expected_delivery`/`shipped_at`/`tracking_id` (mismo
+  vocabulario que `online_orders`); el PATCH del panel sella `shipped_at` y
+  registra con USPS/AfterShip al cargar/cambiar el tracking; el job de 15
+  min (`checkDeliveries`) también recorre `repairs.listPartsInTransit()` y
+  aplica `tracking.applyRepairUpdate` (sin correos — el correo de
+  seguimiento se manda a mano); el webhook de AfterShip cubre tickets
+  (`repairs.findByTrackingId`/`findByTrackingNumber`) y el SSE emite con id
+  namespaced `rep:<id>` para no chocar con ids de órdenes. Sin keys aplica
+  la misma regla de 24 h → 'InTransit'.
   `.track-grid.repair` va DESPUÉS de la regla móvil base en el CSS porque
   empata en especificidad con `.track-grid.no-map` (las reparaciones siempre
   llevan .no-map: sin dirección) y la cascada la decide el orden.

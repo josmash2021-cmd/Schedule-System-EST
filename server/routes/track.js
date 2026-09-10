@@ -82,8 +82,13 @@ function publicRepair(t) {
     repair_status: t.status || 'recibido', // etapas de la reparación (barra propia)
     amount_paid: t.amount_paid != null ? Number(t.amount_paid) : 0, // abonado por el cliente
     ship_status: t.status === 'entregado' ? 'entregado' : (t.tracking_number ? 'enviado' : 'pendiente'),
-    ship_tag: null,
-    expected_delivery: null,
+    // El repuesto se rastrea SOLO por su número (job de 15 min + webhook de
+    // AfterShip): ship_tag y la fecha estimada vienen de la paquetería, o de
+    // la regla de 24 h si no hay proveedor configurado.
+    ship_tag: t.ship_tag || null,
+    expected_delivery: t.expected_delivery
+      ? new Date(t.expected_delivery).toISOString().slice(0, 10)
+      : null,
     tracking_number: t.tracking_number || null,
     carrier: t.carrier || null,
     created_at: t.created_at,
@@ -93,6 +98,7 @@ function publicRepair(t) {
 // Webhook de AfterShip: avisa al instante cuando el paquete cambia de estado.
 // Se registra la URL https://<dominio>/api/track/webhook en el dashboard de
 // AfterShip. Siempre responde 200 rápido (AfterShip reintenta si no).
+// Cubre órdenes Y repuestos de reparación (busca por tracking id y por número).
 router.post('/webhook', async (req, res) => {
   try {
     const msg = req.body && req.body.msg;
@@ -101,6 +107,11 @@ router.post('/webhook', async (req, res) => {
       if (!o && msg.tracking_number) o = await orders.findByTrackingNumber(msg.tracking_number);
       if (o) {
         await tracking.applyUpdate(o, { tag: msg.tag, expectedDelivery: msg.expected_delivery });
+      } else {
+        // ¿Es el repuesto de una reparación? (por id de AfterShip o por número)
+        let t = msg.id ? await repairs.findByTrackingId(msg.id) : null;
+        if (!t && msg.tracking_number) t = await repairs.findByTrackingNumber(msg.tracking_number);
+        if (t) await tracking.applyRepairUpdate(t, { tag: msg.tag, expectedDelivery: msg.expected_delivery });
       }
     }
   } catch (err) {
@@ -116,12 +127,12 @@ router.get('/:token/stream', async (req, res) => {
   const token = String(req.params.token || '');
   if (!/^[a-f0-9]{32,96}$/.test(token)) return res.status(404).end();
   try {
-    // Órdenes y reparaciones comparten el stream. Las reparaciones no tienen
-    // webhook: el stream solo mantiene la conexión viva (el polling de 30 s
-    // de track.html cubre los cambios).
+    // Órdenes y reparaciones comparten el stream. Las órdenes emiten con su
+    // id numérico; las reparaciones con 'rep:<id>' (applyRepairUpdate), así
+    // no chocan los ids entre tablas.
     const o = await orders.findByTrackToken(token);
-    const isOrder = !!o;
-    if (!o && !(await repairs.findByTrackToken(token))) return res.status(404).end();
+    const t = o ? null : await repairs.findByTrackToken(token);
+    if (!o && !t) return res.status(404).end();
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
@@ -129,7 +140,8 @@ router.get('/:token/stream', async (req, res) => {
     });
     res.write(`data: ${JSON.stringify({ type: 'hello' })}\n\n`);
     const onUpdate = (id) => {
-      if (isOrder && id === o.id) res.write(`data: ${JSON.stringify({ type: 'update' })}\n\n`);
+      if (o && id === o.id) res.write(`data: ${JSON.stringify({ type: 'update' })}\n\n`);
+      if (t && id === 'rep:' + t.id) res.write(`data: ${JSON.stringify({ type: 'update' })}\n\n`);
     };
     trackEvents.on('update', onUpdate);
     const hb = setInterval(() => res.write(': hb\n\n'), 25000);

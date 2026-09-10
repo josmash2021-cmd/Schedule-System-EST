@@ -11,6 +11,8 @@ const audit = require('../models/audit');
 const invoices = require('../models/invoices');
 const { buildInvoicePdf } = require('../lib/invoicePdf');
 const email = require('../lib/email');
+const tracking = require('../lib/tracking');
+const trackEvents = require('../lib/trackEvents');
 const { verifyToken, loadUser, requireRole } = require('../middleware/auth');
 const { getClientIp } = require('../lib/rateLimit');
 const { REPAIRS_DIR } = require('../config');
@@ -173,6 +175,17 @@ router.patch('/:id', async (req, res) => {
     const existing = await repairs.findById(id);
     if (!existing) return res.status(404).json({ error: 'Reparación no encontrada.' });
     const t = await repairs.update(id, fields);
+    // Tracking del repuesto NUEVO o cambiado: sella shipped_at (regla de
+    // 24 h) y lo registra con el proveedor (USPS/AfterShip) para que el
+    // estado de la pieza se actualice solo en la página pública. Sin key no
+    // pasa nada (tracking_id queda null y aplica la regla de 24 h).
+    const newTracking = fields.tracking_number && fields.tracking_number !== existing.tracking_number;
+    if (newTracking) {
+      await repairs.stampShipped(id);
+      const tid = await tracking.register(fields.tracking_number, fields.carrier !== undefined ? fields.carrier : existing.carrier);
+      if (tid) await repairs.setTrackingId(id, tid);
+      trackEvents.emit('update', 'rep:' + id);
+    }
     audit.logAction(req.user.id, 'repair.update', { targetType: 'repair', targetId: id, ip: getClientIp(req), metadata: { status: fields.status } });
     res.json({ ticket: t });
   } catch (err) {

@@ -183,6 +183,14 @@ async function initDb() {
     // panel; sin FK porque la tabla invoices se crea más abajo).
     await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS amount_paid NUMERIC(10,2);`);
     await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS invoice_id INTEGER;`);
+    // Seguimiento automático del REPUESTO (mismo sistema que online_orders):
+    // ship_tag (InTransit/OutForDelivery/Delivered), fecha estimada de
+    // llegada, sello de cuándo se cargó el tracking (regla de 24 h) y el id
+    // del proveedor (AfterShip; con USPS basta el número).
+    await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS ship_tag TEXT;`);
+    await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS expected_delivery DATE;`);
+    await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS shipped_at TIMESTAMPTZ;`);
+    await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS tracking_id TEXT;`);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS repair_photos (

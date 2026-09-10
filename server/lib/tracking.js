@@ -223,4 +223,26 @@ async function applyUpdate(o, { tag, expectedDelivery }) {
   if (changed) trackEvents.emit('update', o.id);
 }
 
-module.exports = { enabled, register, getTag, getStatus, applyUpdate };
+// Lo mismo pero para el REPUESTO de una reparación (repair_tickets): solo
+// guarda tag/fecha y emite el aviso SSE con id 'rep:<id>' (sin correos — el
+// correo de seguimiento de la reparación se manda a mano desde el panel).
+// El tag nunca hace retroceder la barra (misma jerarquía que las órdenes).
+async function applyRepairUpdate(t, { tag, expectedDelivery }) {
+  if (!t) return;
+  const repairs = require('../models/repairs');
+  const trackEvents = require('./trackEvents');
+  let changed = false;
+  if (tag && tag !== t.ship_tag && tagRank(tag) >= tagRank(t.ship_tag)) {
+    await repairs.updateShipTag(t.id, tag);
+    changed = true;
+  }
+  const eta = expectedDelivery ? String(expectedDelivery).slice(0, 10) : null;
+  const cur = t.expected_delivery ? new Date(t.expected_delivery).toISOString().slice(0, 10) : null;
+  if (eta && eta !== cur) {
+    await repairs.updateExpectedDelivery(t.id, eta);
+    changed = true;
+  }
+  if (changed) trackEvents.emit('update', 'rep:' + t.id);
+}
+
+module.exports = { enabled, register, getTag, getStatus, applyUpdate, applyRepairUpdate };

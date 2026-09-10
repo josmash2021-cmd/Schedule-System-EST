@@ -23,6 +23,7 @@ const adminSalesRouter = require('./routes/adminSales');
 const adminExpensesRouter = require('./routes/adminExpenses');
 const adminOrdersRouter = require('./routes/adminOrders');
 const orders = require('./models/orders');
+const repairs = require('./models/repairs');
 const tracking = require('./lib/tracking');
 const adminInvoicesRouter = require('./routes/adminInvoices');
 const adminCustomersRouter = require('./routes/adminCustomers');
@@ -227,10 +228,11 @@ async function start() {
   });
 
   // Job de rastreo de envíos: cada 15 min revisa las órdenes con tracking
-  // activo. Con proveedor configurado (AfterShip/USPS) es el RESPALDO de su
+  // activo Y los repuestos de reparaciones en camino al taller. Con proveedor
+  // configurado (AfterShip/USPS) es el RESPALDO de su
   // webhook; sin proveedor, aplica la regla del dueño: 24 h después de cargar
-  // el tracking (shipped_at), la orden se marca 'InTransit' sola — de ahí en
-  // adelante (OutForDelivery/Delivered) el dueño lo actualiza a mano.
+  // el tracking (shipped_at), se marca 'InTransit' sola — de ahí en
+  // adelante (OutForDelivery/Delivered en órdenes) el dueño lo actualiza a mano.
   // Un fallo no tumba el server.
   const AUTO_TRANSIT_MS = 24 * 60 * 60 * 1000;
   const checkDeliveries = async () => {
@@ -261,6 +263,33 @@ async function start() {
             Date.now() - new Date(o.shipped_at).getTime() >= AUTO_TRANSIT_MS) {
           await tracking.applyUpdate(o, { tag: 'InTransit' });
           console.log(`[tracking] Orden #${o.id} marcada 'InTransit' por regla de 24 h.`);
+        }
+      }
+      // Repuestos de reparaciones en camino al taller: mismo sistema, pero
+      // sin correos (applyRepairUpdate solo guarda tag/fecha y avisa por SSE).
+      const parts = await repairs.listPartsInTransit();
+      for (const t of parts) {
+        if (tracking.enabled()) {
+          // Tickets viejos sin tracking_id (guardados antes de esta función o
+          // sin key al guardarlos) se auto-registran aquí con AfterShip.
+          if (!t.tracking_id && process.env.AFTERSHIP_API_KEY) {
+            const tid = await tracking.register(t.tracking_number, t.carrier);
+            if (tid) {
+              await repairs.setTrackingId(t.id, tid);
+              t.tracking_id = tid;
+            }
+          }
+          const s = await tracking.getStatus(t.tracking_id || t.tracking_number);
+          if (s && s.tag) {
+            await tracking.applyRepairUpdate(t, s);
+            continue;
+          }
+        }
+        // Sin dato del proveedor: 24 h tras cargar el tracking → 'InTransit'.
+        if (!t.ship_tag && t.shipped_at &&
+            Date.now() - new Date(t.shipped_at).getTime() >= AUTO_TRANSIT_MS) {
+          await tracking.applyRepairUpdate(t, { tag: 'InTransit' });
+          console.log(`[tracking] Repuesto de reparación #${t.id} 'InTransit' por regla de 24 h.`);
         }
       }
     } catch (e) {

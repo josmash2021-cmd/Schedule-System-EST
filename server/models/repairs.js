@@ -139,8 +139,47 @@ async function findByTrackingNumber(num) {
   return r.rows[0] || null;
 }
 
+// Por id del proveedor de rastreo (AfterShip lo manda en su webhook).
+async function findByTrackingId(trackingId) {
+  const r = await pool.query('SELECT * FROM repair_tickets WHERE tracking_id = $1', [trackingId]);
+  return r.rows[0] || null;
+}
+
+// ---- Seguimiento automático del repuesto (pieza en camino al taller) ----
+// Mismo vocabulario que online_orders: ship_tag fino (InTransit/OutForDelivery/
+// Delivered) escrito por el job de rastreo; shipped_at se sella la PRIMERA vez
+// que se carga tracking (de esa fecha cuentan las 24 h de la regla sin
+// proveedor). Sin correos automáticos: el panel ya tiene el botón de enviar
+// el correo de seguimiento a mano.
+async function stampShipped(id) {
+  await pool.query('UPDATE repair_tickets SET shipped_at = COALESCE(shipped_at, NOW()) WHERE id = $1', [id]);
+}
+
+async function setTrackingId(id, trackingId) {
+  await pool.query('UPDATE repair_tickets SET tracking_id = COALESCE($2, tracking_id) WHERE id = $1', [id, trackingId || null]);
+}
+
+async function updateShipTag(id, tag) {
+  await pool.query('UPDATE repair_tickets SET ship_tag = $2 WHERE id = $1', [id, tag || null]);
+}
+
+async function updateExpectedDelivery(id, date) {
+  await pool.query('UPDATE repair_tickets SET expected_delivery = $2 WHERE id = $1', [id, date || null]);
+}
+
+// Tickets cuya pieza sigue en camino (el job los consulta cada 15 min).
+async function listPartsInTransit() {
+  const r = await pool.query(
+    `SELECT * FROM repair_tickets
+     WHERE tracking_number IS NOT NULL AND status <> 'entregado'
+       AND (ship_tag IS NULL OR ship_tag <> 'Delivered')`
+  );
+  return r.rows;
+}
+
 module.exports = {
   STATUSES, DEVICE_TYPES, SERVICE_TYPES, FIELDS, listAll, findById, getWithPhotos, create, update, remove, removeMany,
   listPhotoFilenames, addPhoto, getPhoto, removePhoto,
-  findByTrackToken, findByTrackingNumber,
+  findByTrackToken, findByTrackingNumber, findByTrackingId,
+  stampShipped, setTrackingId, updateShipTag, updateExpectedDelivery, listPartsInTransit,
 };

@@ -160,7 +160,13 @@ cambies estructura, flujos o convenciones.
   la sección "Seguimiento del repuesto" con botón de correo
   (`POST /:id/send-tracking`, plantilla `sendRepairTrackingEmail`: "the
   replacement part … is on its way to us") y botón de
-  WhatsApp (wa.me con el mensaje y el link ya escritos). **Factura de la
+  WhatsApp (wa.me con el mensaje y el link ya escritos). **El repuesto se
+  rastrea SOLO por su número** (mismo sistema que las órdenes): al guardar/
+  cambiar `tracking_number` en el PATCH se sella `shipped_at` y se registra
+  con el proveedor (`tracking_id`); el job de 15 min actualiza `ship_tag` +
+  `expected_delivery` (o la regla de 24 h sin keys) vía
+  `tracking.applyRepairUpdate` (SIN correos) y emite SSE con id `rep:<id>`;
+  el webhook de AfterShip también cubre tickets (busca por id y por número). **Factura de la
   reparación:** botones en el detalle de la lista — Ver factura, ✉ por
   correo (`POST /:id/send-invoice`, PDF adjunto) y por WhatsApp (wa.me con
   link al PDF público `GET /api/track/:token/invoice.pdf`; si la factura no
@@ -274,7 +280,8 @@ cambies estructura, flujos o convenciones.
   (recibido→diagnostico→reparacion→listo→entregado), `created_at`,
   `delivered_at`, y para el repuesto en camino al taller: `tracking_number`,
   `carrier`, `customer_email` y `track_token` (48 hex, backfill automático en
-  tickets viejos).
+  tickets viejos), más el rastreo automático: `ship_tag`, `expected_delivery`,
+  `shipped_at` y `tracking_id` (idéntico vocabulario que `online_orders`).
 - Bots: `server/wa-bot/` (WhatsApp), `server/ig-bot/` (Instagram) —
   artefactos locales gitignored.
 
