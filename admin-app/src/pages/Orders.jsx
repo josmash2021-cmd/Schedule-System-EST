@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, Fragment } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api.js';
 import FormPage from '../components/FormPage.jsx';
 
@@ -285,35 +285,30 @@ export default function Orders() {
         {orders == null ? <span className="spinner" />
           : orders.length === 0 ? <div className="empty">No hay órdenes todavía. Las compras del website aparecen aquí automáticamente.</div>
             : (
-              <div className="table-wrap">
-                <table className="data orders-blocks">
-                  <thead>
-                    <tr><th>Fecha</th><th>Cliente</th><th className="hide-sm">Origen</th><th className="hide-sm">Dirección</th><th style={{ textAlign: 'right' }}>Total</th><th>Estado</th></tr>
-                  </thead>
-                  <tbody>
-                    {orders.map((o) => (
-                      <Fragment key={o.id}>
-                        <tr>
-                          <td className="muted">{fmtDay(o.created_at)}</td>
-                          <td>
-                            <strong>{o.customer_name || '—'}</strong>
-                            <div className="muted" style={{ fontSize: 12 }}>{o.email || o.phone || ''}</div>
-                          </td>
-                          <td className="hide-sm">
-                            <span className={'badge ' + (o.origen === 'fb_marketplace' ? 'badge-fb' : 'badge-online')}>
-                              {o.origen === 'fb_marketplace' ? 'FB Marketplace' : 'Website'}
-                            </span>
-                          </td>
-                          <td className="muted hide-sm" style={{ maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {o.address || '—'}
-                          </td>
-                          <td style={{ textAlign: 'right' }}><strong>{usd.format(Number(o.total) || 0)}</strong></td>
-                          <td><span className={'badge ' + (SHIP_BADGE[o.ship_status] || '')}>{SHIP_LABEL[o.ship_status] || o.ship_status}</span></td>
-                        </tr>
-                        {/* Detalle siempre abierto: toda la info a la vista. */}
-                        <tr>
-                          <td colSpan="6" style={{ background: '#f8f9fb' }}>
-                            <div className="order-detail">
+              <div className="orders-list">
+                <div className="order-head order-head-labels">
+                  <span>Fecha</span><span>Cliente</span><span className="hide-sm">Origen</span><span className="hide-sm">Dirección</span><span className="order-total">Total</span><span>Estado</span>
+                </div>
+                {orders.map((o) => (
+                  <div className="order-block" key={o.id}>
+                    <div className="order-head">
+                      <span className="muted">{fmtDay(o.created_at)}</span>
+                      <span>
+                        <strong>{o.customer_name || '—'}</strong>
+                        <div className="muted" style={{ fontSize: 12 }}>{o.email || o.phone || ''}</div>
+                      </span>
+                      <span className="hide-sm">
+                        <span className={'badge ' + (o.origen === 'fb_marketplace' ? 'badge-fb' : 'badge-online')}>
+                          {o.origen === 'fb_marketplace' ? 'FB Marketplace' : 'Website'}
+                        </span>
+                      </span>
+                      <span className="muted hide-sm order-addr">{o.address || '—'}</span>
+                      <span className="order-total"><strong>{usd.format(Number(o.total) || 0)}</strong></span>
+                      <span><span className={'badge ' + (SHIP_BADGE[o.ship_status] || '')}>{SHIP_LABEL[o.ship_status] || o.ship_status}</span></span>
+                    </div>
+                    {/* Detalle siempre abierto: toda la info a la vista. */}
+                    <div className="order-body">
+                      <div className="order-detail">
                               <div className="od-col">
                                 <div><span className="muted">Cliente:</span> <strong>{o.customer_name || '—'}</strong></div>
                                 <div><span className="muted">Email:</span> {o.email || '—'}</div>
@@ -404,12 +399,9 @@ export default function Orders() {
                                 </div>
                               )}
                             </div>
-                          </td>
-                        </tr>
-                      </Fragment>
-                    ))}
-                  </tbody>
-                </table>
+                      </div>
+                  </div>
+                ))}
               </div>
             )}
       </div>

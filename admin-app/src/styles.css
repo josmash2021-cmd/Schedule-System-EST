@@ -378,16 +378,31 @@ table.data tbody tr:hover td { background: #f5f5f6; }
 .order-detail { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 24px; font-size: 13.5px; }
 .order-detail ul li { margin: 2px 0; }
 .od-full { grid-column: 1 / -1; }
-/* Órdenes (página Órdenes): cada orden es un PAR de filas — principal
-   (impar) + detalle siempre abierto (par, fondo gris). Separación FUERTE
-   entre órdenes: banda de aire de 14px con una línea divisoria pegada al
-   final del bloque anterior (sombra sobre el td), así cada orden se lee
-   como un bloque independiente y no se ven pegadas una tras otra. */
-table.data.orders-blocks tbody tr:nth-child(odd) td { padding-top: 14px; }
-table.data.orders-blocks tbody tr:nth-child(even) td { border-bottom: none; padding-bottom: 20px; }
-table.data.orders-blocks tbody tr:nth-child(odd):not(:first-child) td {
-  border-top: 14px solid #fff;
-  box-shadow: 0 -2px 0 0 #d3d7dd;
+/* Órdenes (página Órdenes): cada orden es su propia TARJETA independiente
+   (borde + sombra + 16px de separación) — imposible que se vean pegadas.
+   La fila de encabezado de la tarjeta imita las columnas de la tabla vieja;
+   el detalle siempre abierto va abajo sobre fondo gris. */
+.orders-list { display: grid; gap: 16px; }
+.order-block {
+  background: #fff; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: var(--radius);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.07); overflow: hidden;
+  animation: fadeIn 0.35s var(--ease) backwards;
+}
+.order-head {
+  display: grid; grid-template-columns: 150px minmax(0, 1.5fr) 150px minmax(0, 1.2fr) 110px 120px;
+  gap: 8px 18px; align-items: center; padding: 14px 18px; font-size: 14px;
+}
+.order-head-labels {
+  color: #8a8a92; font-weight: 700; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.08em; padding: 2px 18px;
+}
+.order-addr { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.order-total { text-align: right; }
+.order-body { background: #f8f9fb; border-top: 1px solid rgba(0, 0, 0, 0.06); padding: 14px 18px 18px; }
+@media (max-width: 640px) {
+  .order-head { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; padding: 12px 14px; }
+  .order-head-labels { display: none; }
+  .order-body { padding: 12px 14px 14px; }
 }
 @media (max-width: 900px) {
   .order-detail { grid-template-columns: 1fr; }

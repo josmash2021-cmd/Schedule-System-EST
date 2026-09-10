@@ -575,8 +575,11 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   cargar el tracking (`online_orders.shipped_at`, sellado en
   `updateTracking` la primera vez); el correo de tránsito sale con la misma
   pasada. OutForDelivery/Delivered los pone el dueño a mano. Nueva página del panel `/ordenes`
-  (`pages/Orders.jsx`): tabla de envíos con badges de origen/estado, detalle
-  expandible con formulario de tracking, formulario de nueva orden FB,
+  (`pages/Orders.jsx`): lista de envíos con badges de origen/estado y detalle
+  siempre abierto con formulario de tracking — desde 2026-09-10 cada orden es
+  su propia TARJETA (`.order-block`, borde+sombra+16px de separación; antes
+  era una tabla de pares de filas y se veían pegadas una tras otra,
+  queja del dueño) — formulario de nueva orden FB,
   polling de 30 s para reflejar cambios en tiempo real. Las FB también
   cuentan en Ventas/Dashboard (badge "FB Marketplace", costo 0). Facturas:
   el formulario ahora muestra el documento en vivo al lado (layout
