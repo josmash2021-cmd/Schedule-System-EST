@@ -53,30 +53,6 @@
         .track-bar-step.first .track-bar-dot { left: 0; transform: translate(0, -50%); }
         .track-bar-step.last .track-bar-dot { left: 100%; transform: translate(-100%, -50%); }
         .track-bar-step span { display: block; padding-top: 16px; font-size: 11.5px; color: var(--muted); transition: color .5s; white-space: nowrap; }
-        /* Barras de etapas en tarjetas (reparación): columnas en grid como la
-           barra del panel (sin solapes), relleno dorado. s4 = 4 etapas de la
-           reparación; s5 = 5 del envío del repuesto. */
-        .rsteps-wrap { margin: 6px 0 2px; }
-        .rsteps-line { position: relative; height: 4px; border-radius: 999px; background: rgba(255,255,255,.1); margin: 12px 4px 0; }
-        .rsteps-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 999px; background: #d4af37; transition: width 1.4s cubic-bezier(.22,1,.36,1); transform-origin: left; animation: trackBarIn .9s cubic-bezier(.22,1,.36,1); }
-        .rsteps { display: grid; margin-top: -11px; }
-        .rsteps.s4 { grid-template-columns: repeat(4, 1fr); }
-        .rsteps.s5 { grid-template-columns: repeat(5, 1fr); }
-        .rstep { text-align: center; position: relative; }
-        .rstep-dot { width: 14px; height: 14px; margin: 0 auto 5px; border-radius: 50%; background: #0c0c0f; border: 2px solid var(--line); transition: background .4s, border-color .4s, transform .4s; }
-        .rstep span { font-size: 11px; color: var(--muted); line-height: 1.25; display: block; padding: 0 3px; transition: color .4s; }
-        .rstep.on .rstep-dot { background: #d4af37; border-color: #d4af37; }
-        .rstep.on span { color: #f5f5f7; font-weight: 600; }
-        .rstep.current .rstep-dot { transform: scale(1.25); box-shadow: 0 0 0 5px rgba(212,175,55,.12); }
-        /* Vista de reparación: sin columna de estado a la izquierda. La
-           columna derecha es: estado de la reparación → rastreo del repuesto
-           (estatus del tracking) → resumen. */
-        .track-grid.repair { grid-template-columns: 1fr 340px; grid-template-areas: "map rstatus" "map tracking" "map summary"; }
-        .track-grid.repair .track-side-left { display: none; }
-        .track-side-repair-status { grid-area: rstatus; }
-        @media (max-width: 980px) {
-            .track-grid.repair { grid-template-columns: 1fr; grid-template-areas: "rstatus" "tracking" "summary" "map"; }
-        }
         .track-bar-step.on .track-bar-dot { background: #d4af37; border-color: #d4af37; }
         .track-bar-step.on span { color: #f5f5f7; font-weight: 600; }
         /* El círculo se anima CUANDO el relleno lo alcanza: el relleno tarda
@@ -171,6 +147,16 @@
             .track-grid, .track-grid.no-map { grid-template-columns: 1fr;
                 grid-template-areas: "status" "summary" "map" "tracking"; }
             .track-map { height: 300px; }
+        }
+        /* Vista de reparación: igual que un pedido — IZQUIERDA la curva del
+           estatus del paquete, y a la DERECHA el estado de la reparación con
+           el mismo diseño de curva (#repairCurve), luego resumen y rastreo.
+           OJO: va DESPUÉS de la regla móvil base para ganar la cascada
+           (misma especificidad que .track-grid.no-map: gana el orden). */
+        .track-grid.repair { grid-template-columns: 300px 1fr 340px; grid-template-areas: "status map rstatus" "status map summary" "status map tracking"; }
+        .track-side-repair-status { grid-area: rstatus; }
+        @media (max-width: 980px) {
+            .track-grid.repair { grid-template-columns: 1fr; grid-template-areas: "rstatus" "status" "summary" "map" "tracking"; }
         }
         .track-addr { font-size: 14px; line-height: 1.55; color: #d5d5da; }
         .track-ship { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; font-size: 14px; }
@@ -438,18 +424,24 @@
                     <!-- Derecha: resumen del pedido y debajo el rastreo. En
                          REPARACIÓN la columna es: estado de la reparación →
                          rastreo del repuesto → resumen. -->
-                    <!-- Solo reparación: estado de la reparación (4 etapas). -->
+                    <!-- Solo reparación: estado de la reparación (4 etapas)
+                         con el MISMO diseño de curva serpenteante que el
+                         estado del paquete (en móvil, barra horizontal). -->
                     <div class="track-card track-side-repair-status hidden" id="trackRepairStatusCard">
                         <h2 data-en="Repair status">Estado de la reparación</h2>
-                        <div class="rsteps-wrap">
-                            <div class="rsteps-line"><div class="rsteps-fill" id="repairFill" style="width:0%"></div></div>
-                            <div class="rsteps s4" id="repairSteps">
-                                <div class="rstep"><div class="rstep-dot"></div><span data-en="Received">Recibido</span></div>
-                                <div class="rstep"><div class="rstep-dot"></div><span data-en="In review">En revisión</span></div>
-                                <div class="rstep"><div class="rstep-dot"></div><span data-en="In the repair lab">En laboratorio de reparación y mantenimiento</span></div>
-                                <div class="rstep"><div class="rstep-dot"></div><span data-en="Ready for pickup">Listo para recoger</span></div>
+                        <div class="track-bar">
+                            <div class="track-bar-line">
+                                <div class="track-bar-fill" id="repairFill" style="width:0%"></div>
+                                <div class="track-bar-steps" id="repairSteps">
+                                    <div class="track-bar-step first" style="left:0%"><div class="track-bar-dot"></div><span data-en="Received">Recibido</span></div>
+                                    <div class="track-bar-step" style="left:33.33%"><div class="track-bar-dot"></div><span data-en="In review">En revisión</span></div>
+                                    <div class="track-bar-step" style="left:66.66%"><div class="track-bar-dot"></div><span data-en="In the repair lab">En laboratorio de reparación y mantenimiento</span></div>
+                                    <div class="track-bar-step last" style="left:100%"><div class="track-bar-dot"></div><span data-en="Ready for pickup">Listo para recoger</span></div>
+                                </div>
                             </div>
                         </div>
+                        <!-- PC: curva serpenteante (la dibuja el JS, igual que la del paquete). -->
+                        <svg class="track-curve" id="repairCurve" aria-hidden="true"></svg>
                     </div>
 
                     <div class="track-card track-side-summary">
@@ -461,19 +453,6 @@
 
                     <div class="track-card track-side-tracking">
                         <h2 data-en="Tracking">Rastreo</h2>
-                        <!-- Solo reparación: estatus del número de rastreo del
-                             repuesto (barra de envío), debajo del estado de
-                             la reparación. -->
-                        <div class="rsteps-wrap hidden" id="shipBarRepair">
-                            <div class="rsteps-line"><div class="rsteps-fill" id="shipFill2" style="width:0%"></div></div>
-                            <div class="rsteps s5" id="shipSteps2">
-                                <div class="rstep"><div class="rstep-dot"></div><span data-en="Creating label">Creando etiqueta</span></div>
-                                <div class="rstep"><div class="rstep-dot"></div><span data-en="Shipped">Enviado</span></div>
-                                <div class="rstep"><div class="rstep-dot"></div><span data-en="In transit">En tránsito</span></div>
-                                <div class="rstep"><div class="rstep-dot"></div><span data-en="Out for delivery">En reparto</span></div>
-                                <div class="rstep"><div class="rstep-dot"></div><span data-en="Delivered">Entregado</span></div>
-                            </div>
-                        </div>
                         <!-- Sin data-en: el contenido lo escribe el JS (i18n lo pisaría). -->
                         <div class="track-ship" id="trackShip">En cuanto tu paquete sea enviado, aquí aparecerá el número de rastreo.</div>
                     </div>
@@ -809,25 +788,23 @@
         }
         var SVGNS = 'http://www.w3.org/2000/svg';
         var lastStep = 0;
+        var lastRepairStep = 0;
         // Curva de estado (PC): serpente centrada en la tarjeta, de arriba
         // hasta abajo. Puntos dorados = pasos cumplidos; etiquetas alternan
-        // de lado. Se redibuja en cada render (es barato).
-        function drawStatusCurve(step) {
-            var svg = document.getElementById('trackCurve');
+        // de lado. Se redibuja en cada render (es barato). Genérica: sirve
+        // para la curva del paquete (5 puntos) y la de la reparación (4).
+        function drawCurve(svg, labels, step, points) {
             if (!svg) return;
-            lastStep = step;
-            var labels = Array.prototype.map.call(
-                document.querySelectorAll('#trackSteps .track-bar-step span'),
-                function (s) { return s.textContent; });
+            var n = points - 1; // segmentos
             var w = svg.clientWidth || 240;
             var h = Math.max(svg.clientHeight || 0, 340);
             svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
             var cx = w / 2, A = Math.min(46, w * 0.22);
             var y0 = 16, y1 = h - 16, dy = y1 - y0;
             var d = 'M ' + cx + ' ' + y0;
-            for (var i = 1; i <= 4; i++) {
+            for (var i = 1; i <= n; i++) {
                 var s = i % 2 ? 1 : -1;
-                var ya = y0 + dy * (i - 1) / 4, yb = y0 + dy * i / 4;
+                var ya = y0 + dy * (i - 1) / n, yb = y0 + dy * i / n;
                 d += ' C ' + (cx + s * A) + ' ' + (ya + (yb - ya) * 0.3).toFixed(1) +
                      ', ' + (cx - s * A) + ' ' + (ya + (yb - ya) * 0.7).toFixed(1) +
                      ', ' + cx + ' ' + yb.toFixed(1);
@@ -842,10 +819,10 @@
             svg.appendChild(base);
             var L = base.getTotalLength();
             var gold = el('path', { d: d, fill: 'none', stroke: '#d4af37', 'stroke-width': 3, 'stroke-linecap': 'round',
-                'stroke-dasharray': (L * step / 4) + ' ' + L });
+                'stroke-dasharray': (L * step / n) + ' ' + L });
             svg.appendChild(gold);
-            for (var j = 0; j < 5; j++) {
-                var p = base.getPointAtLength(L * j / 4);
+            for (var j = 0; j < points; j++) {
+                var p = base.getPointAtLength(L * j / n);
                 var on = j <= step;
                 svg.appendChild(el('circle', {
                     cx: p.x, cy: p.y, r: j === step ? 7 : 6,
@@ -863,12 +840,35 @@
                 svg.appendChild(t);
             }
         }
-        // La tarjeta estira su altura al acomodarse el grid: redibuja la
-        // curva cuando cambie de tamaño para que siempre llegue hasta abajo.
+        function stepLabels(sel) {
+            return Array.prototype.map.call(
+                document.querySelectorAll(sel + ' .track-bar-step span'),
+                function (s) { return s.textContent; });
+        }
+        function drawStatusCurve(step) {
+            lastStep = step;
+            drawCurve(document.getElementById('trackCurve'), stepLabels('#trackSteps'), step, 5);
+        }
+        // La curva del ESTADO DE LA REPARACIÓN (derecha): mismo diseño, 4
+        // puntos. rs 0-3 (entregado se dibuja como barra completa, paso 3).
+        function drawRepairCurve(rs) {
+            lastRepairStep = rs;
+            drawCurve(document.getElementById('repairCurve'), stepLabels('#repairSteps'), Math.min(rs, 3), 4);
+        }
+        // La tarjeta estira su altura al acomodarse el grid: redibuja las
+        // curvas cuando cambien de tamaño para que lleguen hasta abajo.
         if (window.ResizeObserver) {
             new ResizeObserver(function () {
-                if (window.matchMedia('(min-width: 981px)').matches) drawStatusCurve(lastStep);
+                if (window.matchMedia('(min-width: 981px)').matches) {
+                    drawStatusCurve(lastStep);
+                    if (document.getElementById('repairCurve') && !document.getElementById('trackRepairStatusCard').classList.contains('hidden')) {
+                        drawRepairCurve(lastRepairStep);
+                    }
+                }
             }).observe(document.getElementById('trackCurve'));
+            new ResizeObserver(function () {
+                if (window.matchMedia('(min-width: 981px)').matches) drawRepairCurve(lastRepairStep);
+            }).observe(document.getElementById('repairCurve'));
         }
 
         function render(d) {
@@ -885,13 +885,11 @@
                 document.getElementById('rpCard').classList.remove('hidden');
                 document.getElementById('trackAddrCard').style.display = 'none';
                 document.getElementById('trackSummaryTitle').textContent = en ? 'Repair summary' : 'Resumen de la reparación';
-                document.getElementById('trackTotalLabel').textContent = en ? 'Repair total' : 'Total de la reparación';
-                // Lado derecho: estado de la reparación y debajo el estatus
-                // del tracking del repuesto (la curva de la izquierda se
-                // oculta con la clase .repair del grid).
+                document.getElementById('trackTotalLabel').textContent = 'Total';
+                // Lado derecho: estado de la reparación con el mismo diseño
+                // de curva; la curva del paquete se queda a la izquierda.
                 document.getElementById('trackGrid').classList.add('repair');
                 document.getElementById('trackRepairStatusCard').classList.remove('hidden');
-                document.getElementById('shipBarRepair').classList.remove('hidden');
             }
             var step = shipStep(d);
             // El badge bajo el título muestra la fecha estimada de llegada
@@ -911,39 +909,29 @@
                 lbl.textContent = isRepair ? (en ? 'Repair' : 'Reparación') : (en ? 'Order' : 'Orden');
                 num.textContent = d.order_number;
             }
-            // En PC el estado es una curva SVG; en móvil, la barra horizontal.
-            // (En reparaciones la columna de estado va oculta: las barras de
-            // etapas van en las tarjetas de la derecha.)
+            // En PC el estado del paquete es una curva SVG a la IZQUIERDA;
+            // en móvil, la barra horizontal (igual en pedidos y reparaciones).
             var pct = (step / 4 * 100) + '%';
-            if (!isRepair) {
-                if (window.matchMedia('(min-width: 981px)').matches) {
-                    drawStatusCurve(step);
-                } else {
-                    document.getElementById('trackFill').style.width = pct;
-                }
-                document.querySelectorAll('#trackSteps .track-bar-step').forEach(function (el, i) {
-                    el.classList.toggle('on', step >= i);
-                    el.classList.toggle('current', step === i);
-                });
+            if (window.matchMedia('(min-width: 981px)').matches) {
+                drawStatusCurve(step);
+            } else {
+                document.getElementById('trackFill').style.width = pct;
             }
+            document.querySelectorAll('#trackSteps .track-bar-step').forEach(function (el, i) {
+                el.classList.toggle('on', step >= i);
+                el.classList.toggle('current', step === i);
+            });
             if (isRepair) {
-                // Estado de la reparación (4 etapas): Recibido → En revisión →
-                // En laboratorio de reparación y mantenimiento → Listo para
-                // recoger. Entregado = barra completa.
+                // Estado de la reparación (4 etapas) a la DERECHA con el MISMO
+                // diseño: curva serpenteante en PC, barra horizontal en móvil.
                 var RSTEPS = { recibido: 0, diagnostico: 1, reparacion: 2, listo: 3, entregado: 4 };
                 var rs = RSTEPS[d.repair_status] != null ? RSTEPS[d.repair_status] : 0;
-                document.getElementById('repairFill').style.width = (rs >= 4 ? 100 : ((rs + 0.5) / 4 * 100)) + '%';
-                document.querySelectorAll('#repairSteps .rstep').forEach(function (el, i) {
+                document.getElementById('repairFill').style.width = Math.min(rs / 3 * 100, 100) + '%';
+                document.querySelectorAll('#repairSteps .track-bar-step').forEach(function (el, i) {
                     el.classList.toggle('on', rs >= i);
                     el.classList.toggle('current', rs === i && rs < 4);
                 });
-                // Estatus del tracking del repuesto (barra de envío), debajo
-                // del estado de la reparación.
-                document.getElementById('shipFill2').style.width = (((step + 0.5) / 5) * 100) + '%';
-                document.querySelectorAll('#shipSteps2 .rstep').forEach(function (el, i) {
-                    el.classList.toggle('on', step >= i);
-                    el.classList.toggle('current', step === i);
-                });
+                if (window.matchMedia('(min-width: 981px)').matches) drawRepairCurve(rs);
             }
             document.getElementById('trackPre').textContent = step === 0
                 ? (isRepair
@@ -970,12 +958,23 @@
             var shipTxt = (shipCobrado && ship > 0)
                 ? '<span class="v">' + money(ship) + '</span>'
                 : '<span class="free">' + (en ? 'FREE' : 'GRATIS') + '</span>';
-            // Reparación: sin desglose de pago (Subtotal/Shipping son cosas de
-            // un pedido) — solo el equipo y el total de la reparación.
-            document.getElementById('trackTotals').innerHTML = isRepair ? '' :
-                '<div class="track-mini"><span>Subtotal</span><span class="v">' + money(subtotal) + '</span></div>' +
-                (tax > 0 ? '<div class="track-mini"><span>Tax</span><span class="v">' + money(tax) + '</span></div>' : '') +
-                '<div class="track-mini"><span>' + (en ? 'Shipping' : 'Envío') + '</span>' + shipTxt + '</div>';
+            // Reparación: sin desglose de pedido (Subtotal/Tax/Shipping) — en
+            // su lugar, lo abonado por el cliente y lo que resta por pagar.
+            var totalsHtml;
+            if (isRepair) {
+                var rTotal = Number(d.total) || 0;
+                var rPaid = Number(d.amount_paid) || 0;
+                var rRest = Math.max(rTotal - rPaid, 0);
+                totalsHtml =
+                    '<div class="track-mini"><span>' + (en ? 'Paid by the client' : 'Abonado por el cliente') + '</span><span class="v">' + money(rPaid) + '</span></div>' +
+                    '<div class="track-mini"><span>' + (en ? 'Remaining' : 'Restante por pagar') + '</span><span class="v">' + money(rRest) + '</span></div>';
+            } else {
+                totalsHtml =
+                    '<div class="track-mini"><span>Subtotal</span><span class="v">' + money(subtotal) + '</span></div>' +
+                    (tax > 0 ? '<div class="track-mini"><span>Tax</span><span class="v">' + money(tax) + '</span></div>' : '') +
+                    '<div class="track-mini"><span>' + (en ? 'Shipping' : 'Envío') + '</span>' + shipTxt + '</div>';
+            }
+            document.getElementById('trackTotals').innerHTML = totalsHtml;
             document.getElementById('trackTotal').textContent = money(d.total, d.currency);
             // Dirección en una sola línea horizontal:
             // "Calle, Ciudad, ST 12345".

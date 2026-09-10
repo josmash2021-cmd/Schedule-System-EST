@@ -787,13 +787,16 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   brightness+halo; `.rp-card .rp-anim` lleva width:100% porque sin ella la
   escena colapsa a 0 y max-width:100% de site-v3.css borra la imagen);
   crédito CC BY-SA solo en comentario del código (sin texto visible, decisión del dueño); resumen sin
-  Subtotal/Shipping y "Total de la reparación". La columna derecha de la
-  vista de reparación es: ESTADO DE LA REPARACIÓN (barra `.rsteps.s4` con
-  las 4 etapas, de `repair_status` del payload) → RASTREO con la barra de
-  estatus del tracking del repuesto (`.rsteps.s5`) → resumen; la columna de
-  estado de la izquierda se oculta (`.track-grid.repair`). Verificación visual de
-  track.html: `node admin-app/.visual-test/track-shot.cjs` (API mockeada,
-  capturas reparación + pedido).
+  Subtotal/Shipping. ACTUALIZADO (diseño final del dueño): la IZQUIERDA
+  queda la curva del estatus del paquete (como en pedidos) y a la DERECHA va
+  el ESTADO DE LA REPARACIÓN con el MISMO diseño de curva serpenteante
+  (`#repairCurve`, `drawCurve` genérica con `points`; en móvil, barra
+  horizontal) con las 4 etapas (de `repair_status` del payload), luego
+  REPAIR SUMMARY (equipo + Abonado por el cliente + Restante por pagar, de
+  `amount_paid` del payload) y TRACKING (número + link de paquetería).
+  `.track-grid.repair` va DESPUÉS de la regla móvil base en el CSS porque
+  empata en especificidad con `.track-grid.no-map` (las reparaciones siempre
+  llevan .no-map: sin dirección) y la cascada la decide el orden.
 - OJO (bug previo resuelto el mismo día): el `if (!token) return;` de
   track.html va AL FINAL del script; arriba dejaba `SVGNS`/`CARRIER_URLS` sin
   definir y la búsqueda por número salía con la página vacía.
