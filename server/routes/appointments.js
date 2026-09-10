@@ -3,6 +3,7 @@ const { pool } = require('../db');
 const { validateCreate } = require('../validation');
 const { validateDate, validateHora, requireAuth, isSlotBookable } = require('../utils');
 const { sendOwnerWhatsAppNotification } = require('../notifications');
+const email = require('../lib/email');
 
 const router = express.Router();
 
@@ -62,9 +63,9 @@ router.post('/', rateLimitCitas, async (req, res) => {
   const horaError = validateHora(hora);
   if (horaError) return res.status(400).json({ error: horaError });
 
-  // Mismo día: exigir al menos 1 hora de anticipación
+  // Mismo día: exigir al menos 30 minutos de anticipación
   if (!isSlotBookable(fecha, hora)) {
-    return res.status(400).json({ error: 'Ese horario ya no está disponible. Reserva con al menos 1 hora de anticipación.' });
+    return res.status(400).json({ error: 'Ese horario ya no está disponible. Reserva con al menos 30 minutos de anticipación.' });
   }
 
   // Origen público: la página manda 'web' (o nada); los bots se identifican.
@@ -86,9 +87,11 @@ router.post('/', rateLimitCitas, async (req, res) => {
 
     const cita = result.rows[0];
 
-    // Notificación al dueño por WhatsApp (no bloqueante)
-    const notificationData = { nombre, telefono, correo, servicio, fecha, hora };
+    // Notificación al dueño: WhatsApp + correo (josmash2021@gmail.com vía
+    // OWNER_EMAIL). Ambas no bloqueantes: un fallo NUNCA rompe la reserva.
+    const notificationData = { nombre, telefono, correo, servicio, fecha, hora, origen };
     sendOwnerWhatsAppNotification(notificationData).catch(() => {});
+    email.sendNewAppointmentOwnerEmail(notificationData).catch((e) => console.error('[citas] correo al dueño falló:', e.message));
 
     res.status(201).json({ ok: true, cita });
   } catch (err) {

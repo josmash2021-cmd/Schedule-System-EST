@@ -336,12 +336,16 @@ async function sendPartArrivedEmail(ticket) {
 }
 
 // La reparación quedó LISTA para recoger (status 'listo' en el panel).
-// Incluye el saldo pendiente si lo hay y la dirección/horario del taller.
-// Una sola vez (flag email_ready).
+// La recogida es CON CITA: el botón principal abre la página de citas en
+// modo recogida (?pickup=repair&rep=REP-1xxx, formulario pre-marcado) y
+// debajo queda un enlace discreto al seguimiento. Incluye saldo pendiente
+// si lo hay y la dirección/horario del taller. Una sola vez (flag
+// email_ready).
 async function sendRepairReadyEmail(ticket) {
   if (!ticket.customer_email) return false;
   const num = `REP-${1000 + Number(ticket.id)}`;
   const link = `${siteBase()}/track?t=${ticket.track_token}`;
+  const bookLink = `${siteBase()}/book-appointment?pickup=repair&rep=${num}`;
   const device = [ticket.device_brand, ticket.device_model].filter(Boolean).join(' ') || 'device';
   const total = ticket.final_price != null ? Number(ticket.final_price) : (ticket.quoted_price != null ? Number(ticket.quoted_price) : 0);
   const paid = Number(ticket.amount_paid) || 0;
@@ -352,14 +356,42 @@ async function sendRepairReadyEmail(ticket) {
   return sendEmail({
     to: ticket.customer_email,
     subject: `Your repair ${num} is ready for pickup`,
-    text: `Hi${ticket.customer_name ? ' ' + ticket.customer_name : ''},\n\nYour ${device} is ready! You can pick it up at our shop: 3659 Lorna Rd Suite 157, Hoover, AL 35216 (Mon–Sat 10:00 AM–3:00 PM).${remaining > 0 ? `\nBalance due at pickup: ${usd(remaining)}` : ''}\n\nDetails: ${link}`,
+    text: `Hi${ticket.customer_name ? ' ' + ticket.customer_name : ''},\n\nYour ${device} is ready! Pickups are BY APPOINTMENT only — please book your pickup time here: ${bookLink}\n\nShop: 3659 Lorna Rd Suite 157, Hoover, AL 35216 (Mon–Sat 10:00 AM–3:00 PM).${remaining > 0 ? `\nBalance due at pickup: ${usd(remaining)}` : ''}\n\nTrack your repair: ${link}`,
     html: plantilla(`Your repair ${num} is ready for pickup`, `
-      <p style="font-size:14px;line-height:1.6;color:#3a3a40;margin:0;">Hi${ticket.customer_name ? ' <strong>' + ticket.customer_name + '</strong>' : ''}, your <strong style="color:#111;">${device}</strong> is ready! You can pick it up at our shop.</p>
-      ${cajaDato('Pick up at', '3659 Lorna Rd Suite 157, Hoover, AL 35216', 'Mon–Sat 10:00 AM – 3:00 PM · (385) 461-2042')}
+      <p style="font-size:14px;line-height:1.6;color:#3a3a40;margin:0;">Hi${ticket.customer_name ? ' <strong>' + ticket.customer_name + '</strong>' : ''}, your <strong style="color:#111;">${device}</strong> is ready! Pickups are <strong>by appointment only</strong> — please book your pickup time and we'll have it waiting for you.</p>
+      ${cajaDato('Pick up at', '3659 Lorna Rd Suite 157, Hoover, AL 35216', 'Mon–Sat 10:00 AM – 3:00 PM · (385) 461-2042 · By appointment only')}
       ${cajaSaldo}
-      ${boton(link, 'View my repair')}`,
-      `Your ${device} is ready for pickup — ElectronicST`),
+      ${boton(bookLink, 'Book pickup appointment')}
+      <p style="text-align:center;font-size:12px;margin:14px 0 0;"><a href="${link}" style="color:#6a6a72;text-decoration:underline;">View my repair</a></p>`,
+      `Your ${device} is ready — book your pickup appointment`),
   });
 }
 
-module.exports = { sendEmail, sendNewOrderEmails, sendTrackingEmail, sendTransitEmail, sendDeliveredEmail, sendInvoiceEmail, sendRepairTrackingEmail, sendRepairInvoiceEmail, sendPartArrivedEmail, sendRepairReadyEmail, orderNumber, trackLink };
+// Cita NUEVA creada en el sitio (cualquier servicio): confirmación por
+// correo al dueño (OWNER_EMAIL). Complementa el WhatsApp (que sigue yendo).
+async function sendNewAppointmentOwnerEmail(a) {
+  if (!OWNER_EMAIL) return false;
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(a.fecha || ''));
+  const fechaLarga = m
+    ? new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+    : String(a.fecha || '—');
+  let horaLinda = String(a.hora || '—');
+  const hm = /^(\d{2}):(\d{2})/.exec(horaLinda);
+  if (hm) {
+    let hh = Number(hm[1]); const ap = hh >= 12 ? 'PM' : 'AM'; hh = hh % 12 || 12;
+    horaLinda = `${hh}:${hm[2]} ${ap}`;
+  }
+  return sendEmail({
+    to: OWNER_EMAIL,
+    subject: `New appointment — ${fechaLarga} · ${horaLinda}`,
+    text: `New appointment\nCustomer: ${a.nombre || '—'}\nPhone: ${a.telefono || '—'}\nEmail: ${a.correo || '—'}\nService: ${a.servicio || '—'}\nWhen: ${fechaLarga} · ${horaLinda}\nSource: ${a.origen || 'web'}`,
+    html: plantilla(`New appointment`, `
+      <p style="font-size:14px;line-height:1.6;color:#3a3a40;margin:0 0 6px;">A customer just booked an appointment on the website.</p>
+      ${cajaDato('When', `${fechaLarga} · ${horaLinda}`, `Source: ${a.origen || 'web'}`)}
+      ${cajaDato('Customer', a.nombre || '—', `Phone: ${a.telefono || '—'}${a.correo ? ' · Email: ' + a.correo : ''}`)}
+      ${cajaDato('Service', a.servicio || '—')}`,
+      `New appointment — ${fechaLarga} · ${horaLinda}`),
+  });
+}
+
+module.exports = { sendEmail, sendNewOrderEmails, sendTrackingEmail, sendTransitEmail, sendDeliveredEmail, sendInvoiceEmail, sendRepairTrackingEmail, sendRepairInvoiceEmail, sendPartArrivedEmail, sendRepairReadyEmail, sendNewAppointmentOwnerEmail, orderNumber, trackLink };

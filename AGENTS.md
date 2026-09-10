@@ -186,7 +186,13 @@ cambies estructura, flujos o convenciones.
   `adminOrders.js` (órdenes de envío: website vía Stripe + manuales FB
   Marketplace; GET sincroniza con Stripe máx. 1 vez/min, POST crea manual,
   PATCH tracking → 'enviado' o 'entregado' manual).
-- Rutas públicas (`/api/*`): `appointments.js`, `slots.js`, `checkout.js`
+- Rutas públicas (`/api/*`): `appointments.js`, `slots.js` (citas: mismo día
+  con **30 min de anticipación** — `LEAD_MINUTES` en `server/utils.js`; cada
+  cita nueva avisa al dueño por WhatsApp Y por correo a OWNER_EMAIL vía
+  `email.sendNewAppointmentOwnerEmail`; el wizard acepta
+  `?pickup=repair&rep=REP-1xxx` — modo "recoger equipo reparado" desde el
+  correo de reparación lista: solo la tarjeta Pickup preseleccionada — y el
+  `?pickup=1` clásico del carrito), `checkout.js`
   (Stripe; su webhook guarda cada pago en la tabla `online_orders` y pide
   dirección de envío US en la sesión), `paypal.js` (PayPal y PayPal Credit:
   `GET /api/paypal/config` entrega el client-id público al carrito, `POST

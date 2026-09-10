@@ -593,8 +593,13 @@
             });
         }
 
-        /* ---------- Modo pickup (viene del carrito con ?pickup=1) ---------- */
-        const pickupMode = new URLSearchParams(location.search).get('pickup') === '1';
+        /* ---------- Modo pickup: carrito (?pickup=1) o recoger equipo
+           REPARADO (?pickup=repair&rep=REP-1xxx, viene del correo
+           "reparación lista") ---------- */
+        const pickupParam = new URLSearchParams(location.search).get('pickup');
+        const pickupMode = pickupParam === '1';
+        const repairPickup = pickupParam === 'repair';
+        const repairRef = String(new URLSearchParams(location.search).get('rep') || '').replace(/[^A-Za-z0-9-]/g, '').slice(0, 20);
         let pickupItems = [];
         if (pickupMode) {
             try { pickupItems = JSON.parse(localStorage.getItem('est_cart')) || []; } catch (e) { pickupItems = []; }
@@ -611,6 +616,26 @@
             return `Pickup: ${lines.join('; ')} | Total: ${pickupMoney(sub + tax)}`;
         }
         function initPickup() {
+            if (repairPickup) {
+                // Recogida de equipo REPARADO: caja con la referencia de la
+                // reparación y solo la tarjeta Pickup preseleccionada.
+                document.querySelector('#pickupSummary label').textContent =
+                    T('Tu reparación · Recogida con cita', 'Your repair · Pickup by appointment');
+                document.getElementById('pickupBox').innerHTML =
+                    `<div class="pickup-item">
+                        <div class="pickup-item-info">
+                            <strong>${T('Recogida de equipo reparado', 'Repaired device pickup')}</strong>
+                            <span>${repairRef || T('Tu reparación', 'Your repair')}</span>
+                        </div>
+                    </div>`;
+                document.getElementById('pickupSummary').classList.remove('hidden');
+                Array.from(els.serviceOptions.children).forEach(card => {
+                    card.classList.toggle('hidden', card.id !== 'servicePickup');
+                });
+                document.getElementById('servicePickup').classList.remove('hidden');
+                selectService('Pickup');
+                return;
+            }
             if (!pickupMode || !pickupItems.length) return;
             const sub = pickupSubtotal(), tax = Math.round(sub * PICKUP_TAX * 100) / 100;
             document.getElementById('pickupBox').innerHTML =
@@ -654,9 +679,9 @@
             for (let d = 1; d <= daysInMonth; d++) {
                 const date = new Date(year, month, d), dateStr = toISODate(date);
                 const cell = document.createElement('div'); cell.className = 'cal-cell'; cell.textContent = d;
-                // Hoy es seleccionable si aún quedan horarios con 1 h de anticipación
+                // Hoy es seleccionable si aún quedan horarios con 30 min de anticipación
                 const isPast = dateStr < todayStr, isSunday = date.getDay() === 0;
-                const todaySinTiempo = dateStr === todayStr && bizNow.minutes + 60 > 15 * 60;
+                const todaySinTiempo = dateStr === todayStr && bizNow.minutes + 30 > 15 * 60;
                 const isAvailable = !isPast && !isSunday && !todaySinTiempo;
                 if (isAvailable) {
                     cell.classList.add('available');
@@ -736,7 +761,9 @@
                 telefono: document.getElementById('telefono').value.trim(),
                 correo: document.getElementById('correo').value.trim(),
                 fecha: selectedDate, hora: selectedTime,
-                servicio: (pickupMode && pickupItems.length) ? pickupServiceString() : els.serviceInput.value.trim(),
+                servicio: repairPickup
+                    ? `Pickup: ${T('recogida de equipo reparado', 'repaired device pickup')}${repairRef ? ' · ' + repairRef : ''}`
+                    : (pickupMode && pickupItems.length) ? pickupServiceString() : els.serviceInput.value.trim(),
             };
         }
 

@@ -499,7 +499,8 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
 - `routes/slots.js` GET: valida fecha y devuelve `{abierto:true, date, slots}`
   solo con slots LIBRES (`{hora, disponible:true}`); ocupado = existe cita con
   estado != 'cancelada'. Desde 2026-07-20 filtra además los slots de HOY con
-  menos de 1 h de anticipación (`isSlotBookable`).
+  poca anticipación (`isSlotBookable`; la anticipación era 1 h y desde
+  2026-09-10 es 30 min, petición del dueño).
 - `routes/appointments.js`:
   - POST público: valida campos + fecha + hora; INSERT con
     `ON CONFLICT (fecha,hora) DO NOTHING` → 409 "Este horario ya está ocupado…";
@@ -523,7 +524,8 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   `m <= totalMinutes`), validaciones de fecha (formato, no pasada, no domingo),
   middleware `requireAuth` (JWT, role admin). Desde 2026-07-20: `businessNow()`
   (fecha+minutos en America/Chicago vía Intl), `isSlotBookable(fecha, hora)`
-  (mismo día exige `LEAD_MINUTES=60` de anticipación) y `isPastDate` usa la
+  (mismo día exige anticipación: `LEAD_MINUTES=60` hasta el 2026-09-10, cuando
+  el dueño lo bajó a **30 min**) y `isPastDate` usa la
   fecha del negocio, no la UTC del servidor. El POST de citas también valida
   `isSlotBookable` (no se puede saltar la regla con un POST directo).
 - `validation.js`: solo campos obligatorios (nombre, telefono, servicio, fecha,
@@ -674,7 +676,7 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
 2. **~~Bug de zona horaria en Express~~** (RESUELTO 2026-07-20): "hoy" se
    calculaba en la TZ del servidor (UTC en Railway) y se podía reservar una
    hora de hoy ya pasada. Ahora `businessNow()` usa America/Chicago en
-   `isPastDate` y en la regla de 1 h de anticipación (`isSlotBookable`),
+   `isPastDate` y en la regla de anticipación (`isSlotBookable`, hoy 30 min),
    tanto en slots GET como en el POST. El frontend usa la misma TZ.
    OJO: el Netlify legacy (`slots.mjs`) sigue con su propia lógica vieja.
 3. **Slot de cierre reservable:** Express permite reservar 15:00, la hora exacta
@@ -827,7 +829,15 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   paquetería marca la pieza como Delivered (en `applyRepairUpdate`, flag
   `email_part_arrived`) y "Your repair REP-1xxx is ready for pickup" cuando
   el ticket pasa a 'listo' en el PATCH del panel (flag `email_ready`;
-  incluye saldo pendiente y dirección/horario). Preview verificado por el
+  incluye saldo pendiente y dirección/horario). Ese correo lleva botón
+  "Book pickup appointment" → `book-appointment.html?pickup=repair&rep=REP-1xxx`
+  (modo recogida: solo la tarjeta Pickup preseleccionada y caja con la
+  referencia; la recogida es CON CITA, decisión del dueño) + link discreto al
+  tracking. Además TODA cita nueva manda correo de confirmación al dueño
+  (`email.sendNewAppointmentOwnerEmail` → OWNER_EMAIL, además del WhatsApp de
+  siempre) y la anticipación mínima bajó de 1 h a 30 min
+  (`LEAD_MINUTES` en utils.js, mismo cambio en el calendario del wizard y en
+  los prompts de los bots). Preview verificado por el
   dueño: `server/scripts/send-repair-emails-preview.js` con `railway run`
   (la DATABASE_URL de Railway es interna — el script usa ticket de muestra).
   `.track-grid.repair` va DESPUÉS de la regla móvil base en el CSS porque

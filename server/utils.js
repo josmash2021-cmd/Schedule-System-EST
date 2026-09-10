@@ -5,7 +5,7 @@ const OPEN_HOUR = 10;
 const CLOSE_HOUR = 15;
 const SLOT_MINUTES = 30;
 const BUSINESS_TZ = 'America/Chicago';
-const LEAD_MINUTES = 60; // mismo día: reservable solo con 1 h de anticipación
+const LEAD_MINUTES = 30; // mismo día: reservable solo con 30 min de anticipación
 
 // "Ahora" en la zona horaria del negocio: { dateStr: 'YYYY-MM-DD', minutes: minutos desde medianoche }
 function businessNow() {

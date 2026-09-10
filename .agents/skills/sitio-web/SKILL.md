@@ -63,6 +63,6 @@ y detalle fino (decisiones de diseño, bugs resueltos, advertencias) en
 
 Dirección: 3659 Lorna Rd Suite 157, Hoover, AL 35216. Tel: (205) 573-7840.
 Horario: Lun–Sáb 10:00–15:00, slots de 30 min, domingo cerrado, citas el
-mismo día con 1 h de anticipación. Todo en TZ `America/Chicago`. Están
+mismo día con 30 min de anticipación. Todo en TZ `America/Chicago`. Están
 repetidos en varios HTML y en `server/notifications.js` — si cambian, busca
 todas las ocurrencias.
