@@ -232,27 +232,18 @@
         .rp-unit img { position: absolute; inset: 0; width: 100%; height: 100%; }
         .rp-body { z-index: 1; filter: drop-shadow(0 12px 18px rgba(0,0,0,.55)); }
         /* Internos: un poco MENORES que el área de la pantalla recortada,
-           así quedan tapados cuando la pantalla está en su lugar. */
-        .rp-internals { position: absolute; left: 8%; top: 4%; width: 84%; height: 91%; z-index: 2; border-radius: 12% / 6%; background: #101116; box-shadow: inset 0 0 0 1px rgba(255,255,255,.09); }
-        .rp-batt { position: absolute; right: 12%; top: 38%; width: 42%; height: 50%; border-radius: 8px; background: linear-gradient(180deg, #3d3e49, #2b2c36); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 2px 6px rgba(0,0,0,.4); }
-        .rp-batt::before { content: ''; position: absolute; left: 12%; top: 10%; right: 12%; height: 3px; border-radius: 2px; background: rgba(255,255,255,.14); }
-        .rp-batt::after { content: ''; position: absolute; left: 12%; top: 24%; width: 34%; height: 3px; border-radius: 2px; background: rgba(255,255,255,.09); }
-        .rp-board { position: absolute; right: 12%; top: 9%; width: 30%; height: 24%; border-radius: 6px; background: linear-gradient(180deg, #1d3a2f, #152721); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); }
-        .rp-board::before { content: ''; position: absolute; left: 16%; top: 20%; width: 30%; height: 26%; border-radius: 2px; background: #3a3b45; box-shadow: 12px 14px 0 -1px #3a3b45; }
-        .rp-flex { position: absolute; width: 3px; border-radius: 2px; background: linear-gradient(180deg, #d4af37, #a8842c); box-shadow: 0 0 4px rgba(212,175,55,.35); }
-        .rp-flex.f1 { right: 16%; top: 35%; height: 30%; }
-        .rp-flex.f2 { right: 25%; top: 35%; height: 42%; }
-        .rp-iscrew { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #d9d9de, #7a7a82); box-shadow: inset 0 0 1px rgba(0,0,0,.7); }
-        .rp-iscrew.a { left: 8%; top: 6%; } .rp-iscrew.b { right: 8%; top: 6%; }
-        .rp-iscrew.c { left: 8%; bottom: 6%; } .rp-iscrew.d { right: 8%; bottom: 6%; }
+           así quedan tapados cuando la pantalla está en su lugar. La foto es
+           REAL (chasis de iPhone abierto, ver crédito abajo). */
+        .rp-internals { position: absolute; left: 8%; top: 3.55%; width: 84%; height: 93.9%; z-index: 2; border-radius: 12% / 6%; background: #101116; box-shadow: inset 0 0 0 1px rgba(255,255,255,.09); overflow: hidden; }
+        .rp-internals-img { width: 100%; height: 100%; object-fit: cover; display: block; }
         /* Secuencia (loop 8 s): pantalla PRENDIDA → se APAGA → abre como
            libro (ya apagada) dejando ver los internos → cierra → PRENDE. */
         .rp-screen { z-index: 3; transform-origin: 6% 50%; animation: rpScreen 8s cubic-bezier(.45,0,.25,1) infinite; }
         @keyframes rpScreen {
             0%, 12%   { transform: perspective(800px) rotateY(0deg); filter: brightness(1); }
-            18%, 24%  { transform: perspective(800px) rotateY(0deg); filter: brightness(.05); }
-            38%, 62%  { transform: perspective(800px) rotateY(-62deg); filter: brightness(.05) drop-shadow(12px 14px 14px rgba(0,0,0,.45)); }
-            76%, 82%  { transform: perspective(800px) rotateY(0deg); filter: brightness(.05); }
+            18%, 24%  { transform: perspective(800px) rotateY(0deg); filter: brightness(.02); }
+            38%, 62%  { transform: perspective(800px) rotateY(-62deg); filter: brightness(.02) drop-shadow(12px 14px 14px rgba(0,0,0,.45)); }
+            76%, 82%  { transform: perspective(800px) rotateY(0deg); filter: brightness(.02); }
             92%, 100% { transform: perspective(800px) rotateY(0deg); filter: brightness(1); }
         }
         /* Tornillos pentalobe de la orilla inferior: saltan al empezar y
@@ -262,20 +253,28 @@
         .rp-screw.p2 { left: 69%; animation: rpScrewR 8s ease-in-out infinite; }
         @keyframes rpScrewL { 0% { transform: none; opacity: 1; } 10%, 86% { transform: translate(-12px, 18px) rotate(260deg); opacity: 0; } 96%, 100% { transform: none; opacity: 1; } }
         @keyframes rpScrewR { 0% { transform: none; opacity: 1; } 10%, 86% { transform: translate(12px, 18px) rotate(-260deg); opacity: 0; } 96%, 100% { transform: none; opacity: 1; } }
-        .rp-driver { position: absolute; left: calc(50% + 62px); bottom: 26px; width: 78px; height: 78px; z-index: 5; transform-origin: 50% 94%; animation: rpTurn 1.7s ease-in-out infinite alternate; filter: drop-shadow(0 4px 6px rgba(0,0,0,.45)); }
-        @keyframes rpTurn { from { transform: rotate(-30deg); } to { transform: rotate(20deg); } }
-        .rp-spark { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #ffd86b; opacity: 0; animation: rpSpark 1.7s ease-in-out infinite; }
-        .rp-spark.s1 { left: calc(50% + 66px); bottom: 62px; }
-        .rp-spark.s2 { left: calc(50% + 84px); bottom: 46px; animation-delay: .5s; }
-        .rp-spark.s3 { left: calc(50% + 56px); bottom: 40px; animation-delay: 1s; }
+        /* Desarmador REAL (foto Wiha recortada): gira como atornillando.
+           El mango es negro: se aclara y se le da un halo claro para que
+           resalte sobre la tarjeta oscura. */
+        .rp-driver { position: absolute; left: calc(50% + 72px); bottom: 16px; height: 175px; z-index: 5; transform-origin: 50% 97%; animation: rpTurn 1.4s ease-in-out infinite alternate;
+            filter: brightness(1.35) drop-shadow(0 0 7px rgba(255,255,255,.22)) drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
+        @keyframes rpTurn { from { transform: rotate(36deg); } to { transform: rotate(10deg); } }
+        .rp-spark { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #ffd86b; opacity: 0; animation: rpSpark 1.4s ease-in-out infinite; }
+        .rp-spark.s1 { left: calc(50% + 58px); bottom: 58px; }
+        .rp-spark.s2 { left: calc(50% + 76px); bottom: 40px; animation-delay: .45s; }
+        .rp-spark.s3 { left: calc(50% + 48px); bottom: 34px; animation-delay: .9s; }
         @keyframes rpSpark { 0%, 100% { opacity: 0; transform: scale(.4); } 45% { opacity: .95; transform: scale(1); } }
         @media (prefers-reduced-motion: reduce) {
             .rp-screen, .rp-screw, .rp-driver, .rp-glow, .rp-spark { animation: none !important; }
         }
+        /* Crédito de las fotos reales (CC BY-SA 4.0). */
+        .rp-credit { font-size: 9px; color: rgba(255,255,255,.25); margin-top: 6px; text-align: center; }
         /* La tarjeta del centro con la animación llena su columna (como hacía
            el mapa) y centra la escena verticalmente. */
         .rp-card { flex: 1; display: flex; flex-direction: column; align-items: center; }
-        .rp-card .rp-anim { margin: auto; }
+        /* width:100% en el contenedor: sin ella la escena colapsa a 0 y
+           max-width:100% (de site-v3.css) encoge el desarmador a 0px. */
+        .rp-card .rp-anim { margin: auto; width: 100%; }
 
         /* Página compacta en PC: todo cabe sin scroll (una pantalla). */
         @media (min-width: 981px) {
@@ -375,8 +374,9 @@
                     <div class="track-center">
                         <!-- Animación de REPARACIÓN (oculta en pedidos): un
                              iPhone REAL al que le quitan la pantalla — saltan
-                             los tornillos, la pantalla se levanta y deja ver
-                             batería, placa y flex; luego vuelve a su lugar. -->
+                             los tornillos, la pantalla se apaga y se abre
+                             dejando ver los componentes REALES (foto del
+                             chasis abierto), y un desarmador REAL trabajando. -->
                         <div class="track-card rp-card hidden" id="rpCard">
                             <h2 data-en="Your repair">Tu reparación</h2>
                             <div class="rp-anim" aria-hidden="true">
@@ -385,30 +385,22 @@
                                     <div class="rp-unit">
                                         <img class="rp-body" src="assets/img/iphone-repair.png" alt="" draggable="false" loading="lazy">
                                         <div class="rp-internals">
-                                            <div class="rp-board"></div>
-                                            <div class="rp-batt"></div>
-                                            <div class="rp-flex f1"></div>
-                                            <div class="rp-flex f2"></div>
-                                            <span class="rp-iscrew a"></span><span class="rp-iscrew b"></span>
-                                            <span class="rp-iscrew c"></span><span class="rp-iscrew d"></span>
+                                            <img class="rp-internals-img" src="assets/img/iphone-internals.png" alt="" draggable="false" loading="lazy">
                                         </div>
                                         <img class="rp-screen" src="assets/img/iphone-repair-screen.png" alt="" draggable="false" loading="lazy">
                                         <span class="rp-screw p1"></span>
                                         <span class="rp-screw p2"></span>
                                     </div>
-                                    <svg class="rp-driver" viewBox="0 0 64 64">
-                                        <g transform="rotate(45 32 32)">
-                                            <rect x="26" y="4" width="12" height="22" rx="6" fill="#d4af37"/>
-                                            <rect x="30" y="6" width="4" height="18" rx="2" fill="#a8842c"/>
-                                            <rect x="29.5" y="26" width="5" height="26" fill="#9a9aa2"/>
-                                            <path d="M29.5 52 L34.5 52 L32 60 Z" fill="#c9c9cf"/>
-                                        </g>
-                                    </svg>
+                                    <img class="rp-driver" src="assets/img/screwdriver.png" alt="" draggable="false" loading="lazy">
                                     <div class="rp-spark s1"></div>
                                     <div class="rp-spark s2"></div>
                                     <div class="rp-spark s3"></div>
                                 </div>
                             </div>
+                            <!-- Fotos reales: chasis iPhone 6s abierto (Raimond
+                                 Spekking) y desarmador Wiha (Wiha2013), ambas
+                                 de Wikimedia Commons, licencia CC BY-SA 4.0. -->
+                            <div class="rp-credit">Fotos: R. Spekking · Wiha — Wikimedia Commons (CC BY-SA 4.0)</div>
                         </div>
 
                         <div class="track-card track-map-card" id="trackMapCard">

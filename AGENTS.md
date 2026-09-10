@@ -42,8 +42,15 @@ cambies estructura, flujos o convenciones.
   "Tu reparación" (`#rpCard`) con un iPhone REAL (foto recortada a PNG con
   transparencia: `assets/img/iphone-repair.png` + `iphone-repair-screen.png`,
   generadas de `iphone-15-pro-front.jpg` por luminancia con PIL) al que le
-  quitan la pantalla: saltan los tornillos pentalobe y la pantalla se abre
-  como libro (rotateY 3D) dejando ver batería, placa y flex dorados en CSS)**; título
+  quitan la pantalla: saltan los tornillos pentalobe, la pantalla SE APAGA
+  (brightness) y se abre como libro (rotateY 3D) dejando ver los COMPONENTES
+  REALES (foto del chasis de un iPhone 6s abierto — Raimond Spekking,
+  Wikimedia Commons CC BY-SA 4.0 — `assets/img/iphone-internals.png`), con un
+  desarmador REAL (foto Wiha — Wiha2013, CC BY-SA 4.0 —
+  `assets/img/screwdriver.png` — OJO: el mango negro lleva brightness+halo
+  para verse sobre la tarjeta oscura; y `.rp-card .rp-anim` lleva width:100%
+  porque sin ella la escena colapsa a 0 y max-width:100% de site-v3.css
+  borra la imagen); crédito CC BY-SA en `.rp-credit` dentro de la tarjeta)**; título
   "Seguimiento de reparación", badge "Reparación REP-1xxx", resumen sin
   líneas Subtotal/Shipping y "Total de la reparación"; el título de la
   página es fijo ("Order tracking", sin nombre del producto); **el badge bajo

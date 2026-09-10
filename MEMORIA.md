@@ -770,8 +770,14 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   dirección de envío, una tarjeta "Tu reparación" (`#rpCard`) con un iPhone
   REAL (recorte PNG de `iphone-15-pro-front.jpg` por luminancia con PIL:
   `assets/img/iphone-repair.png` y `iphone-repair-screen.png`) al que le
-  quitan la pantalla — saltan los tornillos pentalobe, la pantalla se abre
-  como libro (rotateY 3D) y deja ver batería/placa/flex en CSS; resumen sin
+  quitan la pantalla — saltan los tornillos pentalobe, la pantalla se apaga
+  (brightness) y se abre como libro (rotateY 3D) dejando ver los COMPONENTES
+  REALES (foto del chasis de un iPhone 6s abierto: `assets/img/iphone-internals.png`,
+  Raimond Spekking, Wikimedia Commons CC BY-SA 4.0) con un desarmador REAL
+  (`assets/img/screwdriver.png`, Wiha2013, CC BY-SA 4.0 — mango negro con
+  brightness+halo; `.rp-card .rp-anim` lleva width:100% porque sin ella la
+  escena colapsa a 0 y max-width:100% de site-v3.css borra la imagen);
+  crédito CC BY-SA visible en `.rp-credit`; resumen sin
   Subtotal/Shipping y "Total de la reparación". Verificación visual de
   track.html: `node admin-app/.visual-test/track-shot.cjs` (API mockeada,
   capturas reparación + pedido).
