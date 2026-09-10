@@ -91,7 +91,11 @@ cambies estructura, flujos o convenciones.
   `background: transparent; border: 0; padding: 0`, flota sobre la página
   igual que la curva de la pieza — decisión del dueño) + debajo el resumen**
   (`grid-template-rows: minmax(0,1fr) auto`, áreas `"status map rstatus" /
-  "tracking map summary"`); CSS inline propio — define `.hidden`, que
+  "tracking map summary"`; en móvil la columna es: estado de la reparación →
+  FOTO del tapete → estado de la pieza → resumen (muestra "Abonado por el
+  cliente $X (N%)" con el porcentaje del total, como el detalle del panel) →
+  rastreo — decisión del dueño 2026-09-10); CSS inline propio — define
+  `.hidden`, que
   `site-v3.css` no tiene;
   enlazada desde el menú principal como "Mi pedido" / `data-en="My order"` en
   todas las páginas — sin token muestra el bloque `#trackNoToken` con
