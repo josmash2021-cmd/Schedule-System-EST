@@ -306,7 +306,15 @@
             .track-map { min-height: 280px; height: auto; }
             .track-curve { min-height: 160px; }
             .track-side-repair-status { display: flex; flex-direction: column; }
-            .rp-card .rp-scene { height: 300px; }
+            /* iPhone GRANDE en PC: la tarjeta central usa todo el alto de la
+               grilla (~530px libres); desarmador y chispas crecen a juego. */
+            .rp-card .rp-scene { height: 500px; width: min(460px, 100%); }
+            .rp-card .rp-unit { height: 452px; }
+            .rp-card .rp-glow { width: 360px; height: 360px; }
+            .rp-card .rp-driver { height: 240px; left: calc(50% + 130px); bottom: 28px; }
+            .rp-card .rp-spark.s1 { left: calc(50% + 108px); bottom: 84px; }
+            .rp-card .rp-spark.s2 { left: calc(50% + 128px); bottom: 58px; }
+            .rp-card .rp-spark.s3 { left: calc(50% + 96px); bottom: 50px; }
         }
         /* Pantallas PC bajitas (<880px de alto): altura automática con scroll
            natural — que nada quede recortado. */
