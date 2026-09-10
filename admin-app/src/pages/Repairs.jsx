@@ -69,6 +69,32 @@ function RepairBar({ ticket }) {
   );
 }
 
+/* Estatus del número de rastreo del repuesto (misma barra que el envío de
+   Órdenes): sale DEBAJO del estado de la reparación. */
+const PART_STEPS = ['Label generado', 'Enviado', 'En tránsito', 'En reparto', 'Delivered'];
+function PartShipBar({ ticket }) {
+  const step = ticket.tracking_number ? 2 : 1;
+  const pct = ((step - 0.5) / PART_STEPS.length) * 100;
+  return (
+    <div className="shipbar">
+      <div className="shipbar-line">
+        <div className="shipbar-fill" style={{ width: pct + '%' }} />
+      </div>
+      <div className="shipbar-steps">
+        {PART_STEPS.map((label, i) => {
+          const n = i + 1;
+          return (
+            <div key={label} className={'shipbar-step' + (step >= n ? ' on' : '') + (step === n ? ' current' : '')}>
+              <div className="shipbar-dot" />
+              <span>{label}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function Repairs() {
   // Permite llegar con ?entregado=YYYY-MM-DD (desde el gráfico de ventas del Dashboard).
   const [searchParams] = useSearchParams();
@@ -279,17 +305,20 @@ export default function Repairs() {
                                   {' · '}
                                   <span className="muted">Final:</span> <strong>{money(t.final_price)}</strong>
                                 </div>
-                                {t.tracking_number && (
-                                  <div>
-                                    <span className="muted">Repuesto:</span>{' '}
-                                    <strong>{t.tracking_number}</strong>
-                                    {t.carrier ? ` (${String(t.carrier).toUpperCase()})` : ''}
-                                  </div>
-                                )}
                               </div>
                               <div className="od-full" style={{ marginTop: 12 }}>
                                 <RepairBar ticket={t} />
                               </div>
+                              {/* Estatus del tracking del repuesto, debajo del
+                                  estado de la reparación. */}
+                              {t.tracking_number && (
+                                <div className="od-full" style={{ marginTop: 14, borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 10 }}>
+                                  <div className="muted" style={{ fontSize: 12.5, marginBottom: 2 }}>
+                                    Repuesto: <strong>{t.tracking_number}</strong>{t.carrier ? ` (${String(t.carrier).toUpperCase()})` : ''}
+                                  </div>
+                                  <PartShipBar ticket={t} />
+                                </div>
+                              )}
                               <div className="od-full row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap', alignItems: 'center' }}>
                                 <select className="estado-select" value={t.status} onChange={(e) => setEstado(t, e.target.value)}>
                                   {REPAIR_STATUS.map((s) => <option key={s.v} value={s.v}>{s.l}</option>)}

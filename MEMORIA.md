@@ -323,7 +323,9 @@ todo cambio de UI antes de commit.
 usa el MISMO diseño que Órdenes — fila + detalle siempre abierto
 (`.order-detail`) y barra de progreso animada (`.shipbar.s4`, 4 pasos) con
 las etapas Recibido → En revisión → En laboratorio de reparación y
-mantenimiento → Listo para recoger (entregado = barra completa); las
+mantenimiento → Listo para recoger (entregado = barra completa); DEBAJO de
+ella, cuando hay tracking, la barra de estatus del envío del repuesto
+(`PartShipBar`, los 5 pasos de Órdenes); las
 etiquetas de `REPAIR_STATUS` cambiaron acorde (diagnostico="En revisión",
 reparacion="En laboratorio", listo="Listo para recoger"). En móvil la barra
 se ancla a la izquierda con max-width:84vw (la tabla es más ancha que la
@@ -785,7 +787,11 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   brightness+halo; `.rp-card .rp-anim` lleva width:100% porque sin ella la
   escena colapsa a 0 y max-width:100% de site-v3.css borra la imagen);
   crédito CC BY-SA solo en comentario del código (sin texto visible, decisión del dueño); resumen sin
-  Subtotal/Shipping y "Total de la reparación". Verificación visual de
+  Subtotal/Shipping y "Total de la reparación". La columna derecha de la
+  vista de reparación es: ESTADO DE LA REPARACIÓN (barra `.rsteps.s4` con
+  las 4 etapas, de `repair_status` del payload) → RASTREO con la barra de
+  estatus del tracking del repuesto (`.rsteps.s5`) → resumen; la columna de
+  estado de la izquierda se oculta (`.track-grid.repair`). Verificación visual de
   track.html: `node admin-app/.visual-test/track-shot.cjs` (API mockeada,
   capturas reparación + pedido).
 - OJO (bug previo resuelto el mismo día): el `if (!token) return;` de

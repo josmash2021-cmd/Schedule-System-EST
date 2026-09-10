@@ -77,6 +77,7 @@ function publicRepair(t) {
     total: price,
     currency: 'usd',
     address: null,
+    repair_status: t.status || 'recibido', // etapas de la reparación (barra propia)
     ship_status: t.status === 'entregado' ? 'entregado' : (t.tracking_number ? 'enviado' : 'pendiente'),
     ship_tag: null,
     expected_delivery: null,
