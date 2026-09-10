@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
 import FormPage from '../components/FormPage.jsx';
 import RepairDetail, {
-  REPAIR_STATUS, STATUS_BADGE, statusLabel, DEVICE_TYPES, deviceTypeLabel, serviceTypeLabel,
+  REPAIR_STATUS, STATUS_BADGE, statusLabel, DEVICE_TYPES, deviceTypeLabel, serviceTypeLabel, phoneIntl,
 } from '../components/RepairDetail.jsx';
 
 const money = (n) => (n == null ? '—' : '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }));
@@ -109,6 +109,48 @@ export default function Repairs() {
   const [sel, setSel] = useState(() => new Set()); // ids marcados para borrar
   const [busy, setBusy] = useState(false);
   const [exiting, setExiting] = useState(false); // el formulario se despide animado
+  const [ok, setOk] = useState('');
+  const [invBusy, setInvBusy] = useState(null); // id de ticket con factura en proceso
+
+  // Factura de la reparación: VER el PDF (link público con el track_token) o
+  // reenviarla por correo / WhatsApp. Si no existe, el server la crea al
+  // vuelo con los datos del ticket.
+  const marcarFactura = (t, num) => {
+    if (!t.invoice_number && num) {
+      setTickets((list) => list.map((x) => (x.id === t.id ? { ...x, invoice_number: num } : x)));
+    }
+  };
+  const verFactura = async (t) => {
+    setErr(''); setOk(''); setInvBusy(t.id);
+    try {
+      const d = await api('/repairs/' + t.id + '/invoice-link', { method: 'POST' });
+      marcarFactura(t, d.invoice_number);
+      window.open(window.location.origin + d.path, '_blank', 'noopener');
+    } catch (e) { setErr(e.message); }
+    setInvBusy(null);
+  };
+  const facturaCorreo = async (t) => {
+    setErr(''); setOk(''); setInvBusy(t.id);
+    try {
+      const d = await api('/repairs/' + t.id + '/send-invoice', { method: 'POST' });
+      marcarFactura(t, d.invoice_number);
+      setOk(`Factura ${d.invoice_number} enviada a ${t.customer_email}.`);
+    } catch (e) { setErr(e.message); }
+    setInvBusy(null);
+  };
+  const facturaWhatsApp = async (t) => {
+    setErr(''); setOk(''); setInvBusy(t.id);
+    try {
+      const d = await api('/repairs/' + t.id + '/invoice-link', { method: 'POST' });
+      marcarFactura(t, d.invoice_number);
+      const device = [t.device_brand, t.device_model].filter(Boolean).join(' ') || 'equipo';
+      const link = window.location.origin + d.path;
+      const msg = `Hola${t.customer_name ? ' ' + t.customer_name : ''}, aquí tienes tu factura ${d.invoice_number} de ElectronicST por la reparación de tu ${device} (PDF): ${link}`;
+      window.open('https://wa.me/' + phoneIntl(t.customer_phone) + '?text=' + encodeURIComponent(msg), '_blank');
+      setOk('Se abrió WhatsApp con el link de la factura listo para enviar.');
+    } catch (e) { setErr(e.message); }
+    setInvBusy(null);
+  };
 
   const load = useCallback(() => {
     setErr('');
@@ -201,6 +243,7 @@ export default function Repairs() {
   return (
     <div className="orders-page">
       {err && <div className="alert alert-error">{err}</div>}
+      {ok && <div className="alert alert-ok">{ok}</div>}
 
       <div className="row" style={{ justifyContent: 'space-between', marginBottom: 16, gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
         <div className="muted" style={{ fontSize: 14 }}>
@@ -324,6 +367,18 @@ export default function Repairs() {
                                   {REPAIR_STATUS.map((s) => <option key={s.v} value={s.v}>{s.l}</option>)}
                                 </select>
                                 <button className="btn btn-secondary btn-sm" onClick={() => setDetail({ id: t.id })}>Abrir ficha</button>
+                                {t.invoice_number && <span className="muted" style={{ fontSize: 12 }}>Factura {t.invoice_number}</span>}
+                                <button className="btn btn-secondary btn-sm" disabled={invBusy === t.id}
+                                  title="Ver el PDF de la factura (si no existe, se crea al vuelo)"
+                                  onClick={() => verFactura(t)}>
+                                  {invBusy === t.id ? <span className="spinner" /> : 'Ver factura'}
+                                </button>
+                                <button className="btn btn-secondary btn-sm" disabled={invBusy === t.id || !t.customer_email}
+                                  title={!t.customer_email ? 'El cliente no tiene correo guardado' : `Enviar la factura en PDF a ${t.customer_email}`}
+                                  onClick={() => facturaCorreo(t)}>✉ Factura por correo</button>
+                                <button className="btn btn-secondary btn-sm" disabled={invBusy === t.id || !t.customer_phone}
+                                  title={!t.customer_phone ? 'El cliente no tiene teléfono guardado' : 'Enviar el link del PDF de la factura por WhatsApp'}
+                                  onClick={() => facturaWhatsApp(t)}>Factura por WhatsApp</button>
                               </div>
                             </div>
                           </td>

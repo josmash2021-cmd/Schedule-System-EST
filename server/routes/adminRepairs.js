@@ -8,6 +8,8 @@ const multer = require('multer');
 const repairs = require('../models/repairs');
 const users = require('../models/users');
 const audit = require('../models/audit');
+const invoices = require('../models/invoices');
+const { buildInvoicePdf } = require('../lib/invoicePdf');
 const email = require('../lib/email');
 const { verifyToken, loadUser, requireRole } = require('../middleware/auth');
 const { getClientIp } = require('../lib/rateLimit');
@@ -183,6 +185,42 @@ router.post('/:id/send-tracking', async (req, res) => {
   } catch (err) {
     console.error('repair send-tracking error:', err.message);
     res.status(500).json({ error: 'No se pudo enviar el correo.' });
+  }
+});
+
+// Enviar/reenviar la factura de la reparación por correo (PDF adjunto).
+// Si la factura no existe (se suele crear desde Ventas), se crea al vuelo
+// con los datos del ticket.
+router.post('/:id/send-invoice', requireRole('admin'), async (req, res) => {
+  const id = parseId(req, res); if (id === null) return;
+  try {
+    const t = await repairs.findById(id);
+    if (!t) return res.status(404).json({ error: 'Reparación no encontrada.' });
+    if (!t.customer_email) return res.status(400).json({ error: 'El cliente no tiene correo guardado.' });
+    const inv = await invoices.createFromRepair(t);
+    const pdf = await buildInvoicePdf(inv);
+    const ok = await email.sendRepairInvoiceEmail(t, inv, pdf);
+    if (!ok) return res.status(502).json({ error: 'No se pudo enviar el correo (revisa las credenciales de Gmail).' });
+    audit.logAction(req.user.id, 'repair.send_invoice', { targetType: 'repair', targetId: id, ip: getClientIp(req), metadata: { invoice_number: inv.invoice_number } });
+    res.json({ ok: true, invoice_number: inv.invoice_number });
+  } catch (err) {
+    console.error('repair send-invoice error:', err.message);
+    res.status(500).json({ error: 'Error al enviar la factura.' });
+  }
+});
+
+// Link PÚBLICO del PDF de la factura (para verla o mandarla por WhatsApp).
+// Asegura que la factura exista y devuelve la ruta /api/track/:token/invoice.pdf
+router.post('/:id/invoice-link', requireRole('admin'), async (req, res) => {
+  const id = parseId(req, res); if (id === null) return;
+  try {
+    const t = await repairs.findById(id);
+    if (!t) return res.status(404).json({ error: 'Reparación no encontrada.' });
+    const inv = await invoices.createFromRepair(t);
+    res.json({ ok: true, invoice_number: inv.invoice_number, path: `/api/track/${t.track_token}/invoice.pdf` });
+  } catch (err) {
+    console.error('repair invoice-link error:', err.message);
+    res.status(500).json({ error: 'Error al generar el link de la factura.' });
   }
 });
 

@@ -5,6 +5,8 @@
 const express = require('express');
 const orders = require('../models/orders');
 const repairs = require('../models/repairs');
+const invoices = require('../models/invoices');
+const { buildInvoicePdf } = require('../lib/invoicePdf');
 const tracking = require('../lib/tracking');
 const trackEvents = require('../lib/trackEvents');
 const { CATALOG } = require('../catalog');
@@ -156,6 +158,27 @@ router.get('/lookup/:number', rateLimit, async (req, res) => {
   } catch (err) {
     console.error('track lookup error:', err.message);
     res.status(500).json({ error: 'Error al consultar el pedido.' });
+  }
+});
+
+// PDF PÚBLICO de la factura de una reparación (el track_token del ticket ES
+// la credencial, igual que para ver el seguimiento). Lo usa el botón "Ver
+// factura" del panel y el link que se manda por WhatsApp.
+router.get('/:token/invoice.pdf', rateLimit, async (req, res) => {
+  const token = String(req.params.token || '');
+  if (!/^[a-f0-9]{32,96}$/.test(token)) return res.status(404).end();
+  try {
+    const t = await repairs.findByTrackToken(token);
+    if (!t) return res.status(404).end();
+    const inv = await invoices.findByRepairId(t.id);
+    if (!inv) return res.status(404).end();
+    const pdf = await buildInvoicePdf(inv);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="Receipt-${inv.invoice_number || inv.id}.pdf"`);
+    res.send(pdf);
+  } catch (err) {
+    console.error('track invoice pdf error:', err.message);
+    res.status(500).end();
   }
 });
 

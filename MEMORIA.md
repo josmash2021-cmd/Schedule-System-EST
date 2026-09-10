@@ -797,3 +797,23 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
 - OJO (bug previo resuelto el mismo día): el `if (!token) return;` de
   track.html va AL FINAL del script; arriba dejaba `SVGNS`/`CARRIER_URLS` sin
   definir y la búsqueda por número salía con la página vacía.
+
+---
+
+## 13. Factura de reparación: ver y reenviar (correo/WhatsApp) — 2026-09-10
+
+- En el detalle de cada reparación (página Reparaciones) hay 3 botones:
+  **Ver factura**, **✉ Factura por correo** y **Factura por WhatsApp**.
+- Si la reparación no tiene factura (se crea manual desde Ventas), el server
+  la crea AL VUELO con los datos del ticket: `invoices.createFromRepair`
+  (equipo+servicio como artículo, cliente del ticket, total = final_price o
+  quoted_price). `invoices.findByRepairId` la busca; `listAll` de repairs ya
+  trae `invoice_number` por subconsulta.
+- Correo: `POST /x/s/repairs/:id/send-invoice` (solo admin) → PDF con
+  `invoicePdf` + `email.sendRepairInvoiceEmail` (adjunto, botón "Track my
+  repair"). Requiere `customer_email`.
+- WhatsApp: `POST /x/s/repairs/:id/invoice-link` asegura la factura y
+  devuelve `/api/track/<track_token>/invoice.pdf` — PDF PÚBLICO protegido
+  por el track_token del ticket (`GET .../invoice.pdf` en `routes/track.js`);
+  el panel abre wa.me con ese link en el mensaje. "Ver factura" usa el mismo
+  link público (así no hace falta descargar el PDF con JWT).

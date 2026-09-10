@@ -18,7 +18,8 @@ const FIELDS = [
 
 async function listAll() {
   const r = await pool.query(
-    `SELECT t.*, u.username AS assignee_username
+    `SELECT t.*, u.username AS assignee_username,
+            (SELECT i.invoice_number FROM invoices i WHERE i.repair_id = t.id ORDER BY i.id DESC LIMIT 1) AS invoice_number
      FROM repair_tickets t
      LEFT JOIN users u ON u.id = t.assigned_to
      ORDER BY (t.status = 'entregado') ASC, t.updated_at DESC`

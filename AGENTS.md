@@ -139,7 +139,12 @@ cambies estructura, flujos o convenciones.
   la sección "Seguimiento del repuesto" con botón de correo
   (`POST /:id/send-tracking`, plantilla `sendRepairTrackingEmail`: "the
   replacement part … is on its way to us") y botón de
-  WhatsApp (wa.me con el mensaje y el link ya escritos)),
+  WhatsApp (wa.me con el mensaje y el link ya escritos). **Factura de la
+  reparación:** botones en el detalle de la lista — Ver factura, ✉ por
+  correo (`POST /:id/send-invoice`, PDF adjunto) y por WhatsApp (wa.me con
+  link al PDF público `GET /api/track/:token/invoice.pdf`; si la factura no
+  existe, `invoices.createFromRepair` la crea al vuelo con los datos del
+  ticket)),
   `adminInventory.js`, `adminInvoices.js` (facturas, solo admin),
   `adminCustomers.js` (clientes agregados desde facturas, solo admin,
   modelo `server/models/customers.js`),

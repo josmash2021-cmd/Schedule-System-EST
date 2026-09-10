@@ -296,4 +296,22 @@ async function sendInvoiceEmail(order, invoice, pdfBuffer) {
   });
 }
 
-module.exports = { sendEmail, sendNewOrderEmails, sendTrackingEmail, sendTransitEmail, sendDeliveredEmail, sendInvoiceEmail, sendRepairTrackingEmail, orderNumber, trackLink };
+// Factura de la REPARACIÓN con el PDF adjunto (reenvio desde el panel).
+async function sendRepairInvoiceEmail(ticket, invoice, pdfBuffer) {
+  const to = ticket.customer_email || invoice.buyer_email;
+  if (!to) return false;
+  const num = invoice.invoice_number || `REP-${1000 + Number(ticket.id)}`;
+  const filename = `Receipt-${num}.pdf`;
+  const link = `${siteBase()}/track?t=${ticket.track_token}`;
+  return sendEmail({
+    to,
+    subject: `Your invoice ${num} — ElectronicST`,
+    text: `Your invoice ${num} is attached as a PDF. Total: ${usd(invoice.total)}.\nTrack your repair here: ${link}`,
+    html: plantilla(`Your invoice ${num}`, `
+      <p style="font-size:14px;color:#3a3a40;">Your invoice is attached as a PDF. Total: <strong style="color:#111;">${usd(invoice.total)}</strong>.</p>
+      ${boton(link, 'Track my repair')}`),
+    attachments: [{ filename, content: pdfBuffer.toString('base64') }],
+  });
+}
+
+module.exports = { sendEmail, sendNewOrderEmails, sendTrackingEmail, sendTransitEmail, sendDeliveredEmail, sendInvoiceEmail, sendRepairTrackingEmail, sendRepairInvoiceEmail, orderNumber, trackLink };

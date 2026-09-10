@@ -71,7 +71,7 @@ const CARRIERS = [
 ];
 
 // Teléfono a formato internacional para wa.me (US: 10 dígitos → +1).
-function phoneIntl(p) {
+export function phoneIntl(p) {
   const d = String(p || '').replace(/\D/g, '');
   return d.length === 10 ? '1' + d : d;
 }

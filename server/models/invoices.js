@@ -119,6 +119,54 @@ async function findByOrderId(orderId) {
   return row;
 }
 
+// Factura de una reparación (la más reciente). Null si no tiene.
+async function findByRepairId(repairId) {
+  const r = await pool.query('SELECT * FROM invoices WHERE repair_id = $1 ORDER BY id DESC LIMIT 1', [repairId]);
+  const row = r.rows[0] || null;
+  if (row && typeof row.items === 'string') row.items = JSON.parse(row.items);
+  return row;
+}
+
+// Crea la factura de la reparación con los datos del ticket (equipo +
+// servicio como artículo, cliente del ticket, total = precio final o
+// cotizado). Si ya existe, la devuelve sin duplicar.
+async function createFromRepair(t) {
+  const existing = await findByRepairId(t.id);
+  if (existing) return existing;
+
+  const SERVICE_ES = { revision: 'Revisión', reparacion: 'Reparación', mantenimiento: 'Mantenimiento' };
+  const device = [t.device_brand, t.device_model].filter(Boolean).join(' ') || 'Equipo';
+  const service = SERVICE_ES[t.service_type] || t.service_type || 'Servicio';
+  const price = t.final_price != null ? Number(t.final_price) : (Number(t.quoted_price) || 0);
+
+  const when = t.delivered_at ? new Date(t.delivered_at) : new Date();
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }).formatToParts(when).reduce((a, x) => { a[x.type] = x.value; return a; }, {});
+
+  return create({
+    repair_id: t.id,
+    seller_name: 'ElectronicST, LLC',
+    seller_address: '3659 Lorna Rd Suite 157, Hoover, AL 35216',
+    seller_phone: '(205) 573-7840',
+    seller_email: 'ventas@electronicservicetechnology.com',
+    buyer_name: t.customer_name || null,
+    buyer_phone: t.customer_phone || null,
+    buyer_email: t.customer_email || null,
+    sale_date: `${parts.year}-${parts.month}-${parts.day}`,
+    sale_time: `${parts.hour}:${parts.minute}`,
+    payment_method: 'otro',
+    tax_rate: 0,
+    subtotal: price,
+    tax_total: 0,
+    shipping_total: 0,
+    total: price,
+    items: [{ description: `${device} — ${service}`.slice(0, 200), qty: 1, price }],
+    warranty_text: '30-Day Limited Warranty',
+  }, null);
+}
+
 // Crea la factura de la orden con TODOS los datos del cliente ya llenos:
 // solo queda darle "Enviar por correo". La dirección de la orden viene como
 // "Nombre | calle | ciudad, estado, zip" — se quita el nombre para no
@@ -187,4 +235,4 @@ async function createFromOrder(order) {
   }, null);
 }
 
-module.exports = { listAll, findById, create, update, remove, findByOrderId, createFromOrder, normalizeFields };
+module.exports = { listAll, findById, create, update, remove, findByOrderId, createFromOrder, findByRepairId, createFromRepair, normalizeFields };
