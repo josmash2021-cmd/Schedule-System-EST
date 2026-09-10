@@ -150,15 +150,18 @@
         }
         /* Vista de reparación: misma grilla de 3 columnas — IZQUIERDA la
            curva del estatus de la PIEZA para reparar con el rastreo del
-           repuesto debajo; CENTRO la animación del iPhone; DERECHA el estado
-           de la REPARACIÓN con su curva (#repairCurve) y el resumen debajo.
+           repuesto debajo; CENTRO la animación del iPhone sobre el tapete
+           azul de laboratorio; DERECHA el estado de la REPARACIÓN con su
+           curva (#repairCurve, SIN caja de fondo) y el resumen debajo.
            Filas: las curvas absorben el alto sobrante (1fr) y las tarjetas
            de abajo van con su alto natural (auto).
            OJO: va DESPUÉS de la regla móvil base para ganar la cascada
            (misma especificidad que .track-grid.no-map: gana el orden). */
         .track-grid.repair { grid-template-columns: 300px 1fr 340px; grid-template-rows: minmax(0, 1fr) auto;
             grid-template-areas: "status map rstatus" "tracking map summary"; }
-        .track-side-repair-status { grid-area: rstatus; }
+        /* Sin caja: la curva de la reparación flota sobre la página, igual
+           que .track-status-card (la del paquete/la pieza). */
+        .track-side-repair-status { grid-area: rstatus; background: transparent; border: 0; padding: 0; }
         @media (max-width: 980px) {
             .track-grid.repair { grid-template-columns: 1fr; grid-template-rows: none; grid-template-areas: "rstatus" "status" "summary" "map" "tracking"; }
         }
@@ -448,13 +451,10 @@
                             <div class="track-addr" id="trackAddr">—</div>
                         </div>
                     </div>
-
-                    <!-- Derecha: resumen del pedido y debajo el rastreo. En
-                         REPARACIÓN la columna es: estado de la reparación →
-                         rastreo del repuesto → resumen. -->
                     <!-- Solo reparación: estado de la reparación (4 etapas)
                          con el MISMO diseño de curva serpenteante que el
-                         estado del paquete (en móvil, barra horizontal). -->
+                         estado de la pieza, SIN caja de fondo — flota sobre
+                         la página igual que la curva de la izquierda. -->
                     <div class="track-card track-side-repair-status hidden" id="trackRepairStatusCard">
                         <h2 data-en="Repair status">Estado de la reparación</h2>
                         <div class="track-bar">
@@ -468,10 +468,13 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- PC: curva serpenteante (la dibuja el JS, igual que la del paquete). -->
+                        <!-- PC: curva serpenteante (la dibuja el JS, igual que la de la pieza). -->
                         <svg class="track-curve" id="repairCurve" aria-hidden="true"></svg>
                     </div>
 
+                    <!-- Derecha: resumen del pedido; a la izquierda, debajo
+                         de la curva de estado, el rastreo. En reparación el
+                         resumen usa lenguaje de reparación. -->
                     <div class="track-card track-side-summary">
                         <h2 id="trackSummaryTitle" data-en="Order summary">Resumen del pedido</h2>
                         <div id="trackItems"></div>
@@ -820,7 +823,7 @@
         // Curva de estado (PC): serpente centrada en la tarjeta, de arriba
         // hasta abajo. Puntos dorados = pasos cumplidos; etiquetas alternan
         // de lado. Se redibuja en cada render (es barato). Genérica: sirve
-        // para la curva del paquete (5 puntos) y la de la reparación (4).
+        // para la curva de la pieza/paquete (5 puntos) y la de la reparación (4).
         function drawCurve(svg, labels, step, points) {
             if (!svg) return;
             var n = points - 1; // segmentos
@@ -920,7 +923,7 @@
                 document.getElementById('trackStatusTitle').textContent = en ? 'Repair part status' : 'Estado de la pieza para reparar';
                 document.getElementById('trackShipTitle').textContent = en ? 'Part tracking' : 'Rastreo de la pieza';
                 // Lado derecho: estado de la reparación con el mismo diseño
-                // de curva; la curva del paquete se queda a la izquierda.
+                // de curva (sin caja); la curva de la pieza queda a la izquierda.
                 document.getElementById('trackGrid').classList.add('repair');
                 document.getElementById('trackRepairStatusCard').classList.remove('hidden');
             }

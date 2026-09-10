@@ -79,7 +79,9 @@ cambies estructura, flujos o convenciones.
   la altura vuelve a auto con scroll natural para no recortar nada). **En
   reparación la grilla es 2 filas: IZQUIERDA la curva "Estado de la pieza
   para reparar" + debajo "Rastreo de la pieza"; CENTRO la animación del
-  iPhone; DERECHA la curva "Estado de la reparación" + debajo el resumen**
+  iPhone; DERECHA la curva "Estado de la reparación" (SIN caja de fondo:
+  `background: transparent; border: 0; padding: 0`, flota sobre la página
+  igual que la curva de la pieza — decisión del dueño) + debajo el resumen**
   (`grid-template-rows: minmax(0,1fr) auto`, áreas `"status map rstatus" /
   "tracking map summary"`); CSS inline propio — define `.hidden`, que
   `site-v3.css` no tiene;
