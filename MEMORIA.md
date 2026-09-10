@@ -783,8 +783,10 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   (mismo día, petición del dueño): un destornillador BAKU BK-3332 dorado a
   escala real (foto del dueño, ya con fondo transparente; rotada 135° a
   vertical punta-abajo con PIL) que desatornilla los 4 tornillos del chasis
-  uno a uno GIRANDO sobre su punta (2 vueltas completas por tornillo, sin
-  vaivén — cada giro termina en ≡20° mod 360 para empatar el loop) y cada
+  uno a uno GIRANDO SOBRE SU PROPIO EJE (`perspective + rotateY` 3D, 2
+  vueltas por tornillo, como moneda al girar — nada de giros en círculos ni
+  vaivén, decisión del dueño; cada giro termina en múltiplo de 360° para
+  empatar el loop) y cada
   tornillo (foto REAL recortada del puñito del propio tapete,
   `assets/img/screw.png`)
   salta y vuela en arco hasta el puñito de tornillos de la esquina superior

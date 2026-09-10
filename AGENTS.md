@@ -51,9 +51,9 @@ cambies estructura, flujos o convenciones.
   dueño, `assets/img/screwdriver.png` — ya venía con fondo transparente;
   rotada 135° a vertical punta-abajo con PIL; `width: 5.2%` ≈ tamaño real
   vs el teléfono) desatornilla los 4 tornillos del chasis uno a uno
-  GIRANDO sobre su punta (2 vueltas completas, 720°, por tornillo — sin
-  vaivén; cada giro termina en ≡20° mod 360 para que el loop empate sin
-  salto) y cada tornillo (`.rp-screw`, **foto real de un tornillo recortada
+  GIRANDO SOBRE SU PROPIO EJE (`perspective + rotateY` 3D, 2 vueltas por
+  tornillo — como moneda al girar; cada giro termina en múltiplo de 360°
+  para que el loop empate sin salto; la inclinación base es `rotate(20deg)`) y cada tornillo (`.rp-screw`, **foto real de un tornillo recortada
   del puñito del propio tapete** — `assets/img/screw.png`) salta y vuela en
   arco hasta el
   puñito de tornillos de la esquina superior derecha del tapete, donde se
