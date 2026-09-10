@@ -780,10 +780,13 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   REAL del banco de trabajo del taller (`assets/img/repair-mat.png` — foto
   propia del dueño, ya venía con fondo transparente; PNG recortado al
   contenido con PIL). Y ENCIMA de la foto, una animación CSS en loop de 16 s
-  (mismo día, petición del dueño): un destornillador Wiha REAL a escala (el
-  `screwdriver.png` CC BY-SA se restauró del historial de git; crédito solo
-  en comentario) que desatornilla los 4 tornillos del chasis uno a uno (gira
-  12°↔27° sobre su punta) y cada tornillo (`.rp-screw`, puntito metálico)
+  (mismo día, petición del dueño): un destornillador BAKU BK-3332 dorado a
+  escala real (foto del dueño, ya con fondo transparente; rotada 135° a
+  vertical punta-abajo con PIL) que desatornilla los 4 tornillos del chasis
+  uno a uno GIRANDO sobre su punta (2 vueltas completas por tornillo, sin
+  vaivén — cada giro termina en ≡20° mod 360 para empatar el loop) y cada
+  tornillo (foto REAL recortada del puñito del propio tapete,
+  `assets/img/screw.png`)
   salta y vuela en arco hasta el puñito de tornillos de la esquina superior
   derecha del tapete, donde se apilan hasta el reset con fundido. Capa
   `.rp-stage` (inline-block pegado al tamaño renderizado de la foto, todo en

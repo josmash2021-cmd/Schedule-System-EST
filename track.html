@@ -243,62 +243,45 @@
            tamaño renderizado del tapete, así todas las posiciones en % de
            los actores coinciden con la foto en cualquier pantalla. */
         .rp-stage { position: relative; display: inline-block; line-height: 0; }
-        /* Destornillador REAL (foto Wiha — crédito abajo) a escala real
-           (mide como el propio teléfono): afloja los 4 tornillos del chasis
-           en loop de 16 s — gira sobre su punta mientras desatornilla. */
-        .rp-driver { position: absolute; left: 46.5%; top: 47%; width: 4.6%; z-index: 3;
-            transform: translate(-50%, -96%) rotate(20deg); transform-origin: 50% 96%;
+        /* Destornillador BAKU BK-3332 dorado (foto del dueño, ya con fondo
+           transparente; rotada 135° a vertical con la punta ABAJO vía PIL) a
+           escala real (mide como el propio teléfono): GIRA sobre su punta
+           (2 vueltas completas por tornillo) mientras desatornilla — no se
+           mueve de lado a lado, solo gira y viaja de tornillo a tornillo. */
+        .rp-driver { position: absolute; left: 46.5%; top: 47%; width: 5.2%; z-index: 3;
+            transform: translate(-50%, -98%) rotate(20deg); transform-origin: 50% 98%;
             filter: drop-shadow(0 4px 6px rgba(0,0,0,.5)); animation: rpDrv 16s ease-in-out infinite; }
         /* Recorrido: tornillo a tornillo (arriba-izq → arriba-der →
-           abajo-der → abajo-izq), girando 12°↔27° al desatornillar y
-           levantándose (rot 8°) mientras el tornillo vuela. */
+           abajo-der → abajo-izq). Gira 720° durante cada desatornillado;
+           cada giro termina en la misma inclinación (≡20° mod 360), así el
+           loop empata sin salto visual. */
         @keyframes rpDrv {
-            0%   { left: 46.5%; top: 47%; transform: translate(-50%,-96%) rotate(20deg); }
-            2%   { transform: translate(-50%,-96%) rotate(27deg); }
-            4%   { transform: translate(-50%,-96%) rotate(12deg); }
-            6%   { transform: translate(-50%,-96%) rotate(27deg); }
-            8%   { transform: translate(-50%,-96%) rotate(12deg); }
-            10%  { transform: translate(-50%,-96%) rotate(27deg); }
-            12%  { transform: translate(-50%,-96%) rotate(14deg); }
-            16%  { transform: translate(-50%,-96%) rotate(8deg); }
-            18%  { left: 46.5%; top: 47%; transform: translate(-50%,-96%) rotate(16deg); }
-            25%  { left: 56%;   top: 47%; transform: translate(-50%,-96%) rotate(20deg); }
-            27%  { transform: translate(-50%,-96%) rotate(27deg); }
-            29%  { transform: translate(-50%,-96%) rotate(12deg); }
-            31%  { transform: translate(-50%,-96%) rotate(27deg); }
-            33%  { transform: translate(-50%,-96%) rotate(12deg); }
-            35%  { transform: translate(-50%,-96%) rotate(27deg); }
-            37%  { transform: translate(-50%,-96%) rotate(14deg); }
-            41%  { transform: translate(-50%,-96%) rotate(8deg); }
-            43%  { left: 56%;   top: 47%; transform: translate(-50%,-96%) rotate(16deg); }
-            50%  { left: 56%;   top: 78%; transform: translate(-50%,-96%) rotate(20deg); }
-            52%  { transform: translate(-50%,-96%) rotate(27deg); }
-            54%  { transform: translate(-50%,-96%) rotate(12deg); }
-            56%  { transform: translate(-50%,-96%) rotate(27deg); }
-            58%  { transform: translate(-50%,-96%) rotate(12deg); }
-            60%  { transform: translate(-50%,-96%) rotate(27deg); }
-            62%  { transform: translate(-50%,-96%) rotate(14deg); }
-            66%  { transform: translate(-50%,-96%) rotate(8deg); }
-            68%  { left: 56%;   top: 78%; transform: translate(-50%,-96%) rotate(16deg); }
-            75%  { left: 46.5%; top: 78%; transform: translate(-50%,-96%) rotate(20deg); }
-            77%  { transform: translate(-50%,-96%) rotate(27deg); }
-            79%  { transform: translate(-50%,-96%) rotate(12deg); }
-            81%  { transform: translate(-50%,-96%) rotate(27deg); }
-            83%  { transform: translate(-50%,-96%) rotate(12deg); }
-            85%  { transform: translate(-50%,-96%) rotate(27deg); }
-            87%  { transform: translate(-50%,-96%) rotate(14deg); }
-            91%  { transform: translate(-50%,-96%) rotate(8deg); }
-            93%  { left: 46.5%; top: 78%; transform: translate(-50%,-96%) rotate(16deg); }
-            100% { left: 46.5%; top: 47%; transform: translate(-50%,-96%) rotate(20deg); }
+            0%   { left: 46.5%; top: 47%; transform: translate(-50%,-98%) rotate(20deg); }
+            2%   { transform: translate(-50%,-98%) rotate(20deg); }
+            12%  { transform: translate(-50%,-98%) rotate(740deg); }
+            18%  { left: 46.5%; top: 47%; transform: translate(-50%,-98%) rotate(740deg); }
+            25%  { left: 56%;   top: 47%; transform: translate(-50%,-98%) rotate(740deg); }
+            27%  { transform: translate(-50%,-98%) rotate(740deg); }
+            37%  { transform: translate(-50%,-98%) rotate(1480deg); }
+            43%  { left: 56%;   top: 47%; transform: translate(-50%,-98%) rotate(1480deg); }
+            50%  { left: 56%;   top: 78%; transform: translate(-50%,-98%) rotate(1480deg); }
+            52%  { transform: translate(-50%,-98%) rotate(1480deg); }
+            62%  { transform: translate(-50%,-98%) rotate(2220deg); }
+            68%  { left: 56%;   top: 78%; transform: translate(-50%,-98%) rotate(2220deg); }
+            75%  { left: 46.5%; top: 78%; transform: translate(-50%,-98%) rotate(2220deg); }
+            77%  { transform: translate(-50%,-98%) rotate(2220deg); }
+            87%  { transform: translate(-50%,-98%) rotate(2960deg); }
+            93%  { left: 46.5%; top: 78%; transform: translate(-50%,-98%) rotate(2960deg); }
+            100% { left: 46.5%; top: 47%; transform: translate(-50%,-98%) rotate(2960deg); }
         }
-        /* Los 4 tornillos: puntitos metálicos sobre el chasis. Al ser
-           desatornillados giran/resaltan (wiggle), SALTAN y vuelan en arco
-           hasta la esquina donde está el puñito de tornillos del tapete
-           (esquina superior derecha); se quedan ahí apilados y al final del
-           loop se desvanecen y reaparecen en el chasis. */
-        .rp-screw { position: absolute; width: 1.15%; aspect-ratio: 1 / 1; border-radius: 50%; z-index: 2;
-            background: radial-gradient(circle at 35% 35%, #ececf1, #9a9aa4 60%, #6e6e78);
-            box-shadow: 0 1px 2px rgba(0,0,0,.5); }
+        /* Los 4 tornillos: foto REAL de un tornillo recortada del puñito del
+           propio tapete (assets/img/screw.png). Al ser desatornillados giran/
+           resaltan, SALTAN y vuelan en arco hasta la esquina donde está el
+           puñito de tornillos del tapete (esquina superior derecha); se
+           quedan ahí apilados y al final del loop se desvanecen y reaparecen
+           en el chasis. */
+        .rp-screw { position: absolute; width: 1.7%; z-index: 2;
+            filter: drop-shadow(0 1px 1px rgba(0,0,0,.55)); }
         .rp-screw.s1 { left: 46.5%; top: 47%; animation: rpS1 16s ease-in-out infinite; }
         .rp-screw.s2 { left: 56%;   top: 47%; animation: rpS2 16s ease-in-out infinite; }
         .rp-screw.s3 { left: 56%;   top: 78%; animation: rpS3 16s ease-in-out infinite; }
@@ -488,15 +471,15 @@
                                 <div class="rp-stage">
                                     <img class="rp-photo" src="assets/img/repair-mat.png" alt="Banco de trabajo con el teléfono desarmado y las herramientas del taller" data-en-alt="Work bench with the disassembled phone and the shop's tools" draggable="false">
                                     <img class="rp-driver" src="assets/img/screwdriver.png" alt="" draggable="false">
-                                    <span class="rp-screw s1"></span>
-                                    <span class="rp-screw s2"></span>
-                                    <span class="rp-screw s3"></span>
-                                    <span class="rp-screw s4"></span>
+                                    <img class="rp-screw s1" src="assets/img/screw.png" alt="" draggable="false">
+                                    <img class="rp-screw s2" src="assets/img/screw.png" alt="" draggable="false">
+                                    <img class="rp-screw s3" src="assets/img/screw.png" alt="" draggable="false">
+                                    <img class="rp-screw s4" src="assets/img/screw.png" alt="" draggable="false">
                                 </div>
                             </div>
-                            <!-- Desarmador: foto Wiha (Wiha2013, Wikimedia
-                                 Commons, licencia CC BY-SA 4.0). Crédito solo
-                                 en comentario del código, decisión del dueño. -->
+                            <!-- Destornillador BAKU BK-3332 dorado y tornillo:
+                                 fotos del dueño (el tornillo se recortó del
+                                 propio tapete), ambas con fondo transparente. -->
                         </div>
 
                         <div class="track-card track-map-card" id="trackMapCard">

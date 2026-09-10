@@ -47,11 +47,15 @@ cambies estructura, flujos o convenciones.
   width:100% porque sin ella max-width:100% de site-v3.css puede encoger la
   imagen) y, SOBRE la foto, una **animación CSS en loop de 16 s** (capa
   `.rp-stage`, inline-block que se ajusta al tamaño renderizado de la foto y
-  posiciona todo en %): un destornillador REAL a escala (foto Wiha
-  `assets/img/screwdriver.png`, Wiha2013 CC BY-SA 4.0 — crédito solo en
-  comentario; `width: 4.6%` ≈ tamaño del teléfono) desatornilla los 4
-  tornillos del chasis uno a uno (gira 12°↔27° sobre su punta) y cada
-  tornillo (`.rp-screw`, puntito metálico) salta y vuela en arco hasta el
+  posiciona todo en %): un **destornillador BAKU BK-3332 dorado** (foto del
+  dueño, `assets/img/screwdriver.png` — ya venía con fondo transparente;
+  rotada 135° a vertical punta-abajo con PIL; `width: 5.2%` ≈ tamaño real
+  vs el teléfono) desatornilla los 4 tornillos del chasis uno a uno
+  GIRANDO sobre su punta (2 vueltas completas, 720°, por tornillo — sin
+  vaivén; cada giro termina en ≡20° mod 360 para que el loop empate sin
+  salto) y cada tornillo (`.rp-screw`, **foto real de un tornillo recortada
+  del puñito del propio tapete** — `assets/img/screw.png`) salta y vuela en
+  arco hasta el
   puñito de tornillos de la esquina superior derecha del tapete, donde se
   quedan apilados hasta el reset con fundido; keyframes `rpDrv` + `rpS1-4`;
   `prefers-reduced-motion` deja la escena estática. Hasta 2026-09-10 era una animación de un iPhone al que le quitaban
