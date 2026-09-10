@@ -14,14 +14,18 @@ const FIELDS = [
   'quoted_price', 'final_price',
   'assigned_to',
   'tracking_number', 'carrier',
+  'amount_paid', 'invoice_id',
 ];
 
 async function listAll() {
   const r = await pool.query(
     `SELECT t.*, u.username AS assignee_username,
-            (SELECT i.invoice_number FROM invoices i WHERE i.repair_id = t.id ORDER BY i.id DESC LIMIT 1) AS invoice_number
+            COALESCE(pin.invoice_number,
+              (SELECT i.invoice_number FROM invoices i WHERE i.repair_id = t.id ORDER BY i.id DESC LIMIT 1)
+            ) AS invoice_number
      FROM repair_tickets t
      LEFT JOIN users u ON u.id = t.assigned_to
+     LEFT JOIN invoices pin ON pin.id = t.invoice_id
      ORDER BY (t.status = 'entregado') ASC, t.updated_at DESC`
   );
   // Conteo de fotos por ticket en una consulta simple aparte (se une en JS).

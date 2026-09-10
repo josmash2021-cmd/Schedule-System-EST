@@ -66,7 +66,7 @@ function extractFields(b) {
     if (s && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return { error: 'Correo del cliente inválido.' };
     f.customer_email = s || null;
   }
-  for (const k of ['quoted_price', 'final_price']) {
+  for (const k of ['quoted_price', 'final_price', 'amount_paid']) {
     if (b[k] !== undefined) { const r = num(b[k]); if (!r.ok) return { error: 'Precio inválido.' }; f[k] = r.val; }
   }
   return { fields: f };
@@ -157,6 +157,17 @@ router.patch('/:id', async (req, res) => {
     const asg = await validAssignee(b.assigned_to);
     if (!asg.ok) return res.status(400).json({ error: 'El trabajador asignado no es válido.' });
     fields.assigned_to = asg.id;
+  }
+  // Vincular una factura existente a la reparación (o quitar el vínculo).
+  if (b.invoice_id !== undefined) {
+    if (b.invoice_id === null || b.invoice_id === '') {
+      fields.invoice_id = null;
+    } else {
+      if (!/^\d+$/.test(String(b.invoice_id))) return res.status(400).json({ error: 'Factura inválida.' });
+      const inv = await invoices.findById(Number(b.invoice_id));
+      if (!inv) return res.status(400).json({ error: 'La factura seleccionada no existe.' });
+      fields.invoice_id = inv.id;
+    }
   }
   try {
     const existing = await repairs.findById(id);

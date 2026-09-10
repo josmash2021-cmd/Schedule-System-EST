@@ -144,7 +144,9 @@ cambies estructura, flujos o convenciones.
   correo (`POST /:id/send-invoice`, PDF adjunto) y por WhatsApp (wa.me con
   link al PDF público `GET /api/track/:token/invoice.pdf`; si la factura no
   existe, `invoices.createFromRepair` la crea al vuelo con los datos del
-  ticket)),
+  ticket). El ticket tiene además `amount_paid` (abonado; el detalle muestra
+  "Abonado: $X (N%) · Restante: $Y") e `invoice_id` (factura vinculada a
+  mano con un selector en el detalle, para corregir duplicadas)),
   `adminInventory.js`, `adminInvoices.js` (facturas, solo admin),
   `adminCustomers.js` (clientes agregados desde facturas, solo admin,
   modelo `server/models/customers.js`),

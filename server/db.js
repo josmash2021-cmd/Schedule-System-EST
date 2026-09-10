@@ -179,6 +179,10 @@ async function initDb() {
     await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS track_token TEXT;`);
     await client.query(`UPDATE repair_tickets SET track_token = md5(random()::text || ':' || id::text) || md5(random()::text) WHERE track_token IS NULL;`);
     await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_repairs_track_token ON repair_tickets(track_token);`);
+    // Abonos del cliente y factura vinculada (puntero explícito elegido en el
+    // panel; sin FK porque la tabla invoices se crea más abajo).
+    await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS amount_paid NUMERIC(10,2);`);
+    await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS invoice_id INTEGER;`);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS repair_photos (

@@ -129,10 +129,21 @@ async function findByRepairId(repairId) {
 
 // Crea la factura de la reparación con los datos del ticket (equipo +
 // servicio como artículo, cliente del ticket, total = precio final o
-// cotizado). Si ya existe, la devuelve sin duplicar.
+// cotizado). Si el ticket tiene factura vinculada (invoice_id), usa ESA;
+// si no hay, busca por repair_id; si no existe, la crea y sella el puntero
+// del ticket (invoice_id) para que siempre sea la misma.
 async function createFromRepair(t) {
+  if (t.invoice_id) {
+    const pinned = await findById(t.invoice_id);
+    if (pinned) return pinned;
+  }
   const existing = await findByRepairId(t.id);
-  if (existing) return existing;
+  if (existing) {
+    if (!t.invoice_id) {
+      await pool.query('UPDATE repair_tickets SET invoice_id = $1 WHERE id = $2', [existing.id, t.id]);
+    }
+    return existing;
+  }
 
   const SERVICE_ES = { revision: 'Revisión', reparacion: 'Reparación', mantenimiento: 'Mantenimiento' };
   const device = [t.device_brand, t.device_model].filter(Boolean).join(' ') || 'Equipo';
@@ -145,7 +156,7 @@ async function createFromRepair(t) {
     hour: '2-digit', minute: '2-digit', hour12: false,
   }).formatToParts(when).reduce((a, x) => { a[x.type] = x.value; return a; }, {});
 
-  return create({
+  const inv = await create({
     repair_id: t.id,
     seller_name: 'ElectronicST, LLC',
     seller_address: '3659 Lorna Rd Suite 157, Hoover, AL 35216',
@@ -165,6 +176,8 @@ async function createFromRepair(t) {
     items: [{ description: `${device} — ${service}`.slice(0, 200), qty: 1, price }],
     warranty_text: '30-Day Limited Warranty',
   }, null);
+  await pool.query('UPDATE repair_tickets SET invoice_id = $1 WHERE id = $2', [inv.id, t.id]);
+  return inv;
 }
 
 // Crea la factura de la orden con TODOS los datos del cliente ya llenos:

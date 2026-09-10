@@ -817,3 +817,20 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   por el track_token del ticket (`GET .../invoice.pdf` en `routes/track.js`);
   el panel abre wa.me con ese link en el mensaje. "Ver factura" usa el mismo
   link público (así no hace falta descargar el PDF con JWT).
+
+---
+
+## 14. Abonos en reparaciones y factura vinculada — 2026-09-10
+
+- `repair_tickets` ganó `amount_paid` (abonado por el cliente) e `invoice_id`
+  (puntero EXPLÍCITO a la factura elegida; sin FK porque `invoices` se crea
+  después en db.js). El abonado se edita en la ficha (campo "Abonado por el
+  cliente") y el detalle de la lista muestra "Abonado: $X (N%) · Restante: $Y"
+  (total = final_price o, sin él, quoted_price).
+- **Factura vinculada:** el detalle tiene un selector con las facturas libres
+  o las del ticket (`PATCH /x/s/repairs/:id { invoice_id }`, valida que
+  exista). Sirve para corregir duplicadas (p. ej. una auto-creada cuando ya
+  había una manual sin ligar). `createFromRepair` ahora: usa el puntero si
+  existe → si no, busca por repair_id y sella el puntero → si no hay, crea y
+  sella. `listAll` devuelve el número con COALESCE(puntero, subconsulta por
+  repair_id).

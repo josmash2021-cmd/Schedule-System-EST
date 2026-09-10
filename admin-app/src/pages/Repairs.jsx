@@ -102,6 +102,7 @@ export default function Repairs() {
   const dayFilter = /^\d{4}-\d{2}-\d{2}$/.test(dayParam || '') ? dayParam : null;
   const [tickets, setTickets] = useState(null);
   const [workers, setWorkers] = useState([]);
+  const [invoices, setInvoices] = useState([]); // para vincular factura a la reparación
   const [err, setErr] = useState('');
   const [filter, setFilter] = useState(dayFilter ? 'entregado' : 'activos');
   const [deviceFilter, setDeviceFilter] = useState('todas'); // categoría de equipo
@@ -111,6 +112,24 @@ export default function Repairs() {
   const [exiting, setExiting] = useState(false); // el formulario se despide animado
   const [ok, setOk] = useState('');
   const [invBusy, setInvBusy] = useState(null); // id de ticket con factura en proceso
+
+  // Vincular (o quitar) la factura de la reparación: la elección manda sobre
+  // la búsqueda automática, así si hay duplicadas se escoge la correcta.
+  const vincularFactura = async (t, invoiceId) => {
+    setErr(''); setOk('');
+    try {
+      const d = await api('/repairs/' + t.id, { method: 'PATCH', body: { invoice_id: invoiceId || null } });
+      const inv = invoices.find((i) => String(i.id) === String(invoiceId));
+      setTickets((list) => list.map((x) => (x.id === t.id
+        ? { ...x, invoice_id: d.ticket.invoice_id, invoice_number: inv ? inv.invoice_number : null }
+        : x)));
+      setOk(inv ? `Reparación vinculada a la factura ${inv.invoice_number}.` : 'Vínculo de factura quitado.');
+    } catch (e) { setErr(e.message); }
+  };
+
+  // Opciones para vincular: facturas libres o las ya ligadas a ESTE ticket
+  // (para no robarle la factura a otra reparación).
+  const invoiceOptions = (t) => invoices.filter((i) => i.repair_id == null || i.repair_id === t.id);
 
   // Factura de la reparación: VER el PDF (link público con el track_token) o
   // reenviarla por correo / WhatsApp. Si no existe, el server la crea al
@@ -159,6 +178,7 @@ export default function Repairs() {
   useEffect(() => {
     load();
     api('/users').then((d) => setWorkers(d.users.filter((u) => u.active))).catch(() => {});
+    api('/invoices').then((d) => setInvoices(d.invoices || [])).catch(() => {});
   }, [load]);
 
   // Filtro por categoría de equipo (teléfonos / tablets / laptops).
@@ -348,6 +368,22 @@ export default function Repairs() {
                                   {' · '}
                                   <span className="muted">Final:</span> <strong>{money(t.final_price)}</strong>
                                 </div>
+                                {(() => {
+                                  const total = t.final_price != null ? Number(t.final_price) : (t.quoted_price != null ? Number(t.quoted_price) : null);
+                                  const paid = t.amount_paid != null ? Number(t.amount_paid) : 0;
+                                  if (total == null || paid <= 0) return null;
+                                  const rest = Math.max(total - paid, 0);
+                                  const pct = Math.round((paid / total) * 100);
+                                  return (
+                                    <div>
+                                      <span className="muted">Abonado:</span>{' '}
+                                      <strong>{money(paid)} ({pct}%)</strong>
+                                      {' · '}
+                                      <span className="muted">Restante:</span>{' '}
+                                      <strong>{money(rest)}</strong>
+                                    </div>
+                                  );
+                                })()}
                               </div>
                               <div className="od-full" style={{ marginTop: 12 }}>
                                 <RepairBar ticket={t} />
@@ -367,7 +403,14 @@ export default function Repairs() {
                                   {REPAIR_STATUS.map((s) => <option key={s.v} value={s.v}>{s.l}</option>)}
                                 </select>
                                 <button className="btn btn-secondary btn-sm" onClick={() => setDetail({ id: t.id })}>Abrir ficha</button>
-                                {t.invoice_number && <span className="muted" style={{ fontSize: 12 }}>Factura {t.invoice_number}</span>}
+                                <select className="estado-select" value={t.invoice_id || ''}
+                                  title="Factura vinculada a esta reparación (cámbiala si hay duplicadas)"
+                                  onChange={(e) => vincularFactura(t, e.target.value)}>
+                                  <option value="">{t.invoice_number ? `Factura ${t.invoice_number}` : 'Sin factura'}</option>
+                                  {invoiceOptions(t).map((i) => (
+                                    <option key={i.id} value={i.id}>Factura {i.invoice_number}</option>
+                                  ))}
+                                </select>
                                 <button className="btn btn-secondary btn-sm" disabled={invBusy === t.id}
                                   title="Ver el PDF de la factura (si no existe, se crea al vuelo)"
                                   onClick={() => verFactura(t)}>

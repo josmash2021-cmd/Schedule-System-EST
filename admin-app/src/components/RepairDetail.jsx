@@ -56,7 +56,7 @@ async function compressImage(file, maxDim = 1600, quality = 0.85) {
 const EMPTY = {
   device_type: 'telefono', service_type: 'reparacion',
   device_brand: '', device_model: '', device_serial: '', customer_name: '', customer_phone: '', customer_email: '',
-  problem: '', diagnosis: '', quoted_price: '', final_price: '', status: 'recibido', assigned_to: '',
+  problem: '', diagnosis: '', quoted_price: '', final_price: '', amount_paid: '', status: 'recibido', assigned_to: '',
   tracking_number: '', carrier: '',
 };
 
@@ -100,6 +100,7 @@ export default function RepairDetail({ ticketId, workers = [], isAdmin, onClose,
         customer_name: ticket.customer_name || '', customer_phone: ticket.customer_phone || '', customer_email: ticket.customer_email || '',
         problem: ticket.problem || '', diagnosis: ticket.diagnosis || '',
         quoted_price: ticket.quoted_price != null ? ticket.quoted_price : '', final_price: ticket.final_price != null ? ticket.final_price : '',
+        amount_paid: ticket.amount_paid != null ? ticket.amount_paid : '',
         status: ticket.status, assigned_to: ticket.assigned_to != null ? String(ticket.assigned_to) : '',
         tracking_number: ticket.tracking_number || '', carrier: ticket.carrier || '',
       });
@@ -113,6 +114,7 @@ export default function RepairDetail({ ticketId, workers = [], isAdmin, onClose,
     ...f, assigned_to: f.assigned_to || null,
     quoted_price: f.quoted_price === '' ? null : f.quoted_price,
     final_price: f.final_price === '' ? null : f.final_price,
+    amount_paid: f.amount_paid === '' ? null : f.amount_paid,
   });
 
   const save = async () => {
@@ -224,6 +226,21 @@ export default function RepairDetail({ ticketId, workers = [], isAdmin, onClose,
       <div className="rd-grid">
         <label className="field"><span>Precio cotizado ($)</span><input type="number" min="0" step="0.01" value={f.quoted_price} onChange={set('quoted_price')} /></label>
         <label className="field"><span>Precio final ($)</span><input type="number" min="0" step="0.01" value={f.final_price} onChange={set('final_price')} /></label>
+      </div>
+      <div className="rd-grid">
+        <label className="field"><span>Abonado por el cliente ($)</span><input type="number" min="0" step="0.01" value={f.amount_paid} onChange={set('amount_paid')} placeholder="0.00" /></label>
+        <div className="field" style={{ justifyContent: 'flex-end' }}>
+          <span className="muted" style={{ fontSize: 12.5 }}>
+            {(() => {
+              const total = f.final_price !== '' ? Number(f.final_price) : (f.quoted_price !== '' ? Number(f.quoted_price) : 0);
+              const paid = Number(f.amount_paid) || 0;
+              if (!total) return 'Sin precio aún.';
+              const rest = Math.max(total - paid, 0);
+              const pct = Math.round((paid / total) * 100);
+              return paid > 0 ? `Abonado ${pct}% · Resta $${rest.toLocaleString('en-US', { maximumFractionDigits: 2 })}` : 'Sin abonos registrados.';
+            })()}
+          </span>
+        </div>
       </div>
       <div className="rd-grid">
         <label className="field"><span>Estado</span>
