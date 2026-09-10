@@ -94,7 +94,10 @@ cambies estructura, flujos o convenciones.
   "tracking map summary"`; en móvil la columna es: estado de la reparación →
   FOTO del tapete → estado de la pieza → resumen (muestra "Abonado por el
   cliente $X (N%)" con el porcentaje del total, como el detalle del panel) →
-  rastreo — decisión del dueño 2026-09-10); CSS inline propio — define
+  rastreo — decisión del dueño 2026-09-10); **vista previa del link en
+  WhatsApp: `og:image` con el logo EST NEGRO sobre fondo BLANCO
+  (`assets/img/logo-link.png`, 1200×630 horneado con PIL de la foto del
+  dueño — el favicon del navegador sigue blanco)**; CSS inline propio — define
   `.hidden`, que
   `site-v3.css` no tiene;
   enlazada desde el menú principal como "Mi pedido" / `data-en="My order"` en
