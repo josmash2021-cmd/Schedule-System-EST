@@ -228,12 +228,12 @@
         @keyframes rpGlow { 0%, 100% { opacity: .65; } 50% { opacity: 1; } }
         /* El teléfono: 3 capas apiladas del mismo tamaño — cuerpo (foto),
            internos (CSS) y pantalla (foto) que se levanta. */
-        .rp-unit { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); height: 300px; aspect-ratio: 267 / 596; }
+        .rp-unit { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); height: 300px; aspect-ratio: 267 / 517; }
         .rp-unit img { position: absolute; inset: 0; width: 100%; height: 100%; }
         .rp-body { z-index: 1; filter: drop-shadow(0 12px 18px rgba(0,0,0,.55)); }
         /* Internos: un poco MENORES que el área de la pantalla recortada,
            así quedan tapados cuando la pantalla está en su lugar. */
-        .rp-internals { position: absolute; left: 8%; top: 5%; width: 84%; height: 77%; z-index: 2; border-radius: 12% / 6%; background: #101116; box-shadow: inset 0 0 0 1px rgba(255,255,255,.09); }
+        .rp-internals { position: absolute; left: 8%; top: 4%; width: 84%; height: 91%; z-index: 2; border-radius: 12% / 6%; background: #101116; box-shadow: inset 0 0 0 1px rgba(255,255,255,.09); }
         .rp-batt { position: absolute; right: 12%; top: 38%; width: 42%; height: 50%; border-radius: 8px; background: linear-gradient(180deg, #3d3e49, #2b2c36); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 2px 6px rgba(0,0,0,.4); }
         .rp-batt::before { content: ''; position: absolute; left: 12%; top: 10%; right: 12%; height: 3px; border-radius: 2px; background: rgba(255,255,255,.14); }
         .rp-batt::after { content: ''; position: absolute; left: 12%; top: 24%; width: 34%; height: 3px; border-radius: 2px; background: rgba(255,255,255,.09); }
@@ -245,21 +245,23 @@
         .rp-iscrew { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #d9d9de, #7a7a82); box-shadow: inset 0 0 1px rgba(0,0,0,.7); }
         .rp-iscrew.a { left: 8%; top: 6%; } .rp-iscrew.b { right: 8%; top: 6%; }
         .rp-iscrew.c { left: 8%; bottom: 6%; } .rp-iscrew.d { right: 8%; bottom: 6%; }
-        /* La pantalla se abre como un libro (bisagra en su orilla izquierda,
-           giro 3D), deja ver los internos y vuelve a cerrar (loop 7 s). */
-        .rp-screen { z-index: 3; transform-origin: 6% 50%; animation: rpScreen 7s cubic-bezier(.45,0,.25,1) infinite; }
+        /* Secuencia (loop 8 s): pantalla PRENDIDA → se APAGA → abre como
+           libro (ya apagada) dejando ver los internos → cierra → PRENDE. */
+        .rp-screen { z-index: 3; transform-origin: 6% 50%; animation: rpScreen 8s cubic-bezier(.45,0,.25,1) infinite; }
         @keyframes rpScreen {
-            0%, 24%   { transform: perspective(800px) rotateY(0deg); }
-            40%, 62%  { transform: perspective(800px) rotateY(-62deg); filter: drop-shadow(12px 14px 14px rgba(0,0,0,.45)); }
-            80%, 100% { transform: perspective(800px) rotateY(0deg); }
+            0%, 12%   { transform: perspective(800px) rotateY(0deg); filter: brightness(1); }
+            18%, 24%  { transform: perspective(800px) rotateY(0deg); filter: brightness(.05); }
+            38%, 62%  { transform: perspective(800px) rotateY(-62deg); filter: brightness(.05) drop-shadow(12px 14px 14px rgba(0,0,0,.45)); }
+            76%, 82%  { transform: perspective(800px) rotateY(0deg); filter: brightness(.05); }
+            92%, 100% { transform: perspective(800px) rotateY(0deg); filter: brightness(1); }
         }
         /* Tornillos pentalobe de la orilla inferior: saltan al empezar y
            regresan cuando la pantalla vuelve. */
-        .rp-screw { position: absolute; top: 87%; width: 5px; height: 5px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #e3e3e8, #8a8a92); z-index: 4; }
-        .rp-screw.p1 { left: 28%; animation: rpScrewL 7s ease-in-out infinite; }
-        .rp-screw.p2 { left: 69%; animation: rpScrewR 7s ease-in-out infinite; }
-        @keyframes rpScrewL { 0% { transform: none; opacity: 1; } 14%, 82% { transform: translate(-12px, 18px) rotate(260deg); opacity: 0; } 94%, 100% { transform: none; opacity: 1; } }
-        @keyframes rpScrewR { 0% { transform: none; opacity: 1; } 14%, 82% { transform: translate(12px, 18px) rotate(-260deg); opacity: 0; } 94%, 100% { transform: none; opacity: 1; } }
+        .rp-screw { position: absolute; top: 96%; width: 5px; height: 5px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #e3e3e8, #8a8a92); z-index: 4; }
+        .rp-screw.p1 { left: 28%; animation: rpScrewL 8s ease-in-out infinite; }
+        .rp-screw.p2 { left: 69%; animation: rpScrewR 8s ease-in-out infinite; }
+        @keyframes rpScrewL { 0% { transform: none; opacity: 1; } 10%, 86% { transform: translate(-12px, 18px) rotate(260deg); opacity: 0; } 96%, 100% { transform: none; opacity: 1; } }
+        @keyframes rpScrewR { 0% { transform: none; opacity: 1; } 10%, 86% { transform: translate(12px, 18px) rotate(-260deg); opacity: 0; } 96%, 100% { transform: none; opacity: 1; } }
         .rp-driver { position: absolute; left: calc(50% + 62px); bottom: 26px; width: 78px; height: 78px; z-index: 5; transform-origin: 50% 94%; animation: rpTurn 1.7s ease-in-out infinite alternate; filter: drop-shadow(0 4px 6px rgba(0,0,0,.45)); }
         @keyframes rpTurn { from { transform: rotate(-30deg); } to { transform: rotate(20deg); } }
         .rp-spark { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #ffd86b; opacity: 0; animation: rpSpark 1.7s ease-in-out infinite; }
