@@ -36,7 +36,14 @@ cambies estructura, flujos o convenciones.
   cuando la barra lo alcanza — delays escalonados); el paso actual pulsa
   lento y suave; la animación del camión y los datos entran con fundido
   fluido (doble rAF + clase .in, nunca de golpe); un fallo transitorio del
-  API nunca muestra "Order not found" si ya hay datos); el título de la
+  API nunca muestra "Order not found" si ya hay datos); **vista de REPARACIÓN
+  (payload con `kind:'repair'`): todo cambia — en vez del camión, un iPhone
+  siendo reparado (`.rp-anim`: engrane girando, destornillador que atornilla,
+  spinner de diagnóstico y barra de progreso dorada en la pantalla, todo
+  SVG+CSS; la intro es corta, ~1.3 s), SIN mapa ni tarjeta de dirección
+  (`.track-grid.repair` = 2 columnas: estado | resumen+rastreo), título
+  "Seguimiento de reparación", badge "Reparación REP-1xxx", resumen sin
+  líneas Subtotal/Shipping y "Total de la reparación"**; el título de la
   página es fijo ("Order tracking", sin nombre del producto); **el badge bajo
   el título muestra la fecha estimada de llegada** ("Llega el jue, 8 may" /
   "Arriving Thu, May 8" — de `expected_delivery` de AfterShip; "Entregado" al

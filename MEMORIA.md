@@ -765,7 +765,13 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   que una orden (el "producto" es el equipo, sin dirección → el mapa se
   oculta solo). En track.html la reparación cambia el título a "Seguimiento
   de reparación" y el texto del paso 0 ("tu equipo está en el taller; en
-  cuanto el repuesto esté en camino…").
+  cuanto el repuesto esté en camino…"). La vista de reparación es DISTINTA a
+  la de un pedido: en vez del camión, un iPhone siendo reparado (`.rp-anim`,
+  SVG+CSS: engrane, destornillador, spinner y barra de progreso), sin mapa ni
+  tarjeta de dirección (grid de 2 columnas), resumen sin Subtotal/Shipping y
+  "Total de la reparación". Verificación visual de track.html:
+  `node admin-app/.visual-test/track-shot.cjs` (API mockeada, capturas
+  reparación + pedido).
 - OJO (bug previo resuelto el mismo día): el `if (!token) return;` de
   track.html va AL FINAL del script; arriba dejaba `SVGNS`/`CARRIER_URLS` sin
   definir y la búsqueda por número salía con la página vacía.
