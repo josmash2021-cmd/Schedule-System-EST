@@ -776,22 +776,22 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   de reparación" y el texto del paso 0 ("tu equipo está en el taller; en
   cuanto el repuesto esté en camino…"). La vista de reparación mantiene el
   camión de entrada, pero la columna del centro cambia: en vez del mapa y la
-  dirección de envío, una tarjeta "Tu reparación" (`#rpCard`) con un iPhone
-  REAL (recorte PNG de `iphone-15-pro-front.jpg` por luminancia con PIL:
-  `assets/img/iphone-repair.png` y `iphone-repair-screen.png`) al que le
-  quitan la pantalla — saltan los tornillos pentalobe, la pantalla se apaga
-  (brightness) y se abre como libro (rotateY 3D) dejando ver los COMPONENTES
-  REALES (foto del chasis de un iPhone 6s abierto: `assets/img/iphone-internals.png`,
-  Raimond Spekking, Wikimedia Commons CC BY-SA 4.0) con un desarmador REAL
-  (`assets/img/screwdriver.png`, Wiha2013, CC BY-SA 4.0 — mango negro con
-  brightness+halo; `.rp-card .rp-anim` lleva width:100% porque sin ella la
-  escena colapsa a 0 y max-width:100% de site-v3.css borra la imagen);
-  crédito CC BY-SA solo en comentario del código (sin texto visible, decisión del dueño); resumen sin
+  dirección de envío, una tarjeta "Tu reparación" (`#rpCard`) con la FOTO
+  REAL del banco de trabajo del taller (`assets/img/repair-mat.png` — foto
+  propia del dueño, ya venía con fondo transparente; PNG recortado al
+  contenido con PIL). NOTA HISTÓRICA: antes era una ANIMACIÓN de un iPhone
+  al que le quitaban la pantalla (tornillos pentalobe, rotateY 3D, internos
+  reales CC BY-SA) — el dueño la reemplazó por la foto real (2026-09-10) y
+  se borraron sus assets (`iphone-repair*.png`, `iphone-internals.png`,
+  `screwdriver.png`); resumen sin
   Subtotal/Shipping. ACTUALIZADO (diseño final del dueño): la IZQUIERDA
-  queda la curva del estatus del paquete (como en pedidos) y a la DERECHA va
+  queda la curva del estatus de la pieza para reparar (como en pedidos) y a
+  la DERECHA va
   el ESTADO DE LA REPARACIÓN con el MISMO diseño de curva serpenteante
   (`#repairCurve`, `drawCurve` genérica con `points`; en móvil, barra
-  horizontal) con las 4 etapas (de `repair_status` del payload), luego
+  horizontal) con las 4 etapas (de `repair_status` del payload) — SIN caja
+  de fondo (`.track-side-repair-status` con `background: transparent; border: 0;
+  padding: 0`, flota como la curva de la pieza) —, luego
   REPAIR SUMMARY (equipo + Abonado por el cliente + Restante por pagar, de
   `amount_paid` del payload) y TRACKING (número + link de paquetería).
   `.track-grid.repair` va DESPUÉS de la regla móvil base en el CSS porque

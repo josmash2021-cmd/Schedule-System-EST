@@ -39,18 +39,14 @@ cambies estructura, flujos o convenciones.
   API nunca muestra "Order not found" si ya hay datos); **vista de REPARACIÓN
   (payload con `kind:'repair'`): el camión se queda igual, pero la columna
   del centro cambia — en vez del mapa y la dirección de envío, una tarjeta
-  "Tu reparación" (`#rpCard`) con un iPhone REAL (foto recortada a PNG con
-  transparencia: `assets/img/iphone-repair.png` + `iphone-repair-screen.png`,
-  generadas de `iphone-15-pro-front.jpg` por luminancia con PIL) al que le
-  quitan la pantalla: saltan los tornillos pentalobe, la pantalla SE APAGA
-  (brightness) y se abre como libro (rotateY 3D) dejando ver los COMPONENTES
-  REALES (foto del chasis de un iPhone 6s abierto — Raimond Spekking,
-  Wikimedia Commons CC BY-SA 4.0 — `assets/img/iphone-internals.png`), con un
-  desarmador REAL (foto Wiha — Wiha2013, CC BY-SA 4.0 —
-  `assets/img/screwdriver.png` — OJO: el mango negro lleva brightness+halo
-  para verse sobre la tarjeta oscura; y `.rp-card .rp-anim` lleva width:100%
-  porque sin ella la escena colapsa a 0 y max-width:100% de site-v3.css
-  borra la imagen); crédito CC BY-SA solo en comentario del código (sin texto visible, decisión del dueño))**; título
+  "Tu reparación" (`#rpCard`) con la FOTO REAL del banco de trabajo del
+  taller (`assets/img/repair-mat.png`: tapete de silicona azul-gris con el
+  teléfono desarmado y las herramientas — foto propia del dueño, ya viene
+  con fondo transparente; el PNG está recortado al contenido con PIL y lleva
+  drop-shadow; en PC `max-height: 500px`; OJO: `.rp-card .rp-anim` lleva
+  width:100% porque sin ella max-width:100% de site-v3.css puede encoger la
+  imagen). Hasta 2026-09-10 era una animación de un iPhone al que le quitaban
+  la pantalla (assets CC BY-SA ya borrados — ver MEMORIA.md)**; título
   "Seguimiento de reparación", badge "Reparación REP-1xxx", resumen sin
   líneas Subtotal/Shipping y "Total de la reparación"; **en reparación la
   tarjeta de estado de la izquierda se titula "Estado de la pieza para
@@ -78,8 +74,8 @@ cambies estructura, flujos o convenciones.
   sobrante vía flex con `min-height` bajo; en pantallas PC de <880px de alto
   la altura vuelve a auto con scroll natural para no recortar nada). **En
   reparación la grilla es 2 filas: IZQUIERDA la curva "Estado de la pieza
-  para reparar" + debajo "Rastreo de la pieza"; CENTRO la animación del
-  iPhone; DERECHA la curva "Estado de la reparación" (SIN caja de fondo:
+  para reparar" + debajo "Rastreo de la pieza"; CENTRO la foto del banco de
+  trabajo; DERECHA la curva "Estado de la reparación" (SIN caja de fondo:
   `background: transparent; border: 0; padding: 0`, flota sobre la página
   igual que la curva de la pieza — decisión del dueño) + debajo el resumen**
   (`grid-template-rows: minmax(0,1fr) auto`, áreas `"status map rstatus" /
