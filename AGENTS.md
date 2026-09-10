@@ -50,15 +50,14 @@ cambies estructura, flujos o convenciones.
   posiciona todo en %): un **destornillador BAKU BK-3332 dorado** (foto del
   dueño, `assets/img/screwdriver.png` — ya venía con fondo transparente;
   rotada 135° a vertical punta-abajo con PIL; `width: 5.2%` ≈ tamaño real
-  vs el teléfono) desatornilla los 4 tornillos del chasis uno a uno
-  GIRANDO SOBRE SU PROPIO EJE (`perspective + rotateY` 3D, 2 vueltas por
-  tornillo — como moneda al girar; cada giro termina en múltiplo de 360°
-  para que el loop empate sin salto; la inclinación base es `rotate(20deg)`) y cada tornillo (`.rp-screw`, **foto real de un tornillo recortada
-  del puñito del propio tapete** — `assets/img/screw.png`) salta y vuela en
-  arco hasta el
-  puñito de tornillos de la esquina superior derecha del tapete, donde se
-  quedan apilados hasta el reset con fundido; keyframes `rpDrv` + `rpS1-4`;
-  `prefers-reduced-motion` deja la escena estática. Hasta 2026-09-10 era una animación de un iPhone al que le quitaban
+  vs el teléfono). NO gira (decisión del dueño): se queda inclinado
+  (`rotate(20deg)`) sobre el tornillo y solo viaja de tornillo a tornillo —
+  el movimiento lo dan los tornillos, que al ser desatornillados giran,
+  saltan y vuelan en arco hasta el puñito de tornillos de la esquina
+  superior derecha del tapete, donde se quedan apilados hasta el reset con
+  fundido; cada tornillo (`.rp-screw`) es foto REAL recortada del propio
+  tapete (`assets/img/screw.png`); keyframes `rpDrv` (solo posición) +
+  `rpS1-4`; `prefers-reduced-motion` deja la escena estática. Hasta 2026-09-10 era una animación de un iPhone al que le quitaban
   la pantalla (assets CC BY-SA ya borrados — ver MEMORIA.md)**; título
   "Seguimiento de reparación", badge "Reparación REP-1xxx", resumen sin
   líneas Subtotal/Shipping y "Total de la reparación"; **en reparación la

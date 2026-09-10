@@ -245,35 +245,21 @@
         .rp-stage { position: relative; display: inline-block; line-height: 0; }
         /* Destornillador BAKU BK-3332 dorado (foto del dueño, ya con fondo
            transparente; rotada 135° a vertical con la punta ABAJO vía PIL) a
-           escala real (mide como el propio teléfono): GIRA SOBRE SU PROPIO
-           EJE (rotateY 3D, como moneda al girar — 2 vueltas por tornillo)
-           mientras desatornilla; no gira en círculos ni vaivén, solo viaja
-           de tornillo a tornillo con la punta levantada. */
+           escala real (mide como el propio teléfono). NO gira: se queda
+           inclinado sobre el tornillo y solo viaja de tornillo a tornillo;
+           el movimiento lo dan los tornillos (giran, saltan y vuelan). */
         .rp-driver { position: absolute; left: 46.5%; top: 47%; width: 5.2%; z-index: 3;
             transform: translate(-50%, -98%) rotate(20deg); transform-origin: 50% 98%;
             filter: drop-shadow(0 4px 6px rgba(0,0,0,.5)); animation: rpDrv 16s ease-in-out infinite; }
         /* Recorrido: tornillo a tornillo (arriba-izq → arriba-der →
-           abajo-der → abajo-izq). El rotateY acumula 720° por tornillo y
-           termina cada giro en múltiplo de 360° (misma cara), así el loop
-           empata sin salto visual. La inclinación base es rotate(20deg). */
+           abajo-der → abajo-izq) y vuelta al primero; quieto mientras el
+           tornillo gira y vuela a la esquina. */
         @keyframes rpDrv {
-            0%   { left: 46.5%; top: 47%; transform: translate(-50%,-98%) rotate(20deg) perspective(600px) rotateY(0deg); }
-            2%   { transform: translate(-50%,-98%) rotate(20deg) perspective(600px) rotateY(0deg); }
-            12%  { transform: translate(-50%,-98%) rotate(20deg) perspective(600px) rotateY(720deg); }
-            18%  { left: 46.5%; top: 47%; transform: translate(-50%,-98%) rotate(20deg) perspective(600px) rotateY(720deg); }
-            25%  { left: 56%;   top: 47%; transform: translate(-50%,-98%) rotate(20deg) perspective(600px) rotateY(720deg); }
-            27%  { transform: translate(-50%,-98%) rotate(20deg) perspective(600px) rotateY(720deg); }
-            37%  { transform: translate(-50%,-98%) rotate(20deg) perspective(600px) rotateY(1440deg); }
-            43%  { left: 56%;   top: 47%; transform: translate(-50%,-98%) rotate(20deg) perspective(600px) rotateY(1440deg); }
-            50%  { left: 56%;   top: 78%; transform: translate(-50%,-98%) rotate(20deg) perspective(600px) rotateY(1440deg); }
-            52%  { transform: translate(-50%,-98%) rotate(20deg) perspective(600px) rotateY(1440deg); }
-            62%  { transform: translate(-50%,-98%) rotate(20deg) perspective(600px) rotateY(2160deg); }
-            68%  { left: 56%;   top: 78%; transform: translate(-50%,-98%) rotate(20deg) perspective(600px) rotateY(2160deg); }
-            75%  { left: 46.5%; top: 78%; transform: translate(-50%,-98%) rotate(20deg) perspective(600px) rotateY(2160deg); }
-            77%  { transform: translate(-50%,-98%) rotate(20deg) perspective(600px) rotateY(2160deg); }
-            87%  { transform: translate(-50%,-98%) rotate(20deg) perspective(600px) rotateY(2880deg); }
-            93%  { left: 46.5%; top: 78%; transform: translate(-50%,-98%) rotate(20deg) perspective(600px) rotateY(2880deg); }
-            100% { left: 46.5%; top: 47%; transform: translate(-50%,-98%) rotate(20deg) perspective(600px) rotateY(2880deg); }
+            0%, 18%   { left: 46.5%; top: 47%; }
+            25%, 43%  { left: 56%;   top: 47%; }
+            50%, 68%  { left: 56%;   top: 78%; }
+            75%, 93%  { left: 46.5%; top: 78%; }
+            100%      { left: 46.5%; top: 47%; }
         }
         /* Los 4 tornillos: foto REAL de un tornillo recortada del puñito del
            propio tapete (assets/img/screw.png). Al ser desatornillados giran/

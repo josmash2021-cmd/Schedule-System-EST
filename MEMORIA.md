@@ -782,13 +782,12 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   contenido con PIL). Y ENCIMA de la foto, una animación CSS en loop de 16 s
   (mismo día, petición del dueño): un destornillador BAKU BK-3332 dorado a
   escala real (foto del dueño, ya con fondo transparente; rotada 135° a
-  vertical punta-abajo con PIL) que desatornilla los 4 tornillos del chasis
-  uno a uno GIRANDO SOBRE SU PROPIO EJE (`perspective + rotateY` 3D, 2
-  vueltas por tornillo, como moneda al girar — nada de giros en círculos ni
-  vaivén, decisión del dueño; cada giro termina en múltiplo de 360° para
-  empatar el loop) y cada
-  tornillo (foto REAL recortada del puñito del propio tapete,
-  `assets/img/screw.png`)
+  vertical punta-abajo con PIL). NO gira (decisión final del dueño): se
+  queda inclinado (rotate 20°) sobre cada tornillo y solo viaja de tornillo
+  a tornillo; el movimiento lo dan los tornillos (giran, saltan y vuelan en
+  arco al puñito de la esquina). Cada
+  tornillo es foto REAL recortada del puñito del propio tapete,
+  `assets/img/screw.png`.
   salta y vuela en arco hasta el puñito de tornillos de la esquina superior
   derecha del tapete, donde se apilan hasta el reset con fundido. Capa
   `.rp-stage` (inline-block pegado al tamaño renderizado de la foto, todo en
