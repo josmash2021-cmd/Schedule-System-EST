@@ -479,8 +479,11 @@
                             <div class="track-addr" id="trackAddr">—</div>
                         </div>
                     </div>
-                    <!-- Solo reparación: estado de la reparación (4 etapas)
-                         con el MISMO diseño de curva serpenteante que el
+                    <!-- Solo reparación: estado de la reparación (5 etapas:
+                         Recibido → En revisión → Esperando el repuesto → En
+                         laboratorio → Listo; la etapa del repuesto se deriva
+                         del rastreo de la pieza) con el MISMO diseño de curva
+                         serpenteante que el
                          estado de la pieza, SIN caja de fondo — flota sobre
                          la página igual que la curva de la izquierda. -->
                     <div class="track-card track-side-repair-status hidden" id="trackRepairStatusCard">
@@ -490,8 +493,9 @@
                                 <div class="track-bar-fill" id="repairFill" style="width:0%"></div>
                                 <div class="track-bar-steps" id="repairSteps">
                                     <div class="track-bar-step first" style="left:0%"><div class="track-bar-dot"></div><span data-en="Received">Recibido</span></div>
-                                    <div class="track-bar-step" style="left:33.33%"><div class="track-bar-dot"></div><span data-en="In review">En revisión</span></div>
-                                    <div class="track-bar-step" style="left:66.66%"><div class="track-bar-dot"></div><span data-en="In the repair lab">En laboratorio de reparación y mantenimiento</span></div>
+                                    <div class="track-bar-step" style="left:25%"><div class="track-bar-dot"></div><span data-en="In review">En revisión</span></div>
+                                    <div class="track-bar-step" style="left:50%"><div class="track-bar-dot"></div><span data-en="Waiting for the part">Esperando el repuesto</span></div>
+                                    <div class="track-bar-step" style="left:75%"><div class="track-bar-dot"></div><span data-en="In the lab">En laboratorio</span></div>
                                     <div class="track-bar-step last" style="left:100%"><div class="track-bar-dot"></div><span data-en="Ready for pickup">Listo para recoger</span></div>
                                 </div>
                             </div>
@@ -851,7 +855,7 @@
         // Curva de estado (PC): serpente centrada en la tarjeta, de arriba
         // hasta abajo. Puntos dorados = pasos cumplidos; etiquetas alternan
         // de lado. Se redibuja en cada render (es barato). Genérica: sirve
-        // para la curva de la pieza/paquete (5 puntos) y la de la reparación (4).
+        // para la curva de la pieza/paquete y la de la reparación (5 puntos).
         function drawCurve(svg, labels, step, points) {
             if (!svg) return;
             var n = points - 1; // segmentos
@@ -908,11 +912,11 @@
             lastStep = step;
             drawCurve(document.getElementById('trackCurve'), stepLabels('#trackSteps'), step, 5);
         }
-        // La curva del ESTADO DE LA REPARACIÓN (derecha): mismo diseño, 4
-        // puntos. rs 0-3 (entregado se dibuja como barra completa, paso 3).
+        // La curva del ESTADO DE LA REPARACIÓN (derecha): mismo diseño, 5
+        // puntos. rs 0-4 (entregado se dibuja como barra completa, paso 4).
         function drawRepairCurve(rs) {
             lastRepairStep = rs;
-            drawCurve(document.getElementById('repairCurve'), stepLabels('#repairSteps'), Math.min(rs, 3), 4);
+            drawCurve(document.getElementById('repairCurve'), stepLabels('#repairSteps'), Math.min(rs, 4), 5);
         }
         // La tarjeta estira su altura al acomodarse el grid: redibuja las
         // curvas cuando cambien de tamaño para que lleguen hasta abajo.
@@ -986,14 +990,20 @@
                 el.classList.toggle('current', step === i);
             });
             if (isRepair) {
-                // Estado de la reparación (4 etapas) a la DERECHA con el MISMO
+                // Estado de la reparación (5 etapas) a la DERECHA con el MISMO
                 // diseño: curva serpenteante en PC, barra horizontal en móvil.
-                var RSTEPS = { recibido: 0, diagnostico: 1, reparacion: 2, listo: 3, entregado: 4 };
+                // "Esperando el repuesto" se deriva SOLO del rastreo de la
+                // pieza: con tracking cargado y aún no entregado, la pieza va
+                // en camino (etapa 2); cuando la paquetería marca Delivered,
+                // la espera terminó (etapa 3+).
+                var RSTEPS = { recibido: 0, diagnostico: 1, reparacion: 3, listo: 4, entregado: 4 };
                 var rs = RSTEPS[d.repair_status] != null ? RSTEPS[d.repair_status] : 0;
-                document.getElementById('repairFill').style.width = Math.min(rs / 3 * 100, 100) + '%';
+                if (d.tracking_number) rs = Math.max(rs, 2);
+                if (d.ship_tag === 'Delivered') rs = Math.max(rs, 3);
+                document.getElementById('repairFill').style.width = Math.min(rs / 4 * 100, 100) + '%';
                 document.querySelectorAll('#repairSteps .track-bar-step').forEach(function (el, i) {
                     el.classList.toggle('on', rs >= i);
-                    el.classList.toggle('current', rs === i && rs < 4);
+                    el.classList.toggle('current', rs === i && rs < 5);
                 });
                 if (window.matchMedia('(min-width: 981px)').matches) drawRepairCurve(rs);
             }

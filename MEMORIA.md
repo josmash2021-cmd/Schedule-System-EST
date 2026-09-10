@@ -802,7 +802,13 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   la DERECHA va
   el ESTADO DE LA REPARACIÓN con el MISMO diseño de curva serpenteante
   (`#repairCurve`, `drawCurve` genérica con `points`; en móvil, barra
-  horizontal) con las 4 etapas (de `repair_status` del payload) — SIN caja
+  horizontal) con las 5 etapas (de `repair_status` del payload): Recibido →
+  En revisión → **Esperando el repuesto** → En laboratorio → Listo para
+  recoger. La etapa del repuesto NO es manual: se deriva del rastreo de la
+  pieza — con `tracking_number` cargado y `ship_tag` distinto de Delivered,
+  la pieza va en camino (etapa actual 2); cuando la paquetería marca
+  Delivered, la espera termina (etapa 3+). (Etiqueta corta "En laboratorio":
+  la larga se cortaba en la curva SVG.) — SIN caja
   de fondo (`.track-side-repair-status` con `background: transparent; border: 0;
   padding: 0`, flota como la curva de la pieza) —, luego
   REPAIR SUMMARY (equipo + Abonado por el cliente + Restante por pagar, de
