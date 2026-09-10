@@ -286,7 +286,7 @@ export default function Orders() {
           : orders.length === 0 ? <div className="empty">No hay órdenes todavía. Las compras del website aparecen aquí automáticamente.</div>
             : (
               <div className="table-wrap">
-                <table className="data">
+                <table className="data orders-blocks">
                   <thead>
                     <tr><th>Fecha</th><th>Cliente</th><th className="hide-sm">Origen</th><th className="hide-sm">Dirección</th><th style={{ textAlign: 'right' }}>Total</th><th>Estado</th></tr>
                   </thead>
