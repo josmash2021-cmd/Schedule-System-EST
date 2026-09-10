@@ -744,24 +744,28 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
 
 ## 12. Seguimiento de reparaciones con número de rastreo — 2026-09-09
 
-- Las reparaciones pueden llevar envío de vuelta al cliente: columnas nuevas
+- El número de rastreo de una reparación es el del **repuesto en camino hacia
+  el taller** (no del equipo de vuelta): columnas nuevas
   en `repair_tickets` (`server/db.js`): `customer_email`, `tracking_number`,
   `carrier` y `track_token` (48 hex; backfill automático con md5 en tickets
   viejos, mismo patrón que `online_orders`).
 - Ficha del panel (`RepairDetail.jsx`): campo de correo del cliente y sección
-  "Seguimiento del envío al cliente" (número + paquetería) con dos botones que
+  "Seguimiento del repuesto" (número + paquetería) con dos botones que
   GUARDAN la ficha antes de enviar:
   - **Correo:** `POST /x/s/repairs/:id/send-tracking` → plantilla
     `sendRepairTrackingEmail` en `server/lib/email.js` (inglés, mismo diseño
-    premium; asunto "Your repair REP-1xxx is on its way back").
-  - **WhatsApp:** wa.me con mensaje en español ya escrito (número de rastreo +
-    link), sin backend.
+    premium; dice "the replacement part your <equipo> needs is on its way to
+    us… track the package and the status of your repair", botón
+    "Track my repair").
+  - **WhatsApp:** wa.me con mensaje en español ya escrito (repuesto en camino,
+    número de rastreo + link), sin backend.
 - El link es `track.html?t=<track_token>` del ticket: `server/routes/track.js`
   ahora busca también en `repair_tickets` (por token y por número en
   `lookup/:number`) y devuelve el payload con `kind:'repair'` — mismo shape
   que una orden (el "producto" es el equipo, sin dirección → el mapa se
   oculta solo). En track.html la reparación cambia el título a "Seguimiento
-  de reparación" y el texto del paso 0 ("tu equipo está en el taller…").
+  de reparación" y el texto del paso 0 ("tu equipo está en el taller; en
+  cuanto el repuesto esté en camino…").
 - OJO (bug previo resuelto el mismo día): el `if (!token) return;` de
   track.html va AL FINAL del script; arriba dejaba `SVGNS`/`CARRIER_URLS` sin
   definir y la búsqueda por número salía con la página vacía.

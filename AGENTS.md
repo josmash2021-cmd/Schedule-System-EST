@@ -119,9 +119,10 @@ cambies estructura, flujos o convenciones.
 - Rutas del panel (`/x/s/*`): `server/routes/adminAuth.js`, `adminUsers.js`,
   `adminTime.js`, `adminTasks.js`, `adminMonitor.js`, `adminRepairs.js`
   (reparaciones; el ticket tiene `tracking_number`/`carrier`/`customer_email`/
-  `track_token` para el envío de vuelta al cliente — la ficha del panel tiene
-  la sección "Seguimiento del envío al cliente" con botón de correo
-  (`POST /:id/send-tracking`, plantilla `sendRepairTrackingEmail`) y botón de
+  `track_token` para el repuesto en camino al taller — la ficha del panel tiene
+  la sección "Seguimiento del repuesto" con botón de correo
+  (`POST /:id/send-tracking`, plantilla `sendRepairTrackingEmail`: "the
+  replacement part … is on its way to us") y botón de
   WhatsApp (wa.me con el mensaje y el link ya escritos)),
   `adminInventory.js`, `adminInvoices.js` (facturas, solo admin),
   `adminCustomers.js` (clientes agregados desde facturas, solo admin,
@@ -227,9 +228,9 @@ cambies estructura, flujos o convenciones.
   (telefono/tablet/laptop), `service_type` (revision/reparacion/mantenimiento),
   `final_price`, `quoted_price`, `status`
   (recibido→diagnostico→reparacion→listo→entregado), `created_at`,
-  `delivered_at`, y para el envío de vuelta: `tracking_number`, `carrier`,
-  `customer_email` y `track_token` (48 hex, backfill automático en tickets
-  viejos).
+  `delivered_at`, y para el repuesto en camino al taller: `tracking_number`,
+  `carrier`, `customer_email` y `track_token` (48 hex, backfill automático en
+  tickets viejos).
 - Bots: `server/wa-bot/` (WhatsApp), `server/ig-bot/` (Instagram) —
   artefactos locales gitignored.
 

@@ -161,9 +161,9 @@ export default function RepairDetail({ ticketId, workers = [], isAdmin, onClose,
     } catch (e) { setErr(e.message); return; }
     const device = [f.device_brand, f.device_model].filter(Boolean).join(' ') || 'equipo';
     const link = window.location.origin + '/track?t=' + trackToken;
-    const msg = `Hola${f.customer_name ? ' ' + f.customer_name : ''}, tu ${device} ya fue enviado de vuelta.\n` +
+    const msg = `Hola${f.customer_name ? ' ' + f.customer_name : ''}, el repuesto que necesita tu ${device} ya está en camino hacia nosotros.\n` +
       `Número de rastreo: ${f.tracking_number}${f.carrier && f.carrier !== 'otra' ? ' (' + f.carrier.toUpperCase() + ')' : ''}\n` +
-      `Sigue tu paquete aquí: ${link}`;
+      `Puedes rastrear el paquete y el estado de tu reparación aquí: ${link}`;
     window.open('https://wa.me/' + phoneIntl(f.customer_phone) + '?text=' + encodeURIComponent(msg), '_blank');
     setOk('Se abrió WhatsApp con el mensaje listo para enviar.');
   };
@@ -239,11 +239,11 @@ export default function RepairDetail({ ticketId, workers = [], isAdmin, onClose,
         )}
       </div>
 
-      {/* Seguimiento del envío de vuelta al cliente: número de rastreo +
-          paquetería, y botones para mandar el link de track.html por correo
-          o WhatsApp. Los botones guardan la ficha antes de enviar. */}
+      {/* Seguimiento del repuesto en camino al taller: número de rastreo +
+          paquetería, y botones para mandar el link de track.html al cliente
+          por correo o WhatsApp. Los botones guardan la ficha antes de enviar. */}
       <div className="rd-ship">
-        <strong style={{ fontSize: 14 }}>Seguimiento del envío al cliente</strong>
+        <strong style={{ fontSize: 14 }}>Seguimiento del repuesto</strong>
         <div className="rd-grid" style={{ marginTop: 10 }}>
           <label className="field"><span>Número de seguimiento</span><input value={f.tracking_number} onChange={set('tracking_number')} placeholder="ej. 9400 1000 0000 0000 0000 00" /></label>
           <label className="field"><span>Paquetería</span>

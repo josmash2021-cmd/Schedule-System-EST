@@ -211,8 +211,8 @@ async function sendNewOrderEmails(order) {
   await Promise.all(tasks);
 }
 
-// Reparación enviada de vuelta al cliente: correo con el número de rastreo
-// y el link de track.html (el token del ticket abre la vista de reparación).
+// Repuesto en camino hacia el taller: correo con el número de rastreo y el
+// link de track.html (el token del ticket abre la vista de reparación).
 async function sendRepairTrackingEmail(ticket) {
   if (!ticket.customer_email) return false;
   const num = `REP-${1000 + Number(ticket.id)}`;
@@ -221,13 +221,14 @@ async function sendRepairTrackingEmail(ticket) {
   const carrier = ticket.carrier ? String(ticket.carrier).toUpperCase() : '';
   return sendEmail({
     to: ticket.customer_email,
-    subject: `Your repair ${num} is on its way back`,
-    text: `Hi${ticket.customer_name ? ' ' + ticket.customer_name : ''},\n\nYour ${device} has been shipped back to you.\nTracking: ${ticket.tracking_number}${carrier ? ' (' + carrier + ')' : ''}\nFollow it here: ${link}`,
-    html: plantilla(`Your repair ${num} is on its way back`, `
-      <p style="font-size:14px;line-height:1.6;color:#3a3a40;margin:0;">Hi${ticket.customer_name ? ' <strong>' + ticket.customer_name + '</strong>' : ''}, your <strong style="color:#111;">${device}</strong> has been shipped back to you.</p>
+    subject: `The part for your repair ${num} is on its way`,
+    text: `Hi${ticket.customer_name ? ' ' + ticket.customer_name : ''},\n\nThe replacement part your ${device} needs is on its way to us.\nTracking: ${ticket.tracking_number}${carrier ? ' (' + carrier + ')' : ''}\nYou can track the package and the status of your repair here: ${link}`,
+    html: plantilla(`The part for your repair ${num} is on its way`, `
+      <p style="font-size:14px;line-height:1.6;color:#3a3a40;margin:0;">Hi${ticket.customer_name ? ' <strong>' + ticket.customer_name + '</strong>' : ''}, the replacement part your <strong style="color:#111;">${device}</strong> needs is on its way to us.</p>
       ${cajaDato('Tracking number', ticket.tracking_number, carrier ? `Carrier: ${carrier}` : '')}
+      <p style="font-size:14px;line-height:1.6;color:#3a3a40;margin:18px 0 0;">You can track the package and the status of your repair with the button below.</p>
       ${boton(link, 'Track my repair')}`,
-      `Your repair ${num} is on its way back — track it here`),
+      `The part for your repair ${num} is on its way — track it here`),
   });
 }
 
