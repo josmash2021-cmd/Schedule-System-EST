@@ -768,11 +768,13 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   cuanto el repuesto esté en camino…"). La vista de reparación mantiene el
   camión de entrada, pero la columna del centro cambia: en vez del mapa y la
   dirección de envío, una tarjeta "Tu reparación" (`#rpCard`) con un iPhone
-  siendo reparado (`.rp-anim`, SVG+CSS: engrane, destornillador, spinner y
-  barra de progreso); resumen sin Subtotal/Shipping y "Total de la
-  reparación". Verificación visual de track.html:
-  `node admin-app/.visual-test/track-shot.cjs` (API mockeada, capturas
-  reparación + pedido).
+  REAL (recorte PNG de `iphone-15-pro-front.jpg` por luminancia con PIL:
+  `assets/img/iphone-repair.png` y `iphone-repair-screen.png`) al que le
+  quitan la pantalla — saltan los tornillos pentalobe, la pantalla se abre
+  como libro (rotateY 3D) y deja ver batería/placa/flex en CSS; resumen sin
+  Subtotal/Shipping y "Total de la reparación". Verificación visual de
+  track.html: `node admin-app/.visual-test/track-shot.cjs` (API mockeada,
+  capturas reparación + pedido).
 - OJO (bug previo resuelto el mismo día): el `if (!token) return;` de
   track.html va AL FINAL del script; arriba dejaba `SVGNS`/`CARRIER_URLS` sin
   definir y la búsqueda por número salía con la página vacía.

@@ -39,9 +39,11 @@ cambies estructura, flujos o convenciones.
   API nunca muestra "Order not found" si ya hay datos); **vista de REPARACIÓN
   (payload con `kind:'repair'`): el camión se queda igual, pero la columna
   del centro cambia — en vez del mapa y la dirección de envío, una tarjeta
-  "Tu reparación" (`#rpCard`) con un iPhone siendo reparado (`.rp-anim`:
-  engrane girando, destornillador que atornilla, spinner de diagnóstico y
-  barra de progreso dorada en la pantalla, todo SVG+CSS)**; título
+  "Tu reparación" (`#rpCard`) con un iPhone REAL (foto recortada a PNG con
+  transparencia: `assets/img/iphone-repair.png` + `iphone-repair-screen.png`,
+  generadas de `iphone-15-pro-front.jpg` por luminancia con PIL) al que le
+  quitan la pantalla: saltan los tornillos pentalobe y la pantalla se abre
+  como libro (rotateY 3D) dejando ver batería, placa y flex dorados en CSS)**; título
   "Seguimiento de reparación", badge "Reparación REP-1xxx", resumen sin
   líneas Subtotal/Shipping y "Total de la reparación"; el título de la
   página es fijo ("Order tracking", sin nombre del producto); **el badge bajo

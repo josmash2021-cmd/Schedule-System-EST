@@ -216,29 +216,59 @@
 
         /* ---- Animación de REPARACIÓN (links con kind:'repair') ----
            Va EN LA COLUMNA DEL CENTRO (donde en un pedido está el mapa y la
-           dirección de envío): un iPhone al que se le está trabajando —
-           engrane girando, destornillador que atornilla y destornilla,
-           spinner de diagnóstico y barra de progreso dorada en la pantalla.
-           El camión de arriba se queda igual que en los pedidos. */
+           dirección de envío): un iPhone REAL (foto recortada sobre fondo
+           transparente, assets/img/iphone-repair.png) al que le quitan la
+           pantalla: saltan los tornillos pentalobe, la pantalla (misma foto,
+           recortada al área del display) se levanta y se hace a un lado
+           dejando ver los internos (batería, placa y flex dorados en CSS),
+           y vuelve a su lugar. El camión de arriba se queda igual. */
         .rp-anim { display: flex; justify-content: center; }
-        .rp-scene { position: relative; width: min(340px, 100%); height: 320px; }
+        .rp-scene { position: relative; width: min(360px, 100%); height: 340px; }
         .rp-glow { position: absolute; left: 50%; top: 50%; width: 250px; height: 250px; transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(212,175,55,.13), transparent 65%); filter: blur(8px); animation: rpGlow 3s ease-in-out infinite; }
         @keyframes rpGlow { 0%, 100% { opacity: .65; } 50% { opacity: 1; } }
-        .rp-phone { position: absolute; left: 50%; top: 50%; width: 124px; height: 254px; transform: translate(-50%, -50%); filter: drop-shadow(0 12px 18px rgba(0,0,0,.55)); }
-        .rp-gear { position: absolute; left: calc(50% - 148px); top: 50%; width: 52px; height: 52px; margin-top: -26px; animation: rpSpin 5s linear infinite; }
-        @keyframes rpSpin { to { transform: rotate(360deg); } }
-        .rp-spin-arc { transform-box: fill-box; transform-origin: center; animation: rpSpin 1.5s linear infinite; }
-        .rp-bar-fill { transform-box: fill-box; transform-origin: left center; animation: rpBar 3.4s ease-in-out infinite; }
-        @keyframes rpBar { 0%, 100% { transform: scaleX(.06); } 50% { transform: scaleX(1); } }
-        .rp-driver { position: absolute; left: calc(50% + 56px); top: 20px; width: 84px; height: 84px; transform-origin: 50% 94%; animation: rpTurn 1.7s ease-in-out infinite alternate; filter: drop-shadow(0 4px 6px rgba(0,0,0,.45)); }
+        /* El teléfono: 3 capas apiladas del mismo tamaño — cuerpo (foto),
+           internos (CSS) y pantalla (foto) que se levanta. */
+        .rp-unit { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); height: 300px; aspect-ratio: 267 / 596; }
+        .rp-unit img { position: absolute; inset: 0; width: 100%; height: 100%; }
+        .rp-body { z-index: 1; filter: drop-shadow(0 12px 18px rgba(0,0,0,.55)); }
+        /* Internos: un poco MENORES que el área de la pantalla recortada,
+           así quedan tapados cuando la pantalla está en su lugar. */
+        .rp-internals { position: absolute; left: 8%; top: 5%; width: 84%; height: 77%; z-index: 2; border-radius: 12% / 6%; background: #101116; box-shadow: inset 0 0 0 1px rgba(255,255,255,.09); }
+        .rp-batt { position: absolute; right: 12%; top: 38%; width: 42%; height: 50%; border-radius: 8px; background: linear-gradient(180deg, #3d3e49, #2b2c36); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 2px 6px rgba(0,0,0,.4); }
+        .rp-batt::before { content: ''; position: absolute; left: 12%; top: 10%; right: 12%; height: 3px; border-radius: 2px; background: rgba(255,255,255,.14); }
+        .rp-batt::after { content: ''; position: absolute; left: 12%; top: 24%; width: 34%; height: 3px; border-radius: 2px; background: rgba(255,255,255,.09); }
+        .rp-board { position: absolute; right: 12%; top: 9%; width: 30%; height: 24%; border-radius: 6px; background: linear-gradient(180deg, #1d3a2f, #152721); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); }
+        .rp-board::before { content: ''; position: absolute; left: 16%; top: 20%; width: 30%; height: 26%; border-radius: 2px; background: #3a3b45; box-shadow: 12px 14px 0 -1px #3a3b45; }
+        .rp-flex { position: absolute; width: 3px; border-radius: 2px; background: linear-gradient(180deg, #d4af37, #a8842c); box-shadow: 0 0 4px rgba(212,175,55,.35); }
+        .rp-flex.f1 { right: 16%; top: 35%; height: 30%; }
+        .rp-flex.f2 { right: 25%; top: 35%; height: 42%; }
+        .rp-iscrew { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #d9d9de, #7a7a82); box-shadow: inset 0 0 1px rgba(0,0,0,.7); }
+        .rp-iscrew.a { left: 8%; top: 6%; } .rp-iscrew.b { right: 8%; top: 6%; }
+        .rp-iscrew.c { left: 8%; bottom: 6%; } .rp-iscrew.d { right: 8%; bottom: 6%; }
+        /* La pantalla se abre como un libro (bisagra en su orilla izquierda,
+           giro 3D), deja ver los internos y vuelve a cerrar (loop 7 s). */
+        .rp-screen { z-index: 3; transform-origin: 6% 50%; animation: rpScreen 7s cubic-bezier(.45,0,.25,1) infinite; }
+        @keyframes rpScreen {
+            0%, 24%   { transform: perspective(800px) rotateY(0deg); }
+            40%, 62%  { transform: perspective(800px) rotateY(-62deg); filter: drop-shadow(12px 14px 14px rgba(0,0,0,.45)); }
+            80%, 100% { transform: perspective(800px) rotateY(0deg); }
+        }
+        /* Tornillos pentalobe de la orilla inferior: saltan al empezar y
+           regresan cuando la pantalla vuelve. */
+        .rp-screw { position: absolute; top: 87%; width: 5px; height: 5px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #e3e3e8, #8a8a92); z-index: 4; }
+        .rp-screw.p1 { left: 28%; animation: rpScrewL 7s ease-in-out infinite; }
+        .rp-screw.p2 { left: 69%; animation: rpScrewR 7s ease-in-out infinite; }
+        @keyframes rpScrewL { 0% { transform: none; opacity: 1; } 14%, 82% { transform: translate(-12px, 18px) rotate(260deg); opacity: 0; } 94%, 100% { transform: none; opacity: 1; } }
+        @keyframes rpScrewR { 0% { transform: none; opacity: 1; } 14%, 82% { transform: translate(12px, 18px) rotate(-260deg); opacity: 0; } 94%, 100% { transform: none; opacity: 1; } }
+        .rp-driver { position: absolute; left: calc(50% + 62px); bottom: 26px; width: 78px; height: 78px; z-index: 5; transform-origin: 50% 94%; animation: rpTurn 1.7s ease-in-out infinite alternate; filter: drop-shadow(0 4px 6px rgba(0,0,0,.45)); }
         @keyframes rpTurn { from { transform: rotate(-30deg); } to { transform: rotate(20deg); } }
         .rp-spark { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #ffd86b; opacity: 0; animation: rpSpark 1.7s ease-in-out infinite; }
-        .rp-spark.s1 { left: calc(50% + 66px); top: 118px; }
-        .rp-spark.s2 { left: calc(50% + 86px); top: 134px; animation-delay: .5s; }
-        .rp-spark.s3 { left: calc(50% + 56px); top: 140px; animation-delay: 1s; }
+        .rp-spark.s1 { left: calc(50% + 66px); bottom: 62px; }
+        .rp-spark.s2 { left: calc(50% + 84px); bottom: 46px; animation-delay: .5s; }
+        .rp-spark.s3 { left: calc(50% + 56px); bottom: 40px; animation-delay: 1s; }
         @keyframes rpSpark { 0%, 100% { opacity: 0; transform: scale(.4); } 45% { opacity: .95; transform: scale(1); } }
         @media (prefers-reduced-motion: reduce) {
-            .rp-gear, .rp-driver, .rp-spin-arc, .rp-bar-fill, .rp-glow, .rp-spark { animation: none !important; }
+            .rp-screen, .rp-screw, .rp-driver, .rp-glow, .rp-spark { animation: none !important; }
         }
         /* La tarjeta del centro con la animación llena su columna (como hacía
            el mapa) y centra la escena verticalmente. */
@@ -252,7 +282,7 @@
             .rd-anim { margin: 0 0 18px; }
             .track-map { min-height: 320px; height: 320px; }
             .track-curve { min-height: 300px; }
-            .rp-card .rp-scene { height: 280px; }
+            .rp-card .rp-scene { height: 310px; }
         }
     </style>
 </head>
@@ -342,30 +372,28 @@
                          REPARACIÓN, la tarjeta con el iPhone siendo reparado. -->
                     <div class="track-center">
                         <!-- Animación de REPARACIÓN (oculta en pedidos): un
-                             iPhone siendo reparado — engrane girando,
-                             destornillador, spinner de diagnóstico y barra de
-                             progreso en la pantalla. -->
+                             iPhone REAL al que le quitan la pantalla — saltan
+                             los tornillos, la pantalla se levanta y deja ver
+                             batería, placa y flex; luego vuelve a su lugar. -->
                         <div class="track-card rp-card hidden" id="rpCard">
                             <h2 data-en="Your repair">Tu reparación</h2>
                             <div class="rp-anim" aria-hidden="true">
                                 <div class="rp-scene">
                                     <div class="rp-glow"></div>
-                                    <svg class="rp-gear" viewBox="0 0 40 40">
-                                        <circle cx="20" cy="20" r="8.5" fill="none" stroke="#6a6a72" stroke-width="8" stroke-dasharray="4.2 4.5"/>
-                                        <circle cx="20" cy="20" r="5.5" fill="#0c0c0f" stroke="#6a6a72" stroke-width="2"/>
-                                    </svg>
-                                    <svg class="rp-phone" viewBox="0 0 90 184">
-                                        <rect x="6" y="4" width="78" height="176" rx="17" fill="#14151b" stroke="rgba(255,255,255,.3)" stroke-width="2.5"/>
-                                        <rect x="13" y="13" width="64" height="158" rx="10" fill="#0a0a0d" stroke="rgba(255,255,255,.07)"/>
-                                        <rect x="32" y="19" width="26" height="7" rx="3.5" fill="#000" stroke="rgba(255,255,255,.14)"/>
-                                        <rect x="3.5" y="42" width="2.5" height="16" rx="1.2" fill="rgba(255,255,255,.22)"/>
-                                        <rect x="3.5" y="64" width="2.5" height="24" rx="1.2" fill="rgba(255,255,255,.22)"/>
-                                        <rect x="84" y="52" width="2.5" height="24" rx="1.2" fill="rgba(255,255,255,.22)"/>
-                                        <circle cx="45" cy="82" r="17" fill="none" stroke="rgba(212,175,55,.25)" stroke-width="4"/>
-                                        <circle class="rp-spin-arc" cx="45" cy="82" r="17" fill="none" stroke="#d4af37" stroke-width="4" stroke-linecap="round" stroke-dasharray="34 73"/>
-                                        <rect x="22" y="128" width="46" height="6" rx="3" fill="rgba(255,255,255,.12)"/>
-                                        <rect class="rp-bar-fill" x="22" y="128" width="46" height="6" rx="3" fill="#d4af37"/>
-                                    </svg>
+                                    <div class="rp-unit">
+                                        <img class="rp-body" src="assets/img/iphone-repair.png" alt="" draggable="false" loading="lazy">
+                                        <div class="rp-internals">
+                                            <div class="rp-board"></div>
+                                            <div class="rp-batt"></div>
+                                            <div class="rp-flex f1"></div>
+                                            <div class="rp-flex f2"></div>
+                                            <span class="rp-iscrew a"></span><span class="rp-iscrew b"></span>
+                                            <span class="rp-iscrew c"></span><span class="rp-iscrew d"></span>
+                                        </div>
+                                        <img class="rp-screen" src="assets/img/iphone-repair-screen.png" alt="" draggable="false" loading="lazy">
+                                        <span class="rp-screw p1"></span>
+                                        <span class="rp-screw p2"></span>
+                                    </div>
                                     <svg class="rp-driver" viewBox="0 0 64 64">
                                         <g transform="rotate(45 32 32)">
                                             <rect x="26" y="4" width="12" height="22" rx="6" fill="#d4af37"/>
