@@ -72,8 +72,16 @@ cambies estructura, flujos o convenciones.
   recibo** (productos con foto/desc + Subtotal/Tax/
   Shipping FREE-o-cobrado/Total — las líneas Tax/Shipping del JSONB se separan
   por nombre en el JS, textos dinámicos bilingües vía `window.EST_LANG`);
-  **página compacta sin scroll en PC** (sin carrusel de productos; paddings y
-  mapa reducidos en ≥981px); CSS inline propio — define `.hidden`, que
+  **página compacta SIN SCROLL en PC** (≥981px: `footer` oculto y
+  `.track-wrap` con `height: calc(100vh - 70px)` en flex-column — la grilla
+  llena el alto disponible y las curvas de estado/el mapa absorben el
+  sobrante vía flex con `min-height` bajo; en pantallas PC de <880px de alto
+  la altura vuelve a auto con scroll natural para no recortar nada). **En
+  reparación la grilla es 2 filas: IZQUIERDA la curva "Estado de la pieza
+  para reparar" + debajo "Rastreo de la pieza"; CENTRO la animación del
+  iPhone; DERECHA la curva "Estado de la reparación" + debajo el resumen**
+  (`grid-template-rows: minmax(0,1fr) auto`, áreas `"status map rstatus" /
+  "tracking map summary"`); CSS inline propio — define `.hidden`, que
   `site-v3.css` no tiene;
   enlazada desde el menú principal como "Mi pedido" / `data-en="My order"` en
   todas las páginas — sin token muestra el bloque `#trackNoToken` con

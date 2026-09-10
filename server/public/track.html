@@ -148,16 +148,19 @@
                 grid-template-areas: "status" "summary" "map" "tracking"; }
             .track-map { height: 300px; }
         }
-        /* Vista de reparación: igual que un pedido — IZQUIERDA la curva del
-           estatus de la pieza para reparar (el repuesto ordenado), y a la
-           DERECHA el estado de la reparación con
-           el mismo diseño de curva (#repairCurve), luego resumen y rastreo.
+        /* Vista de reparación: misma grilla de 3 columnas — IZQUIERDA la
+           curva del estatus de la PIEZA para reparar con el rastreo del
+           repuesto debajo; CENTRO la animación del iPhone; DERECHA el estado
+           de la REPARACIÓN con su curva (#repairCurve) y el resumen debajo.
+           Filas: las curvas absorben el alto sobrante (1fr) y las tarjetas
+           de abajo van con su alto natural (auto).
            OJO: va DESPUÉS de la regla móvil base para ganar la cascada
            (misma especificidad que .track-grid.no-map: gana el orden). */
-        .track-grid.repair { grid-template-columns: 300px 1fr 340px; grid-template-areas: "status map rstatus" "status map summary" "status map tracking"; }
+        .track-grid.repair { grid-template-columns: 300px 1fr 340px; grid-template-rows: minmax(0, 1fr) auto;
+            grid-template-areas: "status map rstatus" "tracking map summary"; }
         .track-side-repair-status { grid-area: rstatus; }
         @media (max-width: 980px) {
-            .track-grid.repair { grid-template-columns: 1fr; grid-template-areas: "rstatus" "status" "summary" "map" "tracking"; }
+            .track-grid.repair { grid-template-columns: 1fr; grid-template-rows: none; grid-template-areas: "rstatus" "status" "summary" "map" "tracking"; }
         }
         .track-addr { font-size: 14px; line-height: 1.55; color: #d5d5da; }
         .track-ship { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; font-size: 14px; }
@@ -285,14 +288,30 @@
            max-width:100% (de site-v3.css) encoge el desarmador a 0px. */
         .rp-card .rp-anim { margin: auto; width: 100%; }
 
-        /* Página compacta en PC: todo cabe sin scroll (una pantalla). */
+        /* Página compacta en PC: todo cabe SIN SCROLL (una sola pantalla,
+           tipo dashboard). El footer se oculta y la grilla llena exactamente
+           el alto disponible (nav = 70px): las curvas de estado y el mapa
+           absorben el espacio sobrante (flex + min-height bajo). */
         @media (min-width: 981px) {
-            .track-wrap { padding: 30px 24px 34px; }
-            .track-head { margin-bottom: 16px; }
-            .rd-anim { margin: 0 0 18px; }
-            .track-map { min-height: 320px; height: 320px; }
-            .track-curve { min-height: 300px; }
-            .rp-card .rp-scene { height: 310px; }
+            footer { display: none; }
+            .track-wrap { padding: 16px 24px; height: calc(100vh - 70px); display: flex; flex-direction: column; }
+            .track-head { margin-bottom: 12px; }
+            .track-head h1 { margin: 4px 0 6px; font-size: 28px; }
+            .rd-anim { margin: 0 0 12px; }
+            .rd-road { height: 100px; }
+            #trackBody, #trackData { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+            .track-grid { flex: 1; min-height: 0; }
+            .track-grid > * { min-height: 0; }
+            .track-grid .track-card { margin-bottom: 0; }
+            .track-map { min-height: 280px; height: auto; }
+            .track-curve { min-height: 160px; }
+            .track-side-repair-status { display: flex; flex-direction: column; }
+            .rp-card .rp-scene { height: 300px; }
+        }
+        /* Pantallas PC bajitas (<880px de alto): altura automática con scroll
+           natural — que nada quede recortado. */
+        @media (min-width: 981px) and (max-height: 880px) {
+            .track-wrap { height: auto; }
         }
     </style>
 </head>
@@ -798,7 +817,7 @@
             if (!svg) return;
             var n = points - 1; // segmentos
             var w = svg.clientWidth || 240;
-            var h = Math.max(svg.clientHeight || 0, 340);
+            var h = Math.max(svg.clientHeight || 0, 220);
             svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
             var cx = w / 2, A = Math.min(46, w * 0.22);
             var y0 = 16, y1 = h - 16, dy = y1 - y0;
