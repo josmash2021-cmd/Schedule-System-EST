@@ -45,7 +45,16 @@ cambies estructura, flujos o convenciones.
   con fondo transparente; el PNG está recortado al contenido con PIL y lleva
   drop-shadow; en PC `max-height: 500px`; OJO: `.rp-card .rp-anim` lleva
   width:100% porque sin ella max-width:100% de site-v3.css puede encoger la
-  imagen). Hasta 2026-09-10 era una animación de un iPhone al que le quitaban
+  imagen) y, SOBRE la foto, una **animación CSS en loop de 16 s** (capa
+  `.rp-stage`, inline-block que se ajusta al tamaño renderizado de la foto y
+  posiciona todo en %): un destornillador REAL a escala (foto Wiha
+  `assets/img/screwdriver.png`, Wiha2013 CC BY-SA 4.0 — crédito solo en
+  comentario; `width: 4.6%` ≈ tamaño del teléfono) desatornilla los 4
+  tornillos del chasis uno a uno (gira 12°↔27° sobre su punta) y cada
+  tornillo (`.rp-screw`, puntito metálico) salta y vuela en arco hasta el
+  puñito de tornillos de la esquina superior derecha del tapete, donde se
+  quedan apilados hasta el reset con fundido; keyframes `rpDrv` + `rpS1-4`;
+  `prefers-reduced-motion` deja la escena estática. Hasta 2026-09-10 era una animación de un iPhone al que le quitaban
   la pantalla (assets CC BY-SA ya borrados — ver MEMORIA.md)**; título
   "Seguimiento de reparación", badge "Reparación REP-1xxx", resumen sin
   líneas Subtotal/Shipping y "Total de la reparación"; **en reparación la

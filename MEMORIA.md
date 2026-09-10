@@ -779,11 +779,20 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   dirección de envío, una tarjeta "Tu reparación" (`#rpCard`) con la FOTO
   REAL del banco de trabajo del taller (`assets/img/repair-mat.png` — foto
   propia del dueño, ya venía con fondo transparente; PNG recortado al
-  contenido con PIL). NOTA HISTÓRICA: antes era una ANIMACIÓN de un iPhone
+  contenido con PIL). Y ENCIMA de la foto, una animación CSS en loop de 16 s
+  (mismo día, petición del dueño): un destornillador Wiha REAL a escala (el
+  `screwdriver.png` CC BY-SA se restauró del historial de git; crédito solo
+  en comentario) que desatornilla los 4 tornillos del chasis uno a uno (gira
+  12°↔27° sobre su punta) y cada tornillo (`.rp-screw`, puntito metálico)
+  salta y vuela en arco hasta el puñito de tornillos de la esquina superior
+  derecha del tapete, donde se apilan hasta el reset con fundido. Capa
+  `.rp-stage` (inline-block pegado al tamaño renderizado de la foto, todo en
+  % para alinear con la foto en cualquier pantalla); keyframes `rpDrv` +
+  `rpS1-4`; `prefers-reduced-motion` = escena estática. NOTA HISTÓRICA:
+  antes era una ANIMACIÓN de un iPhone
   al que le quitaban la pantalla (tornillos pentalobe, rotateY 3D, internos
   reales CC BY-SA) — el dueño la reemplazó por la foto real (2026-09-10) y
-  se borraron sus assets (`iphone-repair*.png`, `iphone-internals.png`,
-  `screwdriver.png`); resumen sin
+  se borraron sus assets (`iphone-repair*.png`, `iphone-internals.png`); resumen sin
   Subtotal/Shipping. ACTUALIZADO (diseño final del dueño): la IZQUIERDA
   queda la curva del estatus de la pieza para reparar (como en pedidos) y a
   la DERECHA va
