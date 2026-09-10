@@ -319,10 +319,17 @@ todo cambio de UI antes de commit.
 (telefono/tablet/laptop) y `service_type` (revision/reparacion/mantenimiento)
 — `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` en `db.js`, enums exportados en
 `models/repairs.js` (`DEVICE_TYPES`/`SERVICE_TYPES`) y validados en la ruta
-(`validEnums`). La página "Activas" es un kanban de 3 columnas (Recibidos /
-En proceso = diagnostico+reparacion / Listos para entregar, `.kanban` en
-styles.css) con pills de categoría de equipo (Todos/Teléfonos/Tablets/Laptops);
-"Entregadas" y "Todas" siguen en tabla con borrado por selección. El formulario
+(`validEnums`). ACTUALIZADO (2026-09-10): la página dejó el kanban y ahora
+usa el MISMO diseño que Órdenes — fila + detalle siempre abierto
+(`.order-detail`) y barra de progreso animada (`.shipbar.s4`, 4 pasos) con
+las etapas Recibido → En revisión → En laboratorio de reparación y
+mantenimiento → Listo para recoger (entregado = barra completa); las
+etiquetas de `REPAIR_STATUS` cambiaron acorde (diagnostico="En revisión",
+reparacion="En laboratorio", listo="Listo para recoger"). En móvil la barra
+se ancla a la izquierda con max-width:84vw (la tabla es más ancha que la
+pantalla y el detalle hereda ese ancho). Lo anterior: pills de categoría de
+equipo (Todos/Teléfonos/Tablets/Laptops) y borrado por selección se
+mantienen. El formulario
 (`RepairDetail.jsx`) tiene selects de Tipo de equipo y Servicio; constantes
 compartidas `DEVICE_TYPES`/`SERVICE_TYPES` + `deviceTypeLabel`/
 `serviceTypeLabel` exportadas ahí.

@@ -3,9 +3,9 @@ import { api, apiUpload, photoUrl } from '../api.js';
 
 export const REPAIR_STATUS = [
   { v: 'recibido', l: 'Recibido' },
-  { v: 'diagnostico', l: 'Diagnóstico' },
-  { v: 'reparacion', l: 'En reparación' },
-  { v: 'listo', l: 'Listo' },
+  { v: 'diagnostico', l: 'En revisión' },
+  { v: 'reparacion', l: 'En laboratorio' },
+  { v: 'listo', l: 'Listo para recoger' },
   { v: 'entregado', l: 'Entregado' },
 ];
 export const STATUS_BADGE = {

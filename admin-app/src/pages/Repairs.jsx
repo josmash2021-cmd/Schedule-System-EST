@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useCallback, Fragment } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
 import FormPage from '../components/FormPage.jsx';
 import RepairDetail, {
-  REPAIR_STATUS, DEVICE_TYPES, deviceTypeLabel, serviceTypeLabel,
+  REPAIR_STATUS, STATUS_BADGE, statusLabel, DEVICE_TYPES, deviceTypeLabel, serviceTypeLabel,
 } from '../components/RepairDetail.jsx';
 
 const money = (n) => (n == null ? '—' : '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }));
@@ -16,6 +16,17 @@ function chicagoKey(date) {
   return `${p.year}-${p.month}-${p.day}`;
 }
 
+// Fecha + hora de negocio, como en Órdenes.
+function fmtDay(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  const p = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }).formatToParts(d).reduce((a, x) => { a[x.type] = x.value; return a; }, {});
+  return `${p.day}/${p.month}/${p.year} ${p.hour}:${p.minute}`;
+}
+
 function FilterPill({ v, cur, set, label }) {
   return <button className={'btn btn-sm ' + (cur === v ? 'btn-primary' : 'btn-secondary')} onClick={() => set(v)}>{label}</button>;
 }
@@ -23,16 +34,42 @@ function FilterPill({ v, cur, set, label }) {
 // Plurales para los pills de categoría de equipo.
 const DEVICE_PLURAL = { telefono: 'Teléfonos', tablet: 'Tablets', laptop: 'Laptops' };
 
-// Las reparaciones activas se organizan en tres columnas por estado:
-// recibidas → en proceso (diagnóstico + reparación) → listas para entregar.
-const KANBAN_COLS = [
-  { key: 'recibidos', label: 'Recibidos', match: (t) => t.status === 'recibido' },
-  { key: 'proceso', label: 'En proceso', match: (t) => t.status === 'diagnostico' || t.status === 'reparacion' },
-  { key: 'listos', label: 'Listos para entregar', match: (t) => t.status === 'listo' },
-];
+/* Barra de progreso animada de la reparación (mismo diseño que la barra de
+   envío de Órdenes): Recibido → En revisión → En laboratorio de reparación
+   y mantenimiento → Listo para recoger. Entregado = barra completa. */
+const REPAIR_STEPS = ['Recibido', 'En revisión', 'En laboratorio de reparación y mantenimiento', 'Listo para recoger'];
+function repairStep(t) {
+  if (t.status === 'entregado') return 5; // barra completa
+  return { recibido: 1, diagnostico: 2, reparacion: 3, listo: 4 }[t.status] || 1;
+}
+function RepairBar({ ticket }) {
+  const step = repairStep(ticket);
+  // El relleno llega hasta el centro de la columna del paso actual (tope 100%).
+  const pct = Math.min(((step - 0.5) / REPAIR_STEPS.length) * 100, 100);
+  return (
+    <div className="shipbar s4">
+      <div className="shipbar-line">
+        <div className="shipbar-fill" style={{ width: pct + '%' }} />
+      </div>
+      <div className="shipbar-steps">
+        {REPAIR_STEPS.map((label, i) => {
+          const n = i + 1;
+          return (
+            <div key={label} className={'shipbar-step' + (step >= n ? ' on' : '') + (step === n ? ' current' : '')}>
+              <div className="shipbar-dot" />
+              <span>{label}</span>
+            </div>
+          );
+        })}
+      </div>
+      {ticket.status === 'entregado' && (
+        <div className="muted" style={{ fontSize: 12, marginTop: 6, textAlign: 'center' }}>Entregado al cliente.</div>
+      )}
+    </div>
+  );
+}
 
 export default function Repairs() {
-  const navigate = useNavigate();
   // Permite llegar con ?entregado=YYYY-MM-DD (desde el gráfico de ventas del Dashboard).
   const [searchParams] = useSearchParams();
   const dayParam = searchParams.get('entregado');
@@ -65,9 +102,6 @@ export default function Repairs() {
     if (filter === 'activos') return t.status !== 'entregado';
     return t.status === filter;
   });
-
-  // Vista de columnas (kanban) solo para las activas, sin filtro de fecha.
-  const kanban = filter === 'activos' && !dayFilter;
 
   // Al cambiar de filtro se limpia la selección: así nunca se borra algo que
   // ya no está a la vista.
@@ -139,15 +173,20 @@ export default function Repairs() {
   }
 
   return (
-    <>
-      <div className="section-head">
-        <div className="spacer" />
-        {tickets != null && tickets.length > 0 && (
-          <button className="btn btn-danger btn-sm" onClick={removeAll} disabled={busy}>Eliminar todas</button>
-        )}
-        <button className="btn btn-primary" onClick={() => setDetail({ id: null })}>+ Nueva reparación</button>
-      </div>
+    <div className="orders-page">
       {err && <div className="alert alert-error">{err}</div>}
+
+      <div className="row" style={{ justifyContent: 'space-between', marginBottom: 16, gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="muted" style={{ fontSize: 14 }}>
+          {tickets == null ? '' : `${tickets.length} reparación${tickets.length === 1 ? '' : 'es'} · ${tickets.filter((t) => t.status !== 'entregado').length} activa${tickets.filter((t) => t.status !== 'entregado').length === 1 ? '' : 's'}`}
+        </div>
+        <div className="row" style={{ gap: 8 }}>
+          {tickets != null && tickets.length > 0 && (
+            <button className="btn btn-danger btn-sm" onClick={removeAll} disabled={busy}>Eliminar todas</button>
+          )}
+          <button className="btn btn-primary" onClick={() => setDetail({ id: null })}>+ Nueva reparación</button>
+        </div>
+      </div>
 
       {/* Categoría de equipo */}
       <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
@@ -165,7 +204,6 @@ export default function Repairs() {
       {dayFilter && (
         <div className="row" style={{ gap: 10, marginBottom: 16 }}>
           <span className="badge badge-on">Entregadas el {dayFilter}</span>
-          <button className="btn btn-ghost btn-sm" onClick={() => navigate('/reparaciones')}>Quitar filtro de fecha</button>
         </div>
       )}
 
@@ -179,77 +217,95 @@ export default function Repairs() {
         </div>
       )}
 
-      {tickets == null ? <span className="spinner spinner-lg" />
-        : kanban ? (
-          <div className="kanban">
-            {KANBAN_COLS.map((col) => {
-              const items = shown.filter(col.match);
-              return (
-                <div key={col.key} className="kanban-col">
-                  <div className="kanban-col-head">{col.label} <span className="muted">({items.length})</span></div>
-                  {items.length === 0 ? <div className="muted" style={{ fontSize: 13, padding: '4px 2px' }}>Sin equipos.</div>
-                    : items.map((t) => (
-                      <div key={t.id} className="kanban-card" onClick={() => setDetail({ id: t.id })}>
-                        <div className="kanban-card-title">
-                          <strong>{[t.device_brand, t.device_model].filter(Boolean).join(' ') || '—'}</strong>
-                          {t.photo_count > 0 && <span className="muted" style={{ fontSize: 12 }}>📷 {t.photo_count}</span>}
-                        </div>
-                        <div className="muted" style={{ fontSize: 12 }}>
-                          {deviceTypeLabel(t.device_type)} · {serviceTypeLabel(t.service_type)}
-                        </div>
-                        <div style={{ fontSize: 13 }}>{t.customer_name || '—'}</div>
-                        <div className="kanban-card-foot">
-                          <span>{money(t.final_price != null ? t.final_price : t.quoted_price)}</span>
-                          <select className="estado-select" value={t.status}
-                            onClick={(e) => e.stopPropagation()}
-                            onChange={(e) => setEstado(t, e.target.value)}>
-                            {REPAIR_STATUS.map((s) => <option key={s.v} value={s.v}>{s.l}</option>)}
-                          </select>
-                        </div>
-                      </div>
+      {/* Lista con el MISMO diseño que Órdenes: fila + detalle siempre abierto
+          y la barra de progreso animada con las etapas de la reparación. */}
+      <div className="card">
+        <h3>Reparaciones</h3>
+        {tickets == null ? <span className="spinner" />
+          : shown.length === 0 ? <div className="empty">No hay reparaciones{filter !== 'todos' ? ' en este filtro' : ''}.</div>
+            : (
+              <div className="table-wrap">
+                <table className="data">
+                  <thead><tr>
+                    <th style={{ width: 34 }}>
+                      <input type="checkbox" checked={allShownSelected} onChange={toggleAllShown}
+                        title="Seleccionar todas las de la lista" style={{ cursor: 'pointer' }} />
+                    </th>
+                    <th>Fecha</th><th>Equipo</th><th>Cliente</th><th className="hide-sm">Técnico</th>
+                    <th style={{ textAlign: 'right' }}>Precio</th><th>Estado</th>
+                  </tr></thead>
+                  <tbody>
+                    {shown.map((t) => (
+                      <Fragment key={t.id}>
+                        <tr>
+                          <td>
+                            <input type="checkbox" checked={sel.has(t.id)} onChange={() => toggle(t.id)} style={{ cursor: 'pointer' }} />
+                          </td>
+                          <td className="muted">{fmtDay(t.created_at)}</td>
+                          <td>
+                            <strong>{[t.device_brand, t.device_model].filter(Boolean).join(' ') || '—'}</strong>
+                            <div className="muted" style={{ fontSize: 12 }}>
+                              {[deviceTypeLabel(t.device_type), serviceTypeLabel(t.service_type)].join(' · ')}{t.device_serial ? ` · ${t.device_serial}` : ''}
+                            </div>
+                          </td>
+                          <td>
+                            {t.customer_name || '—'}
+                            {t.customer_phone && <div className="muted" style={{ fontSize: 12 }}>{t.customer_phone}</div>}
+                          </td>
+                          <td className="muted hide-sm">{t.assignee_username || '—'}</td>
+                          <td style={{ textAlign: 'right' }}><strong>{money(t.final_price != null ? t.final_price : t.quoted_price)}</strong></td>
+                          <td><span className={'badge ' + (STATUS_BADGE[t.status] || '')}>{statusLabel(t.status)}</span></td>
+                        </tr>
+                        {/* Detalle siempre abierto: toda la info a la vista. */}
+                        <tr>
+                          <td colSpan="7" style={{ background: '#f8f9fb' }}>
+                            <div className="order-detail">
+                              <div className="od-col">
+                                <div><span className="muted">Cliente:</span> <strong>{t.customer_name || '—'}</strong></div>
+                                <div><span className="muted">Teléfono:</span> {t.customer_phone || '—'}</div>
+                                <div><span className="muted">Correo:</span> {t.customer_email || '—'}</div>
+                              </div>
+                              <div className="od-col">
+                                <div><span className="muted">Equipo:</span> <strong>{[t.device_brand, t.device_model].filter(Boolean).join(' ') || '—'}</strong></div>
+                                <div><span className="muted">Tipo:</span> {deviceTypeLabel(t.device_type)} · {serviceTypeLabel(t.service_type)}</div>
+                                <div><span className="muted">Serie / IMEI:</span> {t.device_serial || '—'}</div>
+                                <div><span className="muted">Fotos:</span> {t.photo_count > 0 ? `📷 ${t.photo_count}` : 'sin fotos'}</div>
+                              </div>
+                              <div className="od-col">
+                                <div><span className="muted">Problema:</span> {t.problem || '—'}</div>
+                                <div><span className="muted">Diagnóstico:</span> {t.diagnosis || '—'}</div>
+                                <div>
+                                  <span className="muted">Cotizado:</span> {money(t.quoted_price)}
+                                  {' · '}
+                                  <span className="muted">Final:</span> <strong>{money(t.final_price)}</strong>
+                                </div>
+                                {t.tracking_number && (
+                                  <div>
+                                    <span className="muted">Repuesto:</span>{' '}
+                                    <strong>{t.tracking_number}</strong>
+                                    {t.carrier ? ` (${String(t.carrier).toUpperCase()})` : ''}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="od-full" style={{ marginTop: 12 }}>
+                                <RepairBar ticket={t} />
+                              </div>
+                              <div className="od-full row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                                <select className="estado-select" value={t.status} onChange={(e) => setEstado(t, e.target.value)}>
+                                  {REPAIR_STATUS.map((s) => <option key={s.v} value={s.v}>{s.l}</option>)}
+                                </select>
+                                <button className="btn btn-secondary btn-sm" onClick={() => setDetail({ id: t.id })}>Abrir ficha</button>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      </Fragment>
                     ))}
-                </div>
-              );
-            })}
-          </div>
-        )
-        : shown.length === 0 ? <div className="card"><div className="empty">No hay reparaciones{filter !== 'todos' ? ' en este filtro' : ''}.</div></div>
-          : (
-            <div className="table-wrap">
-              <table className="data">
-                <thead><tr>
-                  <th style={{ width: 34 }}>
-                    <input type="checkbox" checked={allShownSelected} onChange={toggleAllShown}
-                      title="Seleccionar todas las de la lista" style={{ cursor: 'pointer' }} />
-                  </th>
-                  <th>Equipo</th><th>Cliente</th><th>Estado</th><th className="hide-sm">Técnico</th><th>Precio</th><th className="hide-sm">Fotos</th>
-                </tr></thead>
-                <tbody>
-                  {shown.map((t) => (
-                    <tr key={t.id} style={{ cursor: 'pointer' }} onClick={() => setDetail({ id: t.id })}>
-                      <td onClick={(e) => e.stopPropagation()} style={{ cursor: 'default' }}>
-                        <input type="checkbox" checked={sel.has(t.id)} onChange={() => toggle(t.id)} style={{ cursor: 'pointer' }} />
-                      </td>
-                      <td><strong>{[t.device_brand, t.device_model].filter(Boolean).join(' ') || '—'}</strong>
-                        <div className="muted" style={{ fontSize: 12 }}>
-                          {[deviceTypeLabel(t.device_type), serviceTypeLabel(t.service_type)].join(' · ')}{t.device_serial ? ` · ${t.device_serial}` : ''}
-                        </div>
-                      </td>
-                      <td>{t.customer_name || '—'}{t.customer_phone && <div className="muted" style={{ fontSize: 12 }}>{t.customer_phone}</div>}</td>
-                      <td onClick={(e) => e.stopPropagation()} style={{ cursor: 'default' }}>
-                        <select className="estado-select" value={t.status} onChange={(e) => setEstado(t, e.target.value)}>
-                          {REPAIR_STATUS.map((s) => <option key={s.v} value={s.v}>{s.l}</option>)}
-                        </select>
-                      </td>
-                      <td className="muted hide-sm">{t.assignee_username || '—'}</td>
-                      <td>{money(t.final_price != null ? t.final_price : t.quoted_price)}</td>
-                      <td className="muted hide-sm">{t.photo_count > 0 ? `📷 ${t.photo_count}` : '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-    </>
+                  </tbody>
+                </table>
+              </div>
+            )}
+      </div>
+    </div>
   );
 }
