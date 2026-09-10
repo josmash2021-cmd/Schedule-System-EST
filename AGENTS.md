@@ -52,8 +52,11 @@ cambies estructura, flujos o convenciones.
   porque sin ella la escena colapsa a 0 y max-width:100% de site-v3.css
   borra la imagen); crédito CC BY-SA solo en comentario del código (sin texto visible, decisión del dueño))**; título
   "Seguimiento de reparación", badge "Reparación REP-1xxx", resumen sin
-  líneas Subtotal/Shipping y "Total de la reparación"; el título de la
-  página es fijo ("Order tracking", sin nombre del producto); **el badge bajo
+  líneas Subtotal/Shipping y "Total de la reparación"; **en reparación la
+  tarjeta de estado de la izquierda se titula "Estado de la pieza para
+  reparar" y la de rastreo "Rastreo de la pieza"** (lo que viaja es el
+  repuesto ordenado para reparar el equipo, no un paquete al cliente); el
+  título de la página es fijo ("Order tracking", sin nombre del producto); **el badge bajo
   el título muestra la fecha estimada de llegada** ("Llega el jue, 8 may" /
   "Arriving Thu, May 8" — de `expected_delivery` de AfterShip; "Entregado" al
   llegar; si no hay fecha, el número de orden como antes) y la página se

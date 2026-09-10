@@ -149,7 +149,8 @@
             .track-map { height: 300px; }
         }
         /* Vista de reparación: igual que un pedido — IZQUIERDA la curva del
-           estatus del paquete, y a la DERECHA el estado de la reparación con
+           estatus de la pieza para reparar (el repuesto ordenado), y a la
+           DERECHA el estado de la reparación con
            el mismo diseño de curva (#repairCurve), luego resumen y rastreo.
            OJO: va DESPUÉS de la regla móvil base para ganar la cascada
            (misma especificidad que .track-grid.no-map: gana el orden). */
@@ -358,7 +359,7 @@
                     <!-- Izquierda: barra de estado (vertical en PC). -->
                     <div class="track-side-left">
                         <div class="track-card track-status-card">
-                            <h2 data-en="Status">Estado</h2>
+                            <h2 id="trackStatusTitle" data-en="Status">Estado</h2>
                             <div class="track-bar">
                                 <div class="track-bar-line">                                    <div class="track-bar-fill" id="trackFill" style="width:0%"></div>
                                     <div class="track-bar-steps" id="trackSteps">
@@ -452,7 +453,7 @@
                     </div>
 
                     <div class="track-card track-side-tracking">
-                        <h2 data-en="Tracking">Rastreo</h2>
+                        <h2 id="trackShipTitle" data-en="Tracking">Rastreo</h2>
                         <!-- Sin data-en: el contenido lo escribe el JS (i18n lo pisaría). -->
                         <div class="track-ship" id="trackShip">En cuanto tu paquete sea enviado, aquí aparecerá el número de rastreo.</div>
                     </div>
@@ -886,6 +887,11 @@
                 document.getElementById('trackAddrCard').style.display = 'none';
                 document.getElementById('trackSummaryTitle').textContent = en ? 'Repair summary' : 'Resumen de la reparación';
                 document.getElementById('trackTotalLabel').textContent = 'Total';
+                // El "paquete" de una reparación es la PIEZA que se ordenó
+                // para reparar el equipo (teléfono/laptop/tablet): el estado
+                // y el rastreo hablan del repuesto, no de un pedido al cliente.
+                document.getElementById('trackStatusTitle').textContent = en ? 'Repair part status' : 'Estado de la pieza para reparar';
+                document.getElementById('trackShipTitle').textContent = en ? 'Part tracking' : 'Rastreo de la pieza';
                 // Lado derecho: estado de la reparación con el mismo diseño
                 // de curva; la curva del paquete se queda a la izquierda.
                 document.getElementById('trackGrid').classList.add('repair');
@@ -1009,7 +1015,9 @@
                     (d.carrier ? ' · ' + esc(String(d.carrier).toUpperCase()) : '') + '</span>' +
                     (url ? '<a href="' + url + encodeURIComponent(d.tracking_number) + '" target="_blank" rel="noopener">' + (en ? 'View on carrier site →' : 'Ver en la paquetería →') + '</a>' : '');
             } else {
-                ship.textContent = en ? 'As soon as your package ships, the tracking number will appear here.' : 'En cuanto tu paquete sea enviado, aquí aparecerá el número de rastreo.';
+                ship.textContent = en
+                    ? (isRepair ? 'As soon as the part for your repair ships, the tracking number will appear here.' : 'As soon as your package ships, the tracking number will appear here.')
+                    : (isRepair ? 'En cuanto la pieza para tu reparación sea enviada, aquí aparecerá el número de rastreo.' : 'En cuanto tu paquete sea enviado, aquí aparecerá el número de rastreo.');
             }
         }
         function load() {
