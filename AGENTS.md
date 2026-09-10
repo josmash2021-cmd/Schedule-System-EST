@@ -95,9 +95,11 @@ cambies estructura, flujos o convenciones.
   FOTO del tapete → estado de la pieza → resumen (muestra "Abonado por el
   cliente $X (N%)" con el porcentaje del total, como el detalle del panel) →
   rastreo — decisión del dueño 2026-09-10); **vista previa del link en
-  WhatsApp: `og:image` con el logo EST NEGRO sobre fondo BLANCO
-  (`assets/img/logo-link.png`, 1200×630 horneado con PIL de la foto del
-  dueño — el favicon del navegador sigue blanco)**; CSS inline propio — define
+  WhatsApp: `og:image` con la tarjeta de presentación del negocio
+  (`assets/img/logo-link.png`, 1200×630 — la imagen "cruise business card
+  (4)" del dueño: logo EST blanco + brazo dorado + ELECTRONICST sobre la
+  tarjeta oscura; el favicon del navegador sigue siendo el logo blanco)**;
+  CSS inline propio — define
   `.hidden`, que
   `site-v3.css` no tiene;
   enlazada desde el menú principal como "Mi pedido" / `data-en="My order"` en
