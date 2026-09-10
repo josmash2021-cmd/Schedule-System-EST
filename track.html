@@ -215,46 +215,44 @@
         .rd-box.load { left: calc(50% - 42px); opacity: 0; transition: left .7s ease-in, opacity .3s .45s; transform: scale(1); }
 
         /* ---- Animación de REPARACIÓN (links con kind:'repair') ----
-           En vez del camión: un iPhone al que se le está trabajando —
+           Va EN LA COLUMNA DEL CENTRO (donde en un pedido está el mapa y la
+           dirección de envío): un iPhone al que se le está trabajando —
            engrane girando, destornillador que atornilla y destornilla,
-           spinner de diagnóstico y barra de progreso dorada en la pantalla. */
-        .rp-anim { display: flex; justify-content: center; margin: 4px 0 30px; opacity: 0; transform: translateY(12px); transition: opacity .7s ease, transform .7s ease; }
-        .rp-anim.in { opacity: 1; transform: none; }
-        .rp-scene { position: relative; width: min(320px, 84%); height: 200px; }
+           spinner de diagnóstico y barra de progreso dorada en la pantalla.
+           El camión de arriba se queda igual que en los pedidos. */
+        .rp-anim { display: flex; justify-content: center; }
+        .rp-scene { position: relative; width: min(340px, 100%); height: 320px; }
         .rp-glow { position: absolute; left: 50%; top: 50%; width: 250px; height: 250px; transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(212,175,55,.13), transparent 65%); filter: blur(8px); animation: rpGlow 3s ease-in-out infinite; }
         @keyframes rpGlow { 0%, 100% { opacity: .65; } 50% { opacity: 1; } }
-        .rp-phone { position: absolute; left: 50%; top: 50%; width: 94px; height: 192px; transform: translate(-50%, -50%); filter: drop-shadow(0 12px 18px rgba(0,0,0,.55)); }
-        .rp-gear { position: absolute; left: calc(50% - 112px); top: 50%; width: 42px; height: 42px; margin-top: -21px; animation: rpSpin 5s linear infinite; }
+        .rp-phone { position: absolute; left: 50%; top: 50%; width: 124px; height: 254px; transform: translate(-50%, -50%); filter: drop-shadow(0 12px 18px rgba(0,0,0,.55)); }
+        .rp-gear { position: absolute; left: calc(50% - 148px); top: 50%; width: 52px; height: 52px; margin-top: -26px; animation: rpSpin 5s linear infinite; }
         @keyframes rpSpin { to { transform: rotate(360deg); } }
         .rp-spin-arc { transform-box: fill-box; transform-origin: center; animation: rpSpin 1.5s linear infinite; }
         .rp-bar-fill { transform-box: fill-box; transform-origin: left center; animation: rpBar 3.4s ease-in-out infinite; }
         @keyframes rpBar { 0%, 100% { transform: scaleX(.06); } 50% { transform: scaleX(1); } }
-        .rp-driver { position: absolute; left: calc(50% + 42px); top: 6px; width: 64px; height: 64px; transform-origin: 50% 94%; animation: rpTurn 1.7s ease-in-out infinite alternate; filter: drop-shadow(0 4px 6px rgba(0,0,0,.45)); }
+        .rp-driver { position: absolute; left: calc(50% + 56px); top: 20px; width: 84px; height: 84px; transform-origin: 50% 94%; animation: rpTurn 1.7s ease-in-out infinite alternate; filter: drop-shadow(0 4px 6px rgba(0,0,0,.45)); }
         @keyframes rpTurn { from { transform: rotate(-30deg); } to { transform: rotate(20deg); } }
         .rp-spark { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #ffd86b; opacity: 0; animation: rpSpark 1.7s ease-in-out infinite; }
-        .rp-spark.s1 { left: calc(50% + 50px); top: 86px; }
-        .rp-spark.s2 { left: calc(50% + 66px); top: 98px; animation-delay: .5s; }
-        .rp-spark.s3 { left: calc(50% + 42px); top: 102px; animation-delay: 1s; }
+        .rp-spark.s1 { left: calc(50% + 66px); top: 118px; }
+        .rp-spark.s2 { left: calc(50% + 86px); top: 134px; animation-delay: .5s; }
+        .rp-spark.s3 { left: calc(50% + 56px); top: 140px; animation-delay: 1s; }
         @keyframes rpSpark { 0%, 100% { opacity: 0; transform: scale(.4); } 45% { opacity: .95; transform: scale(1); } }
         @media (prefers-reduced-motion: reduce) {
             .rp-gear, .rp-driver, .rp-spin-arc, .rp-bar-fill, .rp-glow, .rp-spark { animation: none !important; }
         }
-        /* Vista de reparación: sin mapa ni dirección de envío — el centro
-           desaparece y quedan dos columnas (estado | resumen + rastreo). */
-        .track-grid.repair { grid-template-columns: 300px 1fr; grid-template-areas: "status summary" "status tracking"; }
-        .track-grid.repair .track-center { display: none; }
-        @media (max-width: 980px) {
-            .track-grid.repair { grid-template-columns: 1fr; grid-template-areas: "status" "summary" "tracking"; }
-        }
+        /* La tarjeta del centro con la animación llena su columna (como hacía
+           el mapa) y centra la escena verticalmente. */
+        .rp-card { flex: 1; display: flex; flex-direction: column; align-items: center; }
+        .rp-card .rp-anim { margin: auto; }
 
         /* Página compacta en PC: todo cabe sin scroll (una pantalla). */
         @media (min-width: 981px) {
             .track-wrap { padding: 30px 24px 34px; }
             .track-head { margin-bottom: 16px; }
             .rd-anim { margin: 0 0 18px; }
-            .rp-anim { margin: 0 0 18px; }
             .track-map { min-height: 320px; height: 320px; }
             .track-curve { min-height: 300px; }
+            .rp-card .rp-scene { height: 280px; }
         }
     </style>
 </head>
@@ -316,43 +314,6 @@
                     </div>
                 </div>
 
-                <!-- Animación de REPARACIÓN (solo cuando el link es de una
-                     reparación): un iPhone siendo reparado — engrane girando,
-                     destornillador, spinner de diagnóstico y barra de
-                     progreso en la pantalla. Nada de camión ni envío. -->
-                <div class="rp-anim hidden" id="rpAnim" aria-hidden="true">
-                    <div class="rp-scene">
-                        <div class="rp-glow"></div>
-                        <svg class="rp-gear" viewBox="0 0 40 40">
-                            <circle cx="20" cy="20" r="8.5" fill="none" stroke="#6a6a72" stroke-width="8" stroke-dasharray="4.2 4.5"/>
-                            <circle cx="20" cy="20" r="5.5" fill="#0c0c0f" stroke="#6a6a72" stroke-width="2"/>
-                        </svg>
-                        <svg class="rp-phone" viewBox="0 0 90 184">
-                            <rect x="6" y="4" width="78" height="176" rx="17" fill="#14151b" stroke="rgba(255,255,255,.3)" stroke-width="2.5"/>
-                            <rect x="13" y="13" width="64" height="158" rx="10" fill="#0a0a0d" stroke="rgba(255,255,255,.07)"/>
-                            <rect x="32" y="19" width="26" height="7" rx="3.5" fill="#000" stroke="rgba(255,255,255,.14)"/>
-                            <rect x="3.5" y="42" width="2.5" height="16" rx="1.2" fill="rgba(255,255,255,.22)"/>
-                            <rect x="3.5" y="64" width="2.5" height="24" rx="1.2" fill="rgba(255,255,255,.22)"/>
-                            <rect x="84" y="52" width="2.5" height="24" rx="1.2" fill="rgba(255,255,255,.22)"/>
-                            <circle cx="45" cy="82" r="17" fill="none" stroke="rgba(212,175,55,.25)" stroke-width="4"/>
-                            <circle class="rp-spin-arc" cx="45" cy="82" r="17" fill="none" stroke="#d4af37" stroke-width="4" stroke-linecap="round" stroke-dasharray="34 73"/>
-                            <rect x="22" y="128" width="46" height="6" rx="3" fill="rgba(255,255,255,.12)"/>
-                            <rect class="rp-bar-fill" x="22" y="128" width="46" height="6" rx="3" fill="#d4af37"/>
-                        </svg>
-                        <svg class="rp-driver" viewBox="0 0 64 64">
-                            <g transform="rotate(45 32 32)">
-                                <rect x="26" y="4" width="12" height="22" rx="6" fill="#d4af37"/>
-                                <rect x="30" y="6" width="4" height="18" rx="2" fill="#a8842c"/>
-                                <rect x="29.5" y="26" width="5" height="26" fill="#9a9aa2"/>
-                                <path d="M29.5 52 L34.5 52 L32 60 Z" fill="#c9c9cf"/>
-                            </g>
-                        </svg>
-                        <div class="rp-spark s1"></div>
-                        <div class="rp-spark s2"></div>
-                        <div class="rp-spark s3"></div>
-                    </div>
-                </div>
-
                 <div id="trackData" class="hidden">
                 <div class="track-grid" id="trackGrid">
                     <!-- Izquierda: barra de estado (vertical en PC). -->
@@ -376,15 +337,56 @@
                         </div>
                     </div>
 
-                    <!-- Centro: mapa punto a punto (tienda → cliente) y debajo
-                         la dirección de envío. -->
+                    <!-- Centro: en un PEDIDO, mapa punto a punto (tienda →
+                         cliente) y debajo la dirección de envío. En una
+                         REPARACIÓN, la tarjeta con el iPhone siendo reparado. -->
                     <div class="track-center">
+                        <!-- Animación de REPARACIÓN (oculta en pedidos): un
+                             iPhone siendo reparado — engrane girando,
+                             destornillador, spinner de diagnóstico y barra de
+                             progreso en la pantalla. -->
+                        <div class="track-card rp-card hidden" id="rpCard">
+                            <h2 data-en="Your repair">Tu reparación</h2>
+                            <div class="rp-anim" aria-hidden="true">
+                                <div class="rp-scene">
+                                    <div class="rp-glow"></div>
+                                    <svg class="rp-gear" viewBox="0 0 40 40">
+                                        <circle cx="20" cy="20" r="8.5" fill="none" stroke="#6a6a72" stroke-width="8" stroke-dasharray="4.2 4.5"/>
+                                        <circle cx="20" cy="20" r="5.5" fill="#0c0c0f" stroke="#6a6a72" stroke-width="2"/>
+                                    </svg>
+                                    <svg class="rp-phone" viewBox="0 0 90 184">
+                                        <rect x="6" y="4" width="78" height="176" rx="17" fill="#14151b" stroke="rgba(255,255,255,.3)" stroke-width="2.5"/>
+                                        <rect x="13" y="13" width="64" height="158" rx="10" fill="#0a0a0d" stroke="rgba(255,255,255,.07)"/>
+                                        <rect x="32" y="19" width="26" height="7" rx="3.5" fill="#000" stroke="rgba(255,255,255,.14)"/>
+                                        <rect x="3.5" y="42" width="2.5" height="16" rx="1.2" fill="rgba(255,255,255,.22)"/>
+                                        <rect x="3.5" y="64" width="2.5" height="24" rx="1.2" fill="rgba(255,255,255,.22)"/>
+                                        <rect x="84" y="52" width="2.5" height="24" rx="1.2" fill="rgba(255,255,255,.22)"/>
+                                        <circle cx="45" cy="82" r="17" fill="none" stroke="rgba(212,175,55,.25)" stroke-width="4"/>
+                                        <circle class="rp-spin-arc" cx="45" cy="82" r="17" fill="none" stroke="#d4af37" stroke-width="4" stroke-linecap="round" stroke-dasharray="34 73"/>
+                                        <rect x="22" y="128" width="46" height="6" rx="3" fill="rgba(255,255,255,.12)"/>
+                                        <rect class="rp-bar-fill" x="22" y="128" width="46" height="6" rx="3" fill="#d4af37"/>
+                                    </svg>
+                                    <svg class="rp-driver" viewBox="0 0 64 64">
+                                        <g transform="rotate(45 32 32)">
+                                            <rect x="26" y="4" width="12" height="22" rx="6" fill="#d4af37"/>
+                                            <rect x="30" y="6" width="4" height="18" rx="2" fill="#a8842c"/>
+                                            <rect x="29.5" y="26" width="5" height="26" fill="#9a9aa2"/>
+                                            <path d="M29.5 52 L34.5 52 L32 60 Z" fill="#c9c9cf"/>
+                                        </g>
+                                    </svg>
+                                    <div class="rp-spark s1"></div>
+                                    <div class="rp-spark s2"></div>
+                                    <div class="rp-spark s3"></div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="track-card track-map-card" id="trackMapCard">
                             <h2 data-en="Delivery route">Ruta de entrega</h2>
                             <div class="track-map" id="trackMap"></div>
                         </div>
 
-                        <div class="track-card">
+                        <div class="track-card" id="trackAddrCard">
                             <h2 data-en="Shipping address">Dirección de envío</h2>
                             <div class="track-addr" id="trackAddr">—</div>
                         </div>
@@ -683,27 +685,11 @@
                 revealSmooth(trackData); // los datos cargan animados y fluidos
             }, 4300);
         }
-        /* Animación de reparación (kind:'repair'): un iPhone siendo reparado
-           — NADA de camión, vía ni caja de envío. Más breve que la del
-           camión; queda trabajando en loop (engrane + destornillador). */
-        function repairIntro() {
-            document.querySelector('.rd-anim').classList.add('hidden'); // sin camión
-            var rp = document.getElementById('rpAnim');
-            rp.classList.remove('hidden');
-            if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                rp.classList.add('in');
-                trackData.classList.add('in');
-                trackData.classList.remove('hidden');
-                return;
-            }
-            revealSmooth(rp);
-            setTimeout(function () { revealSmooth(trackData); }, 1300);
-        }
         function showOrder(d) {
             hasData = true;
             errBox.classList.add('hidden');
             body.classList.remove('hidden');
-            if (!introDone) { introDone = true; d.kind === 'repair' ? repairIntro() : truckIntro(); }
+            if (!introDone) { introDone = true; truckIntro(); }
             render(d);
         }
 
@@ -817,13 +803,15 @@
             var en = window.EST_LANG === 'en';
             var isRepair = d.kind === 'repair';
             if (isRepair) {
-                // Reparación: título y textos adaptados, y vista DISTINTA a un
-                // pedido — sin mapa ni dirección de envío (dos columnas), y el
-                // resumen/total con lenguaje de reparación.
+                // Reparación: MISMO camión de entrada, pero el centro cambia —
+                // en vez del mapa y la dirección de envío, la tarjeta con el
+                // iPhone siendo reparado. Resumen y total con lenguaje de
+                // reparación.
                 var tt = document.getElementById('trackTitle');
                 tt.textContent = en ? 'Repair tracking' : 'Seguimiento de reparación';
                 document.title = (en ? 'Repair tracking' : 'Seguimiento de reparación') + ' — ElectronicST';
-                document.getElementById('trackGrid').classList.add('repair');
+                document.getElementById('rpCard').classList.remove('hidden');
+                document.getElementById('trackAddrCard').style.display = 'none';
                 document.getElementById('trackSummaryTitle').textContent = en ? 'Repair summary' : 'Resumen de la reparación';
                 document.getElementById('trackTotalLabel').textContent = en ? 'Repair total' : 'Total de la reparación';
             }
