@@ -169,7 +169,10 @@ cambies estructura, flujos o convenciones.
   la sección "Seguimiento del repuesto" con botón de correo
   (`POST /:id/send-tracking`, plantilla `sendRepairTrackingEmail`: "the
   replacement part … is on its way to us") y botón de
-  WhatsApp (wa.me con el mensaje y el link ya escritos). **El repuesto se
+  WhatsApp (wa.me con el mensaje y el link ya escritos — el saludo es
+  DINÁMICO según la hora del negocio: "buenos días/tardes/noches" vía
+  `saludo()` en `RepairDetail.jsx`, también lo usa el mensaje de la factura
+  por WhatsApp en `Repairs.jsx`). **El repuesto se
   rastrea SOLO por su número** (mismo sistema que las órdenes): al guardar/
   cambiar `tracking_number` en el PATCH se sella `shipped_at` y se registra
   con el proveedor (`tracking_id`); el job de 15 min actualiza `ship_tag` +

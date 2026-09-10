@@ -76,6 +76,14 @@ export function phoneIntl(p) {
   return d.length === 10 ? '1' + d : d;
 }
 
+// Saludo según la hora del negocio (America/Chicago), para los mensajes de
+// WhatsApp al cliente: buenos días (5-11), buenas tardes (12-18), buenas
+// noches (19-4). Se calcula al hacer clic en el botón.
+export function saludo() {
+  const h = Number(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', hour: 'numeric', hourCycle: 'h23' }).format(new Date()));
+  return h >= 5 && h < 12 ? 'buenos días' : h >= 12 && h < 19 ? 'buenas tardes' : 'buenas noches';
+}
+
 export default function RepairDetail({ ticketId, workers = [], isAdmin, onClose, onSaved, onCreated }) {
   const [id, setId] = useState(ticketId || null);
   const [f, setF] = useState(EMPTY);
@@ -163,7 +171,7 @@ export default function RepairDetail({ ticketId, workers = [], isAdmin, onClose,
     } catch (e) { setErr(e.message); return; }
     const device = [f.device_brand, f.device_model].filter(Boolean).join(' ') || 'equipo';
     const link = window.location.origin + '/track?t=' + trackToken;
-    const msg = `Hola${f.customer_name ? ' ' + f.customer_name : ''}, el repuesto que necesita tu ${device} ya está en camino hacia nosotros.\n` +
+    const msg = `Hola${f.customer_name ? ' ' + f.customer_name : ''}, ${saludo()}. El repuesto que necesita tu ${device} ya está en camino hacia nosotros.\n` +
       `Número de rastreo: ${f.tracking_number}${f.carrier && f.carrier !== 'otra' ? ' (' + f.carrier.toUpperCase() + ')' : ''}\n` +
       `Puedes rastrear el paquete y el estado de tu reparación aquí: ${link}`;
     window.open('https://wa.me/' + phoneIntl(f.customer_phone) + '?text=' + encodeURIComponent(msg), '_blank');

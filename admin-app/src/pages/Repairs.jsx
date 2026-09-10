@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
 import FormPage from '../components/FormPage.jsx';
 import RepairDetail, {
-  REPAIR_STATUS, STATUS_BADGE, statusLabel, DEVICE_TYPES, deviceTypeLabel, serviceTypeLabel, phoneIntl,
+  REPAIR_STATUS, STATUS_BADGE, statusLabel, DEVICE_TYPES, deviceTypeLabel, serviceTypeLabel, phoneIntl, saludo,
 } from '../components/RepairDetail.jsx';
 
 const money = (n) => (n == null ? '—' : '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }));
@@ -164,7 +164,7 @@ export default function Repairs() {
       marcarFactura(t, d.invoice_number);
       const device = [t.device_brand, t.device_model].filter(Boolean).join(' ') || 'equipo';
       const link = window.location.origin + d.path;
-      const msg = `Hola${t.customer_name ? ' ' + t.customer_name : ''}, aquí tienes tu factura ${d.invoice_number} de ElectronicST por la reparación de tu ${device} (PDF): ${link}`;
+      const msg = `Hola${t.customer_name ? ' ' + t.customer_name : ''}, ${saludo()}. Aquí tienes tu factura ${d.invoice_number} de ElectronicST por la reparación de tu ${device} (PDF): ${link}`;
       window.open('https://wa.me/' + phoneIntl(t.customer_phone) + '?text=' + encodeURIComponent(msg), '_blank');
       setOk('Se abrió WhatsApp con el link de la factura listo para enviar.');
     } catch (e) { setErr(e.message); }
