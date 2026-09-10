@@ -219,7 +219,13 @@ cambies estructura, flujos o convenciones.
   `GET /api/track/:token` por `track_token`, sin PII de contacto; si el token
   (o el número en `lookup/:number`) no es de una orden busca en
   `repair_tickets` y devuelve el payload con `kind:'repair'` — el "producto"
-  es el equipo reparado y, sin dirección, el mapa se oculta solo),
+  es el equipo reparado y, sin dirección, el mapa se oculta solo; el payload
+  de orden incluye `ship_note`/`ship_note_en` — **nota pública opcional del
+  envío** (columnas de `online_orders`, se escriben a mano por SQL): track.html
+  la muestra en paréntesis bajo la etiqueta del paso ACTUAL de la barra y
+  pinta ese punto de VERDE (#34c759, con pulso verde), p. ej. "Pequeño
+  retraso, en camino"; bilingüe (cae al ES si falta el EN) y deja de
+  mostrarse al entregarse),
   `auth.js` (login viejo, sin frontend).
 - **Correos transaccionales:** `server/lib/email.js`. Único proveedor:
   **Gmail SMTP con nodemailer** (env `GMAIL_USER` + `GMAIL_APP_PASSWORD` —

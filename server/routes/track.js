@@ -56,6 +56,10 @@ function publicOrder(o) {
     address: o.address || null,
     ship_status: o.ship_status || 'pendiente',
     ship_tag: o.ship_tag || null,
+    // Nota del envío (retraso, etc.): se muestra en paréntesis bajo el paso
+    // actual de la barra y ese punto se pinta de verde. ES + EN.
+    ship_note: o.ship_note || null,
+    ship_note_en: o.ship_note_en || null,
     expected_delivery: o.expected_delivery
       ? new Date(o.expected_delivery).toISOString().slice(0, 10)
       : null,

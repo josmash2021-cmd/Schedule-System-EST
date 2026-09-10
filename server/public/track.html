@@ -81,6 +81,16 @@
             0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,.35); }
             50% { box-shadow: 0 0 0 9px rgba(212,175,55,.07); }
         }
+        /* Paso con NOTA del envío (ship_note, p. ej. un pequeño retraso): el
+           punto actual se pinta de verde y la nota va en paréntesis bajo la
+           etiqueta. Va tras las reglas .on para ganar la cascada. */
+        .track-bar-step.noted .track-bar-dot { background: #34c759; border-color: #34c759; }
+        .track-bar-step.noted.current .track-bar-dot { animation: trackDotPop .5s cubic-bezier(.34,1.56,.64,1) both, trackPulseGreen 2.6s ease-in-out .6s infinite; }
+        @keyframes trackPulseGreen {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(52,199,89,.35); }
+            50% { box-shadow: 0 0 0 9px rgba(52,199,89,.08); }
+        }
+        .track-bar-note { display: block; padding-top: 2px; font-size: 10px; line-height: 1.3; color: #34c759; white-space: normal; }
         .track-pre { text-align: center; font-size: 13px; color: var(--muted); margin-top: 8px; }
         /* Móvil: etiquetas angostas y en dos líneas para que no se monten. */
         @media (max-width: 560px) {
@@ -862,11 +872,12 @@
         var SVGNS = 'http://www.w3.org/2000/svg';
         var lastStep = 0;
         var lastRepairStep = 0;
+        var lastNote = '';
         // Curva de estado (PC): serpente centrada en la tarjeta, de arriba
         // hasta abajo. Puntos dorados = pasos cumplidos; etiquetas alternan
         // de lado. Se redibuja en cada render (es barato). Genérica: sirve
         // para la curva de la pieza/paquete y la de la reparación (5 puntos).
-        function drawCurve(svg, labels, step, points) {
+        function drawCurve(svg, labels, step, points, note) {
             if (!svg) return;
             var n = points - 1; // segmentos
             var w = svg.clientWidth || 240;
@@ -897,10 +908,13 @@
             for (var j = 0; j < points; j++) {
                 var p = base.getPointAtLength(L * j / n);
                 var on = j <= step;
+                // Paso con NOTA del envío (ship_note): punto VERDE y la nota
+                // en paréntesis bajo su etiqueta.
+                var noted = !!note && j === step;
                 svg.appendChild(el('circle', {
                     cx: p.x, cy: p.y, r: j === step ? 7 : 6,
-                    fill: on ? '#d4af37' : '#0c0c0f',
-                    stroke: on ? '#d4af37' : 'rgba(255,255,255,.25)', 'stroke-width': 2
+                    fill: noted ? '#34c759' : (on ? '#d4af37' : '#0c0c0f'),
+                    stroke: noted ? '#34c759' : (on ? '#d4af37' : 'rgba(255,255,255,.25)'), 'stroke-width': 2
                 }));
                 var right = j % 2 === 0; // etiquetas alternan de lado
                 var t = el('text', {
@@ -911,6 +925,26 @@
                 });
                 t.textContent = labels[j] || '';
                 svg.appendChild(t);
+                if (noted) {
+                    // La nota puede ser larga para la tarjeta: se envuelve
+                    // por palabras en líneas cortas bajo la etiqueta.
+                    var nwords = ('(' + note + ')').split(' ');
+                    var nlines = [], ncur = '';
+                    nwords.forEach(function (nw) {
+                        var nt2 = ncur ? ncur + ' ' + nw : nw;
+                        if (nt2.length > 20 && ncur) { nlines.push(ncur); ncur = nw; } else { ncur = nt2; }
+                    });
+                    if (ncur) nlines.push(ncur);
+                    nlines.slice(0, 3).forEach(function (nline, k) {
+                        var nt = el('text', {
+                            x: p.x + (right ? 16 : -16), y: p.y + 19 + k * 13,
+                            'text-anchor': right ? 'start' : 'end',
+                            fill: '#34c759', 'font-size': '11'
+                        });
+                        nt.textContent = nline;
+                        svg.appendChild(nt);
+                    });
+                }
             }
         }
         function stepLabels(sel) {
@@ -918,9 +952,10 @@
                 document.querySelectorAll(sel + ' .track-bar-step span'),
                 function (s) { return s.textContent; });
         }
-        function drawStatusCurve(step) {
+        function drawStatusCurve(step, note) {
             lastStep = step;
-            drawCurve(document.getElementById('trackCurve'), stepLabels('#trackSteps'), step, 5);
+            lastNote = note || '';
+            drawCurve(document.getElementById('trackCurve'), stepLabels('#trackSteps'), step, 5, lastNote);
         }
         // La curva del ESTADO DE LA REPARACIÓN (derecha): mismo diseño, 5
         // puntos. rs 0-4 (entregado se dibuja como barra completa, paso 4).
@@ -933,7 +968,7 @@
         if (window.ResizeObserver) {
             new ResizeObserver(function () {
                 if (window.matchMedia('(min-width: 981px)').matches) {
-                    drawStatusCurve(lastStep);
+                    drawStatusCurve(lastStep, lastNote);
                     if (document.getElementById('repairCurve') && !document.getElementById('trackRepairStatusCard').classList.contains('hidden')) {
                         drawRepairCurve(lastRepairStep);
                     }
@@ -970,6 +1005,12 @@
                 document.getElementById('trackRepairStatusCard').classList.remove('hidden');
             }
             var step = shipStep(d);
+            // Nota del envío (ship_note, p. ej. un pequeño retraso): va en
+            // paréntesis bajo la etiqueta del paso ACTUAL y ese punto se
+            // pinta de verde. Ya entregado, la nota deja de mostrarse.
+            var noteTxt = step < 4
+                ? String((en ? (d.ship_note_en || d.ship_note) : d.ship_note) || '').trim()
+                : '';
             // El badge bajo el título muestra la fecha estimada de llegada
             // (AfterShip). Sin fecha aún: el número de orden como antes.
             var lbl = document.getElementById('trackNumLabel');
@@ -991,13 +1032,25 @@
             // en móvil, la barra horizontal (igual en pedidos y reparaciones).
             var pct = (step / 4 * 100) + '%';
             if (window.matchMedia('(min-width: 981px)').matches) {
-                drawStatusCurve(step);
+                drawStatusCurve(step, noteTxt);
             } else {
                 document.getElementById('trackFill').style.width = pct;
             }
             document.querySelectorAll('#trackSteps .track-bar-step').forEach(function (el, i) {
                 el.classList.toggle('on', step >= i);
                 el.classList.toggle('current', step === i);
+                // Punto VERDE + nota en paréntesis en el paso actual (barra
+                // móvil; en PC lo dibuja la curva). Se reconstruye en cada
+                // render porque el polling corre cada 30 s.
+                el.classList.toggle('noted', !!noteTxt && step === i);
+                var oldNote = el.querySelector('.track-bar-note');
+                if (oldNote) oldNote.remove();
+                if (noteTxt && step === i) {
+                    var sm = document.createElement('small');
+                    sm.className = 'track-bar-note';
+                    sm.textContent = '(' + noteTxt + ')';
+                    el.appendChild(sm);
+                }
             });
             if (isRepair) {
                 // Estado de la reparación (5 etapas) a la DERECHA con el MISMO

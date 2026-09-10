@@ -886,3 +886,30 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   existe → si no, busca por repair_id y sella el puntero → si no hay, crea y
   sella. `listAll` devuelve el número con COALESCE(puntero, subconsulta por
   repair_id).
+
+## 15. Nota pública del envío (punto verde) y caso Beverly — 2026-09-10
+
+- `online_orders` ganó `ship_note` (ES) y `ship_note_en` (EN, opcional): nota
+  pública del envío que track.html muestra en paréntesis bajo la etiqueta del
+  paso ACTUAL de la barra, pintando ese punto de VERDE (#34c759, pulso verde
+  incluido). Pensada para avisos puntuales ("Pequeño retraso, en camino").
+  Reglas: bilingüe (cae al ES si falta el EN), se oculta cuando el pedido
+  llega a Entregado, y en la curva SVG de PC la nota se envuelve por palabras
+  en líneas de ≤20 caracteres bajo la etiqueta (sin ella se salía de la
+  tarjeta). Se escribe a mano por SQL (sin UI de panel por ahora):
+  `UPDATE online_orders SET ship_note='…', ship_note_en='…' WHERE id=N`.
+  El payload público la expone en `publicOrder` (routes/track.js); las
+  columnas se autocrean en db.js como el resto.
+- Caso origen: orden #11 (Beverly Aldridge) — el dueño la había marcado
+  'entregado' a mano pero el paquete sigue en camino. Se corrigió por SQL:
+  `ship_status='enviado'` (ship_tag ya era InTransit) + la nota de retraso.
+  OJO: los flags de correo de esa orden están en false porque Gmail estaba
+  bloqueado (error 535); el job de 15 min reintenta el correo de tránsito en
+  cada corrida mientras email_transit=false — comportamiento preexistente.
+- Cómo correr SQL contra producción: `railway run` NO sirve en local
+  (DATABASE_URL apunta a postgres.railway.internal, solo resoluble dentro de
+  Railway). Se usa `DATABASE_PUBLIC_URL` del servicio Postgres:
+  `DB=$(railway variables --service Postgres --kv | grep '^DATABASE_PUBLIC_URL=' | cut -d= -f2-)`
+  y luego `DATABASE_URL="$DB" NODE_ENV=production JWT_SECRET=x ADMIN_PASSWORD=x node server/scripts/run-sql.js "…"`
+  (las vars JWT/ADMIN son dummy: config.js las exige en production aunque el
+  script solo use la base).

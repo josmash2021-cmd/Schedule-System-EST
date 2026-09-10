@@ -362,6 +362,12 @@ async function initDb() {
     // sin esto la ganancia mensual salía inflada porque las ventas web
     // contaban costo 0.
     await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS costo NUMERIC(10,2) NOT NULL DEFAULT 0;`);
+    // Nota pública opcional junto al estado del envío: track.html la muestra
+    // en paréntesis bajo el paso actual y pinta ese punto de VERDE (p. ej.
+    // "Pequeño retraso, en camino"). ship_note_en es la versión en inglés
+    // (si falta, se usa la española para ambos idiomas).
+    await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS ship_note TEXT;`);
+    await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS ship_note_en TEXT;`);
 
     // ----- Facturas (Bill of Sale) -----
     // Una factura puede nacer de una venta de mostrador (sale_id), de una
