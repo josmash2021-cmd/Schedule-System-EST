@@ -223,9 +223,10 @@ async function applyUpdate(o, { tag, expectedDelivery }) {
   if (changed) trackEvents.emit('update', o.id);
 }
 
-// Lo mismo pero para el REPUESTO de una reparación (repair_tickets): solo
-// guarda tag/fecha y emite el aviso SSE con id 'rep:<id>' (sin correos — el
-// correo de seguimiento de la reparación se manda a mano desde el panel).
+// Lo mismo pero para el REPUESTO de una reparación (repair_tickets): guarda
+// tag/fecha, emite el aviso SSE con id 'rep:<id>' y, cuando la paquetería
+// marca Delivered (la pieza LLEGÓ al taller), manda el correo "the part has
+// arrived" al cliente una sola vez (flag email_part_arrived).
 // El tag nunca hace retroceder la barra (misma jerarquía que las órdenes).
 async function applyRepairUpdate(t, { tag, expectedDelivery }) {
   if (!t) return;
@@ -241,6 +242,11 @@ async function applyRepairUpdate(t, { tag, expectedDelivery }) {
   if (eta && eta !== cur) {
     await repairs.updateExpectedDelivery(t.id, eta);
     changed = true;
+  }
+  if (tag === 'Delivered' && !t.email_part_arrived) {
+    const emailLib = require('./email');
+    const ok = await emailLib.sendPartArrivedEmail(t);
+    if (ok) await repairs.markEmailSent(t.id, 'email_part_arrived');
   }
   if (changed) trackEvents.emit('update', 'rep:' + t.id);
 }

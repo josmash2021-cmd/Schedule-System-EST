@@ -191,6 +191,10 @@ async function initDb() {
     await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS expected_delivery DATE;`);
     await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS shipped_at TIMESTAMPTZ;`);
     await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS tracking_id TEXT;`);
+    // Flags de correos de reparación (una sola vez cada uno): la pieza llegó
+    // al taller y el equipo está listo para recoger.
+    await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS email_part_arrived BOOLEAN NOT NULL DEFAULT false;`);
+    await client.query(`ALTER TABLE repair_tickets ADD COLUMN IF NOT EXISTS email_ready BOOLEAN NOT NULL DEFAULT false;`);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS repair_photos (

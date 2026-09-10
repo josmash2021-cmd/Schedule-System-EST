@@ -167,6 +167,12 @@ async function updateExpectedDelivery(id, date) {
   await pool.query('UPDATE repair_tickets SET expected_delivery = $2 WHERE id = $1', [id, date || null]);
 }
 
+// Marca un correo de reparación como enviado (columna en lista blanca).
+async function markEmailSent(id, col) {
+  if (!['email_part_arrived', 'email_ready'].includes(col)) return;
+  await pool.query(`UPDATE repair_tickets SET ${col} = true WHERE id = $1`, [id]);
+}
+
 // Tickets cuya pieza sigue en camino (el job los consulta cada 15 min).
 async function listPartsInTransit() {
   const r = await pool.query(
@@ -181,5 +187,5 @@ module.exports = {
   STATUSES, DEVICE_TYPES, SERVICE_TYPES, FIELDS, listAll, findById, getWithPhotos, create, update, remove, removeMany,
   listPhotoFilenames, addPhoto, getPhoto, removePhoto,
   findByTrackToken, findByTrackingNumber, findByTrackingId,
-  stampShipped, setTrackingId, updateShipTag, updateExpectedDelivery, listPartsInTransit,
+  stampShipped, setTrackingId, updateShipTag, updateExpectedDelivery, listPartsInTransit, markEmailSent,
 };

@@ -186,6 +186,14 @@ router.patch('/:id', async (req, res) => {
       if (tid) await repairs.setTrackingId(id, tid);
       trackEvents.emit('update', 'rep:' + id);
     }
+    // Estado → 'listo': correo al cliente "tu equipo está listo para
+    // recoger", una sola vez (flag email_ready; si el envío falla no se
+    // marca y reintenta en el próximo cambio).
+    if (fields.status === 'listo' && existing.status !== 'listo' && t.customer_email && !existing.email_ready) {
+      email.sendRepairReadyEmail(t)
+        .then((ok) => { if (ok) return repairs.markEmailSent(id, 'email_ready'); })
+        .catch((e) => console.error('repair ready email failed:', e.message));
+    }
     audit.logAction(req.user.id, 'repair.update', { targetType: 'repair', targetId: id, ip: getClientIp(req), metadata: { status: fields.status } });
     res.json({ ticket: t });
   } catch (err) {

@@ -314,4 +314,52 @@ async function sendRepairInvoiceEmail(ticket, invoice, pdfBuffer) {
   });
 }
 
-module.exports = { sendEmail, sendNewOrderEmails, sendTrackingEmail, sendTransitEmail, sendDeliveredEmail, sendInvoiceEmail, sendRepairTrackingEmail, sendRepairInvoiceEmail, orderNumber, trackLink };
+// La pieza del repuesto LLEGÓ al taller (ship_tag Delivered del job/webhook).
+// Avisa al cliente que ya empezamos a trabajar su equipo. Se manda una sola
+// vez (flag email_part_arrived en repair_tickets).
+async function sendPartArrivedEmail(ticket) {
+  if (!ticket.customer_email) return false;
+  const num = `REP-${1000 + Number(ticket.id)}`;
+  const link = `${siteBase()}/track?t=${ticket.track_token}`;
+  const device = [ticket.device_brand, ticket.device_model].filter(Boolean).join(' ') || 'device';
+  return sendEmail({
+    to: ticket.customer_email,
+    subject: `The part for your repair ${num} has arrived`,
+    text: `Hi${ticket.customer_name ? ' ' + ticket.customer_name : ''},\n\nGreat news: the replacement part your ${device} needed has arrived at our shop. Our technicians will start working on your device right away, and we'll let you know as soon as it's ready for pickup.\n\nFollow your repair here: ${link}`,
+    html: plantilla(`The part for your repair ${num} has arrived`, `
+      <p style="font-size:14px;line-height:1.6;color:#3a3a40;margin:0;">Hi${ticket.customer_name ? ' <strong>' + ticket.customer_name + '</strong>' : ''}, great news: the replacement part your <strong style="color:#111;">${device}</strong> needed has arrived at our shop.</p>
+      <p style="font-size:14px;line-height:1.6;color:#3a3a40;margin:16px 0 0;">Our technicians will start working on your device right away, and we'll let you know as soon as it's ready for pickup.</p>
+      ${cajaDato('Your repair', device, `Repair ${num}`)}
+      ${boton(link, 'Track my repair')}`,
+      `The part for your ${device} is here — we start working on it now`),
+  });
+}
+
+// La reparación quedó LISTA para recoger (status 'listo' en el panel).
+// Incluye el saldo pendiente si lo hay y la dirección/horario del taller.
+// Una sola vez (flag email_ready).
+async function sendRepairReadyEmail(ticket) {
+  if (!ticket.customer_email) return false;
+  const num = `REP-${1000 + Number(ticket.id)}`;
+  const link = `${siteBase()}/track?t=${ticket.track_token}`;
+  const device = [ticket.device_brand, ticket.device_model].filter(Boolean).join(' ') || 'device';
+  const total = ticket.final_price != null ? Number(ticket.final_price) : (ticket.quoted_price != null ? Number(ticket.quoted_price) : 0);
+  const paid = Number(ticket.amount_paid) || 0;
+  const remaining = Math.max(total - paid, 0);
+  const cajaSaldo = remaining > 0
+    ? cajaDato('Balance due at pickup', usd(remaining), `Total: ${usd(total)} · Already paid: ${usd(paid)}`)
+    : '';
+  return sendEmail({
+    to: ticket.customer_email,
+    subject: `Your repair ${num} is ready for pickup`,
+    text: `Hi${ticket.customer_name ? ' ' + ticket.customer_name : ''},\n\nYour ${device} is ready! You can pick it up at our shop: 3659 Lorna Rd Suite 157, Hoover, AL 35216 (Mon–Sat 10:00 AM–3:00 PM).${remaining > 0 ? `\nBalance due at pickup: ${usd(remaining)}` : ''}\n\nDetails: ${link}`,
+    html: plantilla(`Your repair ${num} is ready for pickup`, `
+      <p style="font-size:14px;line-height:1.6;color:#3a3a40;margin:0;">Hi${ticket.customer_name ? ' <strong>' + ticket.customer_name + '</strong>' : ''}, your <strong style="color:#111;">${device}</strong> is ready! You can pick it up at our shop.</p>
+      ${cajaDato('Pick up at', '3659 Lorna Rd Suite 157, Hoover, AL 35216', 'Mon–Sat 10:00 AM – 3:00 PM · (385) 461-2042')}
+      ${cajaSaldo}
+      ${boton(link, 'View my repair')}`,
+      `Your ${device} is ready for pickup — ElectronicST`),
+  });
+}
+
+module.exports = { sendEmail, sendNewOrderEmails, sendTrackingEmail, sendTransitEmail, sendDeliveredEmail, sendInvoiceEmail, sendRepairTrackingEmail, sendRepairInvoiceEmail, sendPartArrivedEmail, sendRepairReadyEmail, orderNumber, trackLink };

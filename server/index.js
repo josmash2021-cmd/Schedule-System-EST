@@ -265,8 +265,9 @@ async function start() {
           console.log(`[tracking] Orden #${o.id} marcada 'InTransit' por regla de 24 h.`);
         }
       }
-      // Repuestos de reparaciones en camino al taller: mismo sistema, pero
-      // sin correos (applyRepairUpdate solo guarda tag/fecha y avisa por SSE).
+      // Repuestos de reparaciones en camino al taller: mismo sistema
+      // (applyRepairUpdate guarda tag/fecha, avisa por SSE y, al llegar la
+      // pieza — tag Delivered —, manda el correo "the part has arrived").
       const parts = await repairs.listPartsInTransit();
       for (const t of parts) {
         if (tracking.enabled()) {

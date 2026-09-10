@@ -819,11 +819,17 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   vocabulario que `online_orders`); el PATCH del panel sella `shipped_at` y
   registra con USPS/AfterShip al cargar/cambiar el tracking; el job de 15
   min (`checkDeliveries`) también recorre `repairs.listPartsInTransit()` y
-  aplica `tracking.applyRepairUpdate` (sin correos — el correo de
-  seguimiento se manda a mano); el webhook de AfterShip cubre tickets
+  aplica `tracking.applyRepairUpdate`; el webhook de AfterShip cubre tickets
   (`repairs.findByTrackingId`/`findByTrackingNumber`) y el SSE emite con id
   namespaced `rep:<id>` para no chocar con ids de órdenes. Sin keys aplica
-  la misma regla de 24 h → 'InTransit'.
+  la misma regla de 24 h → 'InTransit'. CORREOS NUEVOS (mismo día): al
+  cliente le llega "The part for your repair REP-1xxx has arrived" cuando la
+  paquetería marca la pieza como Delivered (en `applyRepairUpdate`, flag
+  `email_part_arrived`) y "Your repair REP-1xxx is ready for pickup" cuando
+  el ticket pasa a 'listo' en el PATCH del panel (flag `email_ready`;
+  incluye saldo pendiente y dirección/horario). Preview verificado por el
+  dueño: `server/scripts/send-repair-emails-preview.js` con `railway run`
+  (la DATABASE_URL de Railway es interna — el script usa ticket de muestra).
   `.track-grid.repair` va DESPUÉS de la regla móvil base en el CSS porque
   empata en especificidad con `.track-grid.no-map` (las reparaciones siempre
   llevan .no-map: sin dirección) y la cascada la decide el orden.

@@ -165,8 +165,14 @@ cambies estructura, flujos o convenciones.
   cambiar `tracking_number` en el PATCH se sella `shipped_at` y se registra
   con el proveedor (`tracking_id`); el job de 15 min actualiza `ship_tag` +
   `expected_delivery` (o la regla de 24 h sin keys) vía
-  `tracking.applyRepairUpdate` (SIN correos) y emite SSE con id `rep:<id>`;
-  el webhook de AfterShip también cubre tickets (busca por id y por número). **Factura de la
+  `tracking.applyRepairUpdate` y emite SSE con id `rep:<id>`;
+  el webhook de AfterShip también cubre tickets (busca por id y por número).
+  **Correos automáticos de reparación** (una vez cada uno, flags
+  `email_part_arrived`/`email_ready` en `repair_tickets`): "The part for your
+  repair … has arrived" (la pieza llegó al taller: tag Delivered en
+  `applyRepairUpdate`) y "Your repair … is ready for pickup" (status → 'listo'
+  en el PATCH del panel; incluye saldo pendiente y dirección/horario del
+  taller). **Factura de la
   reparación:** botones en el detalle de la lista — Ver factura, ✉ por
   correo (`POST /:id/send-invoice`, PDF adjunto) y por WhatsApp (wa.me con
   link al PDF público `GET /api/track/:token/invoice.pdf`; si la factura no
