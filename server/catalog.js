@@ -108,6 +108,17 @@ const CATALOG = {
     price: 350,
     img: 'assets/img/airpods-max-pink.jpg',
   },
+  // Sin invId por ahora (igual que AirPods Max): cuando el dueño cree el item
+  // en el inventario del panel con SKU "ipad-2025-a16", agregar aquí su invId.
+  'ipad-2025-a16-nuevo': {
+    name: 'iPad (11th gen) 2025',
+    desc: 'Chip A16 · 128 GB · Solo WiFi',
+    descEn: 'A16 chip · 128 GB · WiFi only',
+    cond: 'Nuevo',
+    condEn: 'Brand new',
+    price: 350,
+    img: 'assets/img/ipad-2025-a16.jpg',
+  },
 };
 
 function getItem(id) {

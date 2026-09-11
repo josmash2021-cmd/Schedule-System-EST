@@ -63,6 +63,7 @@ const htmlRoutes = {
   '/macbook-neo-2026': 'macbook-neo-2026.html',
   '/ipad-air-1': 'ipad-air-1.html',
   '/ipad-10-2022': 'ipad-10-2022.html',
+  '/ipad-2025-a16': 'ipad-2025-a16.html',
   '/hp-15-i5-13': 'hp-15-i5-13.html',
   '/hp-15-pentium': 'hp-15-pentium.html',
   '/victus-gaming': 'victus-gaming.html',
