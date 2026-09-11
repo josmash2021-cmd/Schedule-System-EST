@@ -26,3 +26,6 @@ server/scripts/.usps-profile/
 server/scripts/usps-scraper.log
 server/scripts/_usps-*
 server/scripts/_diag-*
+
+# Perfil local de Chrome para pruebas/robot (artefactos, no se sube)
+.browser-ctl/
