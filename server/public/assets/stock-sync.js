@@ -15,7 +15,7 @@
     var SOLD_NOTE = LANG === 'en' ? 'sold' : 'vendido';
     var LAST = LANG === 'en' ? '1 Left' : 'Queda 1';
 
-    // Stock 1: badge "Queda 1" (texto dorado, sin caja).
+    // Stock 1: badge "Queda 1" (píldora blanca, letras naranja).
     function markLast(el) {
         var badge = el.querySelector('.card-badge');
         if (badge) {
@@ -26,7 +26,7 @@
     }
 
     function markSold(el) {
-        // Badge: "Disponible"/"Queda 1" → "Vendido" (texto rojo, sin caja)
+        // Badge: "Disponible"/"Queda 1" → "Vendido" (píldora blanca, letras rojas)
         var badge = el.querySelector('.card-badge');
         if (badge) {
             badge.textContent = SOLD;

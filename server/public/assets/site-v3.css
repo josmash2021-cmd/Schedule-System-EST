@@ -615,19 +615,17 @@ a { -webkit-tap-highlight-color: transparent; }
     letter-spacing: .06em; padding: 5px 11px; border-radius: 999px; text-transform: uppercase;
 }
 .card-badge.new { background: #fff; border-color: transparent; color: #0a0a0c; }
-/* Badges de estado sin caja: solo el texto sobre la foto */
+/* Badges de estado: misma píldora blanca que "Nuevo", cambia el color de letra */
 .card-badge-hot, .card-badge-sold {
-    background: none; border: none; backdrop-filter: none;
-    padding: 5px 0; border-radius: 0;
-    text-shadow: 0 1px 6px rgba(0, 0, 0, .8);
+    background: #fff; border-color: transparent; backdrop-filter: none;
 }
-/* "Queda 1": a la derecha, dorado */
+/* "Queda 1": a la derecha, letras naranja */
 .card-badge-hot {
     left: auto; right: 14px;
-    color: #e7c76a;
+    color: #e26a00;
     animation: none;
 }
-/* "Vendido": a la izquierda, rojo */
+/* "Vendido": a la izquierda, letras rojas */
 .card-badge-sold { color: #ef4444; }
 @keyframes badgePulse {
     0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, .55); }
