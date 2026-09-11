@@ -26,6 +26,9 @@
     }
 
     function markSold(el) {
+        // Tarjeta marcada como vendida: en el catálogo la foto sale en gris
+        // (regla .card-product.is-sold en site-v3.css; la ficha de detalle no).
+        el.classList.add('is-sold');
         // Badge: "Disponible"/"Queda 1" → "Vendido" (píldora blanca, letras rojas)
         var badge = el.querySelector('.card-badge');
         if (badge) {
