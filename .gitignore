@@ -20,3 +20,9 @@ admin-app/.visual-test/
 
 # Vercel CLI (enlace local del proyecto, no se sube)
 .vercel/
+
+# Robot local de rastreo USPS (perfil de Chrome, log y artefactos de prueba)
+server/scripts/.usps-profile/
+server/scripts/usps-scraper.log
+server/scripts/_usps-*
+server/scripts/_diag-*

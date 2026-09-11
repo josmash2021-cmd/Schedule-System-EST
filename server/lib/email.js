@@ -234,10 +234,10 @@ async function sendRepairTrackingEmail(ticket) {
 
 // El admin guardó el tracking: "tu pedido va en camino".
 async function sendTrackingEmail(order) {
-  if (!order.email) return;
+  if (!order.email) return false;
   const num = orderNumber(order);
   const carrier = order.carrier ? String(order.carrier).toUpperCase() : '';
-  await sendEmail({
+  return sendEmail({
     to: order.email,
     subject: `Your order ${num} is on its way`,
     text: `Your order ${num} is on its way.\nTracking: ${order.tracking_number}${carrier ? ' (' + carrier + ')' : ''}\nFollow it here: ${trackLink(order)}`,
@@ -249,11 +249,11 @@ async function sendTrackingEmail(order) {
   });
 }
 
-// AfterShip reporta el paquete en tránsito.
+// AfterShip/USPS reporta el paquete en tránsito.
 async function sendTransitEmail(order) {
-  if (!order.email) return;
+  if (!order.email) return false;
   const num = orderNumber(order);
-  await sendEmail({
+  return sendEmail({
     to: order.email,
     subject: `Your order ${num} is in transit`,
     text: `Your order ${num} is in transit to your address.\nFollow it here: ${trackLink(order)}`,
@@ -264,11 +264,11 @@ async function sendTransitEmail(order) {
   });
 }
 
-// AfterShip reporta la entrega.
+// AfterShip/USPS reporta la entrega.
 async function sendDeliveredEmail(order) {
-  if (!order.email) return;
+  if (!order.email) return false;
   const num = orderNumber(order);
-  await sendEmail({
+  return sendEmail({
     to: order.email,
     subject: `Your order ${num} was delivered`,
     text: `Your order ${num} was delivered. Thanks for your purchase!`,

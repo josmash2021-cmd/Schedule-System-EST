@@ -913,3 +913,47 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   y luego `DATABASE_URL="$DB" NODE_ENV=production JWT_SECRET=x ADMIN_PASSWORD=x node server/scripts/run-sql.js "…"`
   (las vars JWT/ADMIN son dummy: config.js las exige en production aunque el
   script solo use la base).
+
+
+## 16. AfterShip muerto + robot local USPS + fix flags de correo — 2026-09-11
+
+- **AfterShip dejó de funcionar:** la cuenta (plan "Essentials 100") perdió el
+  acceso a la API — todo GET devuelve 403 "upgrade to a Pro plan". La llave
+  `asat_*` sigue en Railway (decisión del dueño, no quitarla) pero es inútil;
+  el job de 15 min del servidor solo loguea el error y no aplica nada.
+- **USPS API oficial:** el portal de developers funciona, pero las credenciales
+  (Consumer Key/Secret) solo se sacan en el COP: cop.usps.com/cop-navigator?wf=API
+  → "My Apps" → crear app → sección Credentials. El dueño aún no logra obtenerlas;
+  cuando lleguen: ponerlas en Railway + QUITAR AFTERSHIP_API_KEY (si ambas están,
+  gana AfterShip en `lib/tracking.js`) y borrar la tarea `EST-USPS-Tracker`.
+- **Mientras tanto: robot local `server/scripts/usps-scraper.cjs`** en el PC del
+  dueño. No puede correr en Railway (Akamai bloquea datacenter; desde la
+  residencia pasa). Chrome real (headless 'new') + perfil persistente
+  `server/scripts/.usps-profile/` (cookies ayudan contra el bloqueo; la 1ª
+  corrida headless sin cookies dio página en blanco, con perfil ya funciona).
+  URL directa: `tools.usps.com/tracking/?qtc_tLabels1=N`. Parseo:
+  `.tb-step.current-step` (`.tb-status`/`.tb-status-detail` → tag) y
+  `.expected_delivery` (`strong.date` + `.month_year` → fecha). Aplica
+  `tracking.applyUpdate` / `applyRepairUpdate` directo contra la base de
+  producción (`.env` local en la raíz con `DATABASE_URL` pública + Gmail —
+  gitignored). Los correos se envían desde el PC (mismo Gmail SMTP); el SSE
+  local no llega a Railway, pero track.html hace polling cada 30 s, así que se
+  actualiza igual. OJO: el job del servidor y el robot pueden correr a la vez
+  sin conflicto (applyUpdate es idempotente y el tag nunca retrocede).
+- **Programación:** Programador de tareas de Windows, tarea `EST-USPS-Tracker`,
+  gatillos diarios 9:00 y 16:00 con StartWhenAvailable (si el PC estaba
+  apagado corre al encender). Re-registrar:
+  `powershell -ExecutionPolicy Bypass -File server/scripts/registrar-usps-tracker.ps1`.
+  Log: `server/scripts/usps-scraper.log` (gitignored).
+- **Fix `server/lib/email.js`:** `sendTrackingEmail`, `sendTransitEmail` y
+  `sendDeliveredEmail` hacían `await sendEmail(...)` SIN devolver el resultado
+  → los callers (`tracking.applyUpdate`, PATCH adminOrders) nunca marcaban los
+  flags `email_shipped/transit/delivered` → correos duplicados en cada corrida
+  (el "comportamiento preexistente" de la §15 era ESTE bug, no Gmail). Ahora
+  devuelven `sendEmail(...)`/`false` como los demás senders.
+- **Orden #11 (Beverly) actualizada por el robot:** expected_delivery =
+  2026-09-14 (eta real de USPS; el paquete sigue InTransit, último evento
+  "USPS in possession of item" 11-sep Pelham AL). El correo de tránsito sí
+  salió en la 1ª corrida del robot (sin log de error) → `email_transit` se
+  marcó a mano para no duplicarlo. También se actualizó el repuesto del ticket
+  #283 (eta 2026-09-16).

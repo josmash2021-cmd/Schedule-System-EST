@@ -293,6 +293,21 @@ cambies estructura, flujos o convenciones.
   webhook; sin keys aplica la regla de 24 h — `online_orders.shipped_at`
   (sellado al cargar tracking) + 24 h sin tag → 'InTransit' automático con su
   correo de tránsito. OutForDelivery/Delivered los marca el dueño a mano.
+  **Robot local USPS (2026-09-11):** AfterShip quedó sin acceso API (403, pide
+  plan Pro; la llave sigue en Railway pero inútil) y las llaves USPS del portal
+  COP aún no se obtienen → el rastreo automático real lo hace
+  `server/scripts/usps-scraper.cjs` EN EL PC del dueño (no en Railway: Akamai
+  bloquea IPs de datacenter): Chrome real headless + perfil persistente
+  `.usps-profile/` (gitignored), lee `tools.usps.com/tracking/?qtc_tLabels1=N`,
+  parsea `.tb-step.current-step` y `.expected_delivery`, y aplica
+  `tracking.applyUpdate`/`applyRepairUpdate` contra la base de producción
+  (usa `.env` local de la raíz: `DATABASE_URL` pública + credenciales Gmail).
+  Programado en el Programador de tareas de Windows como `EST-USPS-Tracker`
+  (9:00 y 16:00 diario, StartWhenAvailable; re-registrar con
+  `server/scripts/registrar-usps-tracker.ps1`); log en `usps-scraper.log`.
+  Cuando lleguen las llaves COP: ponerlas en Railway (`USPS_CLIENT_ID` +
+  `USPS_CLIENT_SECRET`), quitar `AFTERSHIP_API_KEY` y borrar la tarea
+  programada — el robot sobra.
 - **Ventas del panel = 3 fuentes** (misma definición en `Sales.jsx` y
   `Dashboard.jsx`): reparaciones entregadas + ventas de mostrador + órdenes
   de envío (website + FB Marketplace). Las órdenes no se anulan ni borran
