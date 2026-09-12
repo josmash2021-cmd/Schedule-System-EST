@@ -683,6 +683,13 @@ a { -webkit-tap-highlight-color: transparent; }
 .components-grid {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px;
 }
+/* Parrilla de 5 tarjetas (MacBook Neo): todas en una sola fila horizontal */
+.components-grid:has(> .component-card:nth-child(5):last-child) {
+    grid-template-columns: repeat(5, 1fr);
+}
+.components-grid:has(> .component-card:nth-child(5):last-child) .component-card {
+    padding: 26px 14px;
+}
 .component-card {
     background: var(--panel); border: 1px solid var(--line); border-radius: 22px;
     padding: 26px 22px; text-align: center;
@@ -718,6 +725,10 @@ a { -webkit-tap-highlight-color: transparent; }
 
 @media (max-width: 860px) {
     .components-grid { grid-template-columns: repeat(2, 1fr); }
+    .components-grid:has(> .component-card:nth-child(5):last-child) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .components-grid > .component-card:nth-child(5):last-child { grid-column: 1 / -1; }
 }
 
 /* ---------------- Galería del producto ---------------- */
