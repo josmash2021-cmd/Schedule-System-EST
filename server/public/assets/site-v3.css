@@ -741,11 +741,15 @@ a { -webkit-tap-highlight-color: transparent; }
 }
 .gallery-item:hover img { transform: scale(1.04); }
 
-/* Galería de altura uniforme (Victus Gaming): recorta con cover para que
-   todos los cuadros midan lo mismo sin importar la proporción de la foto. */
-.gallery-grid-even .gallery-item img {
+/* Galería de altura uniforme en TODOS los productos: recorta con cover
+   para que todos los cuadros midan lo mismo sin importar la proporción
+   de la foto. */
+.gallery-grid .gallery-item img {
     aspect-ratio: 1 / 1; object-fit: cover;
 }
+/* Foto única a ancho completo (HP Pentium): 4/3 para no recortar de más
+   una foto vertical ni crear un cuadro gigante. */
+.gallery-grid .gallery-item-full img { aspect-ratio: 4 / 3; }
 
 @media (max-width: 720px) {
     .gallery-grid { grid-template-columns: 1fr; }
