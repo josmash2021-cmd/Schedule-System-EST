@@ -179,6 +179,10 @@ cambies estructura, flujos o convenciones.
   `expected_delivery` (o la regla de 24 h sin keys) vía
   `tracking.applyRepairUpdate` y emite SSE con id `rep:<id>`;
   el webhook de AfterShip también cubre tickets (busca por id y por número).
+  **La lista de Reparaciones se actualiza EN VIVO con ese stream:** abre un
+  EventSource por ticket con tracking activo contra `/api/track/:track_token/stream`
+  y recarga al llegar el aviso (la barra del repuesto usa `ship_tag`; polling
+  silencioso de 30 s de respaldo).
   **Correos automáticos de reparación** (una vez cada uno, flags
   `email_part_arrived`/`email_ready` en `repair_tickets`): "The part for your
   repair … has arrived" (la pieza llegó al taller: tag Delivered en

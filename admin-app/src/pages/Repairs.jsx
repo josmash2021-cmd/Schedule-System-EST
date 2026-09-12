@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, Fragment } from 'react';
+import { useEffect, useState, useCallback, useRef, Fragment } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
 import FormPage from '../components/FormPage.jsx';
@@ -70,10 +70,20 @@ function RepairBar({ ticket }) {
 }
 
 /* Estatus del número de rastreo del repuesto (misma barra que el envío de
-   Órdenes): sale DEBAJO del estado de la reparación. */
+   Órdenes): sale DEBAJO del estado de la reparación. Usa ship_tag (lo escriben
+   el webhook, el job de 15 min y el robot USPS vía applyRepairUpdate); sin tag
+   cae a "hay número guardado" → Enviado. */
 const PART_STEPS = ['Label generado', 'Enviado', 'En tránsito', 'En reparto', 'Delivered'];
+function partStep(t) {
+  const tag = t.ship_tag;
+  if (tag === 'Delivered') return 5;
+  if (tag === 'OutForDelivery') return 4;
+  if (tag === 'InTransit') return 3;
+  if (t.tracking_number) return 2;
+  return 1;
+}
 function PartShipBar({ ticket }) {
-  const step = ticket.tracking_number ? 2 : 1;
+  const step = partStep(ticket);
   const pct = ((step - 0.5) / PART_STEPS.length) * 100;
   return (
     <div className="shipbar">
@@ -171,15 +181,50 @@ export default function Repairs() {
     setInvBusy(null);
   };
 
-  const load = useCallback(() => {
-    setErr('');
-    api('/repairs').then((d) => setTickets(d.tickets)).catch((e) => setErr(e.message));
+  const load = useCallback((silent) => {
+    if (!silent) setErr('');
+    api('/repairs').then((d) => setTickets(d.tickets)).catch((e) => { if (!silent) setErr(e.message); });
   }, []);
   useEffect(() => {
     load();
     api('/users').then((d) => setWorkers(d.users.filter((u) => u.active))).catch(() => {});
     api('/invoices').then((d) => setInvoices(d.invoices || [])).catch(() => {});
+    const t = setInterval(() => load(true), 30000); // respaldo silencioso si el stream se cae
+    return () => clearInterval(t);
   }, [load]);
+
+  /* Seguimiento EN VIVO del repuesto: un stream SSE por reparación con tracking
+     activo (el mismo canal público que usa track.html). Cuando el webhook, el
+     job o el robot USPS actualizan el ship_tag, el server emite el aviso
+     ('rep:<id>') y la lista se recarga al momento — la barra del repuesto se
+     mueve sola, sin tocar F5. Al entregarse la pieza (Delivered) o entregarse
+     la reparación se cierra el stream. */
+  const streams = useRef(new Map());
+  useEffect(() => {
+    if (!tickets) return;
+    const map = streams.current;
+    const quieren = new Map();
+    for (const t of tickets) {
+      if (t.track_token && t.tracking_number && t.ship_tag !== 'Delivered' && t.status !== 'entregado') {
+        quieren.set(t.id, t.track_token);
+      }
+    }
+    for (const [id, es] of map) {
+      if (!quieren.has(id)) { es.close(); map.delete(id); }
+    }
+    for (const [id, token] of quieren) {
+      if (map.has(id)) continue;
+      const es = new EventSource('/api/track/' + token + '/stream');
+      es.onmessage = (ev) => {
+        try { if (JSON.parse(ev.data).type === 'update') load(true); } catch (_) { /* latido */ }
+      };
+      map.set(id, es);
+    }
+  }, [tickets, load]);
+  useEffect(() => () => {
+    for (const es of streams.current.values()) es.close();
+    streams.current.clear();
+  }, []);
 
   // Filtro por categoría de equipo (teléfonos / tablets / laptops).
   const byDevice = tickets ? tickets.filter((t) => deviceFilter === 'todas' || t.device_type === deviceFilter) : [];

@@ -957,3 +957,20 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   salió en la 1ª corrida del robot (sin log de error) → `email_transit` se
   marcó a mano para no duplicarlo. También se actualizó el repuesto del ticket
   #283 (eta 2026-09-16).
+
+## 17. Panel: tracking del repuesto EN VIVO en Reparaciones — 2026-09-12
+
+- **Antes:** la barra del repuesto en la lista de Reparaciones (`PartShipBar`
+  en `admin-app/src/pages/Repairs.jsx`) ignoraba `ship_tag`: con número
+  guardado se quedaba SIEMPRE en "Enviado" y solo cambiaba con F5.
+- **Ahora:** `partStep()` mapea el tag igual que Órdenes (InTransit → En
+  tránsito, OutForDelivery → En reparto, Delivered) y la página abre un
+  **EventSource por reparación con tracking activo** contra el stream público
+  `GET /api/track/:track_token/stream` (el mismo de track.html; el server
+  emite `rep:<id>` desde `tracking.applyRepairUpdate`). Al llegar el aviso se
+  recarga la lista al momento. Se cierra el stream cuando la pieza llega
+  (Delivered) o la reparación se entrega, y queda un polling silencioso de
+  30 s de respaldo (patrón de Órdenes). Cero cambios de backend.
+- Arnés visual: el mock del ticket 1 trae `ship_tag: 'InTransit'` y la
+  intercepción responde `text/event-stream` a `/api/track/*/stream` para no
+  ensuciar la consola.
