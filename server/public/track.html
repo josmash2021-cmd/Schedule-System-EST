@@ -1020,10 +1020,18 @@
                 lbl.textContent = en ? 'Delivered' : 'Entregado';
                 num.textContent = d.order_number;
             } else if (m) {
-                var dt = new Date(+m[1], +m[2] - 1, +m[3]);
-                lbl.textContent = en ? 'Arriving' : 'Llega el';
-                num.textContent = dt.toLocaleDateString(en ? 'en-US' : 'es-US',
-                    { weekday: 'short', month: 'short', day: 'numeric' });
+                // Si la fecha estimada es HOY (hora del negocio, Chicago):
+                // "Arriving Today" / "Llega hoy" en vez del día de la semana.
+                var hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
+                if (m[0].slice(0, 10) === hoy) {
+                    lbl.textContent = en ? 'Arriving' : 'Llega';
+                    num.textContent = en ? 'Today' : 'hoy';
+                } else {
+                    var dt = new Date(+m[1], +m[2] - 1, +m[3]);
+                    lbl.textContent = en ? 'Arriving' : 'Llega el';
+                    num.textContent = dt.toLocaleDateString(en ? 'en-US' : 'es-US',
+                        { weekday: 'short', month: 'short', day: 'numeric' });
+                }
             } else {
                 lbl.textContent = isRepair ? (en ? 'Repair' : 'Reparación') : (en ? 'Order' : 'Orden');
                 num.textContent = d.order_number;

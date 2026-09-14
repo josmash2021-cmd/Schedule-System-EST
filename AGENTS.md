@@ -66,7 +66,9 @@ cambies estructura, flujos o convenciones.
   repuesto ordenado para reparar el equipo, no un paquete al cliente); el
   título de la página es fijo ("Order tracking", sin nombre del producto); **el badge bajo
   el título muestra la fecha estimada de llegada** ("Llega el jue, 8 may" /
-  "Arriving Thu, May 8" — de `expected_delivery` de AfterShip; "Entregado" al
+  "Arriving Thu, May 8" — de `expected_delivery` de AfterShip; si la fecha
+  estimada ES HOY (hora del negocio, America/Chicago) dice "Llega hoy" /
+  "Arriving Today"; "Entregado" al
   llegar; si no hay fecha, el número de orden como antes) y la página se
   actualiza en tiempo real por SSE (`/api/track/:token/stream`); **layout PC de
   ancho completo (máx. 1240px) en 3 columnas: Rastreo a la izquierda (300px),
