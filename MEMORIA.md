@@ -574,7 +574,7 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   mientras no reporta tag), el job marca 'InTransit' SOLO 24 h después de
   cargar el tracking (`online_orders.shipped_at`, sellado en
   `updateTracking` la primera vez); el correo de tránsito sale con la misma
-  pasada. OutForDelivery/Delivered los pone el dueño a mano. Nueva página del panel `/ordenes`
+  pasada. OutForDelivery/Delivered los pone el dueño a mano. **Correo de entrega manual (2026-09-14):** marcar 'entregado' a mano en el panel también dispara `sendDeliveredEmail` (mismo flag `email_delivered` — nunca duplica con el de la paquetería). Nueva página del panel `/ordenes`
   (`pages/Orders.jsx`): lista de envíos con badges de origen/estado y detalle
   siempre abierto con formulario de tracking — desde 2026-09-10 cada orden es
   su propia TARJETA (`.order-block`, borde+sombra+16px de separación; antes

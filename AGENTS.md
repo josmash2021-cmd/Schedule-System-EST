@@ -203,7 +203,9 @@ cambies estructura, flujos o convenciones.
   modelo `server/models/customers.js`),
   `adminOrders.js` (órdenes de envío: website vía Stripe + manuales FB
   Marketplace; GET sincroniza con Stripe máx. 1 vez/min, POST crea manual,
-  PATCH tracking → 'enviado' o 'entregado' manual).
+  PATCH tracking → 'enviado' o 'entregado' manual — el marcado manual de
+  'entregado' también envía el correo de entrega al cliente, con el mismo
+  flag `email_delivered` para no duplicar).
 - Rutas públicas (`/api/*`): `appointments.js`, `slots.js` (citas: mismo día
   con **30 min de anticipación** — `LEAD_MINUTES` en `server/utils.js`; cada
   cita nueva avisa al dueño por WhatsApp Y por correo a OWNER_EMAIL vía

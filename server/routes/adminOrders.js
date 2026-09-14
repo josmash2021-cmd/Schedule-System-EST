@@ -156,7 +156,8 @@ router.post('/', requireRole('admin'), async (req, res) => {
 // PATCH /:id — dos usos:
 //  a) { tracking_number, carrier } → guarda el tracking y pasa a 'enviado'
 //     (si hay AFTERSHIP_API_KEY también lo registra para seguimiento automático).
-//  b) { ship_status: 'entregado' } → marca manual (fallback sin API de tracking).
+//  b) { ship_status: 'entregado' } → marca manual (fallback sin API de
+//     tracking); al marcar entregado también sale el correo de entrega.
 router.patch('/:id', requireRole('admin'), async (req, res) => {
   if (!/^\d+$/.test(String(req.params.id))) return res.status(400).json({ error: 'Orden inválida.' });
   const id = Number(req.params.id);
@@ -169,6 +170,14 @@ router.patch('/:id', requireRole('admin'), async (req, res) => {
       }
       const order = await orders.updateShipStatus(id, b.ship_status);
       if (!order) return res.status(404).json({ error: 'Orden no encontrada.' });
+      // Marcado manual de entrega: el mismo correo que manda applyUpdate
+      // cuando la paquetería reporta Delivered (una sola vez, con flag; si
+      // falla el envío no se marca y se reintenta en el próximo guardado).
+      if (b.ship_status === 'entregado' && !order.email_delivered) {
+        email.sendDeliveredEmail(order)
+          .then((ok) => { if (ok) return orders.markEmailSent(id, 'email_delivered'); })
+          .catch((e) => console.error('Delivered email failed:', e.message));
+      }
       return res.json({ order });
     }
 
