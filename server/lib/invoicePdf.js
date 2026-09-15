@@ -1,14 +1,15 @@
 /* Generador del PDF del Bill of Sale con pdfkit: replica el diseño del
-   documento del panel (InvoiceDoc): header con logo, cajas Seller/Buyer,
-   Sale Information, tabla de artículos, totales, garantía y términos.
+   documento del panel (InvoiceDoc): header con logo, cajas Seller/Buyer con
+   cada dato identificado por su etiqueta (NAME / PHONE NUMBER / ADDRESS /
+   EMAIL), Sale Information, tabla de artículos, totales, garantía y términos.
    Letter (612×792 pt), monocromo, fuentes Helvetica de serie. */
 const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
 
-// Versión negra del logo (letras negras): la normal es blanca y no se ve
-// sobre el fondo blanco del documento.
-const LOGO = path.resolve(__dirname, '..', 'public', 'assets', 'img', 'logo-black.png');
+// Logo EST negro + brazo dorado (fondo transparente): la versión normal es
+// blanca y no se ve sobre el papel blanco del documento.
+const LOGO = path.resolve(__dirname, '..', 'public', 'assets', 'img', 'logo-receipt.png');
 
 const money = (n) => `$${Number(n || 0).toFixed(2)}`;
 
@@ -105,31 +106,92 @@ function buildInvoicePdf(inv) {
     y += 18;
 
     // ---------- Seller / Buyer ----------
+    // Cada dato va identificado con su etiqueta en gris encima del valor
+    // (NAME / PHONE NUMBER / ADDRESS / EMAIL), en dos columnas de campos por
+    // caja como el recibo de referencia. Lo que no cabe en media columna
+    // (dirección o correo largos) baja a su propia fila a ancho completo.
     const colGap = 14;
     const colW = (CW - colGap) / 2;
-    const boxH = 96;
-    caja(doc, M, y, colW, boxH);
-    tituloCaja(doc, 'SELLER INFORMATION', M, y, colW);
-    doc.font('Helvetica').fontSize(10).fillColor('#111');
-    let sy = y + 32;
-    for (const line of [inv.seller_name, inv.seller_address, inv.seller_phone, inv.seller_email]) {
-      if (line) { doc.text(String(line), M + 14, sy, { width: colW - 28 }); sy += 14; }
+    const infoPad = 14;
+    const infoGap = 16;
+    const LBL_H = 9.5;  // altura de la etiqueta sobre el valor
+    const ROW_GAP = 9;  // aire entre filas de campos
+
+    function layoutInfo(d, w) {
+      const cw2 = (w - infoPad * 2 - infoGap) / 2;
+      doc.font('Helvetica').fontSize(10);
+      const fits = (v) => !v || doc.widthOfString(String(v)) <= cw2;
+      const filas = [
+        [{ l: 'NAME', v: d.name, b: true }, { l: 'PHONE NUMBER', v: d.phone }],
+      ];
+      if (fits(d.address) && fits(d.email)) {
+        filas.push([{ l: 'ADDRESS', v: d.address }, { l: 'EMAIL', v: d.email }]);
+      } else {
+        if (d.address) filas.push([{ l: 'ADDRESS', v: d.address, fw: true }]);
+        if (d.email) filas.push([{ l: 'EMAIL', v: d.email, fw: true }]);
+      }
+      return { cw2, fullW: w - infoPad * 2, filas };
     }
 
-    const bx = M + colW + colGap;
-    caja(doc, bx, y, colW, boxH);
-    tituloCaja(doc, 'BUYER INFORMATION', bx, y, colW);
-    let by = y + 32;
-    const buyerLines = [inv.buyer_name, inv.buyer_address, inv.buyer_phone, inv.buyer_email];
-    if (!buyerLines.some(Boolean)) {
-      doc.font('Helvetica').fontSize(10).fillColor('#55555c').text('—', bx + 14, by);
-    } else {
-      doc.font('Helvetica').fontSize(10).fillColor('#111');
-      for (const line of buyerLines) {
-        if (line) { doc.text(String(line), bx + 14, by, { width: colW - 28 }); by += 14; }
+    const altoValor = (f, w) => {
+      doc.font(f.b ? 'Helvetica-Bold' : 'Helvetica').fontSize(10);
+      return LBL_H + doc.heightOfString(String(f.v), { width: w });
+    };
+
+    function altoInfo(d, w) {
+      const { cw2, fullW, filas } = layoutInfo(d, w);
+      let h = 33; // título de la caja
+      let alguna = false;
+      for (const fila of filas) {
+        let altoFila = 0;
+        for (const f of fila) if (f.v) altoFila = Math.max(altoFila, altoValor(f, f.fw ? fullW : cw2));
+        if (altoFila) { alguna = true; h += altoFila + ROW_GAP; }
+      }
+      if (!alguna) h += 14;
+      return h + 6; // aire inferior
+    }
+
+    function cajaInfo(titulo, d, x, y, w, h) {
+      caja(doc, x, y, w, h);
+      tituloCaja(doc, titulo, x, y, w);
+      const { cw2, fullW, filas } = layoutInfo(d, w);
+      const xL = x + infoPad;
+      const xR = xL + cw2 + infoGap;
+      let cy = y + 33;
+      let alguna = false;
+      for (const fila of filas) {
+        let altoFila = 0;
+        for (let i = 0; i < fila.length; i++) {
+          const f = fila[i];
+          if (!f.v) continue;
+          alguna = true;
+          const fx = f.fw ? xL : (i === 0 ? xL : xR);
+          const fw = f.fw ? fullW : cw2;
+          doc.font('Helvetica-Bold').fontSize(6.5).fillColor('#8a8a92')
+            .text(f.l, fx, cy, { width: fw, characterSpacing: 0.8 });
+          doc.font(f.b ? 'Helvetica-Bold' : 'Helvetica').fontSize(10).fillColor('#111')
+            .text(String(f.v), fx, cy + LBL_H, { width: fw });
+          altoFila = Math.max(altoFila, altoValor(f, fw));
+        }
+        if (altoFila) cy += altoFila + ROW_GAP;
+      }
+      if (!alguna) {
+        doc.font('Helvetica').fontSize(10).fillColor('#55555c').text('—', xL, cy);
       }
     }
-    y += boxH + 14;
+
+    const seller = {
+      name: inv.seller_name || 'ElectronicST, LLC',
+      phone: inv.seller_phone, address: inv.seller_address, email: inv.seller_email,
+    };
+    const buyer = {
+      name: inv.buyer_name,
+      phone: inv.buyer_phone, address: inv.buyer_address, email: inv.buyer_email,
+    };
+    const infoH = Math.max(altoInfo(seller, colW), altoInfo(buyer, colW));
+    cajaInfo('SELLER INFORMATION', seller, M, y, colW, infoH);
+    cajaInfo('BUYER INFORMATION', buyer, M + colW + colGap, y, colW, infoH);
+    y += infoH + 14;
 
     // ---------- Sale information ----------
     const saleH = 74;

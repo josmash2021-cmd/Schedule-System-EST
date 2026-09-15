@@ -53,6 +53,23 @@ function vacio() {
 }
 
 /* ---------- Documento imprimible (el "papel") ---------- */
+// Campo etiquetado: la etiqueta gris arriba identifica cada dato (como en el
+// PDF). La celda se renderiza siempre para conservar la grilla 2×2; los valores
+// largos (dirección, correo) ocupan la fila completa para no cortarse.
+function IdocField({ label, value, bold }) {
+  const full = (value || '').length > 26;
+  return (
+    <div className="idoc-field" style={full ? { gridColumn: '1 / -1' } : undefined}>
+      {value ? (
+        <>
+          <div className="idoc-flabel">{label}</div>
+          <div className="idoc-fvalue" style={bold ? { fontWeight: 700 } : undefined}>{value}</div>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
 function InvoiceDoc({ inv, items }) {
   const subtotal = items.reduce((a, it) => a + (Number(it.qty) || 0) * (Number(it.price) || 0), 0);
   const rate = Number(inv.tax_rate) || 0;
@@ -65,8 +82,8 @@ function InvoiceDoc({ inv, items }) {
   return (
     <div className="invoice-doc">
       <div className="idoc-head">
-        {/* Logo oscuro: el normal es blanco y no se ve sobre el papel blanco. */}
-        <img className="idoc-logo" src="/x/static/img/logo-dark.png" alt="ElectronicST" />
+        {/* Logo EST negro + brazo dorado: el normal es blanco y no se ve sobre el papel. */}
+        <img className="idoc-logo" src="/x/static/img/logo-receipt.png" alt="ElectronicST" />
         <div className="idoc-brand">
           <div className="idoc-brand-name">{inv.seller_name || 'ElectronicST, LLC'}</div>
           <div className="idoc-brand-sub">SALES &amp; REPAIR SERVICE</div>
@@ -80,17 +97,23 @@ function InvoiceDoc({ inv, items }) {
       <div className="idoc-cols">
         <div className="idoc-box">
           <div className="idoc-box-title">Seller Information</div>
-          <div className="idoc-line"><span>{inv.seller_name || 'ElectronicST, LLC'}</span></div>
-          {inv.seller_address && <div className="idoc-line"><span>{inv.seller_address}</span></div>}
-          {inv.seller_phone && <div className="idoc-line"><span>Tel: {inv.seller_phone}</span></div>}
-          {inv.seller_email && <div className="idoc-line"><span>{inv.seller_email}</span></div>}
+          <div className="idoc-fields">
+            <IdocField label="Name" value={inv.seller_name || 'ElectronicST, LLC'} bold />
+            <IdocField label="Phone Number" value={inv.seller_phone} />
+            <IdocField label="Address" value={inv.seller_address} />
+            <IdocField label="Email" value={inv.seller_email} />
+          </div>
         </div>
         <div className="idoc-box">
           <div className="idoc-box-title">Buyer Information</div>
-          <div className="idoc-line"><span>{inv.buyer_name || '—'}</span></div>
-          {inv.buyer_address && <div className="idoc-line"><span>{inv.buyer_address}</span></div>}
-          {inv.buyer_phone && <div className="idoc-line"><span>Tel: {inv.buyer_phone}</span></div>}
-          {inv.buyer_email && <div className="idoc-line"><span>{inv.buyer_email}</span></div>}
+          {(inv.buyer_name || inv.buyer_phone || inv.buyer_address || inv.buyer_email) ? (
+            <div className="idoc-fields">
+              <IdocField label="Name" value={inv.buyer_name} bold />
+              <IdocField label="Phone Number" value={inv.buyer_phone} />
+              <IdocField label="Address" value={inv.buyer_address} />
+              <IdocField label="Email" value={inv.buyer_email} />
+            </div>
+          ) : <div className="idoc-line"><span>—</span></div>}
         </div>
       </div>
 
