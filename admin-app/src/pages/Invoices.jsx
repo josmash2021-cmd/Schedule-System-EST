@@ -96,7 +96,7 @@ function InvoiceDoc({ inv, items }) {
 
       <div className="idoc-cols">
         <div className="idoc-box">
-          <div className="idoc-box-title">Seller Information</div>
+          <div className="idoc-box-title">Service Provider</div>
           <div className="idoc-fields">
             <IdocField label="Name" value={inv.seller_name || 'ElectronicST, LLC'} bold />
             <IdocField label="Phone Number" value={inv.seller_phone} />
@@ -105,7 +105,7 @@ function InvoiceDoc({ inv, items }) {
           </div>
         </div>
         <div className="idoc-box">
-          <div className="idoc-box-title">Buyer Information</div>
+          <div className="idoc-box-title">Client Information</div>
           {(inv.buyer_name || inv.buyer_phone || inv.buyer_address || inv.buyer_email) ? (
             <div className="idoc-fields">
               <IdocField label="Name" value={inv.buyer_name} bold />
@@ -176,10 +176,30 @@ function InvoiceDoc({ inv, items }) {
 }
 
 /* ---------- Formulario ---------- */
-function InvoiceForm({ form, setForm, onSave, onCancel, saving, err, isNew }) {
+function InvoiceForm({ form, setForm, onSave, onCancel, saving, err, isNew, productos = [] }) {
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
   const setLinea = (uid, patch) => setForm((f) => ({ ...f, items: f.items.map((l) => (l.uid === uid ? { ...l, ...patch } : l)) }));
   const quitar = (uid) => setForm((f) => (f.items.length > 1 ? { ...f, items: f.items.filter((l) => l.uid !== uid) } : f));
+  // uid → true cuando la línea es texto libre (servicios, reparaciones) en
+  // vez de un producto elegido del inventario.
+  const [customDesc, setCustomDesc] = useState({});
+
+  // Al editar una factura vieja: las líneas cuyo texto no coincide con un
+  // producto del inventario arrancan en modo texto libre.
+  useEffect(() => {
+    if (!productos.length) return;
+    setCustomDesc((m) => {
+      let changed = false;
+      const n = { ...m };
+      for (const l of form.items) {
+        if (!(l.uid in n)) {
+          n[l.uid] = !!l.description && !productos.some((p) => p.name === l.description);
+          changed = true;
+        }
+      }
+      return changed ? n : m;
+    });
+  }, [productos, form.items]);
 
   const subtotal = form.items.reduce((a, l) => a + (Number(l.qty) || 0) * (Number(l.price) || 0), 0);
   const rate = Number(form.tax_rate) || 0;
@@ -232,7 +252,37 @@ function InvoiceForm({ form, setForm, onSave, onCancel, saving, err, isNew }) {
       {form.items.map((l) => (
         <div key={l.uid} className="venta-linea">
           <label className="field vl-prod"><span>Descripción</span>
-            <input value={l.description} onChange={(e) => setLinea(l.uid, { description: e.target.value })} placeholder="ej. iPhone 13 128GB" /></label>
+            {productos.length > 0 && !customDesc[l.uid] ? (
+              <select
+                value={productos.find((p) => p.name === l.description)?.id ?? ''}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === '__otro') {
+                    setCustomDesc((m) => ({ ...m, [l.uid]: true }));
+                    setLinea(l.uid, { description: '' });
+                    return;
+                  }
+                  const p = productos.find((x) => String(x.id) === v);
+                  if (p) setLinea(l.uid, { description: p.name, price: Number(p.price) || '' });
+                }}>
+                <option value="" disabled>— Producto del inventario —</option>
+                {productos.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}{Number(p.price) ? ` — ${usd.format(Number(p.price))}` : ''}
+                  </option>
+                ))}
+                <option value="__otro">Otro (escribir a mano)…</option>
+              </select>
+            ) : (
+              <div className="vl-desc-free">
+                <input value={l.description} onChange={(e) => setLinea(l.uid, { description: e.target.value })} placeholder="ej. iPhone 13 128GB" />
+                {productos.length > 0 && (
+                  <button type="button" className="btn btn-ghost btn-sm" title="Elegir del inventario"
+                    onClick={() => setCustomDesc((m) => ({ ...m, [l.uid]: false }))}>▾</button>
+                )}
+              </div>
+            )}
+          </label>
           <label className="field vl-qty"><span>Cant.</span>
             <input type="number" min="1" max="999" value={l.qty} onChange={(e) => setLinea(l.uid, { qty: e.target.value })} /></label>
           <label className="field vl-precio"><span>Precio</span>
@@ -281,9 +331,16 @@ export default function Invoices() {
   const [viewInv, setViewInv] = useState(null);
   const [saving, setSaving] = useState(false);
   const [preloading, setPreloading] = useState(false);
+  const [productos, setProductos] = useState([]);
 
   const load = () => api('/invoices').then((d) => setInvoices(d.invoices || [])).catch((e) => setErr(e.message));
   useEffect(() => { load(); }, [tick]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Productos del inventario para el dropdown de Descripción en el formulario.
+  useEffect(() => {
+    if (mode !== 'form') return;
+    api('/inventory').then((d) => setProductos(d.items || [])).catch(() => setProductos([]));
+  }, [mode]);
 
   // Prellenar desde Ventas: /facturas?venta=N o ?reparacion=N.
   useEffect(() => {
@@ -524,7 +581,7 @@ export default function Invoices() {
         <div className="inv-editor">
           <div className="card inv-editor-form">
             <InvoiceForm form={form} setForm={setForm} onSave={guardar} saving={saving} err={err}
-              isNew={!editId} onCancel={() => { setMode('list'); setEditId(null); setErr(''); }} />
+              isNew={!editId} productos={productos} onCancel={() => { setMode('list'); setEditId(null); setErr(''); }} />
           </div>
           <div className="inv-editor-preview">
             <InvoiceDoc inv={form} items={form.items} />

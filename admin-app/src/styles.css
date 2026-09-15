@@ -313,6 +313,7 @@ select option { background: #fff; color: #111; }
 .content:has(> .inventory-page) { max-width: none; }
 /* Ventas: página de ancho completo (sin límite de 1140px). */
 .content:has(> .sales-page) { max-width: none; }
+.content:has(> .invoice-page) { max-width: none; }
 .dash-layout { display: grid; grid-template-columns: 1fr 300px; gap: 16px; align-items: start; }
 .dash-layout .stat-grid { grid-template-columns: 1fr; margin-bottom: 0; }
 .dash-main { min-width: 0; }
@@ -820,6 +821,8 @@ button.nav-item { background: none; border: none; width: 100%; font-family: inhe
 .idoc-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 16px; }
 .idoc-flabel { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #8a8a92; margin-bottom: 2px; }
 .idoc-fvalue { font-size: 12.5px; overflow-wrap: anywhere; }
+.vl-desc-free { display: flex; gap: 6px; align-items: center; }
+.vl-desc-free input { flex: 1; min-width: 0; }
 
 .idoc-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
 .idoc-table th { text-align: left; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #55555c; border-bottom: 1px solid rgba(0, 0, 0, 0.2); padding: 5px 6px; }
@@ -839,7 +842,7 @@ button.nav-item { background: none; border: none; width: 100%; font-family: inhe
 /* Editor de factura con vista previa en vivo: formulario a la izquierda,
    documento a la derecha (sticky para acompañar el scroll). En pantallas
    angostas se apila: formulario arriba, preview debajo. */
-.inv-editor { display: grid; grid-template-columns: minmax(380px, 560px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.inv-editor { display: grid; grid-template-columns: minmax(400px, 620px) minmax(0, 1fr); gap: 20px; align-items: start; }
 .inv-editor-preview { position: sticky; top: 16px; }
 .inv-editor-preview .invoice-doc { max-width: none; }
 @media (max-width: 1100px) {

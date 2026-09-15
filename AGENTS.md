@@ -132,7 +132,10 @@ cambies estructura, flujos o convenciones.
   `Invoices.jsx` (Facturas: Bill of Sale por venta/reparación, formulario +
   documento imprimible con `window.print()`, sin librerías de PDF; datos del
   vendedor recordados en localStorage `est_invoice_seller`; **vista previa en
-  vivo** del documento al lado del formulario, layout `.inv-editor`),
+  vivo** del documento al lado del formulario, layout `.inv-editor` a ancho
+  completo de página; la Descripción del artículo es un **dropdown de
+  productos del inventario** que autollena el precio, con opción "Otro
+  (escribir a mano)" para texto libre — servicios/reparaciones),
   `Orders.jsx` (Órdenes/Envíos: compras del website automáticas vía Stripe +
   órdenes manuales de FB Marketplace; tracking number → estado
   pendiente→enviado→entregado; polling 30 s),

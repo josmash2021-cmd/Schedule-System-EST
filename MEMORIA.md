@@ -622,10 +622,10 @@ Incluyen sección SMS (`/terminos#sms`) y política de NO devoluciones/reembolso
   (`server/lib/invoicePdf.js`, réplica del diseño del panel; logo
   `public/assets/img/logo-receipt.png` (2026-09-15: logo EST negro + brazo
   dorado de ChatGPT, recortado y limpiado con PIL) medido por cabecera PNG
-  para no solapar; las cajas Seller/Buyer identifican cada dato con su
-  etiqueta gris (NAME / PHONE NUMBER / ADDRESS / EMAIL) en grilla 2×2, y lo
-  que no cabe en media columna (dirección/correo largos) baja a fila completa
-  — mismo criterio en el InvoiceDoc del panel;
+  para no solapar; las cajas Service Provider / Client Information
+  identifican cada dato con su etiqueta gris (NAME / PHONE NUMBER / ADDRESS /
+  EMAIL) en grilla 2×2, y lo que no cabe en media columna (dirección/correo
+  largos) baja a fila completa — mismo criterio en el InvoiceDoc del panel;
   SIN bloque de firmas ni Tax Rate, hora en 12h, y cada artículo con título en
   negrita + `desc` del catálogo debajo — `createFromOrder` guarda `desc` en
   los items de la factura), `GET /x/s/invoices/:id/pdf` lo descarga

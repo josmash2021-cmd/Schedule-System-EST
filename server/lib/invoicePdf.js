@@ -1,7 +1,8 @@
 /* Generador del PDF del Bill of Sale con pdfkit: replica el diseño del
-   documento del panel (InvoiceDoc): header con logo, cajas Seller/Buyer con
-   cada dato identificado por su etiqueta (NAME / PHONE NUMBER / ADDRESS /
-   EMAIL), Sale Information, tabla de artículos, totales, garantía y términos.
+   documento del panel (InvoiceDoc): header con logo, cajas Service Provider /
+   Client Information con cada dato identificado por su etiqueta (NAME /
+   PHONE NUMBER / ADDRESS / EMAIL), Sale Information, tabla de artículos,
+   totales, garantía y términos.
    Letter (612×792 pt), monocromo, fuentes Helvetica de serie. */
 const fs = require('fs');
 const path = require('path');
@@ -189,8 +190,8 @@ function buildInvoicePdf(inv) {
       phone: inv.buyer_phone, address: inv.buyer_address, email: inv.buyer_email,
     };
     const infoH = Math.max(altoInfo(seller, colW), altoInfo(buyer, colW));
-    cajaInfo('SELLER INFORMATION', seller, M, y, colW, infoH);
-    cajaInfo('BUYER INFORMATION', buyer, M + colW + colGap, y, colW, infoH);
+    cajaInfo('SERVICE PROVIDER', seller, M, y, colW, infoH);
+    cajaInfo('CLIENT INFORMATION', buyer, M + colW + colGap, y, colW, infoH);
     y += infoH + 14;
 
     // ---------- Sale information ----------
