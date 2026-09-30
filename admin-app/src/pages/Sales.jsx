@@ -264,9 +264,11 @@ export default function Sales() {
     const v = ganVista % 3;
     if (v === 0) {
       const keysFull = weekKeysOff(ganOffset);
-      // La semana pertenece al mes de su jueves: los días del mes vecino
-      // no cuentan (cada día se suma a su propio mes).
-      const wkMonth = keysFull[3].slice(0, 7);
+      // La semana en curso se ancla al mes de HOY (igual que el KPI "Esta
+      // semana"); las semanas pasadas se anclan al mes de su jueves
+      // (convención ISO). En ambos casos solo cuentan los días que caen en
+      // ese mes: cada día se suma a su propio mes.
+      const wkMonth = ganOffset === 0 ? curMonthKey : keysFull[3].slice(0, 7);
       const keys = keysFull.filter((k) => k.startsWith(wkMonth));
       const [sy, sm, sd] = keysFull[0].split('-').map(Number);
       return {

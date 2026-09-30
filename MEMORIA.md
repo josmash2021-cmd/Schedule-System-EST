@@ -386,6 +386,11 @@ los días de la semana lun–dom que caen en el mes en curso: cada día
 pertenece a su propio mes (si la semana empieza el 31 de agosto, ese día
 suma a agosto, no a septiembre). En la Ganancia con flechitas, una semana
 pasada pertenece al mes de su jueves (convención ISO).
+**Fix (2026-09-30):** la Ganancia semanal TAMBIÉN anclaba la semana en
+curso al mes de su jueves — al final de un mes con el jueves en el mes
+siguiente (ej. mié 30-sep, jue 1-oct) la tarjeta solo miraba días futuros
+y marcaba $0. Ahora la semana en curso (offset 0) se ancla al mes de HOY,
+igual que el KPI; las semanas pasadas siguen con la regla del jueves.
 
 **Ventas — fila única de KPIs (2026-09-04):** las 6 tarjetas van en una
 sola fila a todo lo ancho (`.sales-page .stat-grid`): Hoy → Esta semana →
