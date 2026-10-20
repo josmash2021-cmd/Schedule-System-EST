@@ -66,6 +66,19 @@ const CATALOG = {
     img: 'assets/img/macbook-pro-2020.jpg',
     freeShip: true,
   },
+  // Sin invId por ahora: la venta no toca inventario y su costo cuenta 0.
+  // Cuando el dueño cree el item en el inventario del panel (SKU
+  // "macbook-pro-2019"), agregar aquí su invId.
+  'macbook-pro-2019-excelente': {
+    name: 'MacBook Pro 2019 15"',
+    desc: 'Intel i7 · 16 GB RAM · 256 GB SSD · Sin daños',
+    descEn: 'Intel i7 · 16 GB RAM · 256 GB SSD · No damage',
+    cond: 'Excelente',
+    condEn: 'Excellent',
+    price: 300,
+    img: 'assets/img/macbook-pro-2019.jpg',
+    freeShip: true,
+  },
   'macbook-neo-2026-openbox': {
     name: 'MacBook Neo 2026',
     desc: '512 GB · 8 GB RAM · Touch ID · Open box',
