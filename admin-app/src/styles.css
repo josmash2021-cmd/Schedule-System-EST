@@ -30,6 +30,8 @@
 
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
+/* Sin zoom por pellizco ni doble toque (ver src/noZoom.js); el scroll sigue igual. */
+html { touch-action: pan-x pan-y; }
 body {
   margin: 0;
   background: var(--white);
