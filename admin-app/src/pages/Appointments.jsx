@@ -102,7 +102,7 @@ function Info({ k, v }) {
 
 export default function Appointments() {
   // Permite llegar con ?fecha=YYYY-MM-DD (p. ej. desde el gráfico del Dashboard).
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const paramFecha = searchParams.get('fecha');
   const fechaParam = /^\d{4}-\d{2}-\d{2}$/.test(paramFecha || '') ? paramFecha : null;
   const hoy = todayChicago();
@@ -112,6 +112,12 @@ export default function Appointments() {
   const [busy, setBusy] = useState('');
   const [editing, setEditing] = useState(null);
   const [creating, setCreating] = useState(false);
+  // Menú "+ Nuevo → Cita": /citas?nueva=1 abre el formulario.
+  useEffect(() => {
+    if (!searchParams.get('nueva')) return;
+    setCreating(true);
+    setSearchParams({}, { replace: true });
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
   const [selected, setSelected] = useState(null); // cita abierta en detalle
   const [tick, setTick] = useState(0); // fuerza recarga
 

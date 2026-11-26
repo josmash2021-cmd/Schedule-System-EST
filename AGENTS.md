@@ -349,22 +349,52 @@ cambies estructura, flujos o convenciones.
 - Bots: `server/wa-bot/` (WhatsApp), `server/ig-bot/` (Instagram) —
   artefactos locales gitignored.
 
-### Dashboard del panel (composición actual, 2026-07-24)
-`admin-app/src/pages/Dashboard.jsx`: fila superior de 4 tarjetas (enlaces):
-Ventas de hoy ($ de entregados hoy), Trabajadores, Reparaciones esta semana
-y Total de inventario. Abajo, layout `.dash-layout` (contenido a la
-izquierda; a la derecha una dona "Ventas vs reparaciones (semana)" —
-entregadas vs creadas no entregadas, componente `Donut` en el mismo archivo).
-- Gráficos de barras SVG propios (`components/BarChart.jsx`, animación de
-  crecimiento escalonada): Ventas de la semana (tickets `entregado`, suma
-  `final_price` por `delivered_at`) y Citas de la semana (por `fecha`).
-  Semana **lunes–domingo en America/Chicago** (`currentWeekKeys`). El día
-  actual se resalta. **Las barras son clicables:** ventas →
-  `/ventas?fecha=YYYY-MM-DD` (página Ventas en vista de día), citas →
-  `/citas?fecha=YYYY-MM-DD`. El título "Ventas de la semana →" enlaza a
-  `/ventas`.
-- Tabla "Citas de hoy". Todo el dashboard sin negrillas
-  (`.dashboard * { font-weight: 400 !important }`, petición del dueño).
+### Dashboard del panel (composición actual, 2026-11-26)
+`admin-app/src/pages/Dashboard.jsx` responde "¿cuánto vendí? / ¿qué necesita
+atención? / ¿cómo va el taller?". Solo usa APIs existentes (`/repairs`,
+`/sales`, `/orders`, `/inventory`, `/expenses`, `/api/appointments`); las
+ventas usan la MISMA definición que `Sales.jsx` (3 fuentes). De arriba abajo:
+- **Saludo** (`.dash-hello`, franja negra con línea dorada): fecha, "Buenos
+  días/tardes/noches" (`saludo()` de `RepairDetail.jsx`), frase resumen
+  (vendido hoy + # pendientes) y 3 atajos (reparaciones en curso, pedidos por
+  enviar, citas hoy).
+- **4 tarjetas** (`.dash-kpis`): Ventas de hoy (flecha verde/roja vs ayer +
+  `Sparkline` 7 días), Ventas del mes (`Meter` hacia el total del mes pasado),
+  Ganancia del mes (ventas − costo − gastos; "Te quedas con N% de cada
+  venta") y Por cobrar (precio final/cotizado − `amount_paid` de
+  reparaciones no entregadas).
+- **Necesita atención** (pendientes accionables, cada fila enlaza): órdenes
+  `pendiente` (urgente), pieza llegada (`ship_tag` Delivered en
+  recibido/diagnóstico, urgente), reparaciones `listo` (con saldo), productos
+  agotados y stock ≤ `min_stock`. Al lado, **Ventas de la semana**
+  (`BarChart`, lun–dom Chicago, barras → `/ventas?fecha=`) con "Mejor día".
+- **Camino de las reparaciones** (4 círculos por estado), **Órdenes** (por
+  enviar / en camino / entregados del mes), **Próximas citas** (hojita de
+  calendario → `/citas?fecha=`).
+- **¿De dónde vino el dinero?** (barra apilada por tipo del mes) y **Últimas
+  ventas** (5, con iniciales).
+- Íconos propios **duotono sin cuadro** (`Ico` + `.duo` dorado + `.dot`),
+  dorado de marca `--oro: #c8a24b` en `:root`. Todo el dashboard sin
+  negrillas (`.dashboard * { font-weight: 400 !important }`, petición del
+  dueño). El único color fuera de negro/blanco/dorado es la flecha verde/roja.
+
+### Menú del panel (`components/Layout.jsx`, 2026-11-26)
+- Agrupado: Dashboard · **Taller** (Reparaciones, Citas) · **Tienda** (Ventas,
+  Órdenes, Inventario, Facturas, Clientes) · **Equipo** (Tareas,
+  **Asistencia** = ruta `/equipo`, Trabajadores) · Ajustes. "Plano 3D" se
+  quitó del menú (la Fase 6 sigue diferida).
+- **Numeritos** dorados (`useCounts`, mismos criterios que "Necesita
+  atención"): reparaciones listas/pieza llegada, citas de hoy, órdenes por
+  enviar, productos agotados; recarga cada 60 s y al cambiar de página
+  (máx. cada 20 s).
+- **"+ Nuevo"**: Venta / Factura / Reparación / Cita → navega a
+  `?nueva=1`; Sales, Invoices, Repairs y Appointments abren su formulario con
+  ese parámetro (efecto sobre `searchParams`, funciona aunque ya estés en la
+  página) y lo limpian.
+- ≤820px: **barra fija abajo** (`.bottom-bar`: Inicio, Reparar, Ventas,
+  Órdenes, Más = abre el menú lateral); `.content` deja espacio abajo.
+- Las vistas previas de cambios visuales para el dueño van SIEMPRE en la
+  misma página de muestra (artifact "Nuevo Dashboard ElectronicST").
 
 ## Verificación visual del panel (úsala SIEMPRE en cambios de UI)
 

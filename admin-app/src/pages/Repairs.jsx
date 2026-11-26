@@ -107,7 +107,7 @@ function PartShipBar({ ticket }) {
 
 export default function Repairs() {
   // Permite llegar con ?entregado=YYYY-MM-DD (desde el gráfico de ventas del Dashboard).
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const dayParam = searchParams.get('entregado');
   const dayFilter = /^\d{4}-\d{2}-\d{2}$/.test(dayParam || '') ? dayParam : null;
   const [tickets, setTickets] = useState(null);
@@ -117,6 +117,12 @@ export default function Repairs() {
   const [filter, setFilter] = useState(dayFilter ? 'entregado' : 'activos');
   const [deviceFilter, setDeviceFilter] = useState('todas'); // categoría de equipo
   const [detail, setDetail] = useState(null); // { id } | { id: null }
+  // Menú "+ Nuevo → Reparación": /reparaciones?nueva=1 abre el formulario.
+  useEffect(() => {
+    if (!searchParams.get('nueva')) return;
+    setDetail({ id: null });
+    setSearchParams({}, { replace: true });
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
   const [sel, setSel] = useState(() => new Set()); // ids marcados para borrar
   const [busy, setBusy] = useState(false);
   const [exiting, setExiting] = useState(false); // el formulario se despide animado

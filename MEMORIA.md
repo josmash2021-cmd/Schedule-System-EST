@@ -1020,3 +1020,27 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   64–66: factura nueva → aparece en Ventas → Ver factura).
 - Facturas libres creadas ANTES de este cambio siguen sin venta: para que
   cuenten, Editar → marcar "Registrar como venta" → Guardar.
+
+## 19. Dashboard y menú rediseñados — 2026-11-26
+
+- **Por qué:** el dashboard viejo mostraba datos que no llevaban a ninguna
+  acción ("Trabajadores: 2", "Total de inventario: 12" en unidades, una dona
+  que comparaba ventas con reparaciones en curso y salía toda negra, gráfica
+  de citas casi siempre vacía) y dejaba media pantalla en blanco. El menú era
+  una lista de 11 opciones sin grupos, "Equipo" y "Trabajadores" se
+  confundían y "Plano 3D" ocupaba lugar con "PRONTO".
+- **Dashboard nuevo** (detalle en AGENTS.md): saludo con resumen del día,
+  tarjetas de dinero con sparkline/meta/margen, "Necesita atención" con
+  pendientes accionables, camino de las reparaciones, órdenes, próximas
+  citas, ventas por tipo y últimas ventas. Cero cambios de backend.
+- **Menú nuevo:** grupos Taller/Tienda/Equipo, numeritos de pendientes,
+  botón "+ Nuevo" (`?nueva=1` en Ventas/Facturas/Reparaciones/Citas),
+  "Equipo" → "Asistencia", sin "Plano 3D", barra fija abajo en ≤820px.
+- Íconos propios duotono sin cuadro (decisión del dueño: "modernos y sin
+  cuadro encerrado"); sin librerías nuevas. Dorado `--oro: #c8a24b` (el de
+  los correos) pasó a `:root`.
+- Gotcha: `innerText` respeta `text-transform`: las etiquetas de grupo del
+  menú salen "TALLER" (el arnés compara sin mayúsculas).
+- Arnés visual: pruebas nuevas de "Necesita atención", próxima cita →
+  `/citas?fecha=`, barra de ventas, grupos/numeritos del menú y
+  "+ Nuevo → Factura". Se quitaron las de la dona y la gráfica de citas.

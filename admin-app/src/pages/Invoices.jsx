@@ -442,6 +442,14 @@ export default function Invoices() {
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Menú "+ Nuevo → Factura": /facturas?nueva=1 abre el formulario vacío
+  // (también si ya se estaba en Facturas).
+  useEffect(() => {
+    if (!searchParams.get('nueva')) return;
+    setForm(vacio()); setEditId(null); setErr(''); setMode('form');
+    setSearchParams({}, { replace: true });
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const itemsFormToRows = (items) => items
     .map((l) => ({
       ...(l.item_id ? { item_id: l.item_id } : {}),

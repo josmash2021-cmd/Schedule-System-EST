@@ -102,7 +102,7 @@ const PERIODS = [
 ];
 
 export default function Sales() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const paramFecha = searchParams.get('fecha');
   const [tickets, setTickets] = useState(null);
@@ -115,6 +115,12 @@ export default function Sales() {
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const [registering, setRegistering] = useState(false);
+  // Menú "+ Nuevo → Venta": /ventas?nueva=1 abre el formulario.
+  useEffect(() => {
+    if (!searchParams.get('nueva')) return;
+    setRegistering(true);
+    setSearchParams({}, { replace: true });
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
   const [tick, setTick] = useState(0);
   const [period, setPeriod] = useState(/^\d{4}-\d{2}-\d{2}$/.test(paramFecha || '') ? 'dia' : 'semana');
   const [day, setDay] = useState(/^\d{4}-\d{2}-\d{2}$/.test(paramFecha || '') ? paramFecha : chicagoParts().key);
