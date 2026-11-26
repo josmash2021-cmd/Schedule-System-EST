@@ -1,20 +1,42 @@
+import './Workers.css';
 import { useEffect, useState, useCallback } from 'react';
 import { api } from '../api.js';
+import { useAuth } from '../auth.jsx';
 import FormPage from '../components/FormPage.jsx';
+import PageHead from '../components/PageHead.jsx';
+import { hace, iniciales } from '../fechas.js';
 
 const ROLE_LABEL = { admin: 'Admin', worker: 'Trabajador' };
+const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
 
 export default function Workers() {
+  const { user: yo } = useAuth() || {};
   const [users, setUsers] = useState(null);
   const [err, setErr] = useState('');
   const [modal, setModal] = useState(null); // { mode, user }
   const [temp, setTemp] = useState(null); // { username, password }
+  const [busy, setBusy] = useState({}); // { [id]: true } mientras cambia Activo/Inactivo
 
   const load = useCallback(() => {
     setErr('');
     api('/users').then((d) => setUsers(d.users)).catch((e) => setErr(e.message));
   }, []);
   useEffect(() => { load(); }, [load]);
+
+  // Interruptor Activo/Inactivo de la tarjeta: es el mismo PATCH que el campo
+  // "Estado" de Gestionar. El servidor impide desactivarse a uno mismo y
+  // dejar el sistema sin administradores activos (muestra su mensaje).
+  const setActivo = async (u, active) => {
+    if (busy[u.id]) return;
+    if (!active && !window.confirm(`¿Desactivar a "${u.username}"?\n\nYa no podrá entrar al panel hasta que lo vuelvas a activar. Su historial no se borra.`)) return;
+    setErr('');
+    setBusy((b) => ({ ...b, [u.id]: true }));
+    try {
+      const res = await api('/users/' + u.id, { method: 'PATCH', body: { active } });
+      setUsers((list) => list.map((x) => (x.id === u.id ? { ...x, ...(res && res.user ? res.user : {}), active } : x)));
+    } catch (e) { setErr(e.message); }
+    setBusy((b) => { const n = { ...b }; delete n[u.id]; return n; });
+  };
 
   // Formulario a página completa (sin modal).
   if (modal) {
@@ -42,40 +64,60 @@ export default function Workers() {
     );
   }
 
+  const lista = users || [];
+  const nAct = lista.filter((u) => u.active).length;
+  const nPw = lista.filter((u) => u.must_change_password).length;
+  const sub = users == null ? 'Cargando…'
+    : [plural(lista.length, 'cuenta', 'cuentas'), plural(nAct, 'activa', 'activas'),
+      nPw ? `${nPw} ${nPw === 1 ? 'debe' : 'deben'} cambiar su contraseña` : null].filter(Boolean).join(' · ');
+
   return (
-    <>
-      <div className="section-head">
-        <div className="spacer" />
+    <div className="tra2">
+      <PageHead title="Trabajadores" sub={sub}>
         <button className="btn btn-primary" onClick={() => setModal({ mode: 'create' })}>+ Nuevo trabajador</button>
-      </div>
+      </PageHead>
       {err && <div className="alert alert-error">{err}</div>}
 
       {users == null ? <span className="spinner spinner-lg" />
-        : users.length === 0 ? <div className="card"><div className="empty">Aún no hay usuarios.</div></div>
+        : users.length === 0 ? <div className="empty-state">Aún no hay usuarios. Crea el primero con <strong>+ Nuevo trabajador</strong>.</div>
           : (
-            <div className="table-wrap">
-              <table className="data">
-                <thead>
-                  <tr><th>Usuario</th><th className="hide-sm">Email</th><th>Rol</th><th>Estado</th><th className="hide-sm">Último acceso</th><th></th></tr>
-                </thead>
-                <tbody>
-                  {users.map((u) => (
-                    <tr key={u.id}>
-                      <td><strong>{u.username}</strong>{u.must_change_password && <span className="badge badge-pendiente" style={{ marginLeft: 8, fontSize: 10 }}>pendiente</span>}</td>
-                      <td className="muted hide-sm">{u.email || '—'}</td>
-                      <td><span className={'badge badge-' + u.role}>{ROLE_LABEL[u.role]}</span></td>
-                      <td><span className={'badge ' + (u.active ? 'badge-on' : 'badge-off')}>{u.active ? 'Activo' : 'Inactivo'}</span></td>
-                      <td className="muted hide-sm">{u.last_login ? new Date(u.last_login).toLocaleString('es') : 'Nunca'}</td>
-                      <td style={{ textAlign: 'right' }}>
-                        <button className="btn btn-secondary btn-sm" onClick={() => setModal({ mode: 'edit', user: u })}>Gestionar</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="tra2-grid">
+              {lista.map((u) => {
+                const soyYo = yo && yo.id === u.id;
+                return (
+                  <div key={u.id} className={'tra2-card' + (u.active ? '' : ' tra2-off')}>
+                    <div className="tra2-top">
+                      <span className="av">{iniciales(u.username)}</span>
+                      <div className="tra2-who">
+                        <div className="tra2-line">
+                          <span className="tra2-name">{u.username}{soyYo && <span className="tra2-me"> · tú</span>}</span>
+                          <span className={'st ' + (u.role === 'admin' ? 'st-strong' : 'st-muted') + ' tra2-role'}>{ROLE_LABEL[u.role] || u.role}</span>
+                        </div>
+                        <div className="tra2-sub">{u.last_login ? `Último acceso ${hace(u.last_login)}` : 'Todavía no ha entrado'}</div>
+                        {u.email && <div className="tra2-mail" title={u.email}>{u.email}</div>}
+                      </div>
+                    </div>
+                    {u.must_change_password && (
+                      <div className="tra2-tags"><span className="st st-warn tra2-pw">Debe cambiar su contraseña</span></div>
+                    )}
+                    <div className="tra2-foot">
+                      <label className={'tra2-sw-wrap' + (soyYo ? ' tra2-locked' : '')}
+                        title={soyYo ? 'No puedes desactivar tu propia cuenta' : (u.active ? 'Desactivar la cuenta' : 'Activar la cuenta')}>
+                        <button type="button" role="switch" aria-checked={!!u.active}
+                          aria-label={(u.active ? 'Desactivar' : 'Activar') + ' a ' + u.username}
+                          className={'tra2-sw' + (u.active ? ' on' : '')}
+                          disabled={soyYo || !!busy[u.id]}
+                          onClick={() => setActivo(u, !u.active)} />
+                        <span className="tra2-sw-l">{u.active ? 'Activo' : 'Inactivo'}</span>
+                      </label>
+                      <button className="btn btn-secondary btn-sm" onClick={() => setModal({ mode: 'edit', user: u })}>Gestionar</button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
-    </>
+    </div>
   );
 }
 

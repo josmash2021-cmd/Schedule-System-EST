@@ -1,38 +1,80 @@
-import { useEffect, useState, useCallback, useRef, Fragment } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
 import FormPage from '../components/FormPage.jsx';
+import PageHead from '../components/PageHead.jsx';
+import Tabs from '../components/Tabs.jsx';
+import MoreMenu from '../components/MoreMenu.jsx';
 import RepairDetail, {
-  REPAIR_STATUS, STATUS_BADGE, statusLabel, DEVICE_TYPES, deviceTypeLabel, serviceTypeLabel, phoneIntl, saludo,
+  statusLabel, DEVICE_TYPES, serviceTypeLabel, phoneIntl, saludo,
 } from '../components/RepairDetail.jsx';
+import { fechaCorta, hace, diasDesde, diaKey, iniciales } from '../fechas.js';
+import './Repairs.css';
 
 const money = (n) => (n == null ? '—' : '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }));
 
-// Fecha de negocio (America/Chicago) como clave YYYY-MM-DD.
-function chicagoKey(date) {
-  const p = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit',
-  }).formatToParts(date).reduce((a, x) => { a[x.type] = x.value; return a; }, {});
-  return `${p.year}-${p.month}-${p.day}`;
-}
+// Número público de la reparación (el mismo de los correos y track.html).
+const repNum = (t) => `REP-${1000 + Number(t.id)}`;
+const equipoDe = (t) => [t.device_brand, t.device_model].filter(Boolean).join(' ') || 'Equipo sin nombre';
+// Total a cobrar: precio final o, si aún no hay, el cotizado.
+const totalDe = (t) => (t.final_price != null ? Number(t.final_price) : (t.quoted_price != null ? Number(t.quoted_price) : null));
+const saldoDe = (t) => {
+  const tot = totalDe(t);
+  return tot == null ? null : Math.max(0, tot - (Number(t.amount_paid) || 0));
+};
 
-// Fecha + hora de negocio, como en Órdenes.
-function fmtDay(iso) {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  const p = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', hour12: false,
-  }).formatToParts(d).reduce((a, x) => { a[x.type] = x.value; return a; }, {});
-  return `${p.day}/${p.month}/${p.year} ${p.hour}:${p.minute}`;
-}
-
-function FilterPill({ v, cur, set, label }) {
-  return <button className={'btn btn-sm ' + (cur === v ? 'btn-primary' : 'btn-secondary')} onClick={() => set(v)}>{label}</button>;
-}
-
-// Plurales para los pills de categoría de equipo.
+// Plurales para las pestañas de equipo.
 const DEVICE_PLURAL = { telefono: 'Teléfonos', tablet: 'Tablets', laptop: 'Laptops' };
+
+// Columnas del tablero "En el taller" (un paso cada una) y el paso siguiente.
+const COLUMNAS = [
+  { v: 'recibido', l: 'Recibido' },
+  { v: 'diagnostico', l: 'Diagnóstico' },
+  { v: 'reparacion', l: 'Reparando' },
+  { v: 'listo', l: 'Listo' },
+];
+const SIGUIENTE = { recibido: 'diagnostico', diagnostico: 'reparacion', reparacion: 'listo' };
+const colLabel = (v) => (COLUMNAS.find((c) => c.v === v) || {}).l || statusLabel(v);
+
+// Cómo va la pieza (repuesto en camino al taller), como texto de color.
+function piezaDe(t) {
+  if (!t.tracking_number) return null;
+  const llega = t.expected_delivery && t.ship_tag !== 'Delivered'
+    ? ` · llega ${fechaCorta(String(t.expected_delivery).slice(0, 10), { conHora: false })}` : '';
+  if (t.ship_tag === 'Delivered') return { txt: 'Pieza llegó', cls: 'st-ok' };
+  if (t.ship_tag === 'OutForDelivery') return { txt: 'Pieza en reparto' + llega, cls: 'st-warn' };
+  if (t.ship_tag === 'InTransit') return { txt: 'Pieza en tránsito' + llega, cls: 'st-warn' };
+  return { txt: 'Pieza enviada' + llega, cls: 'st-warn' };
+}
+
+// Datos que llegan desde Citas ("Crear reparación"): ?nueva=1&cliente=…&tel=…
+// &correo=…&equipo=…&problema=… → valores iniciales del formulario.
+const MARCAS = ['Apple', 'Samsung', 'Google', 'Motorola', 'LG', 'Lenovo', 'HP', 'Dell', 'Asus', 'Acer', 'Microsoft', 'Huawei', 'Xiaomi', 'OnePlus'];
+function equipoDesdeTexto(s) {
+  const txt = String(s || '').trim();
+  if (!txt) return {};
+  let brand = '';
+  let model = txt;
+  const m = MARCAS.find((b) => txt.toLowerCase().startsWith(b.toLowerCase() + ' '));
+  if (m) { brand = m; model = txt.slice(m.length).trim(); }
+  else if (/^(iphone|ipad|macbook|imac|apple watch|airpods)/i.test(txt)) brand = 'Apple';
+  else if (/^galaxy/i.test(txt)) brand = 'Samsung';
+  else if (/^pixel/i.test(txt)) brand = 'Google';
+  const tipo = /ipad|\btab\b|tablet/i.test(txt) ? 'tablet'
+    : /macbook|imac|laptop|thinkpad|notebook|chromebook/i.test(txt) ? 'laptop' : 'telefono';
+  return { device_brand: brand, device_model: model, device_type: tipo };
+}
+function inicialDesdeParams(sp) {
+  const v = (k) => (sp.get(k) || '').trim();
+  const init = {
+    ...(v('cliente') && { customer_name: v('cliente') }),
+    ...(v('tel') && { customer_phone: v('tel') }),
+    ...(v('correo') && { customer_email: v('correo') }),
+    ...(v('problema') && { problem: v('problema') }),
+    ...equipoDesdeTexto(v('equipo')),
+  };
+  return Object.keys(init).length ? init : undefined;
+}
 
 /* Barra de progreso animada de la reparación (mismo diseño que la barra de
    envío de Órdenes): Recibido → En revisión → En laboratorio de reparación
@@ -105,6 +147,70 @@ function PartShipBar({ ticket }) {
   );
 }
 
+/* Resumen arriba de la ficha (lo que antes estaba en el detalle abierto de la
+   lista): estado con su barra, la pieza con su barra (se mueve EN VIVO con el
+   stream), cobro, y la factura (vincular, ver, por correo, por WhatsApp). */
+function Resumen({ t, err, ok, invOptions, invBusy, onVincular, onVer, onCorreo, onWhatsApp }) {
+  const total = totalDe(t);
+  const paid = Number(t.amount_paid) || 0;
+  const saldo = saldoDe(t);
+  const pieza = piezaDe(t);
+  const dias = diasDesde(t.created_at);
+  return (
+    <div className="rep2-res">
+      {err && <div className="alert alert-error">{err}</div>}
+      {ok && <div className="alert alert-ok">{ok}</div>}
+      <div className="rep2-res-top">
+        <span className="st st-strong">{statusLabel(t.status)}</span>
+        <span className="rep2-res-meta">
+          {t.status === 'entregado'
+            ? `Entregada ${fechaCorta(t.delivered_at)}`
+            : `Entró ${fechaCorta(t.created_at)} · ${dias === 1 ? '1 día' : dias + ' días'} en el taller`}
+        </span>
+        {total != null && (
+          <span className="rep2-res-meta">
+            Total {money(total)}
+            {paid > 0 && ` · Abonado ${money(paid)} (${Math.round((paid / total) * 100)}%)`}
+            {saldo > 0 && t.status !== 'entregado' && <> · <span className="st st-bad">Restante {money(saldo)}</span></>}
+          </span>
+        )}
+      </div>
+      <RepairBar ticket={t} />
+      {t.tracking_number && (
+        <div className="rep2-res-part">
+          <div className="rep2-res-meta">
+            Repuesto: <strong>{t.tracking_number}</strong>{t.carrier ? ` (${String(t.carrier).toUpperCase()})` : ''}
+            {pieza && <> · <span className={'st ' + pieza.cls}>{pieza.txt}</span></>}
+          </div>
+          <PartShipBar ticket={t} />
+        </div>
+      )}
+      <div className="rep2-res-inv">
+        <span className="rep2-res-lbl">Factura</span>
+        <select className="estado-select" value={t.invoice_id || ''}
+          title="Factura vinculada a esta reparación (cámbiala si hay duplicadas)"
+          onChange={(e) => onVincular(t, e.target.value)}>
+          <option value="">{t.invoice_number ? `Factura ${t.invoice_number}` : 'Sin factura'}</option>
+          {invOptions.map((i) => (
+            <option key={i.id} value={i.id}>Factura {i.invoice_number}</option>
+          ))}
+        </select>
+        <button type="button" className="btn btn-secondary btn-sm" disabled={invBusy === t.id}
+          title="Ver el PDF de la factura (si no existe, se crea al vuelo)"
+          onClick={() => onVer(t)}>
+          {invBusy === t.id ? <span className="spinner" /> : 'Ver factura'}
+        </button>
+        <button type="button" className="btn btn-secondary btn-sm" disabled={invBusy === t.id || !t.customer_email}
+          title={!t.customer_email ? 'El cliente no tiene correo guardado' : `Enviar la factura en PDF a ${t.customer_email}`}
+          onClick={() => onCorreo(t)}>✉ Factura por correo</button>
+        <button type="button" className="btn btn-secondary btn-sm" disabled={invBusy === t.id || !t.customer_phone}
+          title={!t.customer_phone ? 'El cliente no tiene teléfono guardado' : 'Enviar el link del PDF de la factura por WhatsApp'}
+          onClick={() => onWhatsApp(t)}>Factura por WhatsApp</button>
+      </div>
+    </div>
+  );
+}
+
 export default function Repairs() {
   // Permite llegar con ?entregado=YYYY-MM-DD (desde el gráfico de ventas del Dashboard).
   const [searchParams, setSearchParams] = useSearchParams();
@@ -114,17 +220,23 @@ export default function Repairs() {
   const [workers, setWorkers] = useState([]);
   const [invoices, setInvoices] = useState([]); // para vincular factura a la reparación
   const [err, setErr] = useState('');
-  const [filter, setFilter] = useState(dayFilter ? 'entregado' : 'activos');
+  const [vista, setVista] = useState(dayFilter ? 'entregadas' : 'taller'); // pestaña
   const [deviceFilter, setDeviceFilter] = useState('todas'); // categoría de equipo
-  const [detail, setDetail] = useState(null); // { id } | { id: null }
+  const [q, setQ] = useState(''); // buscador
+  const [detail, setDetail] = useState(null); // { id, initial? } | { id: null }
   // Menú "+ Nuevo → Reparación": /reparaciones?nueva=1 abre el formulario.
+  // Desde Citas llega con los datos del cliente (&cliente=…&tel=…&equipo=…).
   useEffect(() => {
     if (!searchParams.get('nueva')) return;
-    setDetail({ id: null });
+    setDetail({ id: null, initial: inicialDesdeParams(searchParams) });
     setSearchParams({}, { replace: true });
   }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Si llega ?entregado= con la página ya abierta, se va a "Entregadas".
+  useEffect(() => { if (dayFilter) setVista('entregadas'); }, [dayFilter]);
+  const [selMode, setSelMode] = useState(false); // modo "seleccionar varias"
   const [sel, setSel] = useState(() => new Set()); // ids marcados para borrar
   const [busy, setBusy] = useState(false);
+  const [stepBusy, setStepBusy] = useState(null); // id de la tarjeta que cambia de paso
   const [exiting, setExiting] = useState(false); // el formulario se despide animado
   const [ok, setOk] = useState('');
   const [invBusy, setInvBusy] = useState(null); // id de ticket con factura en proceso
@@ -187,6 +299,20 @@ export default function Repairs() {
     setInvBusy(null);
   };
 
+  // "Avisar por WhatsApp" (columna Listo): mismo armado de wa.me con saludo()
+  // que la factura; la recogida es con cita (mismo link que el correo de "lista").
+  const avisarListo = (t) => {
+    setErr(''); setOk('');
+    const device = [t.device_brand, t.device_model].filter(Boolean).join(' ') || 'equipo';
+    const saldo = saldoDe(t);
+    const link = window.location.origin + '/book-appointment?pickup=repair&rep=' + repNum(t);
+    const msg = `Hola${t.customer_name ? ' ' + t.customer_name : ''}, ${saludo()}. Tu ${device} ya está listo para recoger en ElectronicST (${repNum(t)}).` +
+      (saldo > 0 ? ` El saldo pendiente es de ${money(saldo)}.` : '') +
+      `\nLa recogida es con cita; agenda tu hora aquí: ${link}`;
+    window.open('https://wa.me/' + phoneIntl(t.customer_phone) + '?text=' + encodeURIComponent(msg), '_blank');
+    setOk('Se abrió WhatsApp con el aviso listo para enviar.');
+  };
+
   const load = useCallback((silent) => {
     if (!silent) setErr('');
     api('/repairs').then((d) => setTickets(d.tickets)).catch((e) => { if (!silent) setErr(e.message); });
@@ -232,19 +358,38 @@ export default function Repairs() {
     streams.current.clear();
   }, []);
 
-  // Filtro por categoría de equipo (teléfonos / tablets / laptops).
-  const byDevice = tickets ? tickets.filter((t) => deviceFilter === 'todas' || t.device_type === deviceFilter) : [];
+  // Buscador: cliente, teléfono, IMEI/serie, número REP (y equipo/correo/tracking).
+  const texto = q.trim().toLowerCase();
+  const digitos = texto.replace(/\D/g, '');
+  const coincide = (t) => {
+    if (!texto) return true;
+    const hay = [t.customer_name, t.customer_email, t.device_brand, t.device_model, t.device_serial, repNum(t), t.tracking_number]
+      .filter(Boolean).join(' ').toLowerCase();
+    if (hay.includes(texto)) return true;
+    return digitos.length >= 3 && String(t.customer_phone || '').replace(/\D/g, '').includes(digitos);
+  };
 
-  const shown = byDevice.filter((t) => {
-    if (dayFilter && chicagoKey(new Date(t.delivered_at || 0)) !== dayFilter) return false;
-    if (filter === 'todos') return true;
-    if (filter === 'activos') return t.status !== 'entregado';
-    return t.status === filter;
-  });
+  // Filtro por categoría de equipo (teléfonos / tablets / laptops) + buscador.
+  const base = tickets ? tickets.filter((t) => (deviceFilter === 'todas' || t.device_type === deviceFilter) && coincide(t)) : [];
+  const enTaller = base.filter((t) => t.status !== 'entregado');
+  const entregadas = base
+    .filter((t) => t.status === 'entregado' && (!dayFilter || diaKey(t.delivered_at) === dayFilter))
+    .sort((a, b) => (String(a.delivered_at || '') < String(b.delivered_at || '') ? 1 : -1));
+  const shown = vista === 'taller' ? enTaller : entregadas;
+
+  // Resumen de arriba (sobre TODAS las reparaciones, sin filtros).
+  const activas = tickets ? tickets.filter((t) => t.status !== 'entregado') : [];
+  const nListas = activas.filter((t) => t.status === 'listo').length;
+  const porCobrar = activas.reduce((s, t) => s + (saldoDe(t) || 0), 0);
+  const sub = tickets == null ? '' : [
+    activas.length ? `${activas.length} en el taller` : 'Nada en el taller',
+    nListas > 0 && `${nListas} lista${nListas === 1 ? '' : 's'} para entregar`,
+    porCobrar > 0 && `${money(porCobrar)} por cobrar`,
+  ].filter(Boolean).join(' · ');
 
   // Al cambiar de filtro se limpia la selección: así nunca se borra algo que
   // ya no está a la vista.
-  useEffect(() => { setSel(new Set()); }, [filter, deviceFilter, dayFilter]);
+  useEffect(() => { setSel(new Set()); }, [vista, deviceFilter, dayFilter, q]);
 
   const toggle = (id) => setSel((prev) => {
     const n = new Set(prev);
@@ -257,6 +402,7 @@ export default function Repairs() {
     for (const t of shown) { if (allShownSelected) n.delete(t.id); else n.add(t.id); }
     return n;
   });
+  const salirSeleccion = () => { setSelMode(false); setSel(new Set()); };
 
   const removeSelected = async () => {
     const ids = [...sel];
@@ -265,21 +411,42 @@ export default function Repairs() {
     setBusy(true); setErr('');
     try {
       await api('/repairs', { method: 'DELETE', body: { ids } });
-      setSel(new Set());
+      salirSeleccion();
       load();
     } catch (e) { setErr(e.message); }
     setBusy(false);
   };
 
-  // Cambiar el estado directo desde la lista (mismas opciones que la ficha).
+  // Cambiar el estado desde el tablero (mismo PATCH que el selector de la
+  // ficha; al pasar a 'listo' el server manda el correo al cliente).
   const setEstado = async (t, status) => {
-    setErr('');
+    setErr(''); setOk(''); setStepBusy(t.id);
     try {
       await api('/repairs/' + t.id, { method: 'PATCH', body: { status } });
       setTickets((list) => list.map((x) => (x.id === t.id
-        ? { ...x, status, delivered_at: status === 'entregado' ? new Date().toISOString() : null }
+        ? { ...x, status, delivered_at: status === 'entregado' ? new Date().toISOString() : null, updated_at: new Date().toISOString() }
         : x)));
     } catch (e) { setErr(e.message); }
+    setStepBusy(null);
+  };
+
+  // "Siguiente paso →": mueve la tarjeta a la columna siguiente.
+  const avanzar = (t) => {
+    const sig = SIGUIENTE[t.status];
+    if (!sig) return;
+    if (sig === 'listo' && t.customer_email
+      && !window.confirm(`¿Pasar a Listo?\n\nSe le enviará a ${t.customer_email} el correo de que su equipo está listo para recoger.`)) return;
+    setEstado(t, sig);
+  };
+
+  // Marcar entregada: cuenta como venta de hoy, por eso se confirma.
+  const entregar = (t) => {
+    const tot = totalDe(t);
+    const saldo = saldoDe(t);
+    if (!window.confirm(`¿Marcar como entregada la reparación de ${t.customer_name || 'este cliente'} (${equipoDe(t)})?\n\n`
+      + `Cuenta como venta${tot != null ? ' de ' + money(tot) : ''} con fecha de hoy.`
+      + (saldo > 0 ? `\nOjo: aún debe ${money(saldo)}.` : ''))) return;
+    setEstado(t, 'entregado');
   };
 
   const removeAll = async () => {
@@ -290,200 +457,193 @@ export default function Repairs() {
     setBusy(true); setErr('');
     try {
       await api('/repairs', { method: 'DELETE', body: { all: true } });
-      setSel(new Set());
+      salirSeleccion();
       load();
     } catch (e) { setErr(e.message); }
     setBusy(false);
   };
 
+  // Tocar una tarjeta: abre la ficha (o la marca, en modo selección).
+  const abrir = (t) => {
+    if (selMode) { toggle(t.id); return; }
+    setErr(''); setOk('');
+    setDetail({ id: t.id });
+  };
+  const onKey = (t) => (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(t); } };
+  const stop = (fn) => (e) => { e.stopPropagation(); fn(); };
+
   // Formulario a página completa (sin modal). Al guardar o cerrar, la página
   // del formulario se desvanece y la lista entra con su animación de siempre.
   if (detail) {
-    const back = () => { setDetail(null); setExiting(false); load(); };
+    const back = () => { setDetail(null); setExiting(false); setErr(''); setOk(''); load(); };
     const animBack = () => { setExiting(true); setTimeout(back, 260); };
+    const t = detail.id && tickets ? tickets.find((x) => x.id === detail.id) : null;
     return (
       <div className={exiting ? 'page-exit' : undefined}>
-        <FormPage title={detail.id ? 'Reparación' : 'Nueva reparación'} onBack={animBack}>
-          <RepairDetail ticketId={detail.id} workers={workers} isAdmin
+        <FormPage title={detail.id ? `Reparación ${repNum({ id: detail.id })}` : 'Nueva reparación'} onBack={animBack} max={detail.id ? 760 : 640}>
+          {t && (
+            <Resumen t={t} err={err} ok={ok} invOptions={invoiceOptions(t)} invBusy={invBusy}
+              onVincular={vincularFactura} onVer={verFactura} onCorreo={facturaCorreo} onWhatsApp={facturaWhatsApp} />
+          )}
+          <RepairDetail ticketId={detail.id} initial={detail.initial} workers={workers} isAdmin
             onClose={animBack} onSaved={load} onCreated={animBack} />
         </FormPage>
       </div>
     );
   }
 
+  // Tarjeta corta del tablero (función que devuelve JSX, no componente: así
+  // React no la vuelve a montar en cada render).
+  const tarjeta = (t) => {
+    const pieza = piezaDe(t);
+    const saldo = saldoDe(t);
+    const listo = t.status === 'listo';
+    const dias = diasDesde(t.created_at);
+    const cuando = listo ? `lista ${hace(t.updated_at || t.created_at)}` : hace(t.created_at);
+    const marcado = sel.has(t.id);
+    return (
+      <div key={t.id} className={'bcard click rep2-card' + (marcado ? ' rep2-sel' : '')} role="button" tabIndex={0}
+        onClick={() => abrir(t)} onKeyDown={onKey(t)}
+        title={`${repNum(t)} · entró ${fechaCorta(t.created_at)} · ${dias === 1 ? '1 día' : dias + ' días'} en el taller`}>
+        {selMode && <input type="checkbox" className="rep2-check" checked={marcado} readOnly tabIndex={-1} aria-label="Marcar" />}
+        <div className="bcard-title rep2-card-t">{equipoDe(t)}</div>
+        <div className="bcard-sub">{t.customer_name || 'Sin nombre'} · {cuando}</div>
+        <div className="bcard-tags">
+          <span className="st st-muted">{serviceTypeLabel(t.service_type)}</span>
+          {pieza && <span className={'st ' + pieza.cls}>{pieza.txt}</span>}
+          {listo
+            ? (saldo == null ? <span className="st st-muted">Sin precio</span>
+              : saldo > 0 ? <span className="st st-bad">Cobrar {money(saldo)}</span>
+                : <span className="st st-ok">Pagada</span>)
+            : (saldo > 0 && <span className="st">Debe {money(saldo)}</span>)}
+        </div>
+        {!selMode && (
+          <div className="bcard-foot">
+            <div className="rep2-acts">
+              {listo ? (
+                <>
+                  <button type="button" className="btn-step" disabled={!t.customer_phone}
+                    title={t.customer_phone ? 'Abrir WhatsApp con el aviso listo' : 'El cliente no tiene teléfono guardado'}
+                    onClick={stop(() => avisarListo(t))}>Avisar por WhatsApp</button>
+                  <button type="button" className="rep2-link" disabled={stepBusy === t.id}
+                    title="Marcar como entregada (cuenta como venta de hoy)"
+                    onClick={stop(() => entregar(t))}>
+                    {stepBusy === t.id ? <span className="spinner" /> : 'Entregar ✓'}
+                  </button>
+                </>
+              ) : (
+                <button type="button" className="btn-step" disabled={stepBusy === t.id}
+                  title={`Pasar a ${colLabel(SIGUIENTE[t.status])}`}
+                  onClick={stop(() => avanzar(t))}>
+                  {stepBusy === t.id ? <span className="spinner" /> : 'Siguiente paso →'}
+                </button>
+              )}
+            </div>
+            {t.assignee_username && (
+              <span className="av av-sm" title={'Técnico: ' + t.assignee_username}>{iniciales(t.assignee_username)}</span>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const deviceTabs = DEVICE_TYPES.map((s) => ({ v: s.v, l: DEVICE_PLURAL[s.v] }));
+
   return (
-    <div className="orders-page">
+    <div className="rep2">
+      <PageHead title="Reparaciones" sub={sub}
+        search={q} onSearch={setQ} searchPlaceholder="Buscar cliente, teléfono, IMEI o REP…">
+        <button className="btn btn-primary" onClick={() => { setErr(''); setOk(''); setDetail({ id: null }); }}>+ Nueva reparación</button>
+        <MoreMenu items={[
+          tickets && tickets.length > 0 && { label: selMode ? 'Terminar selección' : 'Seleccionar varias', onClick: () => (selMode ? salirSeleccion() : setSelMode(true)) },
+          tickets && tickets.length > 0 && { label: 'Eliminar todas', danger: true, disabled: busy, onClick: removeAll },
+        ]} />
+      </PageHead>
+
       {err && <div className="alert alert-error">{err}</div>}
       {ok && <div className="alert alert-ok">{ok}</div>}
 
-      <div className="row" style={{ justifyContent: 'space-between', marginBottom: 16, gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-        <div className="muted" style={{ fontSize: 14 }}>
-          {tickets == null ? '' : `${tickets.length} reparación${tickets.length === 1 ? '' : 'es'} · ${tickets.filter((t) => t.status !== 'entregado').length} activa${tickets.filter((t) => t.status !== 'entregado').length === 1 ? '' : 's'}`}
-        </div>
-        <div className="row" style={{ gap: 8 }}>
-          {tickets != null && tickets.length > 0 && (
-            <button className="btn btn-danger btn-sm" onClick={removeAll} disabled={busy}>Eliminar todas</button>
-          )}
-          <button className="btn btn-primary" onClick={() => setDetail({ id: null })}>+ Nueva reparación</button>
-        </div>
+      {/* Pestañas: paso (taller / entregadas) + tipo de equipo (tocar otra vez lo quita). */}
+      <div className="rep2-tabs">
+        <Tabs tabs={[{ v: 'taller', l: 'En el taller', n: enTaller.length }, { v: 'entregadas', l: 'Entregadas' }]}
+          value={vista} onChange={setVista} />
+        <span className="rep2-sep" aria-hidden="true" />
+        <Tabs tabs={deviceTabs} value={deviceFilter}
+          onChange={(v) => setDeviceFilter((cur) => (cur === v ? 'todas' : v))} />
       </div>
 
-      {/* Categoría de equipo */}
-      <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-        <FilterPill v="todas" cur={deviceFilter} set={setDeviceFilter} label="Todos los equipos" />
-        {DEVICE_TYPES.map((s) => <FilterPill key={s.v} v={s.v} cur={deviceFilter} set={setDeviceFilter} label={DEVICE_PLURAL[s.v]} />)}
-      </div>
-
-      {/* Estado */}
-      <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-        <FilterPill v="activos" cur={filter} set={setFilter} label="Activas" />
-        <FilterPill v="entregado" cur={filter} set={setFilter} label="Entregadas" />
-        <FilterPill v="todos" cur={filter} set={setFilter} label="Todas" />
-      </div>
-
-      {dayFilter && (
-        <div className="row" style={{ gap: 10, marginBottom: 16 }}>
-          <span className="badge badge-on">Entregadas el {dayFilter}</span>
+      {dayFilter && vista === 'entregadas' && (
+        <div className="rep2-chip">
+          <span>Entregadas el {fechaCorta(dayFilter, { conHora: false })}</span>
+          <button type="button" className="rep2-link" onClick={() => setSearchParams({}, { replace: true })}>Quitar filtro ×</button>
         </div>
       )}
 
-      {sel.size > 0 && (
-        <div className="row" style={{ gap: 10, marginBottom: 16, alignItems: 'center' }}>
-          <strong style={{ fontSize: 14 }}>{sel.size} seleccionada{sel.size === 1 ? '' : 's'}</strong>
-          <button className="btn btn-danger btn-sm" onClick={removeSelected} disabled={busy}>
+      {selMode && (
+        <div className="rep2-selbar">
+          <span>{sel.size ? `${sel.size} seleccionada${sel.size === 1 ? '' : 's'}` : 'Toca las reparaciones para marcarlas'}</span>
+          <div className="spacer" />
+          <button className="btn btn-ghost btn-sm" onClick={toggleAllShown} disabled={busy || !shown.length}>
+            {allShownSelected ? 'Desmarcar todas' : 'Marcar todas las de la vista'}
+          </button>
+          <button className="btn btn-danger btn-sm" onClick={removeSelected} disabled={busy || !sel.size}>
             {busy ? <span className="spinner" /> : 'Eliminar seleccionadas'}
           </button>
-          <button className="btn btn-ghost btn-sm" onClick={() => setSel(new Set())} disabled={busy}>Quitar selección</button>
+          <button className="btn btn-ghost btn-sm" onClick={salirSeleccion} disabled={busy}>Cancelar</button>
         </div>
       )}
 
-      {/* Lista con el MISMO diseño que Órdenes: fila + detalle siempre abierto
-          y la barra de progreso animada con las etapas de la reparación. */}
-      <div className="card">
-        <h3>Reparaciones</h3>
-        {tickets == null ? <span className="spinner" />
-          : shown.length === 0 ? <div className="empty">No hay reparaciones{filter !== 'todos' ? ' en este filtro' : ''}.</div>
+      {tickets == null ? <div className="rep2-load"><span className="spinner spinner-lg" /></div>
+        : vista === 'taller' ? (
+          enTaller.length === 0 && (texto || deviceFilter !== 'todas')
+            ? <div className="empty-state">No hay reparaciones en el taller con este filtro.</div>
             : (
-              <div className="table-wrap">
-                <table className="data">
-                  <thead><tr>
-                    <th style={{ width: 34 }}>
-                      <input type="checkbox" checked={allShownSelected} onChange={toggleAllShown}
-                        title="Seleccionar todas las de la lista" style={{ cursor: 'pointer' }} />
-                    </th>
-                    <th>Fecha</th><th>Equipo</th><th>Cliente</th><th className="hide-sm">Técnico</th>
-                    <th style={{ textAlign: 'right' }}>Precio</th><th>Estado</th>
-                  </tr></thead>
-                  <tbody>
-                    {shown.map((t) => (
-                      <Fragment key={t.id}>
-                        <tr>
-                          <td>
-                            <input type="checkbox" checked={sel.has(t.id)} onChange={() => toggle(t.id)} style={{ cursor: 'pointer' }} />
-                          </td>
-                          <td className="muted">{fmtDay(t.created_at)}</td>
-                          <td>
-                            <strong>{[t.device_brand, t.device_model].filter(Boolean).join(' ') || '—'}</strong>
-                            <div className="muted" style={{ fontSize: 12 }}>
-                              {[deviceTypeLabel(t.device_type), serviceTypeLabel(t.service_type)].join(' · ')}{t.device_serial ? ` · ${t.device_serial}` : ''}
-                            </div>
-                          </td>
-                          <td>
-                            {t.customer_name || '—'}
-                            {t.customer_phone && <div className="muted" style={{ fontSize: 12 }}>{t.customer_phone}</div>}
-                          </td>
-                          <td className="muted hide-sm">{t.assignee_username || '—'}</td>
-                          <td style={{ textAlign: 'right' }}><strong>{money(t.final_price != null ? t.final_price : t.quoted_price)}</strong></td>
-                          <td><span className={'badge ' + (STATUS_BADGE[t.status] || '')}>{statusLabel(t.status)}</span></td>
-                        </tr>
-                        {/* Detalle siempre abierto: toda la info a la vista. */}
-                        <tr>
-                          <td colSpan="7" style={{ background: '#f8f9fb' }}>
-                            <div className="order-detail">
-                              <div className="od-col">
-                                <div><span className="muted">Cliente:</span> <strong>{t.customer_name || '—'}</strong></div>
-                                <div><span className="muted">Teléfono:</span> {t.customer_phone || '—'}</div>
-                                <div><span className="muted">Correo:</span> {t.customer_email || '—'}</div>
-                              </div>
-                              <div className="od-col">
-                                <div><span className="muted">Equipo:</span> <strong>{[t.device_brand, t.device_model].filter(Boolean).join(' ') || '—'}</strong></div>
-                                <div><span className="muted">Tipo:</span> {deviceTypeLabel(t.device_type)} · {serviceTypeLabel(t.service_type)}</div>
-                                <div><span className="muted">Serie / IMEI:</span> {t.device_serial || '—'}</div>
-                                <div><span className="muted">Fotos:</span> {t.photo_count > 0 ? `📷 ${t.photo_count}` : 'sin fotos'}</div>
-                              </div>
-                              <div className="od-col">
-                                <div><span className="muted">Problema:</span> {t.problem || '—'}</div>
-                                <div><span className="muted">Diagnóstico:</span> {t.diagnosis || '—'}</div>
-                                <div>
-                                  <span className="muted">Cotizado:</span> {money(t.quoted_price)}
-                                  {' · '}
-                                  <span className="muted">Final:</span> <strong>{money(t.final_price)}</strong>
-                                </div>
-                                {(() => {
-                                  const total = t.final_price != null ? Number(t.final_price) : (t.quoted_price != null ? Number(t.quoted_price) : null);
-                                  const paid = t.amount_paid != null ? Number(t.amount_paid) : 0;
-                                  if (total == null || paid <= 0) return null;
-                                  const rest = Math.max(total - paid, 0);
-                                  const pct = Math.round((paid / total) * 100);
-                                  return (
-                                    <div>
-                                      <span className="muted">Abonado:</span>{' '}
-                                      <strong>{money(paid)} ({pct}%)</strong>
-                                      {' · '}
-                                      <span className="muted">Restante:</span>{' '}
-                                      <strong>{money(rest)}</strong>
-                                    </div>
-                                  );
-                                })()}
-                              </div>
-                              <div className="od-full" style={{ marginTop: 12 }}>
-                                <RepairBar ticket={t} />
-                              </div>
-                              {/* Estatus del tracking del repuesto, debajo del
-                                  estado de la reparación. */}
-                              {t.tracking_number && (
-                                <div className="od-full" style={{ marginTop: 14, borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 10 }}>
-                                  <div className="muted" style={{ fontSize: 12.5, marginBottom: 2 }}>
-                                    Repuesto: <strong>{t.tracking_number}</strong>{t.carrier ? ` (${String(t.carrier).toUpperCase()})` : ''}
-                                  </div>
-                                  <PartShipBar ticket={t} />
-                                </div>
-                              )}
-                              <div className="od-full row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-                                <select className="estado-select" value={t.status} onChange={(e) => setEstado(t, e.target.value)}>
-                                  {REPAIR_STATUS.map((s) => <option key={s.v} value={s.v}>{s.l}</option>)}
-                                </select>
-                                <button className="btn btn-secondary btn-sm" onClick={() => setDetail({ id: t.id })}>Abrir ficha</button>
-                                <select className="estado-select" value={t.invoice_id || ''}
-                                  title="Factura vinculada a esta reparación (cámbiala si hay duplicadas)"
-                                  onChange={(e) => vincularFactura(t, e.target.value)}>
-                                  <option value="">{t.invoice_number ? `Factura ${t.invoice_number}` : 'Sin factura'}</option>
-                                  {invoiceOptions(t).map((i) => (
-                                    <option key={i.id} value={i.id}>Factura {i.invoice_number}</option>
-                                  ))}
-                                </select>
-                                <button className="btn btn-secondary btn-sm" disabled={invBusy === t.id}
-                                  title="Ver el PDF de la factura (si no existe, se crea al vuelo)"
-                                  onClick={() => verFactura(t)}>
-                                  {invBusy === t.id ? <span className="spinner" /> : 'Ver factura'}
-                                </button>
-                                <button className="btn btn-secondary btn-sm" disabled={invBusy === t.id || !t.customer_email}
-                                  title={!t.customer_email ? 'El cliente no tiene correo guardado' : `Enviar la factura en PDF a ${t.customer_email}`}
-                                  onClick={() => facturaCorreo(t)}>✉ Factura por correo</button>
-                                <button className="btn btn-secondary btn-sm" disabled={invBusy === t.id || !t.customer_phone}
-                                  title={!t.customer_phone ? 'El cliente no tiene teléfono guardado' : 'Enviar el link del PDF de la factura por WhatsApp'}
-                                  onClick={() => facturaWhatsApp(t)}>Factura por WhatsApp</button>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      </Fragment>
-                    ))}
-                  </tbody>
-                </table>
+              /* Tablero: una columna por paso. */
+              <div className="board rep2-board">
+                {COLUMNAS.map((col) => {
+                  const items = enTaller.filter((t) => t.status === col.v);
+                  return (
+                    <div key={col.v} className={'bcol rep2-col rep2-col-' + col.v}>
+                      <div className="bcol-h"><b>{col.l}</b>{items.length}</div>
+                      {items.length === 0
+                        ? <div className="bcol-empty">Nada aquí</div>
+                        : items.map(tarjeta)}
+                    </div>
+                  );
+                })}
               </div>
-            )}
-      </div>
+            )
+        ) : (
+          entregadas.length === 0
+            ? <div className="empty-state">No hay reparaciones entregadas{dayFilter || texto || deviceFilter !== 'todas' ? ' con este filtro' : ' todavía'}.</div>
+            : (
+              <div className="lcards">
+                {entregadas.map((t) => {
+                  const marcado = sel.has(t.id);
+                  return (
+                    <div key={t.id} className={'lcard click rep2-row' + (marcado ? ' sel' : '')} role="button" tabIndex={0}
+                      onClick={() => abrir(t)} onKeyDown={onKey(t)}>
+                      {selMode && <input type="checkbox" checked={marcado} readOnly tabIndex={-1} aria-label="Marcar" />}
+                      <div className="rep2-row-when">{fechaCorta(t.delivered_at, { conHora: false })}</div>
+                      <div className="lcard-main">
+                        <div className="lcard-title">{t.customer_name || 'Sin nombre'}</div>
+                        <div className="lcard-sub">{equipoDe(t)} · {serviceTypeLabel(t.service_type)} · {repNum(t)}</div>
+                      </div>
+                      <div className="lcard-num">{money(totalDe(t))}</div>
+                      {!selMode && (
+                        <button type="button" className="btn btn-secondary btn-sm rep2-row-inv" disabled={invBusy === t.id}
+                          title={t.invoice_number ? `Ver la factura ${t.invoice_number} (PDF)` : 'Ver la factura (si no existe, se crea al vuelo)'}
+                          onClick={stop(() => verFactura(t))}>
+                          {invBusy === t.id ? <span className="spinner" /> : 'Ver factura'}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )
+        )}
     </div>
   );
 }

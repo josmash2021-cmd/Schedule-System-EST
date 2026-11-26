@@ -1,0 +1,74 @@
+/* Asistencia (diseño nuevo 2026-11-26): tarjeta por trabajador con punto
+   verde si está fichado, tabla de horas de la semana y actividad en vivo. */
+
+.asi2 { min-width: 0; }
+.asi2-live { white-space: nowrap; margin-right: 4px; }
+
+/* Tarjetas por persona */
+.asi2-people { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.asi2-card {
+  background: #fff; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 16px; padding: 14px 16px;
+  min-width: 0; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04); animation: fadeIn 0.3s var(--ease) backwards;
+}
+.asi2-on { border-color: rgba(0, 0, 0, 0.18); }
+.asi2-top { display: flex; align-items: flex-start; gap: 12px; }
+.asi2-who { flex: 1; min-width: 0; }
+.asi2-name { font-size: 15px; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.asi2-state { font-size: 12.5px; color: #55555c; margin-top: 2px; display: flex; align-items: center; gap: 6px; min-width: 0; }
+.asi2-app { font-size: 11.5px; color: #9a9aa2; margin-top: 2px; }
+.asi2-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #c4c4cc; }
+.asi2-dot.on { background: #34c759; box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.18); animation: asi2Pulse 2s ease-in-out infinite; }
+@keyframes asi2Pulse { 0%, 100% { box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.18); } 50% { box-shadow: 0 0 0 5px rgba(52, 199, 89, 0.06); } }
+
+.asi2-hrs { display: flex; justify-content: space-between; gap: 10px; margin: 14px 0 7px; font-size: 12.5px; color: #77777f; }
+.asi2-hrs b { font-weight: 600; color: #111; font-variant-numeric: tabular-nums; margin-left: 4px; }
+.asi2-bar { height: 6px; border-radius: 999px; background: #ededf0; overflow: hidden; }
+.asi2-bar i { display: block; height: 100%; background: #111; border-radius: 999px; transition: width 0.6s var(--ease); }
+.asi2-on .asi2-bar i { background: linear-gradient(90deg, #111, #111 70%, var(--oro)); }
+.asi2-shift { font-size: 12px; color: #8a8a92; margin-top: 8px; }
+.asi2-shift b { font-weight: 600; color: #111; font-variant-numeric: tabular-nums; }
+.asi2-empty { margin-bottom: 18px; }
+
+/* Encabezado de cada sección */
+.asi2-sec-h { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; margin-bottom: 12px; }
+.asi2-sec-h h3 { margin: 0; }
+.asi2-range { font-size: 12.5px; color: #8a8a92; }
+
+/* Tabla de la semana: se desliza de lado dentro de su tarjeta en el teléfono. */
+.asi2-week { margin-bottom: 18px; min-width: 0; }
+.asi2-tblwrap { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+.asi2-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 560px; font-variant-numeric: tabular-nums; }
+.asi2-table th {
+  color: #8a8a92; font-weight: 500; font-size: 12px; text-align: right; padding: 6px 8px 8px; white-space: nowrap;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.09);
+}
+.asi2-table th small { display: block; font-size: 10.5px; color: #a8a8b0; margin-top: 1px; }
+.asi2-table td { text-align: right; padding: 10px 8px; border-bottom: 1px solid rgba(0, 0, 0, 0.06); white-space: nowrap; color: #111; }
+.asi2-table th:first-child, .asi2-table td:first-child { text-align: left; padding-left: 0; }
+.asi2-table th:last-child, .asi2-table td:last-child { padding-right: 0; }
+.asi2-table td:first-child { max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+.asi2-table .asi2-zero { color: #c0c0c8; }
+.asi2-table .asi2-total { font-weight: 600; }
+.asi2-table th.asi2-today { color: #111; box-shadow: inset 0 -2px 0 var(--oro); }
+.asi2-table td.asi2-today { background: rgba(200, 162, 75, 0.06); }
+.asi2-table tfoot td { border-bottom: 0; border-top: 1px solid rgba(0, 0, 0, 0.12); color: #55555c; }
+.asi2-table tfoot td.asi2-total { color: #111; }
+
+/* Actividad en vivo, compacta */
+.asi2-act { margin-bottom: 18px; }
+.asi2-feed .activity-row { padding: 7px 2px; font-size: 13px; }
+
+/* Turnos de los últimos 7 días (plegado) */
+.asi2-shifts summary { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; cursor: pointer; list-style: none; }
+.asi2-shifts summary::-webkit-details-marker { display: none; }
+.asi2-shifts summary h3 { margin: 0; }
+.asi2-sum-hint { font-size: 12.5px; color: #8a8a92; white-space: nowrap; }
+.asi2-sum-hint::after { content: ' ▾'; }
+.asi2-shifts[open] .asi2-sum-hint::after { content: ' ▴'; }
+.asi2-shifts[open] summary { margin-bottom: 12px; }
+.asi2-shifts-tbl { box-shadow: none; }
+
+@media (max-width: 560px) {
+  .asi2-people { grid-template-columns: 1fr; }
+  .asi2-card { padding: 13px 14px; }
+}

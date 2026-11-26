@@ -1,25 +1,173 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import './Inventory.css';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
 import FormPage from '../components/FormPage.jsx';
 import BarChart from '../components/BarChart.jsx';
+import PageHead from '../components/PageHead.jsx';
+import Tabs from '../components/Tabs.jsx';
+import MoreMenu from '../components/MoreMenu.jsx';
 import InventoryDetail, { money } from '../components/InventoryDetail.jsx';
 
+/* Inventario (diseño nuevo, 2026-11-26): título + frase de cómo va, buscador
+   y "+ Nuevo producto"; pestañas por categoría + Agotados; grilla de
+   tarjetas con foto, precio, stock en color y botones − N + para ajustar sin
+   abrir el producto. Tocar la tarjeta abre la ficha (movimientos, fecha de
+   compra, borrar). El "Resumen del mes" y la gráfica de inversión siguen
+   aquí, plegados detrás del ⋯ (la tabla mes a mes también vive en Ventas). */
+
+// Orden fijo de la tienda (no alfabético): teléfonos primero, repuestos al
+// final; lo que no esté en la lista va antes de "Sin categoría".
+const ORDEN = ['Teléfonos', 'Tablets', 'Laptop Apple', 'Laptops Windows', 'PC Gaming', 'Consolas', 'Audífonos', 'Accesorios', 'Repuestos'];
+const rangoCat = (c) => {
+  const i = ORDEN.indexOf(c);
+  return i === -1 ? (c === 'Sin categoría' ? 999 : 500) : i;
+};
+const catDe = (i) => i.category || 'Sin categoría';
+
+// "Quedan pocos": stock ≤ mínimo del producto; sin mínimo, 3 o menos.
+const POCOS_SIN_MINIMO = 3;
+function estadoStock(i) {
+  const s = Number(i.stock) || 0;
+  const min = Number(i.min_stock) || 0;
+  if (s <= 0) return { cls: 'st-bad', txt: 'Agotado' };
+  if (s <= (min > 0 ? min : POCOS_SIN_MINIMO)) return { cls: 'st-warn', txt: `Quedan ${s}` };
+  return { cls: 'st-ok', txt: `${s} en stock` };
+}
+
+// Ícono simple (solo trazo, sin cuadro de fondo) cuando el producto no tiene foto.
+function IconoProducto({ item }) {
+  const t = `${item.category || ''} ${item.name || ''}`.toLowerCase();
+  const p = { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.4, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
+  if (/bater/.test(t)) return <svg {...p}><rect x="3" y="7" width="16" height="10" rx="2" /><path d="M21 10.5v3M7 10v4M10.5 10v4" /></svg>;
+  if (/laptop|macbook|notebook/.test(t)) return <svg {...p}><rect x="4" y="5" width="16" height="11" rx="1.5" /><path d="M2 19h20" /></svg>;
+  if (/tablet|ipad/.test(t)) return <svg {...p}><rect x="5" y="2.5" width="14" height="19" rx="2.5" /><path d="M11 18.5h2" /></svg>;
+  if (/\bpc\b|monitor|imac/.test(t)) return <svg {...p}><rect x="3" y="4" width="18" height="12" rx="1.5" /><path d="M9 20h6M12 16v4" /></svg>;
+  if (/consola|playstation|xbox|nintendo/.test(t)) return <svg {...p}><path d="M7 9h10a4 4 0 0 1 4 4v1a3 3 0 0 1-5.4 1.8L14.5 14h-5l-1.1 1.8A3 3 0 0 1 3 14v-1a4 4 0 0 1 4-4Z" /><path d="M8 11.5v2M7 12.5h2M16 12h.01M17.5 13.5h.01" /></svg>;
+  if (/aud[ií]fono|airpods|headphone/.test(t)) return <svg {...p}><path d="M4 15v-3a8 8 0 0 1 16 0v3" /><rect x="3" y="14" width="4" height="6" rx="1.5" /><rect x="17" y="14" width="4" height="6" rx="1.5" /></svg>;
+  if (/tel[eé]fono|iphone|pantalla|galaxy|celular/.test(t)) return <svg {...p}><rect x="7" y="2.5" width="10" height="19" rx="2.5" /><path d="M11 18.5h2" /></svg>;
+  return <svg {...p}><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5v-9Z" /><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9" /></svg>;
+}
+
+const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
+
 export default function Inventory() {
-  const [items, setItems] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [items, setItems] = useState(null); // todos los productos (la búsqueda filtra en el cliente)
+  const [search, setSearch] = useState('');
+  const [tab, setTab] = useState('todos'); // 'todos' | 'agotados' | 'cat:<categoría>'
+  const [err, setErr] = useState('');
+  const [detail, setDetail] = useState(null);
+  const [verResumen, setVerResumen] = useState(false); // Resumen del mes + gráfica (⋯)
+
+  const load = useCallback(() => {
+    setErr('');
+    api('/inventory').then((d) => setItems(d.items || [])).catch((e) => setErr(e.message));
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  // Menú "+ Nuevo": /inventario?nueva=1 abre el formulario de producto nuevo.
+  useEffect(() => {
+    if (!searchParams.get('nueva')) return;
+    setDetail({ id: null });
+    setSearchParams({}, { replace: true });
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* ---------- Stock − N + (misma llamada que el stock editable de antes) ----------
+     PATCH /inventory/:id { stock } — el server registra el movimiento de
+     inventario por la diferencia. Los toques seguidos se juntan en UNA sola
+     llamada (y un solo movimiento) a los 450 ms del último toque. */
+  const pendientes = useRef({}); // id → { timer, original, target }
+  const enviarStock = async (id, p) => {
+    delete pendientes.current[id];
+    if (p.target === p.original) return;
+    try {
+      const d = await api('/inventory/' + id, { method: 'PATCH', body: { stock: p.target } });
+      if (d && d.item) setItems((list) => (list || []).map((x) => (x.id === id ? { ...x, ...d.item } : x)));
+    } catch (e) {
+      setErr(e.message);
+      load(); // vuelve al stock real si falló
+    }
+  };
+  const cambiarStock = (item, nuevo, espera = 450) => {
+    const n = Math.max(0, Math.floor(Number(nuevo) || 0));
+    const p = pendientes.current[item.id] || (pendientes.current[item.id] = { original: Number(item.stock) || 0 });
+    p.target = n;
+    clearTimeout(p.timer);
+    setErr('');
+    setItems((list) => (list || []).map((x) => (x.id === item.id ? { ...x, stock: n } : x)));
+    p.timer = setTimeout(() => enviarStock(item.id, p), espera);
+  };
+  // − / +: suma sobre el valor en espera (toques más rápidos que el render).
+  const sumarStock = (item, delta) => {
+    const p = pendientes.current[item.id];
+    cambiarStock(item, (p ? p.target : Number(item.stock) || 0) + delta);
+  };
+  // Al abrir una ficha se mandan ya los ajustes en espera (la ficha lee del server).
+  const enviarPendientes = () => {
+    for (const [id, p] of Object.entries(pendientes.current)) { clearTimeout(p.timer); enviarStock(Number(id), p); }
+  };
+  useEffect(() => () => enviarPendientes(), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const abrir = (id) => { enviarPendientes(); setDetail({ id }); };
+
+  /* ---------- Listas y totales ---------- */
+  // Búsqueda por nombre, SKU o categoría (los mismos campos que buscaba el server).
+  const buscados = useMemo(() => {
+    const t = search.trim().toLowerCase();
+    const list = items || [];
+    if (!t) return list;
+    return list.filter((i) => [i.name, i.sku, i.category].some((v) => v && String(v).toLowerCase().includes(t)));
+  }, [items, search]);
+
+  const categorias = useMemo(() => {
+    const map = {};
+    for (const i of buscados) map[catDe(i)] = (map[catDe(i)] || 0) + 1;
+    return Object.entries(map).sort(([a], [b]) => rangoCat(a) - rangoCat(b) || a.localeCompare(b, 'es'));
+  }, [buscados]);
+  const agotadosBuscados = buscados.filter((i) => Number(i.stock) <= 0).length;
+
+  // Si la pestaña elegida se queda sin productos (búsqueda), vuelve a Todos.
+  useEffect(() => {
+    if (tab.startsWith('cat:') && !categorias.some(([c]) => 'cat:' + c === tab)) setTab('todos');
+  }, [categorias, tab]);
+
+  const visibles = useMemo(() => {
+    const list = tab === 'agotados' ? buscados.filter((i) => Number(i.stock) <= 0)
+      : tab.startsWith('cat:') ? buscados.filter((i) => 'cat:' + catDe(i) === tab)
+        : buscados;
+    // Con stock primero (por categoría de la tienda), los agotados al final.
+    return [...list].sort((a, b) => ((Number(a.stock) <= 0) - (Number(b.stock) <= 0))
+      || rangoCat(catDe(a)) - rangoCat(catDe(b)) || catDe(a).localeCompare(catDe(b), 'es')
+      || String(a.name || '').localeCompare(String(b.name || ''), 'es'));
+  }, [buscados, tab]);
+
+  const totals = useMemo(() => {
+    if (!items) return null;
+    const units = items.reduce((a, i) => a + Math.max(0, Number(i.stock) || 0), 0);
+    const value = items.reduce((a, i) => a + Math.max(0, Number(i.stock) || 0) * (Number(i.price) || 0), 0);
+    // Inversión = lo que costó el inventario actual (stock × costo).
+    // Ganancia potencial = valor de venta − inversión; el % es el margen
+    // sobre el precio de venta (costo vs venta).
+    const inversion = items.reduce((a, i) => a + Math.max(0, Number(i.stock) || 0) * (Number(i.cost) || 0), 0);
+    const ganancia = value - inversion;
+    const margen = value > 0 ? (ganancia / value) * 100 : 0;
+    const agotados = items.filter((i) => Number(i.stock) <= 0).length;
+    return { products: items.length, units, value, inversion, ganancia, margen, agotados };
+  }, [items]);
+
+  const sub = totals && [
+    plural(totals.products, 'producto', 'productos'),
+    plural(totals.units, 'unidad', 'unidades'),
+    `vale ${money(totals.inversion)} a costo`,
+    totals.agotados > 0 && plural(totals.agotados, 'agotado', 'agotados'),
+  ].filter(Boolean).join(' · ');
+
+  /* ---------- Resumen del mes + inversión por mes (plegado, desde el ⋯) ---------- */
   const [compras, setCompras] = useState(null); // mercancía comprada por mes
   const [stockMes, setStockMes] = useState(null); // inventario al cierre de cada mes
   const [datosVentas, setDatosVentas] = useState(null); // ventas/gastos por mes
-  const [search, setSearch] = useState('');
-  const [err, setErr] = useState('');
-  const [detail, setDetail] = useState(null);
-  const [showOut, setShowOut] = useState(false); // ver solo los fuera de stock
-
-  const load = useCallback((q = '') => {
-    setErr('');
-    api('/inventory' + (q ? '?search=' + encodeURIComponent(q) : '')).then((d) => setItems(d.items)).catch((e) => setErr(e.message));
-  }, []);
-  useEffect(() => { const t = setTimeout(() => load(search), 300); return () => clearTimeout(t); }, [search, load]);
   useEffect(() => {
+    if (!verResumen || compras) return;
     api('/inventory/purchases-by-month').then((d) => setCompras(d.months || [])).catch(() => setCompras([]));
     api('/inventory/stock-by-month').then((d) => setStockMes(d.months || [])).catch(() => setStockMes([]));
     // Ventas/gastos para el resumen del mes (misma definición que Ventas).
@@ -30,59 +178,7 @@ export default function Inventory() {
       api('/expenses').then((d) => d.expenses || []),
     ]).then(([t, s, o, e]) => setDatosVentas({ tickets: t, directas: s, ordenes: o, expenses: e }))
       .catch(() => setDatosVentas({ tickets: [], directas: [], ordenes: [], expenses: [] }));
-  }, []);
-
-  // Stock editable directo en la lista: escribe la cantidad y al salir del
-  // campo (o Enter) se guarda. 0 = fuera de stock → sale de la lista.
-  const [stockBusy, setStockBusy] = useState(0);
-  const saveStock = async (i, raw) => {
-    const n = Math.max(0, Math.floor(Number(String(raw).replace(/[^\d]/g, '')) || 0));
-    if (n === Number(i.stock)) return;
-    setErr(''); setStockBusy(i.id);
-    try {
-      await api('/inventory/' + i.id, { method: 'PATCH', body: { stock: n } });
-      load(search);
-    } catch (e) { setErr(e.message); }
-    setStockBusy(0);
-  };
-
-  // Los productos sin stock NO salen en la lista normal: se cuentan aparte
-  // en la tarjeta "Fuera de stock" (clicable para verlos y poder reabastecer).
-  const inStock = useMemo(() => (items || []).filter((i) => Number(i.stock) > 0), [items]);
-  const outStock = useMemo(() => (items || []).filter((i) => Number(i.stock) <= 0), [items]);
-  const visible = showOut ? outStock : inStock;
-
-  const totals = useMemo(() => {
-    if (!items) return null;
-    const products = inStock.length;
-    const units = inStock.reduce((a, i) => a + (Number(i.stock) || 0), 0);
-    const value = inStock.reduce((a, i) => a + (Number(i.stock) || 0) * (Number(i.price) || 0), 0);
-    // Inversión = lo que costó el inventario actual (stock × costo).
-    // Ganancia potencial = valor de venta − inversión; el % es el margen
-    // sobre el precio de venta (costo vs venta).
-    const inversion = inStock.reduce((a, i) => a + (Number(i.stock) || 0) * (Number(i.cost) || 0), 0);
-    const ganancia = value - inversion;
-    const margen = value > 0 ? (ganancia / value) * 100 : 0;
-    return { products, units, value, inversion, ganancia, margen };
-  }, [items, inStock]);
-
-  const grouped = useMemo(() => {
-    const map = {};
-    for (const i of visible) {
-      const cat = i.category || 'Sin categoría';
-      if (!map[cat]) map[cat] = [];
-      map[cat].push(i);
-    }
-    // Orden fijo de la tienda (no alfabético): teléfonos primero, repuestos
-    // al final; lo que no esté en la lista va antes de "Sin categoría".
-    const ORDEN = ['Teléfonos', 'Tablets', 'Laptop Apple', 'Laptops Windows', 'PC Gaming', 'Consolas', 'Audífonos', 'Accesorios', 'Repuestos'];
-    return Object.entries(map).sort(([a], [b]) => {
-      const ia = ORDEN.indexOf(a), ib = ORDEN.indexOf(b);
-      const ra = ia === -1 ? (a === 'Sin categoría' ? 999 : 500) : ia;
-      const rb = ib === -1 ? (b === 'Sin categoría' ? 999 : 500) : ib;
-      return ra !== rb ? ra - rb : a.localeCompare(b, 'es');
-    });
-  }, [visible]);
+  }, [verResumen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Resumen contable del mes seleccionado (navegación ‹ ›): inversión en
   // mercancía, ventas, ganancia e inventario que quedó al cierre. Misma
@@ -138,7 +234,7 @@ export default function Inventory() {
       stockCierre: stock ? stock.unidades : null,
       valorCierre: stock ? stock.valorCosto : null, // siempre a COSTO (lo que costó), no a precio de venta
     };
-  }, [compras, stockMes, datosVentas, comprasOffset]);
+  }, [compras, stockMes, datosVentas, comprasOffset]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Gráfica de inversión mes a mes (cronológica) + total invertido global.
   const comprasChart = useMemo(() => {
@@ -155,189 +251,186 @@ export default function Inventory() {
       totalInvertido: compras.reduce((a, x) => a + x.total, 0),
       totalUnidades: compras.reduce((a, x) => a + x.unidades, 0),
     };
-  }, [compras]);
+  }, [compras]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (detail) {
-    const back = () => { setDetail(null); load(search); };
+    const back = () => { setDetail(null); load(); };
     return (
       <FormPage title={detail.id ? 'Producto' : 'Nuevo producto'} onBack={back} max={1080}>
-        <InventoryDetail itemId={detail.id} isAdmin onClose={back} onSaved={() => load(search)} />
+        <InventoryDetail itemId={detail.id} isAdmin onClose={back} onSaved={() => load()} />
       </FormPage>
     );
   }
 
+  const tabs = [
+    { v: 'todos', l: 'Todos', n: buscados.length },
+    ...categorias.map(([c, n]) => ({ v: 'cat:' + c, l: c, n })),
+    { v: 'agotados', l: 'Agotados', n: agotadosBuscados },
+  ];
+
   return (
-    <div className="inventory-page">
-      <div className="section-head">
-        <div className="spacer" />
+    <div className="inventory-page inv2">
+      <PageHead title="Inventario" sub={sub} search={search} onSearch={setSearch}
+        searchPlaceholder="Buscar nombre, SKU o categoría…">
         <button className="btn btn-primary" onClick={() => setDetail({ id: null })}>+ Nuevo producto</button>
-      </div>
+        <MoreMenu items={[
+          { label: verResumen ? 'Ocultar resumen del mes' : 'Ver resumen del mes e inversión', onClick: () => setVerResumen((v) => !v) },
+        ]} />
+      </PageHead>
       {err && <div className="alert alert-error">{err}</div>}
 
-      <div className="row" style={{ gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-        <input placeholder="Buscar por nombre, SKU o categoría…" value={search} onChange={(e) => setSearch(e.target.value)} style={{ maxWidth: 340 }} />
-      </div>
-
       {items == null ? <span className="spinner spinner-lg" />
-        : items.length === 0 ? <div className="card"><div className="empty">{search ? 'Sin resultados.' : 'No hay productos. Crea el primero.'}</div></div>
+        : items.length === 0 ? <div className="empty-state">No hay productos. Crea el primero.</div>
           : (
             <>
-              {/* Resumen del mes: inversión, ventas, ganancia e inventario
-                  que quedó al cierre (en dinero). Flechas ‹ › cambian de mes. */}
-              <div className="card" style={{ marginBottom: 18 }}>
-                <div className="stat-top" style={{ marginBottom: 12 }}>
-                  <h3 style={{ margin: 0 }}>Resumen del mes — {resumenMes ? resumenMes.label : '…'}</h3>
-                  <div className="gan-arrows">
-                    <button type="button" className="gan-arrow" title="Mes anterior"
-                      onClick={() => setComprasOffset((o) => o - 1)}>‹</button>
-                    <button type="button" className="gan-arrow" title="Mes siguiente" disabled={comprasOffset >= 0}
-                      onClick={() => setComprasOffset((o) => Math.min(0, o + 1))}>›</button>
-                  </div>
+              <div className="mini-kpis">
+                <div className="mini-kpi">
+                  <div className="k">Valor a costo</div>
+                  <div className="v">{money(totals.inversion)}</div>
+                  <div className="s">lo que te costó (stock × costo)</div>
                 </div>
-                {!resumenMes ? <span className="spinner" /> : (
-                  <div className="stat-grid" style={{ margin: 0 }}>
-                    <div className="stat-card">
-                      <div className="k">Inversión del mes</div>
-                      <div className="v">{money(resumenMes.inversion)}</div>
-                      <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>{resumenMes.unidadesCompradas} unidades compradas</div>
+                <div className="mini-kpi">
+                  <div className="k">Valor a precio de venta</div>
+                  <div className="v">{money(totals.value)}</div>
+                  <div className="s">{plural(totals.units, 'unidad', 'unidades')}</div>
+                </div>
+                <div className="mini-kpi">
+                  <div className="k">Ganancia potencial</div>
+                  <div className="v">{money(totals.ganancia)}</div>
+                  <div className="s">{totals.margen.toFixed(1).replace(/\.0$/, '')}% costo vs venta</div>
+                </div>
+                <button type="button" className={'mini-kpi inv2-kpi-btn' + (tab === 'agotados' ? ' on' : '')}
+                  onClick={() => setTab((t) => (t === 'agotados' ? 'todos' : 'agotados'))}
+                  title="Ver los productos agotados">
+                  <div className="k">Agotados</div>
+                  <div className={'v' + (totals.agotados > 0 ? ' inv2-v-bad' : '')}>{totals.agotados}</div>
+                  <div className="s">{totals.agotados === 1 ? 'producto por reponer' : 'productos por reponer'}</div>
+                </button>
+              </div>
+
+              {verResumen && (
+                <div className="inv2-resumen">
+                  {/* Resumen del mes: inversión, ventas, ganancia e inventario
+                      que quedó al cierre (en dinero). Flechas ‹ › cambian de mes. */}
+                  <div className="card">
+                    <div className="stat-top" style={{ marginBottom: 12 }}>
+                      <h3 style={{ margin: 0 }}>Resumen del mes — {resumenMes ? resumenMes.label : '…'}</h3>
+                      <div className="gan-arrows">
+                        <button type="button" className="gan-arrow" title="Mes anterior"
+                          onClick={() => setComprasOffset((o) => o - 1)}>‹</button>
+                        <button type="button" className="gan-arrow" title="Mes siguiente" disabled={comprasOffset >= 0}
+                          onClick={() => setComprasOffset((o) => Math.min(0, o + 1))}>›</button>
+                      </div>
                     </div>
-                    <div className="stat-card">
-                      <div className="k">Ventas del mes</div>
-                      <div className="v">{money(resumenMes.ventas)}</div>
-                      <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>mercancía vendida que costó {money(resumenMes.costoVendido)}</div>
-                    </div>
-                    <div className="stat-card">
-                      <div className="k">Ganancia del mes</div>
-                      <div className="v">{money(resumenMes.ganancia)}</div>
-                    </div>
-                    <div className="stat-card">
-                      <div className="k">Gastos del mes</div>
-                      <div className="v">{money(resumenMes.gastos)}</div>
-                    </div>
-                    {/* "Quedó en inventario" solo aplica a meses ya cerrados:
-                        el mes en curso aún no tiene cierre. */}
-                    {comprasOffset < 0 && (
-                      <div className="stat-card">
-                        <div className="k">Quedó en inventario</div>
-                        <div className="v">{resumenMes.valorCierre == null ? '—' : money(resumenMes.valorCierre)}</div>
-                        {resumenMes.valorCierre != null && (
-                          <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>
-                            {resumenMes.stockCierre} {resumenMes.stockCierre === 1 ? 'unidad' : 'unidades'} (a costo, lo que te costaron)
+                    {!resumenMes ? <span className="spinner" /> : (
+                      <div className="stat-grid" style={{ margin: 0 }}>
+                        <div className="stat-card">
+                          <div className="k">Inversión del mes</div>
+                          <div className="v">{money(resumenMes.inversion)}</div>
+                          <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>{resumenMes.unidadesCompradas} unidades compradas</div>
+                        </div>
+                        <div className="stat-card">
+                          <div className="k">Ventas del mes</div>
+                          <div className="v">{money(resumenMes.ventas)}</div>
+                          <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>mercancía vendida que costó {money(resumenMes.costoVendido)}</div>
+                        </div>
+                        <div className="stat-card">
+                          <div className="k">Ganancia del mes</div>
+                          <div className="v">{money(resumenMes.ganancia)}</div>
+                        </div>
+                        <div className="stat-card">
+                          <div className="k">Gastos del mes</div>
+                          <div className="v">{money(resumenMes.gastos)}</div>
+                        </div>
+                        {/* "Quedó en inventario" solo aplica a meses ya cerrados:
+                            el mes en curso aún no tiene cierre. */}
+                        {comprasOffset < 0 && (
+                          <div className="stat-card">
+                            <div className="k">Quedó en inventario</div>
+                            <div className="v">{resumenMes.valorCierre == null ? '—' : money(resumenMes.valorCierre)}</div>
+                            {resumenMes.valorCierre != null && (
+                              <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>
+                                {resumenMes.stockCierre} {resumenMes.stockCierre === 1 ? 'unidad' : 'unidades'} (a costo, lo que te costaron)
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
                     )}
                   </div>
-                )}
-              </div>
 
-              <div className="stat-grid" style={{ marginBottom: 18 }}>
-                <div className="stat-card">
-                  <div className="k">Productos</div>
-                  <div className="v">{totals.products}</div>
-                </div>
-                <div className="stat-card">
-                  <div className="k">Unidades</div>
-                  <div className="v">{totals.units}</div>
-                </div>
-                <div className="stat-card">
-                  <div className="k">Valor en inventario</div>
-                  <div className="v">{money(totals.value)}</div>
-                </div>
-                <div className="stat-card">
-                  <div className="k">Valor de inversión</div>
-                  <div className="v">{money(totals.inversion)}</div>
-                  <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>stock × costo</div>
-                </div>
-                <div className="stat-card">
-                  <div className="k">Ganancia potencial</div>
-                  <div className="v">{money(totals.ganancia)}</div>
-                  <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>
-                    {totals.margen.toFixed(1).replace(/\.0$/, '')}% costo vs venta
-                  </div>
-                </div>
-                <div className={'stat-card stat-card-btn' + (showOut ? ' stat-card-on' : '')}
-                  role="button" tabIndex={0}
-                  onClick={() => setShowOut((v) => !v)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setShowOut((v) => !v); }}
-                  title="Toca para ver los productos fuera de stock">
-                  <div className="k">Fuera de stock</div>
-                  <div className="v">{outStock.length}</div>
-                  <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>
-                    {outStock.length === 1 ? 'producto' : 'productos'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Inversión total mes a mes (entradas de stock × costo). */}
-              {comprasChart && comprasChart.keys.length > 0 && (
-                <div className="card" style={{ marginBottom: 18 }}>
-                  <h3>Inversión en inventario por mes</h3>
-                  <BarChart data={comprasChart.data} keys={comprasChart.keys} labels={comprasChart.labels}
-                    highlight={comprasChart.highlight}
-                    format={(v) => '$' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(0))} />
-                  <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>
-                    Total invertido: <strong style={{ color: '#111' }}>{money(comprasChart.totalInvertido)}</strong>
-                    {' '}· {comprasChart.totalUnidades} unidades en total
-                  </div>
+                  {/* Inversión total mes a mes (entradas de stock × costo). */}
+                  {comprasChart && comprasChart.keys.length > 0 && (
+                    <div className="card">
+                      <h3>Inversión en inventario por mes</h3>
+                      <BarChart data={comprasChart.data} keys={comprasChart.keys} labels={comprasChart.labels}
+                        highlight={comprasChart.highlight}
+                        format={(v) => '$' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(0))} />
+                      <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>
+                        Total invertido: <strong style={{ color: '#111' }}>{money(comprasChart.totalInvertido)}</strong>
+                        {' '}· {comprasChart.totalUnidades} unidades en total
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {showOut && (
-                <div className="row" style={{ gap: 10, marginBottom: 14, alignItems: 'center' }}>
-                  <span className="badge badge-off">Viendo solo los productos fuera de stock</span>
-                  <button className="btn btn-ghost btn-sm" onClick={() => setShowOut(false)}>Ver los que tienen stock</button>
+              <Tabs tabs={tabs} value={tab} onChange={setTab} />
+              {/* Subtotal de la categoría elegida (lo que antes iba en la fila de la categoría). */}
+              {tab.startsWith('cat:') && visibles.length > 0 && (
+                <div className="inv2-catline">
+                  {tab.slice(4)}: {plural(visibles.reduce((a, i) => a + Math.max(0, Number(i.stock) || 0), 0), 'unidad', 'unidades')}
+                  {' · '}{money(visibles.reduce((a, i) => a + Math.max(0, Number(i.stock) || 0) * (Number(i.price) || 0), 0))} a precio de venta
                 </div>
               )}
 
-              {visible.length === 0
-                ? <div className="card"><div className="empty">{showOut ? 'Ningún producto fuera de stock.' : 'No hay productos con stock.'}</div></div>
-                : (
-                  <div className="table-wrap">
-                    <table className="data">
-                      <thead><tr><th>Producto</th><th className="hide-sm">SKU</th><th>Precio</th><th>Stock</th></tr></thead>
-                      <tbody>
-                        {grouped.map(([cat, list]) => (
-                          <>
-                            <tr key={'cat-' + cat} className="inv-cat-row">
-                              <td colSpan={4}><span className="inv-cat-name">{cat}</span> <span className="muted" style={{ fontSize: 12, fontWeight: 500 }}>{list.reduce((a, i) => a + (Number(i.stock) || 0), 0)} unidades · {money(list.reduce((a, i) => a + (Number(i.stock) || 0) * (Number(i.price) || 0), 0))}</span></td>
-                            </tr>
-                            {list.map((i) => (
-                              <tr key={i.id} style={{ cursor: 'pointer' }} onClick={() => setDetail({ id: i.id })}>
-                                <td>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                    {i.image_url && (
-                                      <img src={i.image_url} alt="" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(0,0,0,0.08)' }} />
-                                    )}
-                                    <div>
-                                      <strong>{i.name}</strong>
-                                      {i.sku && <div className="muted" style={{ fontSize: 12 }}>{i.sku}</div>}
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="muted hide-sm">{i.sku || '—'}</td>
-                                <td>{money(i.price)}</td>
-                                <td onClick={(e) => e.stopPropagation()} style={{ cursor: 'default' }}>
-                                  <input
-                                    key={i.id + ':' + i.stock}
-                                    className="stock-inline"
-                                    defaultValue={i.stock}
-                                    inputMode="numeric"
-                                    title="Editar cantidad (0 = fuera de stock)"
-                                    disabled={stockBusy === i.id}
-                                    onChange={(e) => { e.target.value = e.target.value.replace(/[^\d]/g, ''); }}
-                                    onBlur={(e) => saveStock(i, e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
-                                  />
-                                </td>
-                              </tr>
-                            ))}
-                          </>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+              {visibles.length === 0 ? (
+                <div className="empty-state">
+                  {tab === 'agotados' ? 'Ningún producto agotado.' : search ? 'Ningún producto coincide con la búsqueda.' : 'No hay productos en esta categoría.'}
+                </div>
+              ) : (
+                <div className="inv2-grid">
+                  {visibles.map((i) => {
+                    const est = estadoStock(i);
+                    const stock = Number(i.stock) || 0;
+                    return (
+                      <div key={i.id} className={'inv2-card' + (stock <= 0 ? ' inv2-out' : '')}
+                        role="button" tabIndex={0} title="Abrir producto"
+                        onClick={() => abrir(i.id)}
+                        onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); abrir(i.id); } }}>
+                        <div className="inv2-ph">
+                          {i.image_url ? <img src={i.image_url} alt="" loading="lazy" /> : <IconoProducto item={i} />}
+                        </div>
+                        <div className="inv2-name" title={i.name}>{i.name}</div>
+                        <div className="inv2-meta">{[i.sku, catDe(i)].filter(Boolean).join(' · ')}</div>
+                        <div className="inv2-price">{money(i.price)}</div>
+                        <div className="inv2-stock">
+                          <span className={'st ' + est.cls}>{est.txt}</span>
+                          {/* Ajuste rápido: no abre la tarjeta. El número también se puede escribir. */}
+                          <span className="inv2-step" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+                            <button type="button" aria-label={`Quitar una unidad de ${i.name}`} disabled={stock <= 0}
+                              onClick={() => sumarStock(i, -1)}>−</button>
+                            <input
+                              key={i.id + ':' + stock}
+                              className="inv2-n"
+                              defaultValue={stock}
+                              inputMode="numeric"
+                              aria-label={`Unidades de ${i.name}`}
+                              title="Escribe la cantidad (0 = agotado)"
+                              onFocus={(e) => e.target.select()}
+                              onChange={(e) => { e.target.value = e.target.value.replace(/[^\d]/g, ''); }}
+                              onBlur={(e) => { const n = Number(e.target.value.replace(/[^\d]/g, '')) || 0; if (n !== stock) cambiarStock(i, n, 0); }}
+                              onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
+                            />
+                            <button type="button" aria-label={`Agregar una unidad de ${i.name}`}
+                              onClick={() => sumarStock(i, 1)}>+</button>
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </>
           )}
     </div>

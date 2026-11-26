@@ -1,0 +1,114 @@
+/* Ventas (diseño nuevo, 2026-11-26). Prefijo obligatorio: ven2-.
+   Estados y tipos SOLO como texto de color; negro/blanco + dorado. La página
+   va sin negrillas (.sales-page * ya fuerza font-weight 400). */
+
+/* ---------- Selector de período ---------- */
+.ven2-periodo { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin: 0 0 16px; }
+.ven2-seg {
+  display: inline-flex; background: #fff; border: 1px solid rgba(0, 0, 0, 0.12); border-radius: 999px; padding: 3px;
+}
+.ven2-seg-btn {
+  border: 0; background: transparent; color: #55555c; border-radius: 999px; padding: 6px 14px;
+  font-family: inherit; font-size: 13px; cursor: pointer; transition: background 0.18s var(--ease), color 0.18s var(--ease);
+}
+.ven2-seg-btn:hover { color: #111; }
+.ven2-seg-btn.on { background: var(--oro-suave); color: #111; box-shadow: inset 0 0 0 1px rgba(200, 162, 75, 0.55); }
+.ven2-nav { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.ven2-arrow {
+  width: 32px; height: 32px; flex: none; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.14); background: #fff;
+  color: #111; font-size: 17px; line-height: 1; cursor: pointer; display: grid; place-items: center; padding: 0 0 2px;
+  font-family: inherit;
+}
+.ven2-arrow:hover { border-color: rgba(0, 0, 0, 0.32); }
+.ven2-arrow:disabled { opacity: 0.35; cursor: default; }
+.ven2-nav input { width: auto; padding: 7px 12px; border-radius: 999px; font-size: 13px; min-width: 0; }
+.ven2-rango { font-size: 13px; color: #55555c; padding: 0 6px; white-space: nowrap; }
+
+/* ---------- Resumen ---------- */
+.ven2-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ven2-kpis .mini-kpi .v { font-size: 28px; }
+.ven2-kpis .mini-kpi .s { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ven2-kpi-btn { cursor: pointer; transition: border-color 0.18s var(--ease), box-shadow 0.18s var(--ease); }
+.ven2-kpi-btn:hover { border-color: rgba(0, 0, 0, 0.26); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08); }
+.ven2-kpi-btn:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+
+.ven2-res { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.ven2-res > .card { min-width: 0; margin: 0; }
+.ven2-hint { font-size: 12px; margin-top: 6px; }
+.ven2-ult .lcards { gap: 6px; }
+.ven2-ult .lcard { box-shadow: none; padding: 10px 12px; }
+.ven2-ult .lcard-detail { padding: 16px 12px 12px; }
+.ven2-vertodas { margin-top: 10px; }
+.ven2-empty { padding: 26px 10px; }
+.ven2-cargando { text-align: center; padding: 48px 0; }
+
+/* ---------- Tarjeta de venta / gasto ---------- */
+/* La columna de la lista nunca crece más que la pantalla (textos largos en una línea). */
+.ven2 .lcards { grid-template-columns: minmax(0, 1fr); }
+.ven2-card { gap: 14px; }
+.ven2-when { width: 92px; flex: none; font-size: 12.5px; color: #8a8a92; white-space: nowrap; }
+.ven2-tipo { width: 112px; flex: none; }
+.ven2-t-mostrador { color: #111; }
+.ven2-t-reparacion { color: #7a5d1c; }
+.ven2-t-web { color: #111; }
+.ven2-t-fb { color: #55555c; }
+.ven2-precio { min-width: 88px; text-align: right; font-size: 14.5px; color: #111; }
+.ven2-quick { min-width: 96px; display: flex; justify-content: flex-end; }
+.ven2-chev { width: 14px; flex: none; color: #77777f; font-size: 13px; line-height: 1; text-align: center; }
+.ven2-card:hover .ven2-chev, .ven2-card.sel .ven2-chev { color: #111; }
+.ven2-card:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+
+/* Detalle abierto */
+.ven2-det-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px 22px; font-size: 13.5px; }
+.ven2-dato { min-width: 0; }
+.ven2-dato > span, .ven2-lbl { display: block; font-size: 11.5px; color: #8a8a92; margin-bottom: 2px; }
+.ven2-dato > div { color: #111; overflow-wrap: anywhere; }
+.ven2-items { margin-top: 14px; font-size: 13.5px; }
+.ven2-items ul { margin: 4px 0 0; padding-left: 18px; }
+.ven2-items li { margin: 2px 0; }
+.ven2-det-foot {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px;
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(0, 0, 0, 0.07); font-size: 13.5px;
+}
+.ven2-det-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.ven2-danger { color: #a33a3a; }
+.ven2-danger:hover { color: #a33a3a; background: rgba(163, 58, 58, 0.08); }
+
+/* ---------- Pestaña Ventas: filtro por tipo + total ---------- */
+.ven2-filtros { display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 12px; }
+.ven2-chip {
+  border: 1px solid rgba(0, 0, 0, 0.12); background: #fff; color: #55555c; border-radius: 999px;
+  padding: 5px 12px; font-family: inherit; font-size: 12.5px; cursor: pointer;
+  transition: border-color 0.18s var(--ease), color 0.18s var(--ease);
+}
+.ven2-chip:hover { border-color: rgba(0, 0, 0, 0.3); color: #111; }
+.ven2-chip.on { border-color: #111; color: #111; box-shadow: inset 0 0 0 1px #111; }
+.ven2-chip b { color: #9a7a2c; margin-left: 6px; }
+.ven2-total {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-top: 10px;
+  padding: 14px 16px; background: #fff; border: 1px solid rgba(0, 0, 0, 0.08); border-top: 2px solid var(--oro);
+  border-radius: 14px; font-size: 15px; color: #111;
+}
+.ven2-total .lcard-num { font-size: 17px; }
+
+/* ---------- Por mes ---------- */
+.ven2-mes-row { cursor: pointer; }
+
+@media (max-width: 1100px) {
+  .ven2-res { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .ven2-periodo { gap: 8px; }
+  .ven2-seg-btn { padding: 6px 12px; }
+  .ven2-card { flex-wrap: wrap; gap: 4px 12px; padding: 12px 14px; }
+  .ven2-card .lcard-main { order: 1; flex: 1 1 calc(100% - 120px); }
+  .ven2-card .ven2-precio { order: 2; min-width: 0; }
+  .ven2-card .ven2-when { order: 3; width: auto; }
+  .ven2-card .ven2-tipo { order: 4; width: auto; }
+  .ven2-card .ven2-quick { order: 5; margin-left: auto; min-width: 0; }
+  .ven2-card .ven2-chev { display: none; }
+  .ven2-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .ven2-kpis .mini-kpi:last-child { grid-column: 1 / -1; }
+  .ven2-kpis .mini-kpi { padding: 12px 14px; }
+  .ven2-kpis .mini-kpi .v { font-size: 22px; }
+}

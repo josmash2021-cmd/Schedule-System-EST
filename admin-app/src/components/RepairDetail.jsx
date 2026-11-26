@@ -84,9 +84,12 @@ export function saludo() {
   return h >= 5 && h < 12 ? 'buenos días' : h >= 12 && h < 19 ? 'buenas tardes' : 'buenas noches';
 }
 
-export default function RepairDetail({ ticketId, workers = [], isAdmin, onClose, onSaved, onCreated }) {
+// `initial` (opcional): valores de arranque para una reparación NUEVA, p. ej.
+// los datos del cliente cuando se crea desde una cita. Se ignora al abrir una
+// existente (ticketId), así WorkerApp y el resto siguen igual sin pasarla.
+export default function RepairDetail({ ticketId, workers = [], isAdmin, onClose, onSaved, onCreated, initial }) {
   const [id, setId] = useState(ticketId || null);
-  const [f, setF] = useState(EMPTY);
+  const [f, setF] = useState(() => (ticketId || !initial ? EMPTY : { ...EMPTY, ...initial }));
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(!!ticketId);
   const [saving, setSaving] = useState(false);

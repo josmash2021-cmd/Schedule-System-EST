@@ -1044,3 +1044,25 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
 - Arnés visual: pruebas nuevas de "Necesita atención", próxima cita →
   `/citas?fecha=`, barra de ventas, grupos/numeritos del menú y
   "+ Nuevo → Factura". Se quitaron las de la dona y la gráfica de citas.
+
+## 20. Las 10 páginas del menú rediseñadas — 2026-11-26
+
+- El dueño aprobó unas pantallas de muestra (en la página de muestra) y pidió
+  "hazlo todo y publica". Detalle de cada página en AGENTS.md ("Páginas del
+  menú: diseño común"). Sin cambios de backend; todas las funciones de antes
+  siguen, algunas cambiaron de lugar (al detalle o al ⋯).
+- Etiquetas sin cuadro en TODO el panel (`.badge*`, `.trend`, "Urgente" del
+  dashboard): solo texto de color.
+- Se construyó en paralelo por páginas (cada una con su CSS y prefijo para no
+  chocar); piezas comunes en `PageHead/Tabs/MoreMenu/fechas.js`.
+- Arreglos de paso: en teléfono (≤560px) `.content` no dejaba espacio para
+  la barra fija de abajo; `.lcards` crecía con textos largos (scroll
+  lateral) → `grid-template-columns: minmax(0, 1fr)`; el mock de gastos del
+  arnés atrapaba el POST.
+- Cambios de comportamiento a recordar: Ventas abre en "Mes" (antes Semana);
+  Inventario "Todos" ya incluye agotados; Órdenes "entregadas este mes" es
+  aproximado (no hay fecha de entrega en `online_orders`); en Trabajadores el
+  interruptor pide confirmación al desactivar.
+- Arnés: pruebas nuevas de "Siguiente paso" (Reparaciones), agenda con
+  botones (Citas), casilla (Tareas), pestaña Agotados (Inventario), pestaña
+  "Por mes" (Ventas) y detalle al tocar (Órdenes, Ventas, Facturas).

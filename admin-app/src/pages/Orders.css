@@ -1,0 +1,66 @@
+/* Órdenes (diseño nuevo, 2026-11-26). Prefijo obligatorio: orn2- (ojo:
+   .ord-* y .od-* ya existen en otros lados). Estados SOLO como texto de
+   color; negro/blanco + dorado. */
+
+/* ---------- Tarjeta de un pedido ---------- */
+/* La columna de la lista nunca crece más que la pantalla (textos largos en una línea). */
+.orn2 .lcards { grid-template-columns: minmax(0, 1fr); }
+.orn2-card { gap: 14px; }
+.orn2-card:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+.orn2-right { flex: none; min-width: 104px; text-align: right; display: grid; gap: 2px; }
+.orn2-right .lcard-num { font-size: 14.5px; color: #111; }
+.orn2-chev { width: 14px; flex: none; color: #77777f; font-size: 13px; line-height: 1; text-align: center; }
+.orn2-card:hover .orn2-chev, .orn2-card.sel .orn2-chev { color: #111; }
+
+/* Tracking en la misma tarjeta ("Por enviar") y en el detalle ("En camino"). */
+.orn2-ship { display: flex; align-items: center; gap: 6px; flex: none; min-width: 0; }
+.orn2-ship input { width: 200px; min-width: 0; padding: 7px 14px; border-radius: 999px; font-size: 13px; }
+.orn2-ship select { width: auto; flex: none; padding: 7px 10px; border-radius: 999px; font-size: 13px; }
+.orn2-ship .btn { flex: none; }
+.orn2-ship-det input { width: 220px; }
+
+/* Barra compacta de 5 pasos ("En camino"). */
+.orn2-track { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex: none; min-width: 0; }
+.orn2-mini { display: inline-flex; gap: 3px; }
+.orn2-mini i { width: 18px; height: 5px; border-radius: 3px; background: rgba(0, 0, 0, 0.12); }
+.orn2-mini i.on { background: #111; }
+.orn2-mini i.cur { background: var(--oro); }
+.orn2-trknum {
+  font-size: 11.5px; color: #8a8a92; font-variant-numeric: tabular-nums; max-width: 210px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ---------- Detalle (abre debajo de la tarjeta) ---------- */
+.orn2-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 26px; font-size: 13.5px; }
+.orn2-col { display: grid; gap: 3px; align-content: start; min-width: 0; overflow-wrap: anywhere; color: #111; }
+.orn2-lbl { font-size: 11.5px; color: #8a8a92; margin-bottom: 2px; }
+.orn2-lbl-row { display: flex; align-items: center; gap: 8px; min-height: 26px; }
+.orn2-copy { padding: 3px 10px; font-size: 12px; }
+.orn2-items { margin: 0 0 6px; padding-left: 18px; }
+.orn2-items li { margin: 2px 0; }
+.orn2-sum { display: flex; justify-content: space-between; gap: 10px; }
+.orn2-strong { color: #111; font-weight: 600; }
+.orn2-small { font-size: 12px; }
+.orn2-trk { margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(0, 0, 0, 0.07); font-size: 13.5px; }
+.orn2-trk-line { overflow-wrap: anywhere; }
+.orn2-trk .shipbar { margin-top: 12px; }
+.orn2-link {
+  margin-left: 10px; color: #111; font-size: 12.5px; white-space: nowrap;
+  text-decoration: underline; text-decoration-color: var(--oro); text-underline-offset: 3px;
+}
+.orn2-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-top: 16px; }
+.orn2-cargando { text-align: center; padding: 48px 0; }
+
+@media (max-width: 900px) {
+  .orn2-cols { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .orn2-card { flex-wrap: wrap; gap: 8px 12px; padding: 12px 14px; }
+  .orn2-card .lcard-main { flex: 1 1 calc(100% - 170px); }
+  .orn2-card .orn2-right { order: 2; min-width: 0; }
+  .orn2-card .orn2-ship, .orn2-card .orn2-track { order: 3; flex: 1 1 100%; }
+  .orn2-card .orn2-track { flex-direction: row; align-items: center; justify-content: space-between; }
+  .orn2-ship input, .orn2-ship-det input { flex: 1 1 auto; width: auto; }
+  .orn2-ship-det { flex: 1 1 100%; }
+  .orn2-chev { display: none; }
+}

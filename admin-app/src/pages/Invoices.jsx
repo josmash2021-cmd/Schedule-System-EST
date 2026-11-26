@@ -1,6 +1,12 @@
-import { useEffect, useState } from 'react';
+import './Invoices.css';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
+import PageHead from '../components/PageHead.jsx';
+import Tabs from '../components/Tabs.jsx';
+import MoreMenu from '../components/MoreMenu.jsx';
+import { phoneIntl, saludo } from '../components/RepairDetail.jsx';
+import { fechaCorta, diaKey, hoyKey } from '../fechas.js';
 
 /* Facturas (Bill of Sale). Listado + formulario + documento imprimible.
    La impresión/PDF es la nativa del navegador: en @media print solo queda
@@ -22,14 +28,6 @@ function chicagoNow() {
     hour: '2-digit', minute: '2-digit', hour12: false,
   }).formatToParts(new Date()).reduce((a, x) => { a[x.type] = x.value; return a; }, {});
   return { date: `${p.year}-${p.month}-${p.day}`, time: `${String(p.hour % 24).padStart(2, '0')}:${p.minute}` };
-}
-
-function fmtFecha(iso) {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  const p = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit' })
-    .formatToParts(d).reduce((a, x) => { a[x.type] = x.value; return a; }, {});
-  return `${p.day}/${p.month}/${p.year}`;
 }
 
 let SEQ = 1;
@@ -612,6 +610,144 @@ export default function Invoices() {
     return 'Libre (sin venta)';
   };
 
+  /* ---------- Lista (diseño nuevo, 2026-11-26) ----------
+     Buscador + pestañas por origen; una tarjeta por factura con PDF y, SOLO
+     donde existe la vía en el server, Correo (órdenes y reparaciones) y
+     WhatsApp (reparaciones: link público del PDF). Tocar la fila abre el
+     documento; Editar/Eliminar van en el ⋯ de cada fila. */
+  const [q, setQ] = useState('');
+  const [filtro, setFiltro] = useState('todas');
+  const [ok, setOk] = useState('');
+  const [filaBusy, setFilaBusy] = useState(null); // id de la factura con una acción en curso
+  // Tickets de reparación: correo/teléfono del cliente y la factura que usan
+  // los endpoints de la reparación (send-invoice / invoice-link).
+  const [tickets, setTickets] = useState([]);
+  useEffect(() => { api('/repairs').then((d) => setTickets(d.tickets || [])).catch(() => setTickets([])); }, []);
+
+  // Mismo orden que origen(): venta → reparación → orden → libre.
+  const tipoDe = (inv) => (inv.sale_id ? 'ventas' : inv.repair_id ? 'reparaciones' : inv.order_id ? 'ordenes' : 'libres');
+
+  // Factura más reciente (id mayor) de cada reparación / orden: es la que
+  // mandan los endpoints del server cuando no hay otra vinculada a mano.
+  const ultimas = useMemo(() => {
+    const rep = {}; const ord = {};
+    for (const i of invoices || []) {
+      if (i.repair_id && (!rep[i.repair_id] || i.id > rep[i.repair_id])) rep[i.repair_id] = i.id;
+      if (i.order_id && (!ord[i.order_id] || i.id > ord[i.order_id])) ord[i.order_id] = i.id;
+    }
+    return { rep, ord };
+  }, [invoices]);
+  const ticketPorId = useMemo(() => Object.fromEntries(tickets.map((t) => [t.id, t])), [tickets]);
+
+  // Vías reales de envío de ESTA factura (si no hay, no se pone el botón).
+  const viasDe = (inv) => {
+    const tipo = tipoDe(inv);
+    if (tipo === 'ordenes') {
+      // POST /orders/:id/send-invoice manda la última factura de la orden al
+      // correo de la orden (buyer_email se copia de ahí al crear la factura).
+      return { correo: !!inv.buyer_email && ultimas.ord[inv.order_id] === inv.id, whatsapp: false };
+    }
+    if (tipo === 'reparaciones') {
+      const t = ticketPorId[inv.repair_id];
+      if (!t) return { correo: false, whatsapp: false };
+      // El correo manda la factura vinculada al ticket (o la última); el link
+      // público de WhatsApp siempre sirve la última de la reparación.
+      const ligada = t.invoice_id ? t.invoice_id === inv.id : ultimas.rep[inv.repair_id] === inv.id;
+      return {
+        correo: ligada && !!t.customer_email,
+        whatsapp: ligada && ultimas.rep[inv.repair_id] === inv.id && !!t.customer_phone,
+        ticket: t,
+      };
+    }
+    return { correo: false, whatsapp: false };
+  };
+
+  // PDF de una fila: descarga con el mismo fetch autenticado del documento.
+  const pdfFila = async (inv) => {
+    setErr(''); setOk(''); setFilaBusy(inv.id);
+    try {
+      const blob = await fetchPdfBlob(`/x/s/invoices/${inv.id}/pdf`);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Receipt-${inv.invoice_number || inv.id}.pdf`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) { setErr(e.message); }
+    setFilaBusy(null);
+  };
+  const correoFila = async (inv) => {
+    setErr(''); setOk(''); setFilaBusy(inv.id);
+    try {
+      const esOrden = tipoDe(inv) === 'ordenes';
+      const d = esOrden
+        ? await api('/orders/' + inv.order_id + '/send-invoice', { method: 'POST' })
+        : await api('/repairs/' + inv.repair_id + '/send-invoice', { method: 'POST' });
+      const dest = esOrden ? inv.buyer_email : ticketPorId[inv.repair_id]?.customer_email;
+      setOk(`Factura ${d.invoice_number || inv.invoice_number} enviada${dest ? ' a ' + dest : ''}.`);
+    } catch (e) { setErr(e.message); }
+    setFilaBusy(null);
+  };
+  // Igual que "Factura por WhatsApp" de Reparaciones: wa.me con el link
+  // público del PDF (/api/track/:token/invoice.pdf) ya escrito.
+  const whatsappFila = async (inv) => {
+    const t = ticketPorId[inv.repair_id];
+    if (!t) return;
+    setErr(''); setOk(''); setFilaBusy(inv.id);
+    try {
+      const d = await api('/repairs/' + t.id + '/invoice-link', { method: 'POST' });
+      const device = [t.device_brand, t.device_model].filter(Boolean).join(' ') || 'equipo';
+      const link = window.location.origin + d.path;
+      const msg = `Hola${t.customer_name ? ' ' + t.customer_name : ''}, ${saludo()}. Aquí tienes tu factura ${d.invoice_number} de ElectronicST por la reparación de tu ${device} (PDF): ${link}`;
+      window.open('https://wa.me/' + phoneIntl(t.customer_phone) + '?text=' + encodeURIComponent(msg), '_blank');
+      setOk('Se abrió WhatsApp con el link de la factura listo para enviar.');
+    } catch (e) { setErr(e.message); }
+    setFilaBusy(null);
+  };
+
+  // Tocar la fila abre el documento (limpia el aviso de la acción anterior).
+  const verFila = (inv) => { setOk(''); abrirVista(inv); };
+
+  const origenCorto = (inv) => {
+    if (inv.sale_id) return `Venta #${inv.sale_id}`;
+    if (inv.repair_id) {
+      const eq = [inv.device_brand, inv.device_model].filter(Boolean).join(' ');
+      return eq ? `Reparación ${eq}` : `Reparación #${inv.repair_id}`;
+    }
+    if (inv.order_id) return `Orden #${inv.order_id}`;
+    return 'Libre';
+  };
+
+  // Búsqueda por número o cliente (nombre, correo o teléfono).
+  const buscadas = useMemo(() => {
+    const list = invoices || [];
+    const t = q.trim().toLowerCase();
+    if (!t) return list;
+    const dig = t.replace(/\D/g, '');
+    return list.filter((i) => [i.invoice_number, i.id && '#' + i.id, i.buyer_name, i.buyer_email]
+      .some((v) => v && String(v).toLowerCase().includes(t))
+      || (dig.length >= 3 && String(i.buyer_phone || '').replace(/\D/g, '').includes(dig)));
+  }, [invoices, q]);
+  const conteo = useMemo(() => {
+    const c = { todas: buscadas.length, ventas: 0, reparaciones: 0, ordenes: 0, libres: 0 };
+    for (const i of buscadas) c[tipoDe(i)] += 1;
+    return c;
+  }, [buscadas]); // eslint-disable-line react-hooks/exhaustive-deps
+  const visibles = filtro === 'todas' ? buscadas : buscadas.filter((i) => tipoDe(i) === filtro);
+
+  // Frase de cómo va: facturas del mes en curso (hora de Chicago).
+  const resumenMes = useMemo(() => {
+    if (!invoices) return '';
+    const mes = hoyKey().slice(0, 7);
+    const MESES_L = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const delMes = invoices.filter((i) => (diaKey(i.created_at) || '').slice(0, 7) === mes);
+    const total = delMes.reduce((a, i) => a + (Number(i.total) || 0), 0);
+    const nombre = MESES_L[Number(mes.slice(5, 7)) - 1];
+    return delMes.length
+      ? `${nombre}: ${delMes.length} factura${delMes.length === 1 ? '' : 's'} · ${usd.format(total)} facturado`
+      : `${nombre}: sin facturas todavía`;
+  }, [invoices]);
+
   if (preloading) return <div style={{ textAlign: 'center', padding: 40 }}><span className="spinner spinner-lg" /></div>;
 
   if (mode === 'view' && viewInv) {
@@ -662,45 +798,73 @@ export default function Invoices() {
     );
   }
 
+  const tabs = [
+    { v: 'todas', l: 'Todas', n: conteo.todas },
+    { v: 'ventas', l: 'Ventas', n: conteo.ventas },
+    { v: 'reparaciones', l: 'Reparaciones', n: conteo.reparaciones },
+    { v: 'ordenes', l: 'Órdenes', n: conteo.ordenes },
+    { v: 'libres', l: 'Libres', n: conteo.libres },
+  ];
+
   return (
-    <div className="invoice-page">
-      {err && <div className="alert alert-error">{err}</div>}
-      <div className="row" style={{ justifyContent: 'flex-end', marginBottom: 16 }}>
-        <button className="btn btn-primary" onClick={() => { setForm(vacio()); setEditId(null); setErr(''); setMode('form'); }}>
+    <div className="invoice-page fac2">
+      <PageHead title="Facturas" sub={resumenMes} search={q} onSearch={setQ} searchPlaceholder="Buscar número o cliente…">
+        <button className="btn btn-primary" onClick={() => { setForm(vacio()); setEditId(null); setErr(''); setOk(''); setMode('form'); }}>
           + Nueva factura
         </button>
-      </div>
+      </PageHead>
+      {err && <div className="alert alert-error">{err}</div>}
+      {ok && <div className="alert alert-ok">{ok}</div>}
 
-      <div className="card">
-        <h3>Facturas emitidas</h3>
-        {invoices == null ? <span className="spinner" />
-          : invoices.length === 0 ? <div className="empty">Aún no hay facturas. Crea una desde aquí o desde una venta en la página de Ventas.</div>
-            : (
-              <div className="table-wrap">
-                <table className="data">
-                  <thead>
-                    <tr><th>Número</th><th>Cliente</th><th className="hide-sm">Origen</th><th>Fecha</th><th style={{ textAlign: 'right' }}>Total</th><th></th></tr>
-                  </thead>
-                  <tbody>
-                    {invoices.map((inv) => (
-                      <tr key={inv.id}>
-                        <td><strong>{inv.invoice_number || `#${inv.id}`}</strong></td>
-                        <td>{inv.buyer_name || '—'}</td>
-                        <td className="muted hide-sm">{origen(inv)}</td>
-                        <td className="muted">{fmtFecha(inv.created_at)}</td>
-                        <td style={{ textAlign: 'right' }}><strong>{usd.format(Number(inv.total) || 0)}</strong></td>
-                        <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                          <button className="btn btn-ghost btn-sm" onClick={() => abrirVista(inv)}>Ver</button>
-                          <button className="btn btn-ghost btn-sm" onClick={() => editar(inv)}>Editar</button>
-                          <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => eliminar(inv)}>Eliminar</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-      </div>
+      {invoices == null ? <span className="spinner spinner-lg" />
+        : invoices.length === 0 ? <div className="empty-state">Aún no hay facturas. Crea una desde aquí o desde una venta en la página de Ventas.</div>
+          : (
+            <>
+              <Tabs tabs={tabs} value={filtro} onChange={setFiltro} />
+              {visibles.length === 0 ? (
+                <div className="empty-state">{q ? 'Ninguna factura coincide con la búsqueda.' : 'No hay facturas de este tipo.'}</div>
+              ) : (
+                <div className="lcards">
+                  {visibles.map((inv) => {
+                    const vias = viasDe(inv);
+                    const ocupada = filaBusy === inv.id;
+                    return (
+                      <div key={inv.id} className="lcard click fac2-row" role="button" tabIndex={0}
+                        title="Ver la factura" onClick={() => verFila(inv)}
+                        onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); verFila(inv); } }}>
+                        <span className="fac2-num">{inv.invoice_number || `#${inv.id}`}</span>
+                        <div className="lcard-main">
+                          <div className="lcard-title">{inv.buyer_name || 'Sin nombre'}</div>
+                          <div className="lcard-sub" title={origen(inv)}>{origenCorto(inv)} · {fechaCorta(inv.created_at)}</div>
+                        </div>
+                        <span className="lcard-num fac2-total">{usd.format(Number(inv.total) || 0)}</span>
+                        {/* Acciones de la fila: no abren el documento. */}
+                        <div className="fac2-acts" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+                          {ocupada && <span className="spinner" />}
+                          <button type="button" className="fac2-mini" disabled={ocupada}
+                            title="Descargar el PDF" onClick={() => pdfFila(inv)}>PDF</button>
+                          {vias.correo && (
+                            <button type="button" className="fac2-mini" disabled={ocupada}
+                              title={`Enviar el PDF por correo a ${inv.order_id && !inv.repair_id && !inv.sale_id ? inv.buyer_email : vias.ticket?.customer_email}`}
+                              onClick={() => correoFila(inv)}>Correo</button>
+                          )}
+                          {vias.whatsapp && (
+                            <button type="button" className="fac2-mini" disabled={ocupada}
+                              title="Mandar el link del PDF por WhatsApp" onClick={() => whatsappFila(inv)}>WhatsApp</button>
+                          )}
+                          <MoreMenu title="Más opciones de la factura" items={[
+                            { label: 'Ver factura', onClick: () => verFila(inv) },
+                            { label: 'Editar', onClick: () => editar(inv) },
+                            { label: 'Eliminar', danger: true, disabled: busy, onClick: () => eliminar(inv) },
+                          ]} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
     </div>
   );
 }

@@ -1,0 +1,139 @@
+/* ---------- Citas (diseño nuevo, 2026-11-26) ----------
+   Agenda del día como horario (8 a 20 h) con la línea dorada "Ahora",
+   semana en 7 columnas y una lista "Todas" para buscar citas viejas.
+   Estados SOLO como texto de color; negro/blanco + dorado. Prefijo: cit2-. */
+
+.cit2 { min-width: 0; }
+.cit2-load { text-align: center; padding: 40px 0; }
+
+/* Navegación ‹ Hoy › (pastilla con tres partes). */
+.cit2-nav {
+  display: inline-flex; align-items: stretch; background: #fff; border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 999px; overflow: hidden; height: 38px;
+}
+.cit2-nav button {
+  background: none; border: 0; font-family: inherit; color: #111; cursor: pointer;
+  transition: background 0.18s var(--ease);
+}
+.cit2-nav button:hover { background: #f4f4f6; }
+.cit2-nav-b { width: 34px; font-size: 18px; line-height: 1; padding: 0 0 2px; color: #55555c !important; }
+.cit2-nav-hoy { padding: 0 12px; font-size: 13px; border-left: 1px solid rgba(0, 0, 0, 0.1) !important; border-right: 1px solid rgba(0, 0, 0, 0.1) !important; }
+
+/* Fila de pestañas + selector de día / filtros. */
+.cit2-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 14px; }
+.cit2-bar .tabs { margin-bottom: 0; }
+.cit2-date { width: auto; padding: 7px 14px; border-radius: 999px; font-size: 13px; }
+.cit2-filtros { display: flex; flex-wrap: wrap; gap: 8px; }
+.cit2-filtros select { width: auto; padding: 7px 16px; border-radius: 999px; font-size: 13px; }
+
+/* ---------- Agenda del día ---------- */
+.cit2-day {
+  background: #fff; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 16px; padding: 4px 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04); min-width: 0;
+}
+.cit2-day-empty { font-size: 13px; color: #8a8a92; padding: 12px 0 4px; }
+.cit2-hour {
+  display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.07); min-height: 46px; padding: 8px 0;
+}
+.cit2-day > .cit2-hour:first-child, .cit2-day-empty + .cit2-hour { border-top: 0; }
+.cit2-hlabel { color: #8a8a92; font-size: 12px; padding-top: 3px; font-variant-numeric: tabular-nums; }
+.cit2-hour-now .cit2-hlabel { color: #7a5d1c; }
+.cit2-slot { display: grid; gap: 8px; min-width: 0; align-content: start; }
+
+/* Cita: borde dorado = por confirmar; negro = confirmada; gris = atendida. */
+.cit2-appt {
+  border-left: 3px solid var(--oro); background: #fbf8f0; border-radius: 10px; padding: 9px 12px;
+  min-width: 0; cursor: pointer; transition: box-shadow 0.18s var(--ease), background 0.18s var(--ease);
+  animation: cit2In 0.35s var(--ease) backwards;
+}
+.cit2-appt:hover { box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08); }
+.cit2-appt:focus-visible, .cit2-wcard:focus-visible, .cit2-row:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+.cit2-appt.cit2-confirmada { border-left-color: #111; background: #f3f3f5; }
+.cit2-appt.cit2-atendida { border-left-color: #c4c4cc; background: #f7f7f8; }
+.cit2-appt.cit2-cancelada { border-left-color: #dcdce0; background: #fafafa; opacity: 0.65; }
+.cit2-cancelada .cit2-appt-t, .cit2-cancelada .cit2-wcard-t, .cit2-row.cit2-cancelada .lcard-title { text-decoration: line-through; color: #8a8a92; }
+.cit2-appt-top { display: flex; align-items: baseline; justify-content: space-between; gap: 4px 12px; flex-wrap: wrap; }
+.cit2-appt-t { font-size: 14px; color: #111; min-width: 0; overflow-wrap: anywhere; }
+.cit2-appt-sub { font-size: 12.5px; color: #77777f; margin-top: 2px; overflow-wrap: anywhere; }
+.cit2-tachado { text-decoration: line-through; }
+
+/* Línea dorada "Ahora · hh:mm". */
+.cit2-now {
+  border-top: 2px solid var(--oro); font-size: 11.5px; color: #7a5d1c; padding-top: 3px; margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.cit2-now-edge { margin: 10px 0 6px; }
+
+/* Botoncitos de cada cita. */
+.cit2-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.cit2-btn {
+  font-family: inherit; font-size: 12px; line-height: 1.2; color: #111; background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.14); border-radius: 999px; padding: 5px 12px; cursor: pointer; white-space: nowrap;
+  transition: background 0.18s var(--ease), border-color 0.18s var(--ease);
+}
+.cit2-btn:hover { border-color: rgba(0, 0, 0, 0.34); }
+.cit2-btn:disabled { opacity: 0.5; cursor: default; }
+.cit2-btn-k { background: #111; color: #fff; border-color: #111; }
+.cit2-btn-k:hover { background: #000; border-color: #000; }
+.cit2-btn-au { border-color: var(--oro); }
+.cit2-btn-au:hover { background: var(--oro-suave); border-color: var(--oro); }
+.cit2-detail-acts { margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(0, 0, 0, 0.07); }
+.cit2-detail-acts .cit2-acts { margin-top: 0; }
+.cit2-detail-acts .cit2-btn { font-size: 13px; padding: 7px 15px; }
+
+/* ---------- Semana (7 columnas) ---------- */
+.cit2-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; align-items: start; }
+.cit2-wcol {
+  background: rgba(0, 0, 0, 0.035); border: 1px solid transparent; border-radius: 14px; padding: 6px;
+  display: grid; gap: 6px; min-width: 0;
+}
+.cit2-wcol-hoy { border-color: var(--oro); background: #fbf8f0; }
+.cit2-wcol-h {
+  display: flex; align-items: baseline; gap: 6px; width: 100%; background: none; border: 0; border-radius: 10px;
+  padding: 5px 6px; font-family: inherit; color: #55555c; cursor: pointer; text-align: left;
+}
+.cit2-wcol-h:hover { background: rgba(0, 0, 0, 0.05); }
+.cit2-wd { font-size: 12.5px; }
+.cit2-wn { font-size: 17px; color: #111; font-variant-numeric: tabular-nums; }
+.cit2-wcol-hoy .cit2-wn { color: #7a5d1c; }
+.cit2-wc { margin-left: auto; font-size: 12px; font-weight: 600; color: #9a7a2c; }
+.cit2-wempty { text-align: center; color: #b4b4bb; font-size: 12.5px; padding: 6px 0 10px; }
+.cit2-wcard {
+  background: #fff; border: 1px solid rgba(0, 0, 0, 0.08); border-left: 3px solid var(--oro); border-radius: 10px;
+  padding: 7px 9px; min-width: 0; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.18s var(--ease);
+}
+.cit2-wcard:hover { border-color: rgba(0, 0, 0, 0.24); border-left-color: var(--oro); }
+.cit2-wcard.cit2-confirmada, .cit2-wcard.cit2-confirmada:hover { border-left-color: #111; }
+.cit2-wcard.cit2-atendida, .cit2-wcard.cit2-atendida:hover { border-left-color: #c4c4cc; }
+.cit2-wcard.cit2-cancelada { border-left-color: #dcdce0; opacity: 0.6; }
+.cit2-wcard-t { font-size: 12.5px; color: #111; overflow-wrap: anywhere; }
+.cit2-wcard-t b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.cit2-wcard-s { font-size: 11.5px; color: #8a8a92; margin: 1px 0 3px; overflow-wrap: anywhere; }
+.cit2-wcard .st { font-size: 11.5px; white-space: normal; }
+
+/* ---------- Todas (lista) ---------- */
+.cit2-row-when { width: 92px; flex: none; display: grid; line-height: 1.3; }
+.cit2-row-when span { font-size: 12.5px; color: #77777f; white-space: nowrap; }
+.cit2-row-when b { font-weight: 400; font-size: 15px; color: #111; font-variant-numeric: tabular-nums; }
+
+@keyframes cit2In { from { opacity: 0; transform: translateY(6px); } }
+
+/* Pantallas medianas: la semana en 4 columnas; teléfono: todo apilado. */
+@media (max-width: 1100px) {
+  .cit2-week { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .cit2-week { grid-template-columns: 1fr; gap: 6px; }
+  .cit2-wempty { display: none; }
+  .cit2-day { padding: 2px 12px; }
+  .cit2-hour { grid-template-columns: 40px minmax(0, 1fr); gap: 8px; }
+  .cit2-bar { align-items: stretch; }
+  .cit2-date { flex: 1 1 100%; }
+  .cit2-row { gap: 10px 12px; }
+  .cit2-row-when { width: 64px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cit2-appt { animation: none; }
+}

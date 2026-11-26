@@ -266,7 +266,8 @@ select option { background: #fff; color: #111; }
   width: 34px; height: 34px; border-radius: 999px; background: #fff; color: #000;
   display: grid; place-items: center; font-weight: 800;
 }
-.content { padding: 12px 28px 30px; max-width: 1140px; width: 100%; }
+/* Todas las páginas a lo ancho (regla 6 del diseño nuevo); tope para pantallas enormes. */
+.content { padding: 12px 28px 30px; max-width: 1480px; width: 100%; }
 
 /* ---------- Cards / stats ---------- */
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 26px; }
@@ -402,9 +403,9 @@ select option { background: #fff; color: #111; }
 .stat-foot { font-size: 11.5px; color: #a1a1aa; margin-top: 4px; }
 .stat-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
 .stat-row .stat-sub { margin-top: 0; }
-.trend { font-size: 12px; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
-.trend-up { background: #e8f6ec; color: #1f7a3d; }
-.trend-down { background: #fbecec; color: #a33a3a; }
+.trend { font-size: 12.5px; white-space: nowrap; }
+.trend-up { color: #1f7a3d; }
+.trend-down { color: #a33a3a; }
 .spark-wrap { position: relative; margin-top: 10px; }
 .spark { display: block; width: 100%; height: 34px; overflow: visible; }
 .spark-area { fill: rgba(17, 17, 17, 0.06); }
@@ -436,7 +437,7 @@ select option { background: #fff; color: #111; }
 .att-ico-on { color: #111; --duo: var(--oro); }
 .att-txt { flex: 1; min-width: 0; }
 .att-txt small { display: block; color: #8a8a92; font-size: 12.5px; margin-top: 2px; }
-.att-pill { flex: none; font-size: 11px; padding: 2px 9px; border-radius: 999px; background: var(--oro-suave); color: #7a5d1c; border: 1px solid rgba(200, 162, 75, 0.45); }
+.att-pill { flex: none; font-size: 12px; color: #7a5d1c; }
 .att-go { color: #9a9aa2; flex: none; }
 .att-more { font-size: 12.5px; padding: 8px 0 0; }
 .att-ok { display: flex; align-items: center; gap: 12px; color: #55555c; font-size: 14.5px; padding: 18px 0; }
@@ -543,24 +544,29 @@ table.data tbody tr { animation: fadeIn 0.35s var(--ease) backwards; }
 table.data tr:last-child td { border-bottom: none; }
 table.data tbody tr:hover td { background: #f5f5f6; }
 
-/* ---------- Badges (monocromo, sobre blanco) ---------- */
+/* ---------- Etiquetas (badges): SOLO texto de color, sin cuadro ----------
+   Decisión del dueño (2026-11-26): nada encerrado. Las clases .badge-* se
+   conservan para no tocar cada página, pero ya no tienen fondo ni borde. */
 .badge {
-  display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11.5px;
-  font-weight: 700; letter-spacing: 0.02em;
-  background: #f0f0f2; color: #55555c; border: 1px solid rgba(0, 0, 0, 0.08);
+  display: inline; padding: 0; border: 0; border-radius: 0; background: none;
+  font-size: 12.5px; font-weight: 600; letter-spacing: 0; color: #55555c; white-space: nowrap;
 }
-.badge-admin { background: #111; color: #fff; border-color: #111; }
-.badge-worker { background: #fff; color: #111; border-color: rgba(0, 0, 0, 0.22); }
-.badge-on { background: #111; color: #fff; border-color: #111; }
-.badge-off { background: #f0f0f2; color: #9a9aa2; border-color: rgba(0, 0, 0, 0.08); }
-.badge-pendiente { background: #fff; color: #111; border-color: rgba(0, 0, 0, 0.32); }
-.badge-confirmada { background: #fff; color: #111; border-color: rgba(0, 0, 0, 0.22); }
-.badge-atendida { background: #111; color: #fff; border-color: #111; }
-.badge-cancelada { background: #fff; color: #9a9aa2; border-color: rgba(0, 0, 0, 0.1); text-decoration: line-through; }
-/* Compras web (Stripe) en la página de Ventas. */
-.badge-online { background: #111; color: #fff; border-color: #111; border-style: dashed; }
-/* Órdenes manuales de FB Marketplace: outline punteado sin relleno. */
-.badge-fb { background: #fff; color: #111; border-color: #111; border-style: dashed; }
+.badge-admin, .badge-on, .badge-atendida { color: #111; }
+.badge-worker, .badge-confirmada { color: #55555c; }
+.badge-off { color: #9a9aa2; }
+.badge-cancelada { color: #9a9aa2; text-decoration: line-through; }
+.badge-pendiente { color: #7a5d1c; }
+/* Compras web (Stripe) y FB Marketplace en Ventas. */
+.badge-online { color: #111; }
+.badge-fb { color: #55555c; }
+
+/* Estado como texto de color (mismo criterio que .badge): bien / aviso / problema. */
+.st { font-size: 12.5px; white-space: nowrap; color: #55555c; }
+.st-ok { color: #1f7a3d; }
+.st-warn { color: #7a5d1c; }
+.st-bad { color: #a33a3a; }
+.st-strong { color: #111; font-weight: 600; }
+.st-muted { color: #9a9aa2; }
 .order-detail { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 24px; font-size: 13.5px; }
 .order-detail ul li { margin: 2px 0; }
 .od-full { grid-column: 1 / -1; }
@@ -826,7 +832,8 @@ table.data tbody tr:hover td { background: #f5f5f6; }
 
 /* ---------- Teléfonos (≤560px): todo más compacto ---------- */
 @media (max-width: 560px) {
-  .content { padding: 10px 14px 22px; }
+  /* Deja espacio abajo para la barra fija del teléfono. */
+  .content { padding: 10px 14px calc(96px + env(safe-area-inset-bottom, 0px)); }
   .topbar h2 { font-size: 17px; }
   /* Tarjetas de stats en 2 columnas y más chicas */
   .stat-grid, .sales-page .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -1092,3 +1099,104 @@ button.nav-item { background: none; border: none; width: 100%; font-family: inhe
   }
   .live-dot { animation: none; }
 }
+
+/* ---------- Páginas: piezas comunes del diseño nuevo (2026-11-26) ----------
+   Regla de las páginas del menú: arriba título + frase de cómo va; un botón
+   negro principal + buscador; pestañas con número; lista de tarjetas cortas
+   (detalle al tocar); lo peligroso en el ⋯; estados SOLO como texto. */
+.ph { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 16px; margin: 6px 0 16px; }
+.ph-txt { min-width: 0; }
+.ph-title { font-size: 26px; font-weight: 400; letter-spacing: -0.02em; margin: 0; color: #111; }
+.ph-sub { color: #8a8a92; font-size: 13.5px; margin-top: 3px; }
+.ph-act { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ph-search { width: 280px; max-width: 100%; padding: 9px 16px; border-radius: 999px; font-size: 13.5px; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.tab {
+  border: 1px solid rgba(0, 0, 0, 0.12); background: #fff; color: #111; border-radius: 999px;
+  padding: 7px 14px; font-family: inherit; font-size: 13px; cursor: pointer;
+  transition: background 0.18s var(--ease), border-color 0.18s var(--ease);
+}
+.tab:hover { border-color: rgba(0, 0, 0, 0.3); }
+.tab.on { background: #111; border-color: #111; color: #fff; }
+.tab b { font-weight: 600; color: #9a7a2c; margin-left: 6px; }
+.tab.on b { color: var(--oro); }
+
+.more { position: relative; }
+.more-btn {
+  width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.14); background: #fff;
+  color: #55555c; font-size: 18px; line-height: 1; cursor: pointer; display: grid; place-items: center; padding: 0 0 4px;
+}
+.more-btn:hover { border-color: rgba(0, 0, 0, 0.3); }
+.more-menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; min-width: 220px; background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 14px; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.16);
+  padding: 6px; display: grid; animation: fadeIn 0.15s var(--ease);
+}
+.more-item { text-align: left; background: none; border: 0; padding: 10px 12px; border-radius: 10px; font-family: inherit; font-size: 13.5px; color: #111; cursor: pointer; }
+.more-item:hover { background: #f4f4f6; }
+.more-item:disabled { opacity: 0.4; cursor: default; }
+.more-danger { color: #a33a3a; }
+
+/* Avatar con iniciales (círculo negro, letras doradas). */
+.av { width: 34px; height: 34px; border-radius: 50%; background: #111; color: var(--oro); display: grid; place-items: center; font-size: 12px; letter-spacing: 0.04em; flex: none; }
+.av-sm { width: 24px; height: 24px; font-size: 9.5px; }
+.av-lg { width: 48px; height: 48px; font-size: 15px; }
+
+/* Lista de tarjetas cortas: una línea por elemento; el detalle abre al tocar. */
+.lcards { display: grid; gap: 8px; }
+.lcard {
+  display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px; padding: 12px 16px; min-width: 0; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
+}
+.lcard.click { cursor: pointer; }
+.lcard.click:hover { border-color: rgba(0, 0, 0, 0.24); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08); }
+.lcard.sel { border-color: #111; box-shadow: 0 0 0 1px #111; }
+.lcard-main { flex: 1; min-width: 0; }
+.lcard-title { font-size: 14.5px; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lcard-sub { font-size: 12.5px; color: #8a8a92; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lcard-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* Detalle abierto de una tarjeta (va justo debajo, mismo ancho). */
+.lcard-detail { background: #fff; border: 1px solid rgba(0, 0, 0, 0.08); border-top: 0; border-radius: 0 0 14px 14px; margin-top: -10px; padding: 18px 16px 16px; }
+
+/* Tablero por columnas (Reparaciones, Tareas). */
+.board { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; align-items: start; }
+.bcol { background: rgba(0, 0, 0, 0.035); border-radius: 16px; padding: 10px; display: grid; gap: 8px; min-width: 0; }
+.bcol-h { display: flex; justify-content: space-between; align-items: center; padding: 4px 6px; font-size: 13px; color: #55555c; }
+.bcol-h b { font-weight: 600; color: #111; }
+.bcard { background: #fff; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 12px; padding: 12px 13px; min-width: 0; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04); }
+.bcard.click { cursor: pointer; }
+.bcard.click:hover { border-color: rgba(0, 0, 0, 0.24); }
+.bcard-title { font-size: 14px; color: #111; }
+.bcard-sub { font-size: 12px; color: #8a8a92; margin-top: 2px; }
+.bcard-tags { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; }
+.bcard-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.bcol-empty { font-size: 12.5px; color: #a1a1aa; text-align: center; padding: 14px 6px; }
+
+/* Botón de "siguiente paso" (contorno dorado). */
+.btn-step {
+  display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--oro); background: #fff; color: #111;
+  border-radius: 999px; padding: 5px 12px; font-family: inherit; font-size: 12.5px; cursor: pointer; white-space: nowrap;
+  transition: background 0.18s var(--ease);
+}
+.btn-step:hover { background: var(--oro-suave); }
+.btn-step:disabled { opacity: 0.5; cursor: default; }
+
+/* Números pequeños en una línea (resumen arriba de la lista). */
+.mini-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.mini-kpi { background: #fff; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 14px; padding: 14px 16px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04); min-width: 0; }
+.mini-kpi .k { font-size: 12.5px; color: #77777f; }
+.mini-kpi .v { font-size: 24px; margin-top: 4px; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.mini-kpi .s { font-size: 12px; color: #8a8a92; margin-top: 2px; }
+
+.empty-state { text-align: center; color: #8a8a92; padding: 40px 16px; background: #fff; border: 1px dashed rgba(0, 0, 0, 0.12); border-radius: 16px; }
+
+@media (max-width: 560px) {
+  .ph-act { width: 100%; }
+  .ph-search { width: 100%; }
+  .ph-title { font-size: 22px; }
+  .lcard { flex-wrap: wrap; }
+}
+/* La lista de tarjetas nunca crece con textos largos (evita scroll lateral en teléfono). */
+.lcards { grid-template-columns: minmax(0, 1fr); }

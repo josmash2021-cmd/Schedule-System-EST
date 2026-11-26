@@ -396,6 +396,39 @@ ventas usan la MISMA definición que `Sales.jsx` (3 fuentes). De arriba abajo:
 - Las vistas previas de cambios visuales para el dueño van SIEMPRE en la
   misma página de muestra (artifact "Nuevo Dashboard ElectronicST").
 
+### Páginas del menú: diseño común (2026-11-26)
+Todas siguen 6 reglas: arriba título + frase de cómo va; un botón negro
+principal + buscador; pestañas con número; tarjetas cortas (el detalle abre
+al tocar); lo peligroso ("Eliminar todas", "Borrar todas las ventas") en el
+menú ⋯; a lo ancho (`.content` máx. 1480px) con fechas fáciles.
+- Piezas compartidas: `components/PageHead.jsx`, `components/Tabs.jsx`,
+  `components/MoreMenu.jsx`, `src/fechas.js` (fechaCorta "hoy 10:30",
+  diaCorto "vie 25 jul", hace, diasDesde, hoyKey, iniciales) y el bloque CSS
+  "Páginas: piezas comunes" al final de `styles.css` (`.ph*`, `.tab`,
+  `.more*`, `.av`, `.lcard*`, `.board/.bcol/.bcard`, `.btn-step`,
+  `.mini-kpis`, estados `.st-*`).
+- **Etiquetas SOLO texto de color** (decisión del dueño): `.badge*` y `.st-*`
+  no tienen fondo ni borde; íconos sin cuadro.
+- CSS propio por página en `src/pages/<Página>.css` con prefijo:
+  `rep2-` Reparaciones (tablero 4 columnas Recibido/Diagnóstico/Reparando/
+  Listo, "Siguiente paso →", Listo: WhatsApp + "Entregar ✓"; la ficha
+  muestra barras, repuesto, montos y factura), `cit2-` Citas (Día = agenda
+  8–20 h con línea "Ahora", Semana = 7 columnas, Todas = lista; botones
+  Confirmar/Llegó/WhatsApp/Crear reparación → `/reparaciones?nueva=1&cliente=…`,
+  `RepairDetail` acepta la prop opcional `initial`), `ven2-` Ventas
+  (pestañas Resumen/Ventas/Gastos/Por mes, período Hoy/Semana/Mes/Año con
+  ‹ ›, por defecto Mes), `orn2-` Órdenes (pestañas Por enviar/En camino/
+  Entregadas/Todas, tracking + "Enviar" en la tarjeta, detalle al tocar),
+  `inv2-` Inventario (tarjetas con stock en color y − N + que agrupa toques
+  en un PATCH; Resumen del mes e inversión en ⋯; "Todos" incluye agotados),
+  `fac2-` Facturas (lista; PDF/Correo/WhatsApp solo donde hay endpoint real;
+  Ver/Editar/Eliminar en ⋯ de la fila), `cli2-` Clientes (lista + ficha con
+  historial que junta facturas, reparaciones y citas en el navegador;
+  `FRECUENTE_MIN = 3`), `tar2-` Tareas (tablero 3 columnas, casilla redonda,
+  "Empezar →"), `asi2-` Asistencia (tarjeta por trabajador + tabla de horas
+  de la semana; `/time` solo trae 7 días → sin flechas de semana), `tra2-`
+  Trabajadores (tarjetas, interruptor Activo con confirm al desactivar).
+
 ## Verificación visual del panel (úsala SIEMPRE en cambios de UI)
 
 `admin-app/.visual-test/run.cjs` (local, gitignored): sirve `server/admin-dist`,

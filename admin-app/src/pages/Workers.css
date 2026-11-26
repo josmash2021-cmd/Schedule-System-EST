@@ -1,0 +1,48 @@
+/* Trabajadores (diseño nuevo 2026-11-26): una tarjeta por cuenta con sus
+   iniciales, rol como texto, último acceso en palabras e interruptor
+   Activo/Inactivo. Los inactivos se ven atenuados. */
+
+.tra2-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.tra2-card {
+  display: flex; flex-direction: column; background: #fff; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 16px;
+  padding: 14px 16px; min-width: 0; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+  animation: fadeIn 0.3s var(--ease) backwards; transition: opacity 0.2s var(--ease), border-color 0.18s var(--ease);
+}
+.tra2-card:hover { border-color: rgba(0, 0, 0, 0.18); }
+.tra2-off { opacity: 0.6; box-shadow: none; }
+.tra2-off:hover { opacity: 0.85; }
+
+.tra2-top { display: flex; align-items: flex-start; gap: 12px; }
+.tra2-who { flex: 1; min-width: 0; }
+.tra2-line { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; min-width: 0; }
+.tra2-name { font-size: 15px; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.tra2-me { color: #9a9aa2; font-size: 12.5px; }
+.tra2-sub { font-size: 12.5px; color: #77777f; margin-top: 2px; }
+.tra2-mail { font-size: 11.5px; color: #a1a1aa; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tra2-role { flex: none; }
+
+.tra2-tags { margin-top: 10px; }
+.tra2-pw { white-space: normal; }
+
+.tra2-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 14px; }
+
+/* Interruptor: negro = activo, gris = inactivo. */
+.tra2-sw-wrap { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+.tra2-sw {
+  flex: none; position: relative; width: 38px; height: 22px; padding: 0; border: 0; border-radius: 999px;
+  background: #d4d4da; cursor: pointer; transition: background 0.2s var(--ease);
+}
+.tra2-sw::after {
+  content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); transition: transform 0.2s var(--ease);
+}
+.tra2-sw.on { background: #111; }
+.tra2-sw.on::after { transform: translateX(16px); }
+.tra2-sw:focus-visible { outline: 2px solid var(--oro); outline-offset: 2px; }
+.tra2-sw:disabled { cursor: default; opacity: 0.55; }
+.tra2-locked { cursor: default; }
+.tra2-sw-l { font-size: 12.5px; color: #55555c; }
+
+@media (max-width: 560px) {
+  .tra2-grid { grid-template-columns: 1fr; }
+}

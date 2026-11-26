@@ -1,0 +1,58 @@
+/* Clientes (diseño nuevo, 2026-11-26): lista + ficha. Prefijo cli2-.
+   "Frecuente" va como texto dorado (sin píldora); negro/blanco + dorado. */
+
+.cli2-split { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.cli2-list { min-width: 0; }
+.cli2-list .lcard:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+
+.cli2-frec { font-size: 12.5px; color: #9a7a2c; white-space: nowrap; flex: none; }
+
+/* Ficha del cliente (a la derecha en PC; sola en teléfono). */
+.cli2-panel {
+  position: sticky; top: 84px; min-width: 0;
+  background: #fff; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 16px; padding: 20px 20px 16px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.06);
+}
+.cli2-ficha { display: grid; gap: 14px; min-width: 0; }
+.cli2-back { justify-self: start; }
+.cli2-top { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.cli2-top-txt { flex: 1; min-width: 0; }
+.cli2-name { font-size: 19px; color: #111; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cli2-contact { font-size: 13px; color: #8a8a92; margin-top: 2px; overflow-wrap: anywhere; }
+.cli2-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.cli2-btns .btn { text-decoration: none; }
+.cli2-stats { font-size: 13px; color: #55555c; }
+
+.cli2-sec { font-size: 12px; color: #8a8a92; letter-spacing: 0.04em; text-transform: uppercase; margin-top: 4px; }
+.cli2-empty { font-size: 13.5px; color: #8a8a92; padding: 8px 0; }
+
+/* Historial: fecha · qué fue · monto. Cada línea abre su factura / cita. */
+.cli2-tl { display: grid; }
+.cli2-tl-row {
+  display: grid; grid-template-columns: 82px minmax(0, 1fr) auto; gap: 12px; align-items: center;
+  width: 100%; text-align: left; background: none; border: 0; border-top: 1px solid rgba(0, 0, 0, 0.07);
+  padding: 10px 6px; font-family: inherit; color: #111; cursor: pointer; border-radius: 8px;
+  transition: background 0.15s var(--ease);
+}
+.cli2-tl-row:first-child { border-top: 0; }
+.cli2-tl-row:hover { background: #f6f6f7; }
+.cli2-tl-row:focus-visible { outline: 2px solid #111; outline-offset: -2px; }
+.cli2-tl-date { font-size: 12.5px; color: #8a8a92; white-space: nowrap; }
+.cli2-tl-txt { min-width: 0; display: grid; }
+.cli2-tl-main { font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cli2-tl-det { font-size: 12px; color: #8a8a92; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cli2-tl-amt { font-size: 13.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cli2-cancel .cli2-tl-main { color: #9a9aa2; text-decoration: line-through; }
+
+@media (max-width: 900px) {
+  .cli2-split { grid-template-columns: 1fr; }
+  /* En teléfono la ficha va sola (sin tarjeta alrededor de toda la página). */
+  .cli2 > .cli2-ficha {
+    background: #fff; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 16px; padding: 16px;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.06);
+  }
+}
+@media (max-width: 560px) {
+  .cli2-tl-row { grid-template-columns: 64px minmax(0, 1fr) auto; gap: 10px; padding: 10px 2px; }
+  .cli2-name { font-size: 17px; }
+}

@@ -1,0 +1,89 @@
+/* ---------- Reparaciones (diseño nuevo, 2026-11-26) ----------
+   Tablero de 4 columnas (Recibido · Diagnóstico · Reparando · Listo) con
+   tarjetas cortas; "Entregadas" como lista de tarjetas. Estados SOLO como
+   texto de color (.st-*); negro/blanco + dorado. Prefijo obligatorio: rep2-. */
+
+.rep2 { min-width: 0; }
+
+/* Pestañas: paso + tipo de equipo en una sola fila (se parte en teléfono). */
+.rep2-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-bottom: 14px; }
+.rep2-tabs .tabs { margin-bottom: 0; }
+.rep2-sep { width: 1px; height: 22px; background: rgba(0, 0, 0, 0.14); flex: none; }
+
+/* Filtro por día de entrega (?entregado=) y barra del modo selección. */
+.rep2-chip {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-bottom: 14px;
+  font-size: 13.5px; color: #111;
+}
+.rep2-chip > span { border-bottom: 2px solid var(--oro); padding-bottom: 1px; }
+.rep2-selbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-bottom: 14px;
+  background: #fff; border: 1px solid rgba(0, 0, 0, 0.12); border-radius: 14px; padding: 8px 10px 8px 16px;
+  font-size: 13.5px; color: #111; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+}
+
+/* Botón de texto (Entregar ✓, Quitar filtro). */
+.rep2-link {
+  background: none; border: 0; padding: 4px 2px; font-family: inherit; font-size: 12.5px; color: #111;
+  cursor: pointer; text-decoration: underline; text-decoration-color: rgba(0, 0, 0, 0.25); text-underline-offset: 3px;
+  white-space: nowrap; display: inline-flex; align-items: center;
+}
+.rep2-link:hover { text-decoration-color: var(--oro); }
+.rep2-link:disabled { opacity: 0.5; cursor: default; }
+.rep2-link .spinner, .rep2 .btn-step .spinner { width: 13px; height: 13px; border-width: 2px; }
+
+.rep2-load { text-align: center; padding: 40px 0; }
+
+/* ---------- Tablero ---------- */
+.rep2-board { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.rep2-col-listo .bcol-h b::after {
+  content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--oro); margin-left: 7px; vertical-align: 1px;
+}
+.rep2-card { position: relative; animation: rep2In 0.35s var(--ease) backwards; }
+.rep2-card:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+.rep2-card-t { overflow-wrap: anywhere; }
+.rep2-card .bcard-sub { overflow-wrap: anywhere; }
+.rep2-card .bcard-tags .st { white-space: normal; }
+.rep2-card.rep2-sel { border-color: #111; box-shadow: 0 0 0 1px #111; }
+.rep2-check { position: absolute; top: 10px; right: 10px; width: 16px; height: 16px; margin: 0; pointer-events: none; }
+.rep2-card:has(.rep2-check) .rep2-card-t { padding-right: 22px; }
+.rep2-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-width: 0; }
+@keyframes rep2In { from { opacity: 0; transform: translateY(6px); } }
+
+/* ---------- Entregadas (lista) ---------- */
+.rep2-row:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+.rep2-row input[type="checkbox"] { width: 16px; height: 16px; margin: 0; flex: none; pointer-events: none; }
+.rep2-row-when { width: 82px; flex: none; font-size: 13px; color: #55555c; white-space: nowrap; }
+.rep2-row .lcard-num { font-size: 14.5px; color: #111; }
+.rep2-row-inv { flex: none; }
+
+/* ---------- Resumen arriba de la ficha ---------- */
+.rep2-res {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08); padding-bottom: 16px; margin-bottom: 18px;
+  display: grid; gap: 12px; min-width: 0;
+}
+.rep2-res-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+.rep2-res-top .st { font-size: 14px; }
+.rep2-res-meta { font-size: 13px; color: #6a6a72; min-width: 0; overflow-wrap: anywhere; }
+.rep2-res-meta strong { color: #111; }
+.rep2-res-part { border-top: 1px solid rgba(0, 0, 0, 0.06); padding-top: 10px; }
+.rep2-res-inv { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border-top: 1px solid rgba(0, 0, 0, 0.06); padding-top: 12px; }
+.rep2-res-lbl { font-size: 13px; color: #6a6a72; margin-right: 2px; }
+.rep2-res-inv .estado-select { width: auto; max-width: 100%; padding: 7px 14px; font-size: 12.5px; border-radius: 999px; }
+
+/* Tablet: 2 columnas; teléfono: el tablero se apila. */
+@media (max-width: 1100px) {
+  .rep2-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .rep2-board { grid-template-columns: 1fr; }
+  .rep2-sep { display: none; }
+  .rep2-row { gap: 8px 12px; }
+  .rep2-row-when { width: auto; order: -1; flex-basis: 100%; font-size: 12px; color: #8a8a92; }
+  .rep2-row .lcard-main { flex: 1 1 140px; }
+  .rep2-res-inv .estado-select { flex: 1 1 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rep2-card { animation: none; }
+}
