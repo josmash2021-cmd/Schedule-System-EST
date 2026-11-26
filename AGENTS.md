@@ -134,8 +134,14 @@ cambies estructura, flujos o convenciones.
   vendedor recordados en localStorage `est_invoice_seller`; **vista previa en
   vivo** del documento al lado del formulario, layout `.inv-editor` a ancho
   completo de página; la Descripción del artículo es un **dropdown de
-  productos del inventario** que autollena el precio, con opción "Otro
-  (escribir a mano)" para texto libre — servicios/reparaciones),
+  productos del inventario** que autollena el precio y guarda su `item_id`,
+  con opción "Otro (escribir a mano)" para texto libre — servicios/
+  reparaciones; **una factura libre con "Registrar como venta" (marcada por
+  defecto al crear) genera su venta de mostrador** en la misma transacción —
+  aparece en Ventas/Dashboard, descuenta stock, fecha = la de la factura;
+  editarla rehace esa venta y eliminarla la anula (`invoices.sale_generated`)
+  — ver MEMORIA.md §18; `?ver=N` abre una factura directo, Ventas lo usa en
+  "Ver factura"),
   `Orders.jsx` (Órdenes/Envíos: compras del website automáticas vía Stripe +
   órdenes manuales de FB Marketplace; tracking number → estado
   pendiente→enviado→entregado; polling 30 s),
@@ -320,7 +326,9 @@ cambies estructura, flujos o convenciones.
   `USPS_CLIENT_SECRET`), quitar `AFTERSHIP_API_KEY` y borrar la tarea
   programada — el robot sobra.
 - **Ventas del panel = 3 fuentes** (misma definición en `Sales.jsx` y
-  `Dashboard.jsx`): reparaciones entregadas + ventas de mostrador + órdenes
+  `Dashboard.jsx`): reparaciones entregadas + ventas de mostrador (incluye
+  las que generan las facturas hechas a mano — las facturas NO son fuente
+  propia, cuentan por su venta) + órdenes
   de envío (website + FB Marketplace). Las órdenes no se anulan ni borran
   desde el panel (reembolsos en Stripe / trato directo en FB).
   **Costo de órdenes (`online_orders.costo`):** el catálogo web

@@ -414,6 +414,11 @@ async function initDb() {
     // Envío de la orden (flat $16 web): va en su columna, no como línea de
     // artículo, para que los totales del recibo cuadren.
     await client.query(`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS shipping_total NUMERIC(10,2) NOT NULL DEFAULT 0;`);
+    // TRUE cuando la venta (sale_id) la GENERÓ esta factura al crearla desde
+    // la página de Facturas: editar la factura actualiza esa venta y
+    // eliminarla la anula (repone stock). FALSE cuando la factura se hizo
+    // DESDE una venta ya existente (botón Facturar de Ventas): esa venta manda.
+    await client.query(`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS sale_generated BOOLEAN NOT NULL DEFAULT FALSE;`);
 
     // Sembrar el primer admin desde ADMIN_PASSWORD (idempotente): solo si aún
     // no existe ningún admin. Nace con must_change_password para forzar rotación.
@@ -440,4 +445,23 @@ async function initDb() {
   }
 }
 
-module.exports = { pool, initDb };
+// Corre fn(client) dentro de una transacción. Si se pasa un client ya en
+// transacción, lo reutiliza (sin BEGIN/COMMIT propios): así un modelo puede
+// formar parte de la transacción de otro.
+async function withTransaction(fn, outer) {
+  if (outer) return fn(outer);
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await fn(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch (_) { /* conexión rota */ }
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+module.exports = { pool, initDb, withTransaction };

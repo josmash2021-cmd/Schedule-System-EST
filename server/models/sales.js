@@ -1,7 +1,9 @@
 /* Ventas directas (sales + sale_items). El total se calcula SIEMPRE en el
    servidor a partir de las líneas; las líneas con item_id descuentan stock y
-   dejan su movimiento de inventario en la misma transacción. */
-const { pool } = require('../db');
+   dejan su movimiento de inventario en la misma transacción.
+   create/remove aceptan un client ya en transacción (opts.client) para que
+   las facturas puedan crear/anular su venta dentro de SU transacción. */
+const { pool, withTransaction } = require('../db');
 
 // Error con código para que la ruta responda 400/409 en vez de 500.
 function fail(status, message) {
@@ -11,9 +13,16 @@ function fail(status, message) {
 }
 
 async function listAll() {
+  // invoice_*: la factura ligada a la venta (si hay), para que Ventas muestre
+  // "Ver factura" en vez de crear una duplicada, y el cliente de la factura.
   const r = await pool.query(
-    `SELECT s.*, u.username AS seller_username
-     FROM sales s LEFT JOIN users u ON u.id = s.created_by
+    `SELECT s.*, u.username AS seller_username,
+            inv.id AS invoice_id, inv.invoice_number, inv.buyer_name AS invoice_buyer
+     FROM sales s
+     LEFT JOIN users u ON u.id = s.created_by
+     LEFT JOIN LATERAL (
+       SELECT id, invoice_number, buyer_name FROM invoices WHERE sale_id = s.id ORDER BY id DESC LIMIT 1
+     ) inv ON true
      ORDER BY s.created_at DESC`
   );
   const items = await pool.query('SELECT * FROM sale_items ORDER BY id ASC');
@@ -25,11 +34,21 @@ async function listAll() {
   return r.rows.map((s) => ({ ...s, items: bySale.get(s.id) || [] }));
 }
 
-// items: [{ item_id?, name?, qty, price? }] — validados por la ruta.
-async function create({ items, payment_method, note }, userId) {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
+// items: [{ item_id?, name?, qty, price? }] — validados por la ruta (o por la
+// factura que la genera). sale_date/sale_time (opcionales, 'YYYY-MM-DD' y
+// 'HH:MM' en hora de Chicago): fecha REAL de la venta; sin ellos, ahora.
+// Los timestamps de la base están en UTC.
+async function create({ items, payment_method, note, sale_date, sale_time }, userId, opts = {}) {
+  return withTransaction(async (client) => {
+    let ts = null;
+    if (sale_date && /^\d{4}-\d{2}-\d{2}$/.test(sale_date)) {
+      const time = sale_time && /^\d{2}:\d{2}(:\d{2})?$/.test(sale_time) ? sale_time : '12:00';
+      const r = await client.query(
+        `SELECT to_char(((($1::date + $2::time) AT TIME ZONE 'America/Chicago') AT TIME ZONE 'UTC'), 'YYYY-MM-DD HH24:MI:SS') AS ts`,
+        [sale_date, time]
+      );
+      ts = r.rows[0].ts;
+    }
     const lines = [];
     let total = 0;
     for (const it of items) {
@@ -45,8 +64,8 @@ async function create({ items, payment_method, note }, userId) {
         line = { item_id: p.id, name: p.name, qty: it.qty, price, cost: Number(p.cost) || 0 };
         await client.query('UPDATE inventory_items SET stock = stock - $2, updated_at = NOW() WHERE id = $1', [p.id, it.qty]);
         await client.query(
-          'INSERT INTO inventory_movements (item_id, delta, reason, note, user_id) VALUES ($1, $2, $3, $4, $5)',
-          [p.id, -it.qty, 'venta', null, userId || null]
+          'INSERT INTO inventory_movements (item_id, delta, reason, note, user_id, created_at) VALUES ($1, $2, $3, $4, $5, COALESCE($6::timestamp, NOW()::timestamp))',
+          [p.id, -it.qty, 'venta', note || null, userId || null, ts]
         );
       } else {
         line = { item_id: null, name: it.name, qty: it.qty, price: it.price, cost: null };
@@ -56,8 +75,8 @@ async function create({ items, payment_method, note }, userId) {
     }
     total = Math.round(total * 100) / 100;
     const s = await client.query(
-      'INSERT INTO sales (total, payment_method, note, created_by) VALUES ($1, $2, $3, $4) RETURNING *',
-      [total, payment_method || null, note || null, userId || null]
+      'INSERT INTO sales (total, payment_method, note, created_by, created_at) VALUES ($1, $2, $3, $4, COALESCE($5::timestamp, NOW()::timestamp)) RETURNING *',
+      [total, payment_method || null, note || null, userId || null, ts]
     );
     const sale = s.rows[0];
     for (const l of lines) {
@@ -66,24 +85,17 @@ async function create({ items, payment_method, note }, userId) {
         [sale.id, l.item_id, l.name, l.qty, l.price, l.cost]
       );
     }
-    await client.query('COMMIT');
     return { ...sale, items: lines };
-  } catch (err) {
-    try { await client.query('ROLLBACK'); } catch (_) { /* conexión rota */ }
-    throw err;
-  } finally {
-    client.release();
-  }
+  }, opts.client);
 }
 
 // Anular una venta: repone el stock de sus líneas de inventario (con su
 // movimiento "venta anulada") y borra la venta. Devuelve false si no existe.
-async function remove(id, userId) {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
+// opts.note: nota del movimiento (por defecto "Venta #N").
+async function remove(id, userId, opts = {}) {
+  return withTransaction(async (client) => {
     const s = await client.query('SELECT id FROM sales WHERE id = $1 FOR UPDATE', [id]);
-    if (!s.rows.length) { await client.query('ROLLBACK'); return false; }
+    if (!s.rows.length) return false;
     const items = await client.query('SELECT * FROM sale_items WHERE sale_id = $1 AND item_id IS NOT NULL', [id]);
     for (const it of items.rows) {
       const u = await client.query(
@@ -91,21 +103,17 @@ async function remove(id, userId) {
         [it.item_id, it.qty]
       );
       if (u.rowCount) {
+        // El motivo DEBE ser 'venta anulada': purchasesByMonth lo excluye
+        // para no contar la reposición como compra de inventario.
         await client.query(
           'INSERT INTO inventory_movements (item_id, delta, reason, note, user_id) VALUES ($1, $2, $3, $4, $5)',
-          [it.item_id, it.qty, 'venta anulada', `Venta #${id}`, userId || null]
+          [it.item_id, it.qty, 'venta anulada', opts.note || `Venta #${id}`, userId || null]
         );
       }
     }
     await client.query('DELETE FROM sales WHERE id = $1', [id]); // líneas caen por CASCADE
-    await client.query('COMMIT');
     return true;
-  } catch (err) {
-    try { await client.query('ROLLBACK'); } catch (_) { /* conexión rota */ }
-    throw err;
-  } finally {
-    client.release();
-  }
+  }, opts.client);
 }
 
 // Borrado total (reinicio de la página de Ventas). NO repone stock: es una

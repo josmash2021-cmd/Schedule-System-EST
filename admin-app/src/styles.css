@@ -793,6 +793,15 @@ button.nav-item { background: none; border: none; width: 100%; font-family: inhe
 /* ---------- Facturas (Bill of Sale imprimible) ---------- */
 .inv-sec { font-size: 12px; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: #8a8a92; margin: 18px 0 12px; }
 .inv-total-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(0, 0, 0, 0.08); }
+/* "Registrar como venta" (factura libre) y nota de venta/reparación ligada. */
+.inv-venta-check {
+  display: flex; align-items: flex-start; gap: 10px; margin: 4px 0 2px;
+  padding: 10px 12px; border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 10px;
+  background: #f8f9fb; cursor: pointer; font-size: 14px;
+}
+.inv-venta-check input { width: 16px; height: 16px; padding: 0; margin: 2px 0 0; flex: 0 0 auto; }
+.inv-venta-check small { display: block; color: #8a8a92; font-size: 12px; margin-top: 2px; }
+.inv-venta-nota { margin: 4px 0 2px; padding: 10px 12px; border-radius: 10px; background: #f8f9fb; color: #55555c; font-size: 13px; }
 
 /* El documento: una hoja blanca tipo carta, monocroma como el sitio. */
 .invoice-doc {

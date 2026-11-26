@@ -984,3 +984,39 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
 - Arnés visual: el mock del ticket 1 trae `ship_tag: 'InTransit'` y la
   intercepción responde `text/event-stream` a `/api/track/*/stream` para no
   ensuciar la consola.
+
+## 18. Factura hecha a mano = venta — 2026-11-25
+
+- **Bug:** crear una factura en `/facturas` solo insertaba en `invoices`.
+  Ventas/Dashboard suman 3 fuentes (reparaciones entregadas, `sales`,
+  `online_orders`) y las facturas NO son una de ellas → la factura nunca
+  aparecía como venta ni descontaba inventario (el dropdown de productos
+  solo copiaba nombre y precio, sin `item_id`).
+- **Ahora:** la factura LIBRE (sin `sale_id`/`repair_id`/`order_id`) trae la
+  casilla **"Registrar como venta"** (marcada por defecto al crear; sin marcar
+  al editar, para facturas viejas que quizá ya cuentan por otro lado). Al
+  guardar, `invoices.createWithSale` crea en UNA transacción la factura + su
+  venta de mostrador (`sales.create` con `opts.client`): líneas con `item_id`
+  (elegidas del dropdown) descuentan stock y guardan costo; texto libre va como
+  concepto; impuesto/envío como líneas libres (venta = total de la factura);
+  fecha/hora de la venta = las de la factura en hora de Chicago (también el
+  movimiento de inventario). Sin stock → 409 con pista y rollback completo.
+- `invoices.sale_generated` (columna nueva) marca que la venta la creó la
+  factura: **editar** la factura rehace la venta solo si cambió algo que la
+  afecta (artículos, impuesto, fecha, hora, pago — `updateWithSale`);
+  **eliminar** la factura anula la venta y repone stock. Facturas hechas DESDE
+  una venta (botón Facturar) quedan `sale_generated = false`: esa venta manda
+  y no se toca.
+- Anular la venta desde Ventas deja la factura como "Libre (sin venta)" (FK
+  `ON DELETE SET NULL`). Las reposiciones usan motivo `venta anulada` (que
+  `purchasesByMonth` excluye) para no inflar "Inversión (compras)".
+- Ventas: `sales.listAll` trae `invoice_id`/`invoice_number`/`invoice_buyer`;
+  la fila muestra "Factura EST-xxxx · cliente" y **Ver factura**
+  (`/facturas?ver=N`) en vez de Facturar, para no duplicar facturas.
+- Lista de Facturas: el origen ahora distingue `Orden #N` (antes las facturas
+  automáticas de órdenes salían como "Libre").
+- `withTransaction(fn, outer)` en `server/db.js`: reutiliza un client ya en
+  transacción. Probado contra Postgres real (PGlite) + arnés visual (pasos
+  64–66: factura nueva → aparece en Ventas → Ver factura).
+- Facturas libres creadas ANTES de este cambio siguen sin venta: para que
+  cuenten, Editar → marcar "Registrar como venta" → Guardar.

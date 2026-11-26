@@ -149,12 +149,15 @@ export default function Sales() {
         cliente: t.customer_name || null, telefono: t.customer_phone || null,
         quien: t.assignee_username || null, cp: chicagoParts(new Date(t.delivered_at)),
       }));
+    // Incluye las ventas que generan las facturas hechas a mano (Facturas):
+    // traen su factura (invoiceId/numero) y el cliente de la factura.
     const deMostrador = (directas || []).map((v) => ({
       key: 'v' + v.id, ventaId: v.id, tipo: 'venta', price: Number(v.total) || 0, when: v.created_at,
       // Costo de lo vendido (foto del momento de la venta; null en viejas/libres = 0).
       costo: (v.items || []).reduce((a, i) => a + (Number(i.cost) || 0) * (Number(i.qty) || 0), 0),
       concepto: (v.items || []).map((i) => (i.qty > 1 ? `${i.qty}× ${i.name}` : i.name)).join(', ') || 'Venta',
-      cliente: null, telefono: null, pago: v.payment_method || null,
+      invoiceId: v.invoice_id || null, factura: v.invoice_number || null,
+      cliente: v.invoice_buyer || null, telefono: null, pago: v.payment_method || null,
       quien: v.seller_username || null, cp: chicagoParts(new Date(v.created_at)),
     }));
     // Órdenes online (Stripe) y FB Marketplace: el costo viene de la orden
@@ -352,7 +355,8 @@ export default function Sales() {
   };
 
   const anular = async (s) => {
-    if (!window.confirm(`¿Anular la venta de ${usd.format(s.price)} (${s.concepto})?\n\nSe repone el stock de los productos vendidos.`)) return;
+    const conFactura = s.factura ? `\nLa factura ${s.factura} no se borra: queda como factura sin venta.` : '';
+    if (!window.confirm(`¿Anular la venta de ${usd.format(s.price)} (${s.concepto})?\n\nSe repone el stock de los productos vendidos.${conFactura}`)) return;
     setBusy(true); setErr('');
     try {
       await api('/sales/' + s.ventaId, { method: 'DELETE' });
@@ -579,7 +583,8 @@ export default function Sales() {
                           <td>
                             <strong>{s.tipo === 'reparacion' ? (s.cliente || '—') : (s.tipo === 'online' ? (s.cliente || s.concepto) : s.concepto)}</strong>
                             <div className="muted" style={{ fontSize: 12 }}>
-                              {s.tipo === 'reparacion' ? s.concepto : s.tipo === 'online' ? (s.email || (s.origen === 'fb_marketplace' ? 'FB Marketplace' : 'compra web')) : (s.pago || 'mostrador')}
+                              {s.tipo === 'reparacion' ? s.concepto : s.tipo === 'online' ? (s.email || (s.origen === 'fb_marketplace' ? 'FB Marketplace' : 'compra web'))
+                                : [s.factura && `Factura ${s.factura}`, s.cliente, s.pago || 'mostrador'].filter(Boolean).join(' · ')}
                             </div>
                           </td>
                           <td><span className={'badge ' + (s.tipo === 'venta' ? 'badge-on' : s.tipo === 'online' ? (s.origen === 'fb_marketplace' ? 'badge-fb' : 'badge-online') : 'badge-worker')}>{s.tipo === 'venta' ? 'venta' : s.tipo === 'online' ? (s.origen === 'fb_marketplace' ? 'FB Marketplace' : 'online') : 'reparación'}</span></td>
@@ -592,9 +597,15 @@ export default function Sales() {
                                 title="Ver datos del cliente y envío">{openOrder === s.key ? 'Cerrar' : 'Detalle'}</button>
                             ) : (
                               <>
-                                <button className="btn btn-ghost btn-sm"
-                                  onClick={() => navigate(s.tipo === 'venta' ? `/facturas?venta=${s.ventaId}` : `/facturas?reparacion=${s.repairId}`)}
-                                  title="Crear factura (Bill of Sale)">Facturar</button>
+                                {s.invoiceId ? (
+                                  <button className="btn btn-ghost btn-sm"
+                                    onClick={() => navigate(`/facturas?ver=${s.invoiceId}`)}
+                                    title={`Ver la factura ${s.factura || ''}`}>Ver factura</button>
+                                ) : (
+                                  <button className="btn btn-ghost btn-sm"
+                                    onClick={() => navigate(s.tipo === 'venta' ? `/facturas?venta=${s.ventaId}` : `/facturas?reparacion=${s.repairId}`)}
+                                    title="Crear factura (Bill of Sale)">Facturar</button>
+                                )}
                                 {s.tipo === 'venta' && (
                                   <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => anular(s)} title="Anular venta (repone stock)">Anular</button>
                                 )}

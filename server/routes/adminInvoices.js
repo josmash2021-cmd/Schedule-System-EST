@@ -67,15 +67,28 @@ router.get('/:id', requireRole('admin'), async (req, res) => {  const id = Numbe
   }
 });
 
+// Errores de la venta generada (sin stock, producto borrado) llegan con
+// status 400/409: se devuelven tal cual con una pista de cómo resolverlo.
+function ventaError(res, err) {
+  if (!err.status) return false;
+  res.status(err.status).json({
+    error: `${err.message} Cambia esa línea a "Otro (escribir a mano)" o desmarca "Registrar como venta".`,
+  });
+  return true;
+}
+
+// Crear. Con { register_sale: true } (factura libre del panel) genera también
+// su venta de mostrador: así cuenta en Ventas/Dashboard y descuenta stock.
 router.post('/', requireRole('admin'), async (req, res) => {
   try {
-    const inv = await invoices.create(req.body, req.user.id);
+    const inv = await invoices.createWithSale(req.body, req.user.id);
     audit.logAction(req.user.id, 'invoice.create', {
       targetType: 'invoice', targetId: String(inv.id), ip: getClientIp(req),
-      metadata: { invoice_number: inv.invoice_number, total: inv.total },
+      metadata: { invoice_number: inv.invoice_number, total: inv.total, sale_id: inv.sale_id || null },
     });
     res.status(201).json({ invoice: inv });
   } catch (err) {
+    if (ventaError(res, err)) return;
     console.error('invoice create error:', err.message);
     res.status(500).json({ error: 'No se pudo crear la factura.' });
   }
@@ -85,15 +98,16 @@ router.patch('/:id', requireRole('admin'), async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id < 1) return res.status(404).json({ error: 'Factura no encontrada.' });
   try {
-    const existing = await invoices.findById(id);
-    if (!existing) return res.status(404).json({ error: 'Factura no encontrada.' });
-    const inv = await invoices.update(id, req.body);
+    // Si la factura generó su venta, la venta se actualiza con ella.
+    const inv = await invoices.updateWithSale(id, req.body, req.user.id);
+    if (!inv) return res.status(404).json({ error: 'Factura no encontrada.' });
     audit.logAction(req.user.id, 'invoice.update', {
       targetType: 'invoice', targetId: String(id), ip: getClientIp(req),
-      metadata: { invoice_number: inv.invoice_number },
+      metadata: { invoice_number: inv.invoice_number, sale_id: inv.sale_id || null },
     });
     res.json({ invoice: inv });
   } catch (err) {
+    if (ventaError(res, err)) return;
     console.error('invoice update error:', err.message);
     res.status(500).json({ error: 'No se pudo actualizar la factura.' });
   }
@@ -103,7 +117,8 @@ router.delete('/:id', requireRole('admin'), async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id < 1) return res.status(404).json({ error: 'Factura no encontrada.' });
   try {
-    const ok = await invoices.remove(id);
+    // Si la factura generó su venta, también la anula (repone stock).
+    const ok = await invoices.remove(id, req.user.id);
     if (!ok) return res.status(404).json({ error: 'Factura no encontrada.' });
     audit.logAction(req.user.id, 'invoice.delete', {
       targetType: 'invoice', targetId: String(id), ip: getClientIp(req),

@@ -33,7 +33,9 @@ function fmtFecha(iso) {
 }
 
 let SEQ = 1;
-const nuevaLinea = () => ({ uid: SEQ++, description: '', qty: 1, price: '' });
+// item_id: producto del inventario elegido en el dropdown (la venta generada
+// descuenta su stock); null en líneas de texto libre.
+const nuevaLinea = () => ({ uid: SEQ++, item_id: null, description: '', qty: 1, price: '' });
 
 function vacio() {
   const t = chicagoNow();
@@ -41,7 +43,9 @@ function vacio() {
   try { seller = { ...SELLER_DEFAULT, ...JSON.parse(localStorage.getItem(SELLER_KEY) || '{}') }; } catch (_) { /* nada */ }
   return {
     ...seller,
-    sale_id: null, repair_id: null,
+    sale_id: null, repair_id: null, order_id: null,
+    // Factura nueva hecha a mano = venta: aparece en Ventas y descuenta stock.
+    register_sale: true, sale_generated: false,
     buyer_name: '', buyer_address: '', buyer_phone: '', buyer_email: '',
     sale_date: t.date, sale_time: t.time,
     payment_method: 'efectivo', tax_rate: '0',
@@ -185,21 +189,31 @@ function InvoiceForm({ form, setForm, onSave, onCancel, saving, err, isNew, prod
   const [customDesc, setCustomDesc] = useState({});
 
   // Al editar una factura vieja: las líneas cuyo texto no coincide con un
-  // producto del inventario arrancan en modo texto libre.
+  // producto del inventario arrancan en modo texto libre; las que sí
+  // coinciden (facturas de antes de guardar item_id) quedan ligadas a ese
+  // producto, que es el que el dropdown muestra elegido.
+  // Si el producto ligado ya no está en el inventario, la línea pasa a texto
+  // libre y se suelta del producto.
   useEffect(() => {
     if (!productos.length) return;
-    setCustomDesc((m) => {
-      let changed = false;
-      const n = { ...m };
-      for (const l of form.items) {
-        if (!(l.uid in n)) {
-          n[l.uid] = !!l.description && !productos.some((p) => p.name === l.description);
-          changed = true;
-        }
-      }
-      return changed ? n : m;
-    });
-  }, [productos, form.items]);
+    const nuevas = form.items.filter((l) => !(l.uid in customDesc));
+    if (!nuevas.length) return;
+    const modo = {};
+    const ligar = {};
+    for (const l of nuevas) {
+      const porId = l.item_id ? productos.find((x) => x.id === l.item_id) : null;
+      const porNombre = porId ? null : productos.find((x) => x.name === l.description);
+      modo[l.uid] = !!l.description && !porId && !porNombre;
+      if (porNombre) ligar[l.uid] = porNombre.id;
+      else if (l.item_id && !porId) ligar[l.uid] = null;
+    }
+    setCustomDesc((m) => ({ ...m, ...modo }));
+    if (Object.keys(ligar).length) {
+      setForm((f) => ({ ...f, items: f.items.map((l) => (l.uid in ligar ? { ...l, item_id: ligar[l.uid] } : l)) }));
+    }
+  }, [productos, form.items]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const libre = !form.sale_id && !form.repair_id && !form.order_id;
 
   const subtotal = form.items.reduce((a, l) => a + (Number(l.qty) || 0) * (Number(l.price) || 0), 0);
   const rate = Number(form.tax_rate) || 0;
@@ -247,6 +261,26 @@ function InvoiceForm({ form, setForm, onSave, onCancel, saving, err, isNew, prod
         <label className="field"><span>Impuesto (%)</span>
           <input type="number" min="0" max="100" step="0.01" value={form.tax_rate} onChange={(e) => set({ tax_rate: e.target.value })} /></label>
       </div>
+      {/* La factura hecha a mano cuenta como venta (Ventas/Dashboard) y
+          descuenta del inventario los productos elegidos de la lista. Si ya
+          viene de una venta, reparación u orden, esa ya cuenta: no se duplica. */}
+      {libre ? (
+        <label className="inv-venta-check">
+          <input type="checkbox" checked={!!form.register_sale} onChange={(e) => set({ register_sale: e.target.checked })} />
+          <span>
+            Registrar como venta
+            <small>Aparece en Ventas y descuenta del inventario los productos elegidos de la lista.</small>
+          </span>
+        </label>
+      ) : (
+        <div className="inv-venta-nota">
+          {form.sale_generated && form.sale_id
+            ? `Esta factura generó la Venta #${form.sale_id}: al guardar cambios, la venta se actualiza con ellos.`
+            : form.sale_id ? `Ligada a la Venta #${form.sale_id} (ya cuenta en Ventas).`
+              : form.repair_id ? `Ligada a la Reparación #${form.repair_id} (cuenta en Ventas al entregarse).`
+                : `Ligada a la Orden #${form.order_id} (ya cuenta en Ventas).`}
+        </div>
+      )}
 
       <div className="inv-sec">Artículos</div>
       {form.items.map((l) => (
@@ -254,31 +288,36 @@ function InvoiceForm({ form, setForm, onSave, onCancel, saving, err, isNew, prod
           <label className="field vl-prod"><span>Descripción</span>
             {productos.length > 0 && !customDesc[l.uid] ? (
               <select
-                value={productos.find((p) => p.name === l.description)?.id ?? ''}
+                value={l.item_id ?? productos.find((p) => p.name === l.description)?.id ?? ''}
                 onChange={(e) => {
                   const v = e.target.value;
                   if (v === '__otro') {
                     setCustomDesc((m) => ({ ...m, [l.uid]: true }));
-                    setLinea(l.uid, { description: '' });
+                    setLinea(l.uid, { item_id: null, description: '' });
                     return;
                   }
                   const p = productos.find((x) => String(x.id) === v);
-                  if (p) setLinea(l.uid, { description: p.name, price: Number(p.price) || '' });
+                  if (p) setLinea(l.uid, { item_id: p.id, description: p.name, price: Number(p.price) || '' });
                 }}>
                 <option value="" disabled>— Producto del inventario —</option>
                 {productos.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name}{Number(p.price) ? ` — ${usd.format(Number(p.price))}` : ''}
+                    {p.name}{Number(p.price) ? ` — ${usd.format(Number(p.price))}` : ''}{Number(p.stock) < 1 ? ' (sin stock)' : ` (${p.stock})`}
                   </option>
                 ))}
                 <option value="__otro">Otro (escribir a mano)…</option>
               </select>
             ) : (
               <div className="vl-desc-free">
-                <input value={l.description} onChange={(e) => setLinea(l.uid, { description: e.target.value })} placeholder="ej. iPhone 13 128GB" />
+                <input value={l.description} onChange={(e) => setLinea(l.uid, { item_id: null, description: e.target.value })} placeholder="ej. iPhone 13 128GB" />
                 {productos.length > 0 && (
                   <button type="button" className="btn btn-ghost btn-sm" title="Elegir del inventario"
-                    onClick={() => setCustomDesc((m) => ({ ...m, [l.uid]: false }))}>▾</button>
+                    onClick={() => {
+                      setCustomDesc((m) => ({ ...m, [l.uid]: false }));
+                      // Si el texto ya es un producto, el dropdown lo muestra elegido: ligarlo.
+                      const p = productos.find((x) => x.name === l.description);
+                      setLinea(l.uid, { item_id: p ? p.id : null });
+                    }}>▾</button>
                 )}
               </div>
             )}
@@ -343,12 +382,23 @@ export default function Invoices() {
   }, [mode]);
 
   // Prellenar desde Ventas: /facturas?venta=N o ?reparacion=N.
+  // /facturas?ver=N abre directo la factura N (Ventas → "Ver factura").
   useEffect(() => {
     const ventaId = searchParams.get('venta');
     const repId = searchParams.get('reparacion');
-    if (!ventaId && !repId) return;
+    const verId = searchParams.get('ver');
+    if (!ventaId && !repId && !verId) return;
     setPreloading(true);
     (async () => {
+      if (verId) {
+        try {
+          const d = await api('/invoices/' + encodeURIComponent(verId));
+          abrirVista(d.invoice);
+        } catch (e) { setErr(e.message); }
+        setPreloading(false);
+        setSearchParams({}, { replace: true });
+        return;
+      }
       try {
         const f = vacio();
         if (ventaId) {
@@ -393,7 +443,10 @@ export default function Invoices() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const itemsFormToRows = (items) => items
-    .map((l) => ({ description: String(l.description || '').trim(), qty: Number(l.qty) || 1, price: l.price === '' ? 0 : Number(l.price) }))
+    .map((l) => ({
+      ...(l.item_id ? { item_id: l.item_id } : {}),
+      description: String(l.description || '').trim(), qty: Number(l.qty) || 1, price: l.price === '' ? 0 : Number(l.price),
+    }))
     .filter((l) => l.description);
 
   const guardar = async (totales) => {
@@ -409,6 +462,8 @@ export default function Invoices() {
       }));
       const body = {
         sale_id: form.sale_id, repair_id: form.repair_id,
+        // Solo cuenta en facturas libres (el server lo ignora si hay venta/reparación/orden).
+        register_sale: !!form.register_sale,
         seller_name: form.seller_name, seller_address: form.seller_address,
         seller_phone: form.seller_phone, seller_email: form.seller_email,
         buyer_name: form.buyer_name, buyer_address: form.buyer_address,
@@ -433,7 +488,10 @@ export default function Invoices() {
     setEditId(inv.id);
     setForm({
       ...vacio(),
-      sale_id: inv.sale_id, repair_id: inv.repair_id,
+      sale_id: inv.sale_id, repair_id: inv.repair_id, order_id: inv.order_id,
+      // Al editar, registrar la venta es opcional (sin marcar): la factura
+      // libre pudo hacerse de algo que ya cuenta en Ventas por otro lado.
+      register_sale: false, sale_generated: !!inv.sale_generated,
       seller_name: inv.seller_name || '', seller_address: inv.seller_address || '',
       seller_phone: inv.seller_phone || '', seller_email: inv.seller_email || '',
       buyer_name: inv.buyer_name || '', buyer_address: inv.buyer_address || '',
@@ -443,7 +501,7 @@ export default function Invoices() {
       payment_method: inv.payment_method || 'efectivo',
       tax_rate: String(inv.tax_rate ?? 0),
       items: (inv.items || []).length
-        ? inv.items.map((i) => ({ uid: SEQ++, description: i.description, qty: i.qty, price: String(i.price) }))
+        ? inv.items.map((i) => ({ uid: SEQ++, item_id: i.item_id ?? null, description: i.description, qty: i.qty, price: String(i.price) }))
         : [nuevaLinea()],
       warranty_text: inv.warranty_text || '', terms_text: inv.terms_text || '', notes: inv.notes || '',
     });
@@ -451,7 +509,10 @@ export default function Invoices() {
   };
 
   const eliminar = async (inv) => {
-    if (!window.confirm(`¿Eliminar la factura ${inv.invoice_number || '#' + inv.id}?`)) return;
+    const conVenta = inv.sale_generated && inv.sale_id
+      ? `\n\nTambién se anula la Venta #${inv.sale_id} que generó (se repone el stock de sus productos).`
+      : '';
+    if (!window.confirm(`¿Eliminar la factura ${inv.invoice_number || '#' + inv.id}?${conVenta}`)) return;
     setBusy(true); setErr('');
     try {
       await api('/invoices/' + inv.id, { method: 'DELETE' });
@@ -538,7 +599,9 @@ export default function Invoices() {
   const origen = (inv) => {
     if (inv.sale_id) return `Venta #${inv.sale_id}`;
     if (inv.repair_id) return `Reparación #${inv.repair_id}`;
-    return 'Libre';
+    // Las facturas automáticas de órdenes salían como "Libre".
+    if (inv.order_id) return `Orden #${inv.order_id}`;
+    return 'Libre (sin venta)';
   };
 
   if (preloading) return <div style={{ textAlign: 'center', padding: 40 }}><span className="spinner spinner-lg" /></div>;

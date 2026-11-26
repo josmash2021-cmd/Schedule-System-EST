@@ -1,7 +1,14 @@
 /* Facturas (Bill of Sale). Una factura puede estar ligada a una venta de
-   mostrador (sale_id), a una reparación entregada (repair_id) o a ninguna
-   (factura libre). Los textos se guardan tal como fueron emitidos. */
-const { pool } = require('../db');
+   mostrador (sale_id), a una reparación entregada (repair_id), a una orden
+   de envío (order_id) o a ninguna (factura libre). Los textos se guardan tal
+   como fueron emitidos.
+   Una factura hecha a mano en la página de Facturas GENERA su venta de
+   mostrador (register_sale): así aparece en Ventas/Dashboard y descuenta del
+   inventario los productos elegidos de la lista (item_id). Esa venta queda
+   marcada con sale_generated y sigue a la factura: editar la factura la
+   actualiza y eliminarla la anula (repone stock). */
+const { pool, withTransaction } = require('../db');
+const sales = require('./sales');
 
 const PAYMENT_METHODS = ['efectivo', 'tarjeta', 'transferencia', 'otro'];
 
@@ -17,12 +24,16 @@ function num(v) {
   return Number.isFinite(n) ? Math.round(n * 100) / 100 : null;
 }
 
+// item_id (opcional): producto del inventario elegido en el dropdown — la
+// venta generada descuenta su stock y guarda su costo. qty entero 1–999
+// (sale_items.qty es INTEGER).
 function normalizeItems(raw) {
   const arr = Array.isArray(raw) ? raw : [];
   return arr.slice(0, 50).map((it) => ({
     description: trim(it.description, 200) || '',
     ...(it.desc ? { desc: trim(it.desc, 200) } : {}),
-    qty: Number(it.qty) || 1,
+    ...(/^\d+$/.test(String(it.item_id ?? '')) ? { item_id: Number(it.item_id) } : {}),
+    qty: Math.min(999, Math.max(1, Math.round(Number(it.qty) || 1))),
     price: num(it.price) || 0,
   })).filter((it) => it.description || it.qty !== 1 || it.price !== 0);
 }
@@ -75,10 +86,11 @@ async function findById(id) {
   return row;
 }
 
-async function create(body, userId) {
+async function create(body, userId, client) {
+  const db = client || pool;
   const fields = normalizeFields(body);
   if (!fields.invoice_number) {
-    const last = await pool.query("SELECT invoice_number FROM invoices WHERE invoice_number ~ '^EST-[0-9]+$' ORDER BY id DESC LIMIT 1");
+    const last = await db.query("SELECT invoice_number FROM invoices WHERE invoice_number ~ '^EST-[0-9]+$' ORDER BY id DESC LIMIT 1");
     const n = last.rows.length ? Number(last.rows[0].invoice_number.split('-')[1]) + 1 : 1;
     fields.invoice_number = `EST-${String(n).padStart(4, '0')}`;
   }
@@ -86,28 +98,135 @@ async function create(body, userId) {
   const vals = Object.values(fields);
   const ph = cols.map((_, i) => `$${i + 1}`);
   cols.push('created_by'); vals.push(userId || null); ph.push(`$${cols.length}`);
-  const r = await pool.query(
+  const r = await db.query(
     `INSERT INTO invoices (${cols.join(', ')}) VALUES (${ph.join(', ')}) RETURNING *`,
     vals
   );
   return r.rows[0];
 }
 
-async function update(id, body) {
+async function update(id, body, client) {
+  const db = client || pool;
   const fields = normalizeFields(body);
   const keys = Object.keys(fields);
-  if (!keys.length) return findById(id);
+  if (!keys.length) {
+    const r = await db.query('SELECT * FROM invoices WHERE id = $1', [id]);
+    return r.rows[0] || null;
+  }
   const sets = keys.map((k, i) => `${k} = $${i + 1}`);
   sets.push('updated_at = NOW()');
   const vals = Object.values(fields);
   vals.push(id);
-  const r = await pool.query(`UPDATE invoices SET ${sets.join(', ')} WHERE id = $${vals.length} RETURNING *`, vals);
+  const r = await db.query(`UPDATE invoices SET ${sets.join(', ')} WHERE id = $${vals.length} RETURNING *`, vals);
   return r.rows[0] || null;
 }
 
-async function remove(id) {
-  const r = await pool.query('DELETE FROM invoices WHERE id = $1', [id]);
-  return r.rowCount > 0;
+/* ---------- Venta generada por la factura ---------- */
+
+// La factura con su fecha/hora como TEXTO sacado en SQL ('YYYY-MM-DD',
+// 'HH:MM'): así no depende de cómo el driver convierte DATE a Date (zona
+// horaria del proceso). lock=true la bloquea para la transacción.
+async function filaFactura(client, id, lock = false) {
+  const r = await client.query(
+    `SELECT *, to_char(sale_date, 'YYYY-MM-DD') AS sale_date_key, to_char(sale_time, 'HH24:MI') AS sale_time_key
+     FROM invoices WHERE id = $1${lock ? ' FOR UPDATE' : ''}`,
+    [id]
+  );
+  return r.rows[0] || null;
+}
+
+// Venta de mostrador equivalente a la factura: una línea por artículo (con
+// item_id si se eligió del inventario), más el impuesto y el envío como
+// conceptos libres para que el total de la venta = total de la factura.
+// Fecha/hora = las de la factura (la venta cae en su día real). inv debe
+// venir de filaFactura (trae sale_date_key/sale_time_key).
+function saleFromInvoice(inv) {
+  const items = (typeof inv.items === 'string' ? JSON.parse(inv.items) : inv.items) || [];
+  const lines = [];
+  for (const it of items) {
+    const qty = Math.min(999, Math.max(1, Math.round(Number(it.qty) || 1)));
+    const price = Math.round((Number(it.price) || 0) * 100) / 100;
+    if (it.item_id) lines.push({ item_id: Number(it.item_id), qty, price });
+    else if (it.description) lines.push({ item_id: null, name: String(it.description).slice(0, 160), qty, price });
+  }
+  const tax = Number(inv.tax_total) || 0;
+  if (tax > 0) {
+    const rate = Number(inv.tax_rate) || 0;
+    lines.push({ item_id: null, name: rate > 0 ? `Impuesto (${rate}%)` : 'Impuesto', qty: 1, price: tax });
+  }
+  const ship = Number(inv.shipping_total) || 0;
+  if (ship > 0) lines.push({ item_id: null, name: 'Envío', qty: 1, price: ship });
+  return {
+    items: lines,
+    payment_method: PAYMENT_METHODS.includes(inv.payment_method) ? inv.payment_method : null,
+    note: `Factura ${inv.invoice_number || '#' + inv.id}`,
+    sale_date: inv.sale_date_key || null,
+    sale_time: inv.sale_time_key || null,
+  };
+}
+
+// Crea la venta de la factura y la liga (sale_generated). Devuelve la fila
+// actualizada de la factura.
+async function attachNewSale(id, userId, client) {
+  const inv = await filaFactura(client, id);
+  const payload = saleFromInvoice(inv);
+  if (!payload.items.length) return inv;
+  const sale = await sales.create(payload, userId, { client });
+  const r = await client.query(
+    'UPDATE invoices SET sale_id = $1, sale_generated = TRUE, updated_at = NOW() WHERE id = $2 RETURNING *',
+    [sale.id, id]
+  );
+  return r.rows[0];
+}
+
+const esLibre = (x) => !x.sale_id && !x.repair_id && !x.order_id;
+
+// Factura nueva desde el panel. Con register_sale (y sin venta/reparación/
+// orden ligada) crea también su venta, todo en una transacción: si la venta
+// falla (p. ej. sin stock), no queda la factura a medias.
+async function createWithSale(body, userId) {
+  const b = body || {};
+  if (b.register_sale !== true || !esLibre(normalizeFields(b))) return create(b, userId);
+  return withTransaction(async (client) => {
+    const inv = await create(b, userId, client);
+    return attachNewSale(inv.id, userId, client);
+  });
+}
+
+// Editar factura. Si su venta la generó ella, la venta se rehace con los
+// datos nuevos (solo si cambió algo que la afecta: artículos, impuesto,
+// fecha, hora o pago). Si era libre y llega register_sale, genera su venta.
+async function updateWithSale(id, body, userId) {
+  const b = body || {};
+  return withTransaction(async (client) => {
+    const before = await filaFactura(client, id, true);
+    if (!before) return null;
+    let inv = await update(id, b, client);
+    if (inv.sale_generated && inv.sale_id) {
+      const after = await filaFactura(client, id);
+      if (JSON.stringify(saleFromInvoice(before)) !== JSON.stringify(saleFromInvoice(after))) {
+        await sales.remove(inv.sale_id, userId, { client, note: `Venta #${inv.sale_id} (factura ${inv.invoice_number || '#' + id} editada)` });
+        inv = await attachNewSale(id, userId, client);
+      }
+    } else if (b.register_sale === true && esLibre(inv)) {
+      inv = await attachNewSale(id, userId, client);
+    }
+    return inv;
+  });
+}
+
+// Eliminar factura. Si generó su venta, la anula también (repone stock).
+async function remove(id, userId) {
+  return withTransaction(async (client) => {
+    const cur = await client.query('SELECT * FROM invoices WHERE id = $1 FOR UPDATE', [id]);
+    const inv = cur.rows[0];
+    if (!inv) return false;
+    if (inv.sale_generated && inv.sale_id) {
+      await sales.remove(inv.sale_id, userId, { client, note: `Venta #${inv.sale_id} (factura ${inv.invoice_number || '#' + id} eliminada)` });
+    }
+    await client.query('DELETE FROM invoices WHERE id = $1', [id]);
+    return true;
+  });
 }
 
 // Factura de una orden de envío (website/FB). Devuelve null si ya existe una
@@ -248,4 +367,4 @@ async function createFromOrder(order) {
   }, null);
 }
 
-module.exports = { listAll, findById, create, update, remove, findByOrderId, createFromOrder, findByRepairId, createFromRepair, normalizeFields };
+module.exports = { listAll, findById, create, update, remove, createWithSale, updateWithSale, findByOrderId, createFromOrder, findByRepairId, createFromRepair, normalizeFields };
