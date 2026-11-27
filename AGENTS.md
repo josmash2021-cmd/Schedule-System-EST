@@ -136,18 +136,20 @@ cambies estructura, flujos o convenciones.
 - **Portada (`index.html`):** el fondo del hero es un video,
   `assets/video/hero-home.mp4` (H.264 sin audio, fondo negro, fundido a negro
   en las puntas; ancho `max(100%, 112svh)` centrado, no `cover`), que **se
-  repite cada 10 s** (dura 5 s y espera 5 s en negro; `CICLO` en el script
-  junto al video). Toda la portada va con **fondo negro puro** (`<body
+  reproduce UNA sola vez** y se queda quieto en el último cuadro (la laptop
+  abierta y encendida; sin fundido a negro al final, sin capa oscura encima). Toda la portada va con **fondo negro puro** (`<body
   class="fondo-negro">`: sin la seda ni el resplandor gris de los capítulos;
   las demás páginas siguen con la seda). Detalle en `MEMORIA.md` §3.
 - **Visor interactivo del capítulo Laptops (2026-11-27):** la imagen
   `macbook-pro.jpg` y sus badges se sustituyeron por `#featureViewer`, con CSS/JS
   en `assets/product-viewer.css|js` y medios en
   `assets/img|video/product-viewer/`. Tiene 7 opciones, selector de color,
-  cierre/reapertura y videos Display/Touch. Display empieza PAUSADO con la foto
-  clara `hero.avif` (la foto 2 del dueño, no el poster oscuro de Display); Play
-  o un toque lo reproduce UNA vez y vuelve a esa foto pausada. Touch se
-  reproduce una vez al abrirlo y vuelve a `touch-poster.avif`. La preview local
+  cierre/reapertura y videos Display/Touch. **Empieza SIN ninguna opción
+  abierta** (`data-active="inicio"`: figura `inicio` con la foto clara
+  `hero.avif`); la X + "Explore" vuelve a ese inicio. Al abrir Display o Touch
+  su video se reproduce UNA vez y se queda en el último cuadro (no vuelve al
+  poster ni se repite; tocar el video ya terminado no hace nada, solo el botón
+  Play lo repite a mano). Reabrir la opción = otra reproducción. La preview local
   `preview/macbook-pro/` comparte esos mismos assets y no se copia al deploy.
 - JS/CSS compartido: `assets/` (`site.js`, `cart.js`, `site-v3.css`,
   `transitions.js`, `i18n.js`, `security.js`).

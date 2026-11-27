@@ -17,7 +17,9 @@
     const mobile = window.matchMedia('(max-width: 734px)');
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const finishedVideos = new WeakSet();
-    let active = 'display';
+    // 'inicio' = ninguna opción abierta (así empieza y así vuelve al reabrir)
+    const INICIO = 'inicio';
+    let active = INICIO;
     let closed = false;
     let playRequested = false;
     let manualPlayback = false;
@@ -26,6 +28,10 @@
     const centerActive = (smooth = true) => {
         if (!mobile.matches) return;
         const item = items.find(entry => entry.dataset.feature === active);
+        if (!item) {
+            list.scrollTo({ left: 0, behavior: 'auto' });
+            return;
+        }
         const left = item.offsetLeft - (list.clientWidth - item.offsetWidth) / 2;
         list.scrollTo({ left, behavior: smooth && !reducedMotion.matches ? 'smooth' : 'auto' });
     };
@@ -62,13 +68,15 @@
     };
 
     const selectFeature = (id, options = {}) => {
-        if (!items.some(item => item.dataset.feature === id)) return;
+        if (id !== INICIO && !items.some(item => item.dataset.feature === id)) return;
         active = id;
         viewer.dataset.active = id;
         manualPlayback = false;
+        // Cada vez que se abre una opción con video, este empieza desde el
+        // principio y se reproduce UNA vez (ver 'ended').
         const selectedVideo = videos.find(video => video.dataset.video === id);
         resetVideo(selectedVideo);
-        playRequested = Boolean(selectedVideo && !options.initial);
+        playRequested = Boolean(selectedVideo);
 
         items.forEach(item => {
             const selected = item.dataset.feature === id;
@@ -84,7 +92,7 @@
         });
 
         const index = items.findIndex(item => item.dataset.feature === id);
-        previous.disabled = index === 0;
+        previous.disabled = index <= 0;
         next.disabled = index === items.length - 1;
         syncPlayback();
         window.requestAnimationFrame(() => centerActive(!options.initial));
@@ -113,7 +121,7 @@
         closed = false;
         viewer.classList.remove('is-closed');
         closedState.setAttribute('aria-hidden', 'true');
-        selectFeature('display', { initial: true });
+        selectFeature(INICIO, { initial: true });
         close.focus({ preventScroll: true });
     };
 
@@ -146,19 +154,21 @@
     playback.addEventListener('click', togglePlayback);
 
     videos.forEach(video => {
-        video.addEventListener('click', togglePlayback);
+        // Tocar el video lo pausa o lo sigue; ya terminado no lo repite
+        video.addEventListener('click', () => {
+            if (!finishedVideos.has(video)) togglePlayback();
+        });
         video.addEventListener('play', () => {
             video.closest('.viewer-media').classList.add('is-playing');
             updatePlaybackButton();
         });
         video.addEventListener('pause', updatePlaybackButton);
+        // Termina: se queda quieto en el último cuadro (no vuelve al inicio ni
+        // se repite). Solo el botón de play lo vuelve a reproducir.
         video.addEventListener('ended', () => {
             playRequested = false;
             manualPlayback = false;
             finishedVideos.add(video);
-            video.pause();
-            video.currentTime = 0;
-            video.closest('.viewer-media').classList.remove('is-playing');
             updatePlaybackButton();
         });
     });

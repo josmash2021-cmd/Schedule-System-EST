@@ -234,7 +234,7 @@ a { -webkit-tap-highlight-color: transparent; }
 /* Con "menos movimiento" el script de index.html quita el video: queda una
    imagen fija del mismo video, con el mismo tamaño y posición. */
 @media (prefers-reduced-motion: reduce) {
-    .hero-media { background: #000 url(img/hero-home-still.jpg) center / var(--hero-video-w) auto no-repeat; }
+    .hero-media { background: #000 url(img/hero-home-still.jpg?v=2) center / var(--hero-video-w) auto no-repeat; }
 }
 /* Sin capa oscura encima del video (petición del dueño, 2026-11-27): el
    video ya tiene fondo negro y el texto se lee con su text-shadow. */

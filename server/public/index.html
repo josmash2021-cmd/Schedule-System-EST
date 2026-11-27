@@ -47,20 +47,21 @@
         <!-- ================= HERO ================= -->
         <section class="hero">
             <!-- Video de portada (assets/video/hero-home.mp4): H.264 sin audio,
-                 fondo negro puro y fundido a negro al inicio y al final. Dura
-                 5 s y se repite cada 10 s (el script de abajo espera en negro
-                 lo que falta). Sin poster: entra desde negro. -->
+                 fondo negro puro y fundido desde negro al inicio. Se reproduce
+                 UNA sola vez y se queda quieto en el último cuadro (la laptop
+                 abierta y encendida) — decisión del dueño. Sin poster: entra
+                 desde negro. -->
             <div class="hero-media" data-parallax="0.28">
                 <video class="hero-video" autoplay muted playsinline preload="auto" disablepictureinpicture disableremoteplayback aria-hidden="true" tabindex="-1">
-                    <source src="assets/video/hero-home.mp4" type="video/mp4">
+                    <source src="assets/video/hero-home.mp4?v=2" type="video/mp4">
                 </video>
             </div>
             <script>
-                /* Video de portada: se repite cada 10 s; con "menos
-                   movimiento" se quita (el CSS deja una imagen fija); si el
-                   teléfono bloquea el autoplay (modo de bajo consumo) arranca
-                   al primer toque; y se pausa cuando la portada ya no está en
-                   pantalla. */
+                /* Video de portada: se reproduce una vez y se queda en el
+                   último cuadro; con "menos movimiento" se quita (el CSS deja
+                   esa misma imagen fija); si el teléfono bloquea el autoplay
+                   (modo de bajo consumo) arranca al primer toque; y se pausa
+                   si la portada sale de la pantalla antes de terminar. */
                 (function () {
                     var v = document.querySelector('.hero-video');
                     if (!v) return;
@@ -68,24 +69,14 @@
                         v.parentNode.removeChild(v);
                         return;
                     }
-                    var CICLO = 10000; // de un inicio al siguiente, en ms
                     v.muted = true;
-                    var visible = true, espera = null;
+                    var visible = true;
                     function play() {
-                        if (!visible || espera || !v.paused) return;
+                        // Ya terminó: no vuelve a empezar, se queda en el último cuadro
+                        if (!visible || v.ended || !v.paused) return;
                         var p = v.play();
                         if (p && p.catch) p.catch(function () {});
                     }
-                    // Al terminar (acaba en negro) espera lo que falta para
-                    // completar los 10 s y vuelve a empezar desde el inicio.
-                    v.addEventListener('ended', function () {
-                        var dura = (v.duration || 5) * 1000;
-                        espera = setTimeout(function () {
-                            espera = null;
-                            v.currentTime = 0;
-                            play();
-                        }, Math.max(0, CICLO - dura));
-                    });
                     play();
                     ['touchstart', 'click'].forEach(function (ev) {
                         document.addEventListener(ev, play, { once: true, passive: true });
@@ -93,7 +84,7 @@
                     if ('IntersectionObserver' in window) {
                         new IntersectionObserver(function (entradas) {
                             visible = entradas[0].isIntersecting;
-                            if (visible) play(); else v.pause();
+                            if (visible) play(); else if (!v.ended) v.pause();
                         }).observe(v);
                     }
                 })();
@@ -132,8 +123,15 @@
             </div>
             <div class="chapter-figure chapter-figure-feature reveal-scale">
                 <div class="figure-media">
-                    <section class="viewer" id="featureViewer" data-active="display" data-color="space-black" data-playback="paused" tabindex="0" role="region" aria-label="MacBook Pro product feature viewer">
+                    <section class="viewer" id="featureViewer" data-active="inicio" data-color="space-black" data-playback="paused" tabindex="0" role="region" aria-label="MacBook Pro product feature viewer">
                         <div class="media-layer">
+                            <!-- Inicio: ninguna opción abierta, solo la laptop -->
+                            <figure class="viewer-media is-active" data-media="inicio" aria-hidden="false">
+                                <picture>
+                                    <source media="(max-width: 734px)" srcset="assets/img/product-viewer/hero-small.avif">
+                                    <img src="assets/img/product-viewer/hero.avif" alt="MacBook Pro with a colorful PROLED XDR display">
+                                </picture>
+                            </figure>
                             <figure class="viewer-media" data-media="sizes" aria-hidden="true">
                                 <picture>
                                     <source media="(max-width: 734px)" srcset="assets/img/product-viewer/sizes-small.avif">
@@ -154,7 +152,7 @@
                                     </picture>
                                 </div>
                             </figure>
-                            <figure class="viewer-media is-active" data-media="display" aria-hidden="false">
+                            <figure class="viewer-media" data-media="display" aria-hidden="true">
                                 <picture class="video-static" aria-hidden="true">
                                     <source media="(max-width: 734px)" srcset="assets/img/product-viewer/hero-small.avif">
                                     <img src="assets/img/product-viewer/hero.avif" alt="">
@@ -213,9 +211,9 @@
                                         </fieldset>
                                     </div>
                                 </li>
-                                <li class="feature-item is-active" data-feature="display">
-                                    <button class="feature-trigger" type="button" aria-expanded="true" aria-controls="detail-display"><span class="plus-icon" aria-hidden="true"></span><span>Display</span></button>
-                                    <div class="feature-detail" id="detail-display" aria-hidden="false"><p><strong>Display.</strong> The spectacular PROLED XDR display features an industry-leading tandem OLED panel that provides up to 2000 nits peak HDR and SDR brightness, a 10,000,000:1 contrast ratio, and a wider color gamut covering both P3 and Adobe RGB.</p></div>
+                                <li class="feature-item" data-feature="display">
+                                    <button class="feature-trigger" type="button" aria-expanded="false" aria-controls="detail-display"><span class="plus-icon" aria-hidden="true"></span><span>Display</span></button>
+                                    <div class="feature-detail" id="detail-display" aria-hidden="true"><p><strong>Display.</strong> The spectacular PROLED XDR display features an industry-leading tandem OLED panel that provides up to 2000 nits peak HDR and SDR brightness, a 10,000,000:1 contrast ratio, and a wider color gamut covering both P3 and Adobe RGB.</p></div>
                                 </li>
                                 <li class="feature-item" data-feature="touch">
                                     <button class="feature-trigger" type="button" aria-expanded="false" aria-controls="detail-touch"><span class="plus-icon" aria-hidden="true"></span><span>Touch</span></button>

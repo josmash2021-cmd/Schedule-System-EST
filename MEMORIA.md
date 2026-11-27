@@ -61,9 +61,12 @@ video que dio el dueño — 5 s, 1440×546, fondo negro puro; venía en AV1, que
 muchos iPhone no reproducen, así que se convirtió a H.264 sin audio con
 `ffmpeg-static` de `server/node_modules`, con fundido a negro de 0.4 s al
 inicio y al final). `<video autoplay muted playsinline>` SIN `loop` y sin
-poster (entra desde negro): **se repite cada 10 s** (petición del dueño) —
-al terminar (`ended`) el script espera en negro lo que falta (`CICLO =
-10000` ms menos la duración) y vuelve a empezar desde 0. NO va en `cover`: ancho
+poster (entra desde negro): **se reproduce UNA sola vez** y se queda en el
+último cuadro (decisión final del dueño, 2026-11-27; antes fue loop y luego
+"cada 10 s" con espera en negro — ambas descartadas: "que no se quede oscuro").
+Por eso el MP4 (`?v=2` en el src) lleva fundido desde negro SOLO al inicio; el
+final no se funde. `play()` no hace nada si `v.ended`. `hero-home-still.jpg`
+(menos movimiento) es ese mismo último cuadro. NO va en `cover`: ancho
 `max(100%, 112svh)` centrado — el sobrante es negro sobre negro y en teléfono
 la laptop no queda diminuta; `.hero-media` lleva `background-color:#000`
 porque sin él asoma el fondo de `body::before`. El script junto al video lo
@@ -90,12 +93,15 @@ M3 Pro/batería por `#featureViewer` (7 opciones, imágenes, selector Space
 Black/Silver, flechas, cierre/reapertura y gestos móviles). CSS/JS compartidos:
 `assets/product-viewer.css` y `assets/product-viewer.js`; medios en
 `assets/img/product-viewer/` y `assets/video/product-viewer/` (versiones large
-y small). Display comienza pausado y visible con la foto CLARA `hero.avif` /
-`hero-small.avif` (la foto 2 que eligió el dueño; NO usar el oscuro
-`display-poster`). El botón Play o tocar el video lo reproduce UNA sola vez;
-al terminar vuelve a `currentTime = 0` y reaparece esa foto clara pausada. Al
-volver a abrir Display se reproduce una vez, igual que Touch, que termina con
-`touch-poster.avif`. Con `prefers-reduced-motion` no hay reproducción
+y small). **Empieza sin ninguna opción abierta** (pedido del dueño
+2026-11-27): estado `INICIO = 'inicio'` en el JS, figura `data-media="inicio"`
+con la foto CLARA `hero.avif` / `hero-small.avif` (la foto 2 que eligió el
+dueño; NO usar el oscuro `display-poster`); flecha ↑ deshabilitada ahí, ↓ abre
+la primera opción; cerrar con la X y reabrir vuelve a ese inicio. Cada vez que
+se abre Display o Touch su video arranca desde 0 y se reproduce UNA vez; al
+terminar se queda en el ÚLTIMO cuadro (no se resetea a 0 ni reaparece el
+poster: "no se deben repetir"). Tocar el video ya terminado no lo repite; solo
+el botón Play lo vuelve a reproducir a mano. Con `prefers-reduced-motion` no hay reproducción
 automática, pero el usuario puede iniciarla manualmente. La capa
 `.closed-state picture/img` lleva `pointer-events:none` para que no intercepte
 el botón de reapertura. `preview/macbook-pro/` es una preview local que usa los
