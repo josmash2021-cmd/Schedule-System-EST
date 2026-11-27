@@ -213,6 +213,23 @@ a { -webkit-tap-highlight-color: transparent; }
 }
 .hero-media { position: absolute; inset: -12% 0 0; height: 112%; z-index: -2; will-change: transform; }
 .hero-media img { width: 100%; height: 100%; object-fit: cover; object-position: center center; opacity: 1; }
+/* Video de portada. Su fondo es negro puro, así que no se recorta a "cover":
+   va a todo lo ancho y centrado, y lo que sobra arriba y abajo es negro sobre
+   negro. En pantallas altas (teléfonos) se hace más ancho que la pantalla
+   para que la laptop no quede diminuta. */
+.hero-media { --hero-video-w: max(100%, 112svh); background-color: #000; }
+.hero-media video {
+    position: absolute; left: 50%; top: 50%;
+    width: var(--hero-video-w); max-width: none; height: auto;
+    transform: translate(-50%, -50%); pointer-events: none;
+}
+/* Sin el botón de "play" que pone iOS cuando bloquea el autoplay */
+.hero-media video::-webkit-media-controls-start-playback-button { display: none !important; }
+/* Con "menos movimiento" el script de index.html quita el video: queda una
+   imagen fija del mismo video, con el mismo tamaño y posición. */
+@media (prefers-reduced-motion: reduce) {
+    .hero-media { background: #000 url(img/hero-home-still.jpg) center / var(--hero-video-w) auto no-repeat; }
+}
 .hero::after {
     content: ""; position: absolute; inset: -30% 0 0; height: 130%; z-index: -1;
     background: linear-gradient(180deg, #000 0%, #000 8%, rgba(0, 0, 0, .42) 24%, rgba(0, 0, 0, .32) 72%, #000 100%);
@@ -228,6 +245,8 @@ a { -webkit-tap-highlight-color: transparent; }
     text-wrap: balance;
 }
 .hero .sub { color: #d4d4d8; font-size: clamp(16px, 1.7vw, 20px); max-width: 600px; margin: 0 auto 38px; }
+/* Sombra suave: el texto se sigue leyendo en los momentos claros del video */
+.hero h1, .hero .sub { text-shadow: 0 2px 22px rgba(0, 0, 0, .6); }
 .hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
 
 /* Entrada escalonada del hero */
@@ -889,7 +908,7 @@ footer {
     .hero-media { inset: 0; height: 100%; }
     .hero-media img { object-position: 50% 45%; }
     .hero::after {
-        background: linear-gradient(180deg, rgba(0,0,0,.82) 0%, rgba(0,0,0,.55) 18%, rgba(0,0,0,.22) 38%, rgba(0,0,0,.25) 72%, rgba(0,0,0,.85) 100%);
+        background: linear-gradient(180deg, rgba(0,0,0,.82) 0%, rgba(0,0,0,.55) 18%, rgba(0,0,0,.42) 38%, rgba(0,0,0,.42) 72%, rgba(0,0,0,.85) 100%);
     }
 }
 

@@ -56,6 +56,20 @@
 ### `index.html` — landing oscura estilo Apple (usa `assets/site-v3.css`)
 Hero a pantalla completa con parallax (`data-parallax="0.28"`), entrada
 escalonada (`.h-in-1..4`), sin indicador de scroll (`.scroll-cue` eliminado).
+**Fondo del hero = video (2026-11-27):** `assets/video/hero-home.mp4` (el
+video que dio el dueño — 5 s, 1440×546, fondo negro puro; venía en AV1, que
+muchos iPhone no reproducen, así que se convirtió a H.264 sin audio con
+`ffmpeg-static` de `server/node_modules`, con fundido a negro de 0.4 s al
+inicio y al final para que el loop no salte). `<video autoplay muted loop
+playsinline>` sin poster (entra desde negro). NO va en `cover`: ancho
+`max(100%, 112svh)` centrado — el sobrante es negro sobre negro y en teléfono
+la laptop no queda diminuta; `.hero-media` lleva `background-color:#000`
+porque sin él asoma el fondo de `body::before`. El script junto al video lo
+quita con `prefers-reduced-motion` (queda `assets/img/hero-home-still.jpg`
+por CSS), lo arranca al primer toque si el teléfono bloquea el autoplay y lo
+pausa fuera de pantalla. `.hero h1/.sub` llevan `text-shadow` para leerse
+sobre los momentos claros. La foto anterior (`hero-macbook.jpg`) sigue en el
+repo pero ya no se usa.
 Gradiente superior reforzado (`assets/site-v3.css:194`) para oscurecer también
 la zona justo debajo del menú (`rgba(0,0,0,.85)` → `.25` → `.55` → `#000`),
 marquee infinito, 2 "capítulos" (MacBook desde

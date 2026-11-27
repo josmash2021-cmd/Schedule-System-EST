@@ -45,9 +45,45 @@
     <main>
         <!-- ================= HERO ================= -->
         <section class="hero">
+            <!-- Video de portada (assets/video/hero-home.mp4): H.264 sin audio,
+                 fondo negro puro y fundido a negro al inicio y al final para
+                 que el loop no dé un salto. Sin poster: entra desde negro. -->
             <div class="hero-media" data-parallax="0.28">
-                <img draggable="false" src="assets/img/hero-macbook.jpg" alt="MacBook iluminado en la oscuridad" data-en-alt="MacBook glowing in the dark" fetchpriority="high">
+                <video class="hero-video" autoplay muted loop playsinline preload="auto" disablepictureinpicture disableremoteplayback aria-hidden="true" tabindex="-1">
+                    <source src="assets/video/hero-home.mp4" type="video/mp4">
+                </video>
             </div>
+            <script>
+                /* Video de portada: con "menos movimiento" se quita (el CSS
+                   deja una imagen fija); si el teléfono bloquea el autoplay
+                   (modo de bajo consumo) arranca al primer toque; y se pausa
+                   cuando la portada ya no está en pantalla. */
+                (function () {
+                    var v = document.querySelector('.hero-video');
+                    if (!v) return;
+                    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                        v.parentNode.removeChild(v);
+                        return;
+                    }
+                    v.muted = true;
+                    var visible = true;
+                    function play() {
+                        if (!visible || !v.paused) return;
+                        var p = v.play();
+                        if (p && p.catch) p.catch(function () {});
+                    }
+                    play();
+                    ['touchstart', 'click'].forEach(function (ev) {
+                        document.addEventListener(ev, play, { once: true, passive: true });
+                    });
+                    if ('IntersectionObserver' in window) {
+                        new IntersectionObserver(function (entradas) {
+                            visible = entradas[0].isIntersecting;
+                            if (visible) play(); else v.pause();
+                        }).observe(v);
+                    }
+                })();
+            </script>
             <div class="hero-content">
                 <h1 class="h-in h-in-2"><span data-en="Genuine Apple,">Apple original,</span><br><span data-en="without overpaying.">sin pagar de más.</span></h1>
                 <p class="sub h-in h-in-3" data-en="Cracked screen, a battery that won't last, or need a laptop for school or work? We'll help you in English or Spanish, with warranty and no hassle.">¿Pantalla rota, batería que ya no aguanta o necesitas una laptop para la escuela o el trabajo? Te ayudamos en español, con garantía y sin complicaciones.</p>
