@@ -47,6 +47,73 @@ function DemoDataCard() {
   );
 }
 
+// Dónde deja el dueño los paquetes de cada paquetería. El seguimiento que ve
+// el cliente lo muestra como la parada "Dejado en …" del recorrido y como
+// pin en el mapa. Si una queda vacía, el mapa sale de la tienda directo.
+const PAQUETERIAS = [
+  ['usps', 'USPS', 'Oficina de correos de Hoover'],
+  ['ups', 'UPS', 'The UPS Store de Hoover'],
+  ['fedex', 'FedEx', 'FedEx Office de Hoover'],
+  ['dhl', 'DHL', 'Punto DHL de Hoover'],
+];
+function DropoffsCard() {
+  const [data, setData] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const [ok, setOk] = useState('');
+
+  useEffect(() => {
+    api('/settings/dropoffs').then((d) => setData(d.dropoffs)).catch((e) => setErr(e.message));
+  }, []);
+
+  const campo = (c, k, v) => { setOk(''); setData((d) => ({ ...d, [c]: { ...d[c], [k]: v } })); };
+  const guardar = async (e) => {
+    e.preventDefault();
+    setBusy(true); setErr(''); setOk('');
+    try {
+      const d = await api('/settings/dropoffs', { method: 'PUT', body: { dropoffs: data } });
+      setData(d.dropoffs);
+      setOk('Guardado. Los clientes ya lo ven en su seguimiento.');
+    } catch (e2) {
+      setErr(e2.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="card" style={{ maxWidth: 560, marginTop: 18 }}>
+      <h3>¿Dónde dejas los paquetes?</h3>
+      <p className="muted" style={{ margin: '0 0 12px' }}>
+        La oficina de cada paquetería donde dejas los envíos. El cliente la ve en su seguimiento como la parada
+        "Dejado en…" y en el mapa. Si dejas una vacía, el mapa sale directo de la tienda.
+      </p>
+      {err && <div className="alert alert-error">{err}</div>}
+      {ok && <div className="alert alert-ok">{ok}</div>}
+      {!data ? (!err && <span className="spinner" />) : (
+        <form onSubmit={guardar}>
+          {PAQUETERIAS.map(([c, nombre, ej]) => (
+            <fieldset key={c} className="drop-row">
+              <legend>{nombre}</legend>
+              <label className="field"><span>Nombre de la oficina</span>
+                <input value={data[c]?.name || ''} maxLength={200} placeholder={ej}
+                  onChange={(e) => campo(c, 'name', e.target.value)} />
+              </label>
+              <label className="field"><span>Dirección</span>
+                <input value={data[c]?.address || ''} maxLength={200} placeholder="Calle, ciudad, estado y código postal"
+                  onChange={(e) => campo(c, 'address', e.target.value)} />
+              </label>
+            </fieldset>
+          ))}
+          <button className="btn btn-primary" disabled={busy}>
+            {busy ? <span className="spinner" /> : 'Guardar'}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
 export default function Settings({ forced }) {
   const { user, logout } = useAuth();
 
@@ -77,6 +144,7 @@ export default function Settings({ forced }) {
         <p className="muted" style={{ margin: '0 0 6px' }}>Usuario: <strong style={{ color: '#111' }}>{user.username}</strong></p>
         <p className="muted" style={{ margin: 0 }}>Rol: {user.role === 'admin' ? 'Administrador' : 'Trabajador'}</p>
       </div>
+      {user.role === 'admin' && <DropoffsCard />}
       {user.role === 'admin' && <DemoDataCard />}
     </>
   );

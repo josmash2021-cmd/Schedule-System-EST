@@ -1088,3 +1088,33 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
   la hoja, 4 botones blancos + 9 páginas, Citas navega y la cierra, Crear
   nuevo → Venta, cierra con Escape y tocando el fondo). Ojo: el texto de un
   ítem con numerito incluye el número ("2Citas").
+
+## 22. Seguimiento de PEDIDOS rediseñado (track.html, vista sv-) — 2026-11-26
+
+- El dueño lo fue eligiendo en la página de muestra (videos a 60 fps): mapa
+  **blanco** (Standard monocromo de día) con las **vías en gris medio (B1)**,
+  ruta **L1** (dorada continua con sombra suave), pines "D mejorada" (tienda +
+  paquetería en insignia doble, foto del producto en la casa), mapa **más de
+  lado** (inclinado y en diagonal), **barra C** (un ícono por paso), tarjeta
+  con el **logo oficial y el color** de cada paquetería (excepción pedida al
+  monocromo del sitio, §3), recorrido con 3 paradas, todo con animación
+  suave y **sin el camión grande** en pedidos. Las reparaciones NO cambiaron.
+- Descartado en el camino: mapa negro, rayitas animadas (no le gustaron),
+  relieve 3D/colores en el mapa claro ("mejor mantén el blanco"), GIFs para
+  mostrar animaciones (se ven a ~16 fps: usar video MP4 a 60 fps con ffmpeg
+  de imageio-ffmpeg, cuadros dibujados a mano con jumpTo/WAAPI).
+- **Bug del mapa resuelto:** el código esperaba el evento `load` de Mapbox,
+  que espera TODAS las teselas; si una se colgaba, no se dibujaba la ruta ni
+  los pines (lo vimos en pruebas: "a veces no salen los pines"). Ahora se
+  espera `style.load` (con `load` y `isStyleLoaded()` de respaldo).
+- Gotchas de Mapbox Standard: las capas propias se ven oscuras con la luz
+  del estilo si no llevan `line-emissive-strength: 1`; las capas de vías van
+  con `slot: 'middle'`; `line-trim-offset` necesita `lineMetrics: true`; los
+  marcadores HTML: estilos en un hijo (`.x-in`), nunca `position` en el raíz.
+- La llave de Mapbox solo funciona en el dominio real (URL restringida): para
+  probar sin publicar, abrir `https://electronicservicetechnology.com/track`
+  en Chrome de prueba e interceptar el documento y `/assets/*` con los
+  archivos locales + `/api/track/*` con un pedido inventado.
+- Nuevo en el servidor: `shop_settings` (clave→JSON) con `dropoffs` (oficina
+  de cada paquetería, Ajustes del panel), `online_orders.delivered_at`, y el
+  payload público con `shipped_at`, `delivered_at` y `dropoff`.

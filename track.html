@@ -383,6 +383,169 @@
             .track-wrap { height: auto; }
         }
     </style>
+    <style>
+        /* ================================================================
+           SEGUIMIENTO DE PEDIDOS (diseño 2026-11): mapa claro de Mapbox a
+           todo lo ancho (monocromo de día + vías grises), y encima la hoja
+           negra (teléfono) o el panel flotante (PC) con: cuándo llega, la
+           barra C (un ícono por paso), la tarjeta con el logo/color de la
+           paquetería, el recorrido con las 3 paradas y el recibo. Todo entra
+           con animación suave. Las REPARACIONES siguen con su vista de antes
+           (#trackBody). Prefijo sv-.
+           ================================================================ */
+        body.sv-on { background: #0b0b0e; }
+        body.sv-on .track-wrap { display: none; }
+        .sv { position: relative; }
+        .sv-map { position: fixed; left: 0; right: 0; top: 0; height: 64vh; height: 64svh; z-index: 0; background: #f3f3f4; opacity: 0; transition: opacity .6s ease; }
+        .sv-map.in { opacity: 1; }
+        .sv-map .mapboxgl-ctrl-logo, .sv-map .mapboxgl-ctrl-attrib { display: none !important; }
+        /* Hoja del teléfono: va en el flujo normal de la página, así al
+           desplazar hacia arriba "sube" sobre el mapa (scroll nativo, fluido). */
+        .sv-sheet { position: relative; z-index: 2; margin-top: calc(56vh - 70px); margin-top: calc(56svh - 70px); background: #0b0b0e; color: #f5f5f7;
+            border-radius: 26px 26px 0 0; padding: 10px 20px 30px; box-shadow: 0 -18px 40px rgba(0, 0, 0, .3); min-height: 60vh; }
+        .sv-handle { width: 40px; height: 5px; border-radius: 99px; background: rgba(255, 255, 255, .22); margin: 0 auto 16px; }
+        .sv-shop { font-size: 13px; color: #8a8a94; }
+        .sv-when { font-size: 30px; font-weight: 700; letter-spacing: -.02em; margin: 4px 0 4px; line-height: 1.15; color: #fff; }
+        .sv-st { font-size: 15px; color: #d4af37; font-weight: 600; }
+        .sv-st i { font-style: normal; color: #8a8a94; font-weight: 500; }
+        .sv-note { margin-top: 6px; font-size: 13px; color: #34c759; }
+        .sv-sw { transition: opacity .2s ease, transform .2s ease; }
+        .sv-sw.out { opacity: 0; transform: translateY(-6px); }
+        /* Barra C: un ícono por paso; la línea dorada avanza y el paso actual
+           late. La línea va del centro de la 1.ª columna al de la 5.ª. */
+        .sv-bar { position: relative; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 22px; }
+        .sv-line { position: absolute; left: 10%; right: 10%; top: 18px; height: 3px; margin-top: -1.5px; background: #26262c; border-radius: 99px; }
+        .sv-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #d4af37; border-radius: 99px; transition: width 1.1s cubic-bezier(.22, 1, .36, 1); }
+        .sv-step { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; color: #6f6f78; text-align: center; transition: color .4s ease; min-width: 0; }
+        .sv-step b { font-size: 10.5px; font-weight: 600; letter-spacing: -.01em; line-height: 1.2; }
+        .sv-ico { position: relative; z-index: 1; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #1c1c21; box-shadow: inset 0 0 0 1px #2c2c33; color: #6f6f78; transition: background .45s ease, color .45s ease, box-shadow .45s ease; }
+        .sv-ico svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+        .sv-step.on .sv-ico { background: #d4af37; color: #0b0b0e; box-shadow: none; }
+        .sv-step.pop .sv-ico { animation: svPop .5s cubic-bezier(.34, 1.56, .64, 1); }
+        .sv-step.cur { color: #fff; }
+        .sv-step.cur b { font-weight: 700; }
+        .sv-step.cur .sv-ico svg { animation: svBob 1.4s ease-in-out infinite; }
+        .sv-step.cur.noted .sv-ico { background: #34c759; }
+        .sv-ring { position: absolute; top: 0; left: 10%; width: 36px; height: 36px; margin-left: -18px; border-radius: 50%; pointer-events: none; opacity: 0;
+            transition: left .6s cubic-bezier(.22, 1, .36, 1), opacity .4s ease; animation: svPulse 1.8s ease-out infinite; }
+        .sv-ring.on { opacity: 1; }
+        .sv-ring.noted { animation-name: svPulseVerde; }
+        @keyframes svPop { 0% { transform: scale(.7); } 60% { transform: scale(1.14); } 100% { transform: scale(1); } }
+        @keyframes svBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+        @keyframes svPulse { 0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, .6); } 100% { box-shadow: 0 0 0 13px rgba(212, 175, 55, 0); } }
+        @keyframes svPulseVerde { 0% { box-shadow: 0 0 0 0 rgba(52, 199, 89, .55); } 100% { box-shadow: 0 0 0 13px rgba(52, 199, 89, 0); } }
+        /* Tarjeta de la paquetería: su logo oficial y su color. */
+        .sv-cr { margin-top: 22px; border-radius: 18px; padding: 15px 14px 16px 18px; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 0 10px; align-items: center; color: #fff; background: #141418; border: 1px solid rgba(255, 255, 255, .07); }
+        .sv-cr-logo { height: 32px; display: flex; align-items: center; min-width: 0; font-weight: 700; font-size: 16px; letter-spacing: .02em; }
+        .sv-cr-logo img { display: block; width: auto; }
+        .sv-cr-txt { grid-column: 1 / -1; margin-top: 10px; min-width: 0; }
+        .sv-cr small { display: block; font-size: 12px; opacity: .75; line-height: 1.45; }
+        .sv-cr .num { font-size: 15px; font-variant-numeric: tabular-nums; letter-spacing: .03em; margin-top: 2px; overflow-wrap: anywhere; }
+        .sv-cr-btn { width: 40px; height: 40px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, .16); color: inherit; display: grid; place-items: center; cursor: pointer; text-decoration: none; transition: background .2s ease, transform .15s ease; }
+        .sv-cr-btn:hover { background: rgba(255, 255, 255, .26); }
+        .sv-cr-btn:active { transform: scale(.94); }
+        .sv-cr-btn svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+        .sv-cr-usps { background: #004b87; border-color: transparent; } .sv-cr-usps .sv-cr-logo img { height: 24px; }
+        .sv-cr-ups { background: #351c15; border-color: transparent; } .sv-cr-ups .sv-cr-logo img { height: 40px; margin: -4px 0; }
+        .sv-cr-fedex { background: #4d148c; border-color: transparent; } .sv-cr-fedex .sv-cr-logo img { height: 30px; }
+        .sv-cr-dhl { background: #fecc00; border-color: transparent; color: #1a1a1a; } .sv-cr-dhl .sv-cr-logo img { height: 22px; }
+        .sv-cr-dhl .sv-cr-btn { background: rgba(0, 0, 0, .09); }
+        /* Recorrido del paquete (3 paradas) y recibo. */
+        .sv-card { margin-top: 14px; background: #141418; border: 1px solid rgba(255, 255, 255, .07); border-radius: 18px; padding: 16px 18px; }
+        .sv-lbl { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #8a8a94; font-weight: 700; margin-bottom: 12px; }
+        .sv-stop { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; position: relative; padding-bottom: 16px; }
+        .sv-stop:last-child { padding-bottom: 0; }
+        .sv-stop:not(:last-child)::before { content: ""; position: absolute; left: 19px; top: 40px; bottom: 0; width: 2px; background: repeating-linear-gradient(180deg, #3a3a42 0 4px, transparent 4px 9px); }
+        .sv-stop.hecho:not(:last-child)::before { background: #d4af37; }
+        .sv-stop-i { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; overflow: hidden; background: #1c1c21; box-shadow: inset 0 0 0 1px #2c2c33; color: #8a8a94; }
+        .sv-stop-i img { display: block; }
+        .sv-stop-i svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+        .sv-stop-i.tienda { background: #000; box-shadow: inset 0 0 0 2px #d4af37; }
+        .sv-stop-i.tienda img { width: 34px; height: 34px; object-fit: cover; border-radius: 50%; }
+        .sv-stop-i.sede { background: #fff; box-shadow: inset 0 0 0 2px #004b87; }
+        .sv-stop-i.sede img { width: 28px; height: 28px; object-fit: contain; }
+        .sv-stop-i.casa.hecho { background: #d4af37; color: #0b0b0e; box-shadow: none; }
+        .sv-stop b { display: block; font-size: 14.5px; font-weight: 600; color: #f5f5f7; }
+        .sv-stop span { display: block; font-size: 13px; color: #a1a1aa; margin-top: 2px; line-height: 1.4; }
+        .sv-stop em { display: block; font-style: normal; font-size: 12px; color: #d4af37; font-weight: 600; margin-top: 2px; }
+        .sv-stop em.gris { color: #6f6f78; }
+        .sv-prod { display: flex; gap: 12px; align-items: center; padding: 6px 0; }
+        .sv-prod img { width: 52px; height: 52px; border-radius: 12px; object-fit: cover; flex: none; background: #fff; }
+        .sv-prod div { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; }
+        .sv-prod small { display: block; color: #8a8a94; font-size: 12.5px; font-weight: 400; margin-top: 2px; }
+        .sv-prod em { font-style: normal; font-size: 15px; font-weight: 600; white-space: nowrap; }
+        .sv-line2 { display: flex; justify-content: space-between; font-size: 13.5px; color: #a1a1aa; margin-top: 10px; }
+        .sv-line2 .free { color: #d4af37; font-weight: 600; }
+        .sv-total { display: flex; justify-content: space-between; color: #fff; font-size: 16px; font-weight: 600; border-top: 1px solid rgba(255, 255, 255, .08); padding-top: 12px; margin-top: 12px; }
+        .sv-total strong { color: #d4af37; }
+        /* Pines del mapa (marcadores HTML de Mapbox). OJO: el elemento raíz es
+           el que Mapbox posiciona; los estilos van en el hijo .x-in. */
+        .x-in { position: relative; font-family: Inter, system-ui, sans-serif; transform-origin: 50% 50%; }
+        .x-in.pop-in { animation: svPinIn .5s cubic-bezier(.34, 1.56, .64, 1) both; }
+        @keyframes svPinIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .x-lbl { position: absolute; white-space: nowrap; font-size: 11.5px; font-weight: 600; color: #f5f5f7; background: rgba(10, 10, 12, .88); border: 1px solid rgba(255, 255, 255, .14); border-radius: 999px; padding: 4px 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, .3); transition: opacity .3s ease; }
+        .x-lbl small { color: #d4af37; font-weight: 700; margin-right: 4px; }
+        .x-lbl.izq { right: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
+        .x-lbl.der { left: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
+        .x-lbl.arr { bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); }
+        .x-c { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; }
+        .x-c img { display: block; }
+        .x-tienda { background: #000; box-shadow: inset 0 0 0 2px #d4af37; }
+        .x-tienda img { width: 36px; height: 36px; object-fit: cover; border-radius: 50%; }
+        .x-sede { background: #fff; box-shadow: inset 0 0 0 2px #004b87; transition: filter .5s ease, opacity .5s ease; }
+        .x-sede img { width: 30px; height: 30px; object-fit: contain; }
+        .x-sede.gris { filter: grayscale(1); opacity: .45; }
+        .x-par { display: flex; align-items: center; padding: 3px; border-radius: 999px; background: rgba(10, 10, 12, .9); border: 1px solid rgba(255, 255, 255, .14); box-shadow: 0 8px 18px rgba(0, 0, 0, .3); }
+        .x-par .x-sede { margin-left: -8px; box-shadow: 0 0 0 3px rgba(10, 10, 12, .95), inset 0 0 0 2px #004b87; }
+        .x-solo { box-shadow: 0 8px 18px rgba(0, 0, 0, .3); }
+        .x-bub { width: 62px; height: 62px; border-radius: 17px; background: #fff; padding: 3px; box-shadow: 0 12px 24px rgba(0, 0, 0, .3); position: relative; margin-bottom: 14px; box-sizing: border-box; }
+        .x-bub img { width: 56px; height: 56px; border-radius: 14px; object-fit: cover; display: block; }
+        .x-bub::after { content: ""; position: absolute; left: 50%; bottom: -8px; margin-left: -8px; border: 8px solid transparent; border-bottom: 0; border-top-color: #fff; }
+        .x-ok { position: absolute; right: -9px; top: -9px; width: 24px; height: 24px; border-radius: 50%; background: #d4af37; display: grid; place-items: center; box-shadow: 0 0 0 3px #fff, 0 3px 8px rgba(0, 0, 0, .3); transform: scale(0); transition: transform .45s cubic-bezier(.34, 1.56, .64, 1); }
+        .x-ok.on { transform: scale(1); }
+        .x-ok svg { width: 14px; height: 14px; fill: none; stroke: #0b0b0e; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+        .x-fin { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 3px solid #0b0b0e; box-sizing: border-box; box-shadow: 0 0 0 6px rgba(212, 175, 55, .3); transition: box-shadow .6s ease; }
+        .x-fin.fuerte { box-shadow: 0 0 0 9px rgba(212, 175, 55, .35), 0 0 0 20px rgba(212, 175, 55, .16); }
+        .x-bub-ico { width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center; background: #f3f3f4; color: #c4952f; }
+        .x-bub-ico svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+        /* Cada paquetería con el anillo de su color (pin del mapa y recorrido). */
+        .x-sede, .sv-stop-i.sede { --cc: #004b87; }
+        .x-sede.ups, .sv-stop-i.sede.ups { --cc: #351c15; }
+        .x-sede.fedex, .sv-stop-i.sede.fedex { --cc: #4d148c; }
+        .x-sede.dhl, .sv-stop-i.sede.dhl { --cc: #d40511; }
+        .x-sede { box-shadow: inset 0 0 0 2px var(--cc); }
+        .x-par .x-sede { box-shadow: 0 0 0 3px rgba(10, 10, 12, .95), inset 0 0 0 2px var(--cc); }
+        .x-par .x-sede.x-sola { margin-left: 0; box-shadow: inset 0 0 0 2px var(--cc); }
+        .sv-stop-i.sede { box-shadow: inset 0 0 0 2px var(--cc); }
+        body.sv-on footer { position: relative; z-index: 2; background: #0b0b0e; }
+        /* Entrada suave de la hoja y de su contenido. */
+        .sv-sheet.in { animation: svSheetIn .7s cubic-bezier(.22, 1, .36, 1) both; }
+        @keyframes svSheetIn { from { transform: translateY(45vh); } to { transform: none; } }
+        .sv-sheet.in > * { animation: svUp .55s cubic-bezier(.22, 1, .36, 1) both; }
+        .sv-sheet.in > :nth-child(2) { animation-delay: .3s; } .sv-sheet.in > :nth-child(3) { animation-delay: .37s; }
+        .sv-sheet.in > :nth-child(4) { animation-delay: .44s; } .sv-sheet.in > :nth-child(5) { animation-delay: .5s; }
+        .sv-sheet.in > :nth-child(6) { animation-delay: .62s; } .sv-sheet.in > :nth-child(7) { animation-delay: .9s; }
+        .sv-sheet.in > :nth-child(8) { animation-delay: 1.05s; } .sv-sheet.in > :nth-child(9) { animation-delay: 1.15s; }
+        @keyframes svUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+        /* Sin mapa (sin dirección o si Mapbox falla): la hoja sola. */
+        body.sv-nomap .sv-map { display: none; }
+        body.sv-nomap .sv-sheet { margin-top: 12px; border-radius: 26px; max-width: 560px; margin-left: auto; margin-right: auto; }
+        /* PC: el mapa a pantalla completa y un panel flotante a la izquierda. */
+        @media (min-width: 981px) {
+            .sv-map { height: 100vh; }
+            .sv-sheet { position: fixed; left: 24px; top: 96px; bottom: 24px; width: 404px; box-sizing: border-box; margin: 0; min-height: 0; border-radius: 26px; overflow-y: auto; overscroll-behavior: contain;
+                padding: 22px 22px 26px; border: 1px solid rgba(255, 255, 255, .06); box-shadow: 0 24px 60px rgba(0, 0, 0, .3); scrollbar-width: thin; scrollbar-color: #2c2c33 transparent; }
+            .sv-handle { display: none; }
+            .sv-when { font-size: 32px; }
+            .sv-sheet.in { animation-name: svPanelIn; }
+            @keyframes svPanelIn { from { transform: translateX(-110%); } to { transform: none; } }
+            body.sv-nomap .sv-sheet { position: relative; left: auto; top: auto; bottom: auto; margin: 24px auto; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .sv-map, .sv-fill, .sv-ring, .sv-step, .sv-ico, .x-lbl, .x-sede, .x-fin, .x-ok, .sv-sw { transition: none !important; }
+            .sv-sheet.in, .sv-sheet.in > *, .x-in.pop-in, .sv-ring, .sv-step.cur .sv-ico svg, .sv-step.pop .sv-ico { animation: none !important; }
+        }
+    </style>
 </head>
 <body>
     <nav class="nav">
@@ -543,6 +706,40 @@
                 </div><!-- /trackData -->
             </div>
         </section>
+
+        <!-- PEDIDOS (diseño 2026-11): mapa claro detrás + hoja (teléfono) o
+             panel (PC). Lo arma svShow() en el JS; las reparaciones usan
+             #trackBody de arriba. -->
+        <div id="shipView" class="sv hidden">
+            <div class="sv-map" id="svMap" aria-hidden="true"></div>
+            <div class="sv-sheet" id="svSheet">
+                <div class="sv-handle" aria-hidden="true"></div>
+                <div class="sv-shop"><span data-en="ElectronicST · Order">ElectronicST · Pedido</span> <span id="svNum"></span></div>
+                <h1 class="sv-when sv-sw" id="svWhen"></h1>
+                <div class="sv-st sv-sw" id="svSt"></div>
+                <div class="sv-note hidden" id="svNote"></div>
+                <div class="sv-bar" id="svBar">
+                    <div class="sv-line"><div class="sv-fill" id="svFill"></div></div>
+                    <span class="sv-ring" id="svRing"></span>
+                    <div class="sv-step"><span class="sv-ico"><svg viewBox="0 0 24 24"><path d="M3 4.6v6.1a2 2 0 0 0 .6 1.4l8.3 8.3a2 2 0 0 0 2.8 0l5.8-5.8a2 2 0 0 0 0-2.8l-8.3-8.3a2 2 0 0 0-1.4-.6H4.6A1.6 1.6 0 0 0 3 4.6z"/><circle cx="7.6" cy="7.6" r="1.3"/></svg></span><b data-en="Label">Etiqueta</b></div>
+                    <div class="sv-step"><span class="sv-ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5L12 12l8-4.5M12 12v9"/></svg></span><b data-en="Shipped">Enviado</b></div>
+                    <div class="sv-step"><span class="sv-ico"><svg viewBox="0 0 24 24"><path d="M2.5 16.5v-9A1.5 1.5 0 0 1 4 6h8a1.5 1.5 0 0 1 1.5 1.5v10"/><path d="M13.5 10h3.4a2 2 0 0 1 1.7 1l1.9 3.2a2 2 0 0 1 .3 1v1.3a1 1 0 0 1-1 1h-.8M2.5 16.5a1 1 0 0 0 1 1h1.5M9 17.5h6"/><circle cx="7" cy="17.5" r="2"/><circle cx="17" cy="17.5" r="2"/></svg></span><b data-en="In transit">En tránsito</b></div>
+                    <div class="sv-step"><span class="sv-ico"><svg viewBox="0 0 24 24"><path d="M4 11l8-6 8 6v8a1 1 0 0 1-1 1h-4v-5h-6v5H5a1 1 0 0 1-1-1z"/></svg></span><b data-en="Out for delivery">En reparto</b></div>
+                    <div class="sv-step"><span class="sv-ico"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><b data-en="Delivered">Entregado</b></div>
+                </div>
+                <div id="svCarrier"></div>
+                <div class="sv-card">
+                    <div class="sv-lbl" data-en="Package journey">Recorrido del paquete</div>
+                    <div id="svStops"></div>
+                </div>
+                <div class="sv-card">
+                    <div class="sv-lbl" data-en="Your order">Tu pedido</div>
+                    <div id="svItems"></div>
+                    <div id="svTotals"></div>
+                    <div class="sv-total"><span data-en="Total paid">Total pagado</span><strong id="svTotal">—</strong></div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <footer>
@@ -819,9 +1016,491 @@
                 revealSmooth(trackData); // los datos cargan animados y fluidos
             }, 4300);
         }
+        /* ================================================================
+           PEDIDOS — vista nueva (prefijo sv-, diseño 2026-11). Mapa claro de
+           Mapbox (Standard monocromo de día + vías grises), ruta dorada
+           (línea L1), pines: tienda + paquetería juntas, foto del producto en
+           la casa. Encima la hoja (teléfono) / panel (PC) con la barra C, la
+           tarjeta de la paquetería, el recorrido y el recibo. Cada cambio de
+           estado (en vivo por SSE) se anima: nunca de golpe.
+           ================================================================ */
+        var SV = { built: false, step: -1, data: null, map: null, geo: null, cam: null, mk: {}, prog: 0, anim: null, introOn: false, rutaKey: null };
+        SV.reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+        var CARRIER_NAMES = { usps: 'USPS', ups: 'UPS', fedex: 'FedEx', dhl: 'DHL' };
+        var SV_STEPS = { es: ['Creando etiqueta', 'Enviado', 'En tránsito', 'En reparto', 'Entregado'], en: ['Creating label', 'Shipped', 'In transit', 'Out for delivery', 'Delivered'] };
+        var ICO_COPY = '<svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8"/></svg>';
+        var ICO_OPEN = '<svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/></svg>';
+        var ICO_OK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+        var ICO_CASA = '<svg viewBox="0 0 24 24"><path d="M4 11l8-6 8 6v8a1 1 0 0 1-1 1h-4v-5h-6v5H5a1 1 0 0 1-1-1z"/></svg>';
+        var ICO_CAJA = '<svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5L12 12l8-4.5M12 12v9"/></svg>';
+        function svIO(x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
+        function svC(d) { var c = String(d.carrier || '').toLowerCase(); return CARRIER_NAMES[c] ? c : ''; }
+        function svCN(d) { var c = String(d.carrier || '').toLowerCase(); return CARRIER_NAMES[c] || (d.carrier ? String(d.carrier).toUpperCase() : ''); }
+        function svPC() { return window.matchMedia('(min-width: 981px)').matches; }
+        // Fecha y hora en la zona del negocio: "lun, 24 nov · 10:15".
+        function svFechaHora(iso, en) {
+            if (!iso) return '';
+            var dt = new Date(iso);
+            if (isNaN(dt)) return '';
+            var dia = dt.toLocaleDateString(en ? 'en-US' : 'es-US', { timeZone: 'America/Chicago', weekday: 'short', day: 'numeric', month: 'short' }).replace(/\./g, '');
+            var hora = dt.toLocaleTimeString(en ? 'en-US' : 'es-US', { timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit' });
+            return dia + ' · ' + hora;
+        }
+        function svEsHoy(d) {
+            var m = /^(\d{4}-\d{2}-\d{2})/.exec(String(d.expected_delivery || ''));
+            return !!m && m[1] === new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
+        }
+        // "Llega el sáb, 28 de nov" / "Llega hoy" (fecha estimada de la paquetería).
+        function svLlega(d, en) {
+            var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d.expected_delivery || ''));
+            if (!m) return '';
+            if (svEsHoy(d)) return en ? 'Arriving today' : 'Llega hoy';
+            var dt = new Date(+m[1], +m[2] - 1, +m[3]);
+            return (en ? 'Arriving ' : 'Llega el ') + dt.toLocaleDateString(en ? 'en-US' : 'es-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        }
+        function svCiudad(d) { return String((String(d.address || '').split('|')[1]) || '').trim(); }
+        function svDireccion(d) {
+            var seg = String(d.address || '').split('|').map(function (s) { return s.trim(); }).filter(Boolean);
+            return seg.join(', ').replace(/,\s*([A-Z]{2})\s*,\s*(\d{5}(-\d{4})?)/, ', $1 $2');
+        }
+        // Cambia un texto con un fundido corto (nunca de golpe).
+        function svSet(el, html) {
+            if (el.__v === html) return;
+            var primera = el.__v == null;
+            el.__v = html;
+            if (primera || SV.reduce) { el.innerHTML = html; return; }
+            el.classList.add('out');
+            setTimeout(function () { el.innerHTML = html; el.classList.remove('out'); }, 200);
+        }
+
+        function svShow(d) {
+            var en = window.EST_LANG === 'en';
+            var step = shipStep(d);
+            SV.data = d;
+            if (!SV.built) {
+                SV.built = true;
+                document.body.classList.add('sv-on');
+                document.getElementById('shipView').classList.remove('hidden');
+                var sheet = document.getElementById('svSheet');
+                if (!SV.reduce) requestAnimationFrame(function () { requestAnimationFrame(function () { sheet.classList.add('in'); }); });
+                if (d.address && MAPBOX_TOKEN && window.mapboxgl) svMapa(d); else document.body.classList.add('sv-nomap');
+            }
+            var noteTxt = step < 4 ? String((en ? (d.ship_note_en || d.ship_note) : d.ship_note) || '').trim() : '';
+            var nombres = SV_STEPS[en ? 'en' : 'es'];
+            var cn = svCN(d);
+            var when, st;
+            if (step === 4) {
+                when = en ? 'Delivered' : 'Entregado';
+                var fe = d.delivered_at ? svFechaHora(d.delivered_at, en).split(' · ')[0] : '';
+                st = (fe ? (en ? 'Delivered ' : 'Entregado el ') + fe : nombres[4]) + (cn ? ' <i>· ' + esc(cn) + '</i>' : '');
+            } else if (step === 0) {
+                when = en ? 'Preparing your order' : 'Preparando tu pedido';
+                st = nombres[0] + ' <i>· ' + (en ? 'ships soon' : 'lo enviamos pronto') + '</i>';
+            } else {
+                when = svLlega(d, en) || (en ? 'On its way' : 'En camino');
+                st = nombres[step] + (cn ? ' <i>· ' + esc(cn) + '</i>' : '');
+            }
+            document.getElementById('svNum').textContent = d.order_number || '';
+            svSet(document.getElementById('svWhen'), esc(when));
+            svSet(document.getElementById('svSt'), st);
+            document.title = when + ' — ElectronicST';
+            var note = document.getElementById('svNote');
+            note.textContent = noteTxt ? '(' + noteTxt + ')' : '';
+            note.classList.toggle('hidden', !noteTxt);
+            svBarra(step, !!noteTxt);
+            svTarjeta(d, en);
+            svParadas(d, step, en);
+            svRecibo(d, en);
+            var cambio = step !== SV.step;
+            SV.step = step;
+            // Si cambió la paquetería o su oficina, se rehace la ruta del mapa.
+            if (SV.map && SV.geo && svRutaKey(d) !== SV.rutaKey) svRehacerRuta(d);
+            else if (SV.map && cambio) svEstado(step);
+        }
+
+        // Barra C: los pasos se encienden uno tras otro mientras avanza la línea.
+        function svBarra(step, noted) {
+            var pasos = document.querySelectorAll('#svBar .sv-step');
+            var primera = !document.getElementById('svBar').__ok;
+            document.getElementById('svBar').__ok = true;
+            var fill = document.getElementById('svFill');
+            var ring = document.getElementById('svRing');
+            var base = primera && !SV.reduce ? 750 : 0;
+            fill.style.transitionDelay = base ? '.75s' : '0s';
+            fill.style.width = (step * 25) + '%';
+            pasos.forEach(function (el, i) {
+                var on = i <= step;
+                var era = el.classList.contains('on');
+                var aplicar = function () {
+                    el.classList.toggle('on', on);
+                    el.classList.toggle('cur', i === step);
+                    el.classList.toggle('noted', noted && i === step);
+                    if (on && !era && !SV.reduce) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+                };
+                if (on && !era && (base || step > 0)) setTimeout(aplicar, base + (primera ? i * 280 : 350));
+                else aplicar();
+            });
+            ring.style.left = (10 + step * 20) + '%';
+            ring.classList.toggle('noted', noted);
+            setTimeout(function () { ring.classList.add('on'); }, base ? base + step * 280 + 300 : 0);
+        }
+
+        // Tarjeta de la paquetería: su logo oficial y su color, botón para
+        // copiar el número y otro para abrir su página de rastreo.
+        function svTarjeta(d, en) {
+            var box = document.getElementById('svCarrier');
+            var c = svC(d);
+            var key = (d.tracking_number || '') + '|' + c + '|' + (en ? 'en' : 'es');
+            if (box.__k === key) return;
+            var primera = box.__k == null;
+            box.__k = key;
+            var html;
+            if (!d.tracking_number) {
+                html = '<div class="sv-cr"><span class="sv-cr-logo">' + (en ? 'Tracking' : 'Rastreo') + '</span><span></span><span></span><div class="sv-cr-txt"><small>' +
+                    (en ? 'As soon as we drop off your package with the carrier, its logo and tracking number will show here.'
+                        : 'En cuanto dejemos tu paquete en la paquetería, aquí sale su logo y el número de rastreo.') + '</small></div></div>';
+            } else {
+                var url = CARRIER_URLS[String(d.carrier || '').toLowerCase()];
+                var logo = c ? '<img src="assets/img/carriers/' + c + '-card.svg" alt="' + CARRIER_NAMES[c] + '">' : esc(svCN(d) || (en ? 'Tracking' : 'Rastreo'));
+                html = '<div class="sv-cr' + (c ? ' sv-cr-' + c : '') + '"><span class="sv-cr-logo">' + logo + '</span>' +
+                    '<button type="button" class="sv-cr-btn" id="svCopy" aria-label="' + (en ? 'Copy tracking number' : 'Copiar número de rastreo') + '" title="' + (en ? 'Copy' : 'Copiar') + '">' + ICO_COPY + '</button>' +
+                    (url ? '<a class="sv-cr-btn" href="' + url + encodeURIComponent(d.tracking_number) + '" target="_blank" rel="noopener" aria-label="' + (en ? 'Open carrier tracking' : 'Ver en la paquetería') + '" title="' + (en ? 'Open' : 'Abrir') + '">' + ICO_OPEN + '</a>' : '<span></span>') +
+                    '<div class="sv-cr-txt"><small>' + (en ? 'Tracking number' : 'Número de rastreo') + '</small><div class="num">' + esc(d.tracking_number) + '</div></div></div>';
+            }
+            var poner = function () {
+                box.innerHTML = html;
+                var b = document.getElementById('svCopy');
+                if (b) b.addEventListener('click', function () { svCopiar(d.tracking_number, b); });
+            };
+            if (primera || SV.reduce) { poner(); return; }
+            box.classList.add('sv-sw', 'out');
+            setTimeout(function () { poner(); box.classList.remove('out'); }, 220);
+        }
+        function svCopiar(txt, btn) {
+            var listo = function () { btn.innerHTML = ICO_OK; setTimeout(function () { btn.innerHTML = ICO_COPY; }, 1600); };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(txt).then(listo, function () {});
+            } else {
+                var t = document.createElement('textarea');
+                t.value = txt; document.body.appendChild(t); t.select();
+                try { document.execCommand('copy'); listo(); } catch (e) { /* sin portapapeles */ }
+                t.remove();
+            }
+        }
+
+        // Recorrido del paquete: tienda → oficina de la paquetería → casa.
+        function svParadas(d, step, en) {
+            var c = svC(d), cn = svCN(d), dp = d.dropoff || null;
+            var s1 = '<div class="sv-stop' + (step >= 1 ? ' hecho' : '') + '"><span class="sv-stop-i tienda"><img src="assets/img/logo-avatar.png" alt=""></span><div><b>' +
+                (step >= 1 ? (en ? 'Left ElectronicST' : 'Salió de ElectronicST') : (en ? 'Being prepared at ElectronicST' : 'Preparando en ElectronicST')) +
+                '</b><span>' + esc(STORE_ADDR) + '</span>' + (d.created_at ? '<em>' + (en ? 'Ordered ' : 'Pedido ') + esc(svFechaHora(d.created_at, en)) + '</em>' : '') + '</div></div>';
+            var ico2 = c ? '<span class="sv-stop-i sede ' + c + '"><img src="assets/img/carriers/' + c + '-badge.svg" alt=""></span>' : '<span class="sv-stop-i">' + ICO_CAJA + '</span>';
+            var t2 = step >= 1 ? (en ? 'Dropped off with ' : 'Dejado en ') + esc(cn || (en ? 'the carrier' : 'la paquetería')) : (en ? 'Handed to the carrier' : 'Se entrega a la paquetería');
+            var a2 = dp && dp.address ? esc((dp.name ? dp.name + ' · ' : '') + dp.address) : '';
+            var e2 = step >= 1 ? (d.shipped_at ? '<em>' + esc(svFechaHora(d.shipped_at, en)) + '</em>' : '') : '<em class="gris">' + (en ? 'Pending' : 'Pendiente') + '</em>';
+            var s2 = '<div class="sv-stop' + (step >= 4 ? ' hecho' : '') + '">' + ico2 + '<div><b>' + t2 + '</b>' + (a2 ? '<span>' + a2 + '</span>' : '') + e2 + '</div></div>';
+            var e3;
+            if (step === 4) e3 = '<em>' + (d.delivered_at ? (en ? 'Delivered ' : 'Entregado ') + esc(svFechaHora(d.delivered_at, en)) : (en ? 'Delivered' : 'Entregado')) + '</em>';
+            else e3 = svLlega(d, en) ? '<em>' + esc(svLlega(d, en)) + '</em>' : '<em class="gris">' + (en ? 'Date to be confirmed' : 'Fecha por confirmar') + '</em>';
+            var s3 = '<div class="sv-stop"><span class="sv-stop-i casa' + (step === 4 ? ' hecho' : '') + '">' + (step === 4 ? ICO_OK : ICO_CASA) + '</span><div><b>' +
+                (step === 4 ? (en ? 'Delivered' : 'Entregado') : (en ? 'Delivery' : 'Entrega')) + '</b>' + (d.address ? '<span>' + esc(svDireccion(d)) + '</span>' : '') + e3 + '</div></div>';
+            var box = document.getElementById('svStops');
+            var html = s1 + s2 + s3;
+            if (box.__v !== html) { box.__v = html; box.innerHTML = html; }
+        }
+
+        // Recibo: productos con foto + Subtotal / Impuestos / Envío / Total.
+        function svRecibo(d, en) {
+            var prods = [], tax = 0, ship = 0, shipCobrado = false;
+            (d.items || []).forEach(function (i) {
+                var n = String(i.name || '').trim().toLowerCase();
+                if (n === 'impuestos' || n === 'tax') { tax += Number(i.price) || 0; return; }
+                if (n === 'envío' || n === 'envio' || n === 'shipping') { ship += Number(i.price) || 0; shipCobrado = true; return; }
+                prods.push(i);
+            });
+            var html = prods.map(function (i) {
+                return '<div class="sv-prod">' + (i.img ? '<img src="' + esc(i.img) + '" alt="" loading="lazy">' : '') + '<div>' + (i.qty > 1 ? i.qty + '× ' : '') + esc(i.name) +
+                    (i.desc ? '<small>' + esc(i.desc) + '</small>' : '') + '</div><em>' + money(i.price) + '</em></div>';
+            }).join('');
+            var subtotal = prods.reduce(function (a, i) { return a + (Number(i.price) || 0); }, 0);
+            var tot = '<div class="sv-line2"><span>Subtotal</span><span>' + money(subtotal) + '</span></div>' +
+                (tax > 0 ? '<div class="sv-line2"><span>' + (en ? 'Tax' : 'Impuestos') + '</span><span>' + money(tax) + '</span></div>' : '') +
+                '<div class="sv-line2"><span>' + (en ? 'Shipping' : 'Envío') + '</span>' + ((shipCobrado && ship > 0) ? '<span>' + money(ship) + '</span>' : '<span class="free">' + (en ? 'FREE' : 'GRATIS') + '</span>') + '</div>';
+            var it = document.getElementById('svItems');
+            if (it.__v !== html) { it.__v = html; it.innerHTML = html; }
+            var tt = document.getElementById('svTotals');
+            if (tt.__v !== tot) { tt.__v = tot; tt.innerHTML = tot; }
+            document.getElementById('svTotal').textContent = money(d.total, d.currency);
+        }
+
+        // ---- Mapa ----
+        function svDir(a, z) {
+            return fetch('https://api.mapbox.com/directions/v5/mapbox/driving/' + a.join(',') + ';' + z.join(',') +
+                '?geometries=geojson&overview=full&access_token=' + MAPBOX_TOKEN)
+                .then(function (r) { return r.json(); })
+                .then(function (j) { var rt = j.routes && j.routes[0]; return rt ? rt.geometry.coordinates : [a, z]; })
+                .catch(function () { return [a, z]; });
+        }
+        function svKm(a, z) {
+            var t = Math.PI / 180, dl = (z[1] - a[1]) * t, dg = (z[0] - a[0]) * t;
+            var x = Math.sin(dl / 2) * Math.sin(dl / 2) + Math.cos(a[1] * t) * Math.cos(z[1] * t) * Math.sin(dg / 2) * Math.sin(dg / 2);
+            return 12742 * Math.asin(Math.sqrt(x));
+        }
+        function svLargo(c) { var s = 0; for (var i = 1; i < c.length; i++) s += svKm(c[i - 1], c[i]); return s; }
+        function svRutaKey(d) { return svC(d) + '|' + ((d.dropoff && d.dropoff.address) || ''); }
+        // Coordenadas de tienda, casa y (si está en Ajustes) la oficina de la
+        // paquetería, más la ruta por carretera en dos tramos.
+        function svCalcularRuta(d) {
+            var dest = String(d.address || '').split('|').map(function (s) { return s.trim(); }).join(', ');
+            var dp = d.dropoff && d.dropoff.address;
+            return Promise.all([geocode(STORE_ADDR), geocode(dest), dp ? geocode(dp).catch(function () { return null; }) : Promise.resolve(null)])
+                .then(function (p) {
+                    var t = p[0], z = p[1], s = p[2];
+                    return Promise.all([svDir(t, s || z), s ? svDir(s, z) : Promise.resolve(null)])
+                        .then(function (r) { return { tienda: t, dest: z, sede: s, leg1: r[0], leg2: r[1] }; });
+                });
+        }
+        function svMapa(d) {
+            var map;
+            try {
+                mapboxgl.accessToken = MAPBOX_TOKEN;
+                map = new mapboxgl.Map({
+                    container: 'svMap',
+                    style: 'mapbox://styles/mapbox/standard',
+                    config: { basemap: { lightPreset: 'day', theme: 'monochrome', showPlaceLabels: false, showRoadLabels: false, showPointOfInterestLabels: false, showTransitLabels: false } },
+                    center: [-86.8, 33.4], zoom: 5, pitch: 0,
+                    attributionControl: false,
+                    interactive: false
+                });
+            } catch (e) { document.body.classList.add('sv-nomap'); return; }
+            // Se espera solo el ESTILO ('style.load'), no 'load': 'load' espera
+            // TODAS las teselas y si una tarda o se cuelga, el mapa nunca
+            // aparecía (era el fallo de "a veces no sale la ruta"). Se escucha
+            // en cuanto se crea el mapa, así nunca se pierde el aviso.
+            var cargado = new Promise(function (res) {
+                var listo = false;
+                var ya = function () { if (!listo) { listo = true; res(); } };
+                map.on('style.load', ya);
+                map.on('load', ya);
+                if (map.isStyleLoaded && map.isStyleLoaded()) ya();
+            });
+            SV.rutaKey = svRutaKey(d);
+            Promise.all([cargado, svCalcularRuta(d)])
+                .then(function (x) { svDibujar(map, x[1]); })
+                .catch(function () {
+                    document.body.classList.add('sv-nomap');
+                    try { map.remove(); } catch (e) { /* nada */ }
+                });
+            var t = null;
+            window.addEventListener('resize', function () {
+                clearTimeout(t);
+                t = setTimeout(function () {
+                    map.resize();
+                    if (SV.geo && !SV.introOn) { svCamaras(SV.geo); map.jumpTo(svCam(SV.step === 3 ? SV.cam.cerca : SV.cam.ruta)); }
+                }, 150);
+            });
+        }
+        function svDibujar(map, g) {
+            SV.map = map;
+            var E = { 'line-emissive-strength': 1 }, L = { 'line-cap': 'round', 'line-join': 'round' };
+            // Vías en gris medio: más marcadas que las del estilo, sin pesar.
+            try {
+                map.addSource('sv-calles', { type: 'vector', url: 'mapbox://mapbox.mapbox-streets-v8' });
+                map.addLayer({ id: 'sv-vias', type: 'line', source: 'sv-calles', 'source-layer': 'road', slot: 'middle',
+                    filter: ['in', ['get', 'class'], ['literal', ['motorway', 'trunk', 'primary', 'secondary']]], layout: L,
+                    paint: { 'line-color': ['match', ['get', 'class'], 'motorway', '#8c8c94', 'trunk', '#9a9aa2', 'primary', '#adadb4', '#c2c2c8'],
+                        'line-width': ['match', ['get', 'class'], 'motorway', 2.2, 'trunk', 1.8, 'primary', 1.2, 0.8] } });
+            } catch (e) { /* sin vías extra */ }
+            map.addSource('sv-ruta', { type: 'geojson', lineMetrics: true, data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [g.tienda, g.dest] } } });
+            // Camino que falta (tenue) + recorrido (L1: sombra suave, dorado y filo claro).
+            map.addLayer({ id: 'sv-pend', type: 'line', source: 'sv-ruta', layout: L, paint: Object.assign({ 'line-color': '#c4952f', 'line-width': 4, 'line-opacity': 0.3, 'line-trim-offset': [0, 1] }, E) });
+            map.addLayer({ id: 'sv-sombra', type: 'line', source: 'sv-ruta', layout: L, paint: Object.assign({ 'line-color': '#000', 'line-width': 12, 'line-blur': 9, 'line-opacity': 0.18, 'line-trim-offset': [0, 1] }, E) });
+            map.addLayer({ id: 'sv-oro', type: 'line', source: 'sv-ruta', layout: L, paint: Object.assign({ 'line-color': '#c4952f', 'line-width': 5, 'line-trim-offset': [0, 1] }, E) });
+            map.addLayer({ id: 'sv-filo', type: 'line', source: 'sv-ruta', layout: L, paint: Object.assign({ 'line-color': '#f6dc8a', 'line-width': 1.4, 'line-opacity': 0.9, 'line-trim-offset': [0, 1] }, E) });
+            svGeo(g);
+            svIntro();
+        }
+        function svGeo(g) {
+            SV.geo = g;
+            var todo = g.leg2 ? g.leg1.concat(g.leg2.slice(1)) : g.leg1;
+            g.todo = todo;
+            SV.map.getSource('sv-ruta').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: todo } });
+            // Qué parte de la ruta es el tramo tienda → oficina (se pinta al enviarse).
+            SV.P1 = g.leg2 ? Math.max(0.02, svLargo(g.leg1) / Math.max(0.001, svLargo(todo))) : 0.05;
+            svCamaras(g);
+            svPines(g);
+        }
+        // Tres encuadres: desde arriba (entrada), la ruta completa inclinada y
+        // de lado, y cerca de la ciudad del cliente (en reparto).
+        function svCamaras(g) {
+            var map = SV.map, pc = svPC();
+            var h = map.getContainer().clientHeight;
+            var a = g.tienda, z = g.dest, t = Math.PI / 180;
+            var rumbo = Math.atan2(Math.sin((z[0] - a[0]) * t) * Math.cos(z[1] * t),
+                Math.cos(a[1] * t) * Math.sin(z[1] * t) - Math.sin(a[1] * t) * Math.cos(z[1] * t) * Math.cos((z[0] - a[0]) * t)) / t;
+            var br = rumbo + (pc ? 35 : 45);
+            while (br > 180) br -= 360;
+            while (br < -180) br += 360;
+            var pitch = pc ? 55 : 62;
+            var abajo = pc ? 90 : Math.round(h * 0.13) + 45;
+            var izq = pc ? 500 : 40;
+            var bb = new mapboxgl.LngLatBounds();
+            g.todo.forEach(function (c) { bb.extend(c); });
+            var l2 = g.leg2 || g.leg1;
+            var cb = new mapboxgl.LngLatBounds();
+            l2.slice(Math.floor(l2.length * 0.94)).forEach(function (c) { cb.extend(c); });
+            cb.extend(z);
+            var cfb = function (b, o) { try { return map.cameraForBounds(b, o) || null; } catch (e) { return null; } };
+            var ruta = cfb(bb, { padding: { top: pc ? 130 : 150, bottom: abajo, left: izq, right: pc ? 90 : 40 }, pitch: pitch, bearing: br }) || cfb(bb, { padding: 30, pitch: pitch, bearing: br });
+            var arriba = cfb(bb, { padding: { top: 110, bottom: abajo + 40, left: izq, right: pc ? 110 : 50 }, pitch: 0, bearing: 0 }) || cfb(bb, { padding: 30 });
+            var cerca = cfb(cb, { padding: { top: pc ? 200 : 190, bottom: abajo + 20, left: pc ? izq + 60 : 70, right: pc ? 160 : 70 }, pitch: pitch, bearing: br, maxZoom: 12.5 }) || ruta;
+            SV.cam = { arriba: arriba || ruta, ruta: ruta, cerca: cerca, pitch: pitch, br: br };
+        }
+        function svCam(c, pitch0) {
+            var o = { center: c.center, zoom: c.zoom };
+            o.pitch = pitch0 != null ? pitch0 : SV.cam.pitch;
+            o.bearing = pitch0 != null ? 0 : SV.cam.br;
+            return o;
+        }
+        function svMarcador(html, ll, anchor, origen) {
+            var d = document.createElement('div');
+            d.innerHTML = '<div class="x-in">' + html + '</div>';
+            d.firstChild.style.transformOrigin = origen || '50% 50%';
+            return new mapboxgl.Marker({ element: d, anchor: anchor }).setLngLat(ll).addTo(SV.map);
+        }
+        function svPines(g) {
+            var d = SV.data, c = svC(d);
+            ['o', 's', 'f', 'b'].forEach(function (k) { if (SV.mk[k]) { SV.mk[k].remove(); SV.mk[k] = null; } });
+            var tienda = '<span class="x-c x-tienda"><img src="assets/img/logo-avatar.png" alt=""></span>';
+            var sede = c ? '<span class="x-c x-sede ' + c + '" id="svSedeIco"><img src="assets/img/carriers/' + c + '-badge.svg" alt=""></span>' : '';
+            // Tienda y oficina juntas en una insignia doble si quedan tan cerca
+            // que se taparían; si no, cada una con su pin.
+            var junto = !g.sede || (svKm(g.tienda, g.sede) / Math.max(1, svKm(g.tienda, g.dest))) * 320 < 70;
+            if (junto) {
+                var mid = g.sede ? [(g.tienda[0] + g.sede[0]) / 2, (g.tienda[1] + g.sede[1]) / 2] : g.tienda;
+                SV.mk.o = svMarcador('<div class="x-par">' + tienda + sede + '</div><span class="x-lbl izq" id="svLblO"></span>', mid, 'center');
+            } else {
+                SV.mk.o = svMarcador('<div class="x-par">' + tienda + '</div><span class="x-lbl izq" id="svLblO"></span>', g.tienda, 'center');
+                SV.mk.s = svMarcador('<div class="x-par">' + sede.replace('x-c x-sede', 'x-c x-sede x-sola') + '</div><span class="x-lbl der" id="svLblS"></span>', g.sede, 'center');
+            }
+            var foto = '';
+            (d.items || []).some(function (i) { if (i.img) { foto = i.img; return true; } return false; });
+            SV.mk.f = svMarcador('<div class="x-fin" id="svFin"></div>', g.dest, 'center');
+            SV.mk.b = svMarcador('<div class="x-bub">' + (foto ? '<img src="' + esc(foto) + '" alt="">' : '<span class="x-bub-ico">' + ICO_CAJA + '</span>') +
+                '<span class="x-ok" id="svOk">' + ICO_OK + '</span></div><span class="x-lbl arr" id="svLblD"></span>', g.dest, 'bottom', '50% 100%');
+        }
+        function svPintar(p) {
+            SV.prog = p;
+            ['sv-sombra', 'sv-oro', 'sv-filo'].forEach(function (id) {
+                try { SV.map.setPaintProperty(id, 'line-trim-offset', [Math.min(Math.max(p, 0), 1), 1]); } catch (e) { /* nada */ }
+            });
+        }
+        // La parte dorada (recorrida) avanza suave hasta "meta" (0 a 1).
+        function svProgreso(meta, dur) {
+            if (SV.anim) cancelAnimationFrame(SV.anim);
+            var desde = SV.prog, t0 = null;
+            if (!dur || SV.reduce || Math.abs(meta - desde) < 0.001) { svPintar(meta); return; }
+            var paso = function (ts) {
+                if (t0 == null) t0 = ts;
+                var u = Math.min(1, (ts - t0) / dur);
+                svPintar(desde + (meta - desde) * svIO(u));
+                if (u < 1) SV.anim = requestAnimationFrame(paso);
+            };
+            SV.anim = requestAnimationFrame(paso);
+        }
+        // Lo que cambia en el mapa con cada estado del envío.
+        function svEstado(step) {
+            if (!SV.map || !SV.cam) return;
+            var d = SV.data, en = window.EST_LANG === 'en', cn = svCN(d), city = svCiudad(d);
+            var lo = document.getElementById('svLblO');
+            if (lo) {
+                lo.innerHTML = step === 0 || !cn
+                    ? '<small>1</small>' + (en ? 'At our store' : 'En tu tienda')
+                    : (SV.mk.s ? '<small>1</small>' + (en ? 'Our store' : 'Tu tienda') : '<small>1·2</small>' + (en ? 'Our store → ' : 'Tu tienda → ') + esc(cn));
+            }
+            var ls = document.getElementById('svLblS');
+            if (ls) ls.innerHTML = '<small>2</small>' + esc(cn) + (en ? ' · dropped off here' : ' · aquí se dejó');
+            var ld = document.getElementById('svLblD');
+            if (ld) {
+                ld.innerHTML = '<small>3</small>' + (step === 4 ? (en ? 'Delivered' : 'Entregado')
+                    : step === 3 ? (svEsHoy(d) ? (en ? 'Arriving today' : 'Llega hoy') : (en ? 'Out for delivery' : 'En reparto'))
+                        : (en ? 'Delivery' : 'Entrega') + (city ? ' · ' + esc(city) : ''));
+            }
+            var si = document.getElementById('svSedeIco');
+            if (si) si.classList.toggle('gris', step === 0);
+            var fin = document.getElementById('svFin');
+            if (fin) fin.classList.toggle('fuerte', step === 3);
+            var ok = document.getElementById('svOk');
+            if (ok) ok.classList.toggle('on', step === 4);
+            if (SV.introOn) return; // la entrada se encarga de la ruta y la cámara
+            svProgreso(step <= 0 ? 0 : step === 1 ? SV.P1 : 1, 1300);
+            var cam = svCam(step === 3 ? SV.cam.cerca : SV.cam.ruta);
+            if (SV.reduce) SV.map.jumpTo(cam);
+            else SV.map.easeTo(Object.assign({ duration: 1600, easing: svIO }, cam));
+        }
+        // Entrada: el mapa aparece desde arriba, la cámara baja e inclina, la
+        // ruta se dibuja sola y los pines salen con un rebote suave.
+        function svIntro() {
+            var map = SV.map, C = SV.cam, cont = document.getElementById('svMap');
+            var step = SV.step < 0 ? shipStep(SV.data) : SV.step;
+            if (SV.reduce) {
+                map.jumpTo(svCam(step === 3 ? C.cerca : C.ruta));
+                try { map.setPaintProperty('sv-pend', 'line-trim-offset', [1, 1]); } catch (e) { /* nada */ }
+                svPintar(step <= 0 ? 0 : step === 1 ? SV.P1 : 1);
+                svEstado(step);
+                cont.classList.add('in');
+                return;
+            }
+            SV.introOn = true;
+            map.jumpTo(svCam(C.arriba, 0));
+            svEstado(step);
+            var interior = function (mk) { return mk ? mk.getElement().firstChild : null; };
+            var pins = [[interior(SV.mk.o), 500], [interior(SV.mk.s), 650], [interior(SV.mk.f), 2450], [interior(SV.mk.b), 2550]];
+            pins.forEach(function (p) { if (p[0]) p[0].style.visibility = 'hidden'; });
+            var arrancar = function () {
+                if (arrancar.ya) return;
+                arrancar.ya = true;
+                cont.classList.add('in');
+                map.easeTo(Object.assign({ duration: 1600, easing: svIO }, svCam(C.ruta)));
+                pins.forEach(function (p) {
+                    if (!p[0]) return;
+                    setTimeout(function () { p[0].style.visibility = ''; p[0].classList.add('pop-in'); }, p[1]);
+                });
+                // El camino tenue se dibuja de la tienda a la casa…
+                var t0 = null;
+                var dibujar = function (ts) {
+                    if (t0 == null) t0 = ts;
+                    var u = Math.min(1, Math.max(0, (ts - t0 - 1200) / 1400));
+                    try { map.setPaintProperty('sv-pend', 'line-trim-offset', [svIO(u), 1]); } catch (e) { /* nada */ }
+                    if (u < 1) requestAnimationFrame(dibujar);
+                };
+                requestAnimationFrame(dibujar);
+                // …y luego el dorado avanza hasta donde va el paquete.
+                setTimeout(function () { svProgreso(SV.step <= 0 ? 0 : SV.step === 1 ? SV.P1 : 1, 1300); }, 2200);
+                // Al terminar, el mapa sigue el estado actual (en reparto se
+                // acerca a la ciudad del cliente).
+                setTimeout(function () { SV.introOn = false; svEstado(SV.step); }, 3700);
+            };
+            // Arranca cuando ya cargó la vista de arriba (o a los 1.2 s como máximo).
+            map.once('idle', arrancar);
+            setTimeout(arrancar, 1200);
+        }
+        // Si cambia la paquetería o su oficina, se rehace la ruta sin la entrada.
+        function svRehacerRuta(d) {
+            SV.rutaKey = svRutaKey(d);
+            svCalcularRuta(d).then(function (g) {
+                svGeo(g);
+                svPintar(0);
+                svEstado(SV.step);
+            }).catch(function () { /* se queda la ruta de antes */ });
+        }
+
         function showOrder(d) {
             hasData = true;
             errBox.classList.add('hidden');
+            // Pedidos: la vista nueva. Reparaciones: la vista de antes (camión,
+            // foto del taller y las dos curvas), sin cambios.
+            if (d.kind !== 'repair') { svShow(d); return; }
             body.classList.remove('hidden');
             if (!introDone) { introDone = true; truckIntro(); }
             render(d);

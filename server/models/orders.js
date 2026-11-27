@@ -185,8 +185,12 @@ async function updateShipTag(id, tag) {
 }
 
 async function updateShipStatus(id, status) {
+  // Al entregarse se sella la fecha (una sola vez): la ve el cliente en el
+  // recorrido del seguimiento.
   const r = await pool.query(
-    'UPDATE online_orders SET ship_status = $2 WHERE id = $1 RETURNING *',
+    `UPDATE online_orders SET ship_status = $2,
+            delivered_at = CASE WHEN $2 = 'entregado' THEN COALESCE(delivered_at, NOW()) ELSE delivered_at END
+      WHERE id = $1 RETURNING *`,
     [id, status]
   );
   trackEvents.emit('update', id);

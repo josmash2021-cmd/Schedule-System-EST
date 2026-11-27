@@ -109,6 +109,30 @@ cambies estructura, flujos o convenciones.
   **formulario de búsqueda por número de rastreo** (`GET
   /api/track/lookup/:number`, mismo payload público), no el error),
   `terms.html`, `privacy.html`.
+- **track.html — PEDIDOS con la vista nueva (2026-11-26, prefijo `sv-`):**
+  lo de arriba sobre el camión, la curva, las 3 columnas y el mapa oscuro
+  aplica SOLO a REPARACIONES (`kind:'repair'`, `#trackBody`, sin cambios).
+  Los pedidos usan `#shipView`: mapa **Mapbox Standard monocromo de día**
+  (`config.basemap` lightPreset day + theme monochrome, sin etiquetas) a todo
+  lo ancho + capa propia de vías en gris medio (`sv-vias`, streets-v8), ruta
+  dorada L1 (`sv-pend` tenue + `sv-sombra/sv-oro/sv-filo` con
+  `line-trim-offset` para lo recorrido), pines HTML: tienda + paquetería
+  juntas en insignia doble si quedan cerca (si no, separadas), foto del
+  producto en la casa, etiquetas numeradas; cámara inclinada (62° teléfono /
+  55° PC) girada para que el viaje cruce en diagonal; en reparto se acerca a
+  la ciudad del cliente; entregado = toda dorada + palomita. Encima: hoja negra
+  en el flujo de la página (teléfono: al desplazar "sube" sobre el mapa fijo)
+  o panel flotante fijo a la izquierda (PC ≥981px): cuándo llega, **barra C**
+  (5 íconos, anillo que late, verde con `ship_note`), tarjeta con el **logo
+  oficial y color de cada paquetería** (`assets/img/carriers/<c>-card.svg` /
+  `-badge.svg`; USPS azul, UPS café, FedEx morado, DHL amarillo — excepción
+  pedida al monocromo) con copiar/abrir, **recorrido** (tienda → oficina de
+  Ajustes → casa, con `created_at`/`shipped_at`/`delivered_at`) y recibo. Todo
+  entra animado (mapa desde arriba → inclina, la ruta se dibuja, pines con
+  rebote, hoja/panel desliza) y cada cambio en vivo (SSE/30 s) se anima;
+  `prefers-reduced-motion` lo deja quieto. Sin dirección o si Mapbox falla →
+  `body.sv-nomap` (la hoja sola). OJO: el mapa espera `style.load`, NO `load`
+  (`load` espera todas las teselas y una colgada dejaba el mapa sin ruta).
 - JS/CSS compartido: `assets/` (`site.js`, `cart.js`, `site-v3.css`,
   `transitions.js`, `i18n.js`, `security.js`).
 - **Tras editar cualquier página/asset del sitio:** `node server/scripts/copy-frontend.js`
@@ -210,6 +234,13 @@ cambies estructura, flujos o convenciones.
   `adminInventory.js`, `adminInvoices.js` (facturas, solo admin),
   `adminCustomers.js` (clientes agregados desde facturas, solo admin,
   modelo `server/models/customers.js`),
+  `adminSettings.js` (`/x/s/settings/dropoffs` GET/PUT, solo admin: dónde
+  deja el dueño los paquetes de cada paquetería — tarjeta "¿Dónde dejas los
+  paquetes?" en Ajustes; modelo `server/models/settings.js`, tabla
+  `shop_settings` clave→JSON, en memoria 5 min; el payload público de
+  `track.js` manda `dropoff` {name,address} de la paquetería del pedido, más
+  `shipped_at` y `delivered_at` — `online_orders.delivered_at` se sella una
+  vez en `orders.updateShipStatus(…, 'entregado')`),
   `adminOrders.js` (órdenes de envío: website vía Stripe + manuales FB
   Marketplace; GET sincroniza con Stripe máx. 1 vez/min, POST crea manual,
   PATCH tracking → 'enviado' o 'entregado' manual — el marcado manual de

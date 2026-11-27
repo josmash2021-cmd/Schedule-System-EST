@@ -368,6 +368,20 @@ async function initDb() {
     // (si falta, se usa la española para ambos idiomas).
     await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS ship_note TEXT;`);
     await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS ship_note_en TEXT;`);
+    // Cuándo se entregó el pedido (la ve el cliente en "Recorrido del paquete").
+    await client.query(`ALTER TABLE online_orders ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ;`);
+
+    // ----- Ajustes del negocio (clave → JSON) -----
+    // Hoy: 'dropoffs' = dónde deja el dueño los paquetes de cada paquetería
+    // (USPS/UPS/FedEx/DHL); el seguimiento público lo muestra como la parada
+    // "Dejado en …" del recorrido y como pin en el mapa.
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS shop_settings (
+        key        TEXT PRIMARY KEY,
+        value      JSONB NOT NULL DEFAULT '{}'::jsonb,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
 
     // ----- Facturas (Bill of Sale) -----
     // Una factura puede nacer de una venta de mostrador (sale_id), de una

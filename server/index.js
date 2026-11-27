@@ -28,6 +28,7 @@ const tracking = require('./lib/tracking');
 const adminInvoicesRouter = require('./routes/adminInvoices');
 const adminCustomersRouter = require('./routes/adminCustomers');
 const adminDemoDataRouter = require('./routes/adminDemoData'); // limpieza de datos demo
+const adminSettingsRouter = require('./routes/adminSettings'); // ajustes del negocio (oficinas de paquetería)
 
 const app = express();
 
@@ -190,6 +191,7 @@ app.use('/x/s/invoices', adminInvoicesRouter);
 // Clientes: base de datos de compradores agregada desde las facturas.
 app.use('/x/s/customers', adminCustomersRouter);
 app.use('/x/s/demo-data', adminDemoDataRouter); // solo consulta/borra los datos demo
+app.use('/x/s/settings', adminSettingsRouter);
 
 // Entrada del panel tras el slug secreto. Slug incorrecto → next() → 404 por
 // defecto, idéntico a cualquier ruta desconocida (sin pistas). El bundle es

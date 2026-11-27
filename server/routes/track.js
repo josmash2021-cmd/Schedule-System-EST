@@ -10,6 +10,7 @@ const { buildInvoicePdf } = require('../lib/invoicePdf');
 const tracking = require('../lib/tracking');
 const trackEvents = require('../lib/trackEvents');
 const { CATALOG } = require('../catalog');
+const settings = require('../models/settings');
 
 const router = express.Router();
 
@@ -47,7 +48,11 @@ function enrichItems(items) {
     return p ? { ...l, img: p.img || null, desc: l.desc || p.descEn || p.desc || null } : l;
   });
 }
-function publicOrder(o) {
+// dropoffs: oficinas donde el dueño deja los paquetes (Ajustes del panel);
+// va solo la de la paquetería de este pedido (nombre + dirección, nada privado).
+function publicOrder(o, dropoffs) {
+  const carrier = String(o.carrier || '').toLowerCase();
+  const dp = dropoffs && dropoffs[carrier];
   return {
     order_number: `EST-${1000 + o.id}`,
     items: enrichItems(o.items),
@@ -66,6 +71,10 @@ function publicOrder(o) {
     tracking_number: o.tracking_number || null,
     carrier: o.carrier || null,
     created_at: o.created_at,
+    // Recorrido del paquete: cuándo se dejó en la paquetería y cuándo llegó.
+    shipped_at: o.shipped_at || null,
+    delivered_at: o.delivered_at || null,
+    dropoff: dp && dp.address ? { name: dp.name || null, address: dp.address } : null,
   };
 }
 
@@ -168,7 +177,7 @@ router.get('/lookup/:number', rateLimit, async (req, res) => {
   }
   try {
     const o = await orders.findByTrackingNumber(num);
-    if (o) return res.json(publicOrder(o));
+    if (o) return res.json(publicOrder(o, await settings.getDropoffs().catch(() => null)));
     const t = await repairs.findByTrackingNumber(num);
     if (t) return res.json(publicRepair(t));
     return res.status(404).json({ error: 'Pedido no encontrado.' });
@@ -207,7 +216,7 @@ router.get('/:token', rateLimit, async (req, res) => {
   }
   try {
     const o = await orders.findByTrackToken(token);
-    if (o) return res.json(publicOrder(o));
+    if (o) return res.json(publicOrder(o, await settings.getDropoffs().catch(() => null)));
     const t = await repairs.findByTrackToken(token);
     if (t) return res.json(publicRepair(t));
     return res.status(404).json({ error: 'Pedido no encontrado.' });
