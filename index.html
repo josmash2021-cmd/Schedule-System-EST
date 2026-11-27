@@ -116,6 +116,55 @@
             </div>
         </div>
 
+        <!-- ================= PRESENTACIÓN: LAPTOP QUE SE ABRE AL BAJAR =================
+             Laptop dibujada con CSS 3D (prefijo lap-). El script del final de
+             esta página convierte el avance del scroll en la tapa que se abre,
+             la pantalla que se prende y el cambio de texto. -->
+        <section class="lap" id="lapShow">
+            <div class="lap-pin">
+                <div class="lap-copy">
+                    <div class="lap-msg lap-msg-1">
+                        <span class="eyebrow" data-en="Laptops">Laptops</span>
+                        <h2 data-en="Open it.">Ábrela.</h2>
+                        <p data-en="We check every laptop before it reaches your hands.">Cada laptop la revisamos antes de que llegue a tus manos.</p>
+                    </div>
+                    <div class="lap-msg lap-msg-2">
+                        <p class="lap-kicker" data-en="MacBook Air and MacBook Pro">MacBook Air y MacBook Pro</p>
+                        <h2><span data-en="Original.">Original.</span> <span data-en="Verified.">Verificada.</span> <span data-en="Yours.">Tuya.</span></h2>
+                    </div>
+                </div>
+                <!-- Cajita de precio con el botón de comprar (aparece al final) -->
+                <div class="lap-buy">
+                    <div class="lap-buy-txt">
+                        <b data-en="From $150, warranty included.">Desde $150, con garantía incluida.</b>
+                        <span data-en="We ship it, or you pick it up at the store.">Te la enviamos o la recoges en la tienda.</span>
+                    </div>
+                    <a href="/products" class="lap-buy-btn" data-en="Buy">Comprar</a>
+                </div>
+                <div class="lap-stage" aria-hidden="true">
+                    <div class="lap-model">
+                        <div class="lap-floor"></div>
+                        <div class="lap-deck">
+                            <div class="lap-keys"></div>
+                            <div class="lap-pad"></div>
+                            <div class="lap-spill"></div>
+                        </div>
+                        <div class="lap-front"></div>
+                        <div class="lap-lid">
+                            <div class="lap-screen">
+                                <div class="lap-display">
+                                    <img draggable="false" class="lap-wall" src="assets/img/laptop-pantalla-1.jpg" alt="" decoding="async">
+                                    <img draggable="false" class="lap-logo" src="assets/img/logo-cruise.png" alt="">
+                                </div>
+                                <span class="lap-notch"></span>
+                            </div>
+                            <div class="lap-back"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- ================= CAPÍTULO: LAPTOPS ================= -->
         <section class="chapter">
             <div class="container">
@@ -251,6 +300,9 @@
                             <button class="open-viewer" type="button"><span class="plus-icon" aria-hidden="true"></span>Explore MacBook Pro</button>
                         </div>
                     </section>
+                </div>
+            </div>
+        </section>
 
         <!-- ================= RESEÑAS ================= -->
         <section class="testimonials">
@@ -874,6 +926,94 @@
             } else {
                 flyToStore();
             }
+        })();
+    </script>
+    <script>
+        /* Presentación de la laptop: el avance del scroll dentro de #lapShow
+           (0 → 1) abre la tapa, endereza la "cámara", prende la pantalla
+           (primero el logo, luego el fondo) y cambia el texto. */
+        (function () {
+            var sec = document.getElementById('lapShow');
+            if (!sec) return;
+            var pin = sec.querySelector('.lap-pin');
+            var model = sec.querySelector('.lap-model');
+            var lid = sec.querySelector('.lap-lid');
+            var msg1 = sec.querySelector('.lap-msg-1');
+            var msg2 = sec.querySelector('.lap-msg-2');
+            var buy = sec.querySelector('.lap-buy');
+
+            // Teclado: cada fila suma 30 columnas (teclas anchas = más columnas)
+            var filas = [
+                [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],
+                [2,2,2,2,2,2,2,2,2,2,2,2,2,4],
+                [3,2,2,2,2,2,2,2,2,2,2,2,2,3],
+                [4,2,2,2,2,2,2,2,2,2,2,2,4],
+                [5,2,2,2,2,2,2,2,2,2,2,5],
+                [2,2,2,3,10,3,2,2,2,2]
+            ];
+            var keys = sec.querySelector('.lap-keys');
+            filas.forEach(function (fila) {
+                fila.forEach(function (n) {
+                    var k = document.createElement('i');
+                    k.style.gridColumn = 'span ' + n;
+                    keys.appendChild(k);
+                });
+            });
+
+            var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            function clamp(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
+            function seg(p, a, b) { return clamp((p - a) / (b - a)); }
+            function suave(t) { return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+            function lerp(a, b, t) { return a + (b - a) * t; }
+
+            var pendiente = false;
+            function pintar() {
+                pendiente = false;
+                var r = sec.getBoundingClientRect();
+                var vh = window.innerHeight;
+                if (r.bottom < -50 || r.top > vh + 50) return; // fuera de pantalla
+                var recorrido = Math.max(1, sec.offsetHeight - vh);
+                var p = reduce ? 1 : clamp(-r.top / recorrido);
+
+                var abre = suave(seg(p, .04, .52));   // la tapa se abre
+                var cerca = suave(seg(p, .72, 1));    // acercamiento final
+                var h = model.offsetHeight;
+
+                var tapa = lerp(-90, 10, abre);
+                var incl = lerp(-46, -13, abre) + lerp(0, 4, cerca);
+                var esc = lerp(.86, 1, abre);
+                var baja = lerp(-.7, 0, abre) * h;
+
+                model.style.transform = 'translate3d(0,' + baja.toFixed(1) + 'px,0) rotateX(' + incl.toFixed(2) + 'deg) scale(' + esc.toFixed(4) + ')';
+                lid.style.transform = 'rotateX(' + tapa.toFixed(2) + 'deg)';
+
+                // Pantalla: primero el logo; luego entra el fondo de colores y el logo se va
+                var fondo = suave(seg(p, .56, .72));
+                pin.style.setProperty('--boot', (seg(p, .44, .54) * (1 - seg(p, .6, .7))).toFixed(3));
+                pin.style.setProperty('--wall', fondo.toFixed(3));
+                pin.style.setProperty('--lit', seg(p, .56, .76).toFixed(3));
+
+                var m1 = seg(p, .38, .5);
+                var m2 = seg(p, .58, .72);
+                msg1.style.opacity = (1 - m1).toFixed(3);
+                msg1.style.transform = 'translateY(' + (-24 * m1).toFixed(1) + 'px)';
+                msg2.style.opacity = m2.toFixed(3);
+                msg2.style.transform = 'translateY(' + (24 * (1 - m2)).toFixed(1) + 'px)';
+                msg2.style.pointerEvents = m2 > .5 ? 'auto' : 'none';
+                msg1.style.visibility = m1 >= 1 ? 'hidden' : 'visible';
+                msg2.style.visibility = m2 <= 0 ? 'hidden' : 'visible';
+                var m3 = seg(p, .7, .84);
+                buy.style.opacity = m3.toFixed(3);
+                buy.style.transform = 'translate(-50%,' + (18 * (1 - m3)).toFixed(1) + 'px)';
+                buy.style.visibility = m3 <= 0 ? 'hidden' : 'visible';
+                buy.style.pointerEvents = m3 > .5 ? 'auto' : 'none';
+            }
+            function pedir() {
+                if (!pendiente) { pendiente = true; requestAnimationFrame(pintar); }
+            }
+            window.addEventListener('scroll', pedir, { passive: true });
+            window.addEventListener('resize', pedir);
+            pintar();
         })();
     </script>
     <script src="assets/product-viewer.js" defer></script>

@@ -140,6 +140,14 @@ cambies estructura, flujos o convenciones.
   junto al video). Toda la portada va con **fondo negro puro** (`<body
   class="fondo-negro">`: sin la seda ni el resplandor gris de los capítulos;
   las demás páginas siguen con la seda). Detalle en `MEMORIA.md` §3.
+- **Laptop que se abre al bajar (`#lapShow`, prefijo `lap-`, 2026-11-27):**
+  entre el marquee y el capítulo Laptops. Laptop negra dibujada con CSS 3D
+  (sin fotos de terceros); la sección mide 330vh (280vh en teléfono) y su
+  capa `.lap-pin` es sticky: el script al final de `index.html` convierte el
+  scroll en tapa que se abre → logo → fondo `assets/img/laptop-pantalla-1.jpg`
+  (fondos generados; las variantes -2..4 están sin usar) → texto "Original.
+  Verificada. Tuya." → cajita "Desde $150" con Comprar. En teléfono la
+  cajita va a `bottom: 82px` para no quedar bajo el botón del chat 24/7.
 - **Visor interactivo del capítulo Laptops (2026-11-27):** la imagen
   `macbook-pro.jpg` y sus badges se sustituyeron por `#featureViewer`, con CSS/JS
   en `assets/product-viewer.css|js` y medios en

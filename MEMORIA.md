@@ -77,6 +77,18 @@ solo en `index.html` quita la seda (`body::before`) y el resplandor gris
 difuminado de los capítulos (`.chapter-figure .glow`). Las demás páginas
 siguen con la seda; para ponerlo en todo el sitio basta agregar la clase al
 `<body>` de cada página.
+**Laptop que se abre al bajar (`#lapShow`, 2026-11-27):** sección propia con
+una laptop negra hecha en CSS 3D (`.lap-model`: base `.lap-deck` con teclado
+generado por JS en filas de 30 columnas, tapa `.lap-lid` con pantalla y
+espalda). El avance del scroll (0→1) mueve la tapa de -90° a 10°, endereza la
+cámara y fija las variables `--boot` (logo), `--wall` (fondo de pantalla) y
+`--lit` (luz de colores sobre el teclado). OJO: el `src` del fondo es
+`laptop-pantalla-1.jpg`; el archivo sin número nunca existió y dejaba la
+pantalla vacía. Los colores de `.lap-spill` (verde/rosa/morado) van con esa
+imagen: si se cambia por la -2 (dorada), -3 (azul) o -4 (plata), ajustarlos.
+En teléfono `.lap-buy` sube a `bottom: 82px` (el chat 24/7 tapaba Comprar) y
+el ancho de la laptop descuenta 470px del alto en vez de 420px para no chocar.
+Con `prefers-reduced-motion` la sección queda abierta y quieta.
 **Visor interactivo del capítulo Laptops (2026-11-27):** el bloque
 `.chapter-figure-feature` reemplaza la foto `macbook-pro.jpg` y los badges de
 M3 Pro/batería por `#featureViewer` (7 opciones, imágenes, selector Space
