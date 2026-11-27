@@ -124,8 +124,11 @@ porque la franja es `aria-hidden`).
 tener las reseñas reales. Sale el diseño nuevo, `/reviews`, el botón y la
 franja sin salto, pero las 15 reseñas que ya había (sin origen comprobado) van
 con `fuente: ""` → sin la palabra "Google" en la tarjeta, títulos "Reseñas" (no
-"Reseñas en Google"), resumen "Promedio de N reseñas" y sin producto (los de la
-vista previa eran de ejemplo). La etiqueta "Google" solo se pone en reseñas
+"Reseñas en Google"), resumen "Promedio de N reseñas" y producto SOLO en las 3
+que nombran el equipo en su propio texto (Carlos R., Sofía H., Andrea B. →
+MacBook Air 13"); los demás de la vista previa eran de ejemplo y el dueño los
+pidió ("se supone que era así"), pero no se ponen sin saber qué compró cada
+uno. La etiqueta "Google" solo se pone en reseñas
 copiadas del perfil real (`fuente: "google"`); el resumen dice "en Google" solo
 si todas lo son.
 **Visor interactivo del capítulo Laptops (2026-11-27):** el bloque

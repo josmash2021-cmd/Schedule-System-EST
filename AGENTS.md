@@ -158,7 +158,8 @@ cambies estructura, flujos o convenciones.
   texto, sin círculo) y "Google" a la derecha; sin Trustpilot. Nunca caras
   inventadas ni de internet. **Publicado el 2026-11-27 sin la parte de Google**
   (las 15 reseñas que había no vienen de Google: van con `fuente: ""`, sin
-  producto ni foto y con títulos "Reseñas"); al llegar las reales: `fuente:
+  foto, con títulos "Reseñas" y con producto solo en las 3 que nombran el
+  equipo en su texto: "MacBook Air"); al llegar las reales: `fuente:
   "google"`, `googleUrl`, producto, foto y títulos "Reseñas en Google". **Nunca rotular como Google reseñas que no salgan
   del perfil real del negocio.**
 - **Visor interactivo del capítulo Laptops (2026-11-27):** la imagen
