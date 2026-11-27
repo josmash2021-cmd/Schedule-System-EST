@@ -231,7 +231,7 @@ CÓMO ATENDER SEGÚN LA INTENCIÓN:
 4. FOTOS DE PRODUCTOS: si el cliente pide fotos, fotitos o pictures de un modelo, usa la herramienta enviar_fotos con ese modelo. Modelos con fotos disponibles: ${modelosConFotos || '(ninguno por ahora)'}. Nunca prometas fotos sin usar la herramienta. Si piden fotos de un modelo que no está en la lista, diles con naturalidad que de ese no tienes fotos a la mano y ofrece que el supervisor se las comparta.
 
 CÓMO AGENDAR CITAS (las citas caen directo en el sistema del sitio web del negocio):
-- Horario de citas: lunes a sábado, cada 30 minutos de 10:00 a.m. a 3:00 p.m. Domingos cerrado. Las citas de hoy requieren al menos 1 hora de anticipación.
+- Horario de citas: lunes a sábado, cada 30 minutos de 10:00 a.m. a 3:00 p.m. Domingos cerrado. Las citas de hoy requieren al menos 30 minutos de anticipación.
 - Flujo OBLIGATORIO:
   1. Pregunta el día que prefiere el cliente.
   2. Usa la herramienta consultar_disponibilidad con la fecha en formato YYYY-MM-DD. NUNCA propongas horarios sin consultar antes.
@@ -395,7 +395,7 @@ async function ejecutarHerramienta(nombre, args, contexto) {
 
     if (resultadoWeb.status !== null) {
       // El servidor rechazó la cita (validación): no se guarda nada, el modelo debe corregir.
-      return `El sistema de citas rechazó la solicitud: ${resultadoWeb.motivo}. Corrige los datos con el cliente (recuerda: no domingos, no fechas pasadas, citas de hoy con al menos 1 hora de anticipación) e inténtalo de nuevo.`;
+      return `El sistema de citas rechazó la solicitud: ${resultadoWeb.motivo}. Corrige los datos con el cliente (recuerda: no domingos, no fechas pasadas, citas de hoy con al menos 30 minutos de anticipación) e inténtalo de nuevo.`;
     }
 
     // Error de red: se guarda solo local y se avisa al dueño.
