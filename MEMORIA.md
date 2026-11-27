@@ -101,6 +101,19 @@ cajita "Desde $150") — estuvo publicada en f566a74, se borró completa
 También se quitó la capa oscura del hero (`.hero::after`): el video va sin
 oscurecer y el texto se lee por su `text-shadow` (más fuerte en `.sub`).
 No reintroducir ninguna de las dos sin pedirlo.
+**Reseñas de Google (2026-11-27):** el dueño eligió la opción 3 de la página
+de muestra: reseñas de Google en vez de "Verified by Trustpilot" (la etiqueta
+no se podía sostener: las 15 reseñas estaban escritas a mano en el HTML desde
+julio, sin origen comprobado). Ahora viven en `assets/resenas-datos.js` y las
+pinta `assets/resenas.js` en la franja del inicio y en `/reviews`
+(`reviews.html`, ruta en `server/index.js` y en `copy-frontend.js`). El botón
+"Ver todas las reseñas" lleva a esa página del sitio, NO al perfil de Google
+(decisión del dueño); el perfil solo se abre desde "Déjanos tu reseña en
+Google", que se esconde sin `googleUrl` (site-v3 no trae `[hidden]`, por eso
+`.res-dejar [hidden]`). Iniciales sin círculo, solo texto dorado (decisión del
+dueño). La franja ya no salta: antes eran 15 tarjetas animadas a -50 % sin
+duplicar. Al cargar reseñas reales: texto tal cual, nombre como en Google y sus
+estrellas reales (4 se ve con una apagada y cuenta en el promedio).
 **Visor interactivo del capítulo Laptops (2026-11-27):** el bloque
 `.chapter-figure-feature` reemplaza la foto `macbook-pro.jpg` y los badges de
 M3 Pro/batería por `#featureViewer` (7 opciones, imágenes, selector Space

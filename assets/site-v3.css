@@ -816,9 +816,12 @@ a { -webkit-tap-highlight-color: transparent; }
     mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
     -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
 }
+/* La lista va dos veces seguidas (assets/resenas.js): el padding-right igual
+   al gap hace que -50% sea justo una vuelta, sin salto. La duración crece con
+   el número de reseñas (--n) para que la velocidad no cambie. */
 .testimonials-track {
-    display: flex; gap: 20px; width: max-content;
-    animation: testimonialScroll 40s linear infinite;
+    display: flex; gap: 20px; width: max-content; padding-right: 20px;
+    animation: testimonialScroll calc(var(--n, 15) * 5.3s) linear infinite;
 }
 .testimonials-track:hover { animation-play-state: paused; }
 
@@ -853,22 +856,39 @@ a { -webkit-tap-highlight-color: transparent; }
     color: var(--text); font-size: 13px; font-weight: 600;
     white-space: nowrap; flex-shrink: 0;
 }
-.trustpilot-badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    color: var(--muted); font-size: 11px; font-weight: 500;
-    text-transform: uppercase; letter-spacing: .06em;
-    white-space: nowrap; flex-shrink: 0;
+/* Reseñas de Google (opción 3 que eligió el dueño, 2026-11-27): estrellas en
+   el dorado del logo, iniciales en dorado SOLO texto (sin círculo) y "Google"
+   a la derecha. */
+.res-estrella svg { display: block; width: 16px; height: 16px; fill: #c8a24b; }
+.res-estrella.res-apagada svg { fill: rgba(255, 255, 255, .18); }
+.res-quien { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.res-iniciales { flex: none; color: #c8a24b; font-size: 12.5px; font-weight: 700; letter-spacing: .06em; }
+.res-fuente { color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .02em; white-space: nowrap; }
+.res-cta { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
+
+/* Página /reviews (reviews.html): todas las reseñas en cuadrícula */
+.res-resumen {
+    display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+    margin: 18px 0 0; color: #d4d4d8; font-size: 15px;
 }
-.trustpilot-badge svg, .trustpilot-badge img { flex-shrink: 0; }
-.trustpilot-badge strong { color: #fff; }
+.res-resumen b { color: var(--text); font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.res-resumen-estrellas { display: inline-flex; gap: 2px; }
+.res-resumen-estrellas svg { width: 18px; height: 18px; fill: #c8a24b; }
+.res-pagina { padding: 34px 24px 90px; }
+.res-grid {
+    max-width: 1200px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 20px;
+}
+.res-grid .testimonial-card { flex: none; min-width: 0; }
+.res-dejar { display: flex; justify-content: center; margin-top: 40px; }
+/* site-v3 no trae [hidden]: sin googleUrl el botón debe quedar escondido aunque .btn sea inline-flex */
+.res-dejar [hidden] { display: none !important; }
 
 @media (max-width: 720px) {
     .testimonial-card { flex: 0 0 280px; padding: 20px; }
-    .testimonials-track { animation-duration: 32s; }
-    /* Footer de la reseña en una sola línea: nombre + badge sin cortes */
+    .testimonials-track { animation-duration: calc(var(--n, 15) * 4.3s); }
     .testimonial-author { font-size: 12px; }
-    .trustpilot-badge { font-size: 9.5px; letter-spacing: .04em; gap: 4px; }
-    .trustpilot-badge img { width: 13px; height: 13px; }
+    .res-pagina { padding: 24px 16px 70px; }
 }
 
 /* ---------------- Reveal al hacer scroll ---------------- */

@@ -26,6 +26,7 @@ const itemsToCopy = [
   'book-appointment.html',
   'terms.html',
   'privacy.html',
+  'reviews.html',
   'assets',
   'qr-cita.png',
   'logo.jpg',

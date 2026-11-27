@@ -143,6 +143,17 @@ cambies estructura, flujos o convenciones.
   los `.h-in`; respaldo a 3.5 s si no arranca y tope de 6 s). Toda la portada va con **fondo negro puro** (`<body
   class="fondo-negro">`: sin la seda ni el resplandor gris de los capítulos;
   las demás páginas siguen con la seda). Detalle en `MEMORIA.md` §3.
+- **Reseñas de Google (2026-11-27, opción 3 del dueño):** una sola lista en
+  `assets/resenas-datos.js` (`googleUrl` + `lista` de {nombre, estrellas 1–5,
+  fecha AAAA-MM-DD, texto, texto_en opcional}) que pinta `assets/resenas.js`
+  (sin defer, al final del body) en dos lados: la franja `#resenasFranja` del
+  inicio (lista duplicada + `padding-right` = gap para girar sin salto; la
+  duración sale de `--n`) con el botón "Ver todas las reseñas" → **`/reviews`**
+  (`reviews.html`: cuadrícula de todas, promedio calculado de la lista y botón
+  "Déjanos tu reseña en Google" que solo aparece con `googleUrl`). Estrellas en
+  el dorado del logo, iniciales doradas SOLO texto (sin círculo) y "Google" a la
+  derecha; sin Trustpilot. **Nunca rotular como Google reseñas que no salgan
+  del perfil real del negocio.**
 - **Visor interactivo del capítulo Laptops (2026-11-27):** la imagen
   `macbook-pro.jpg` y sus badges se sustituyeron por `#featureViewer`, con CSS/JS
   en `assets/product-viewer.css|js` y medios en

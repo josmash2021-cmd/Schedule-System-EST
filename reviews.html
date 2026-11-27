@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title data-en="Reviews — ElectronicST">Reseñas — ElectronicST</title>
+    <meta name="description" content="Lo que dicen nuestros clientes en Google: reseñas de ElectronicST, tienda Apple y servicio técnico en Hoover, AL." data-en="What our customers say on Google: reviews of ElectronicST, Apple store and tech service in Hoover, AL.">
+    <meta property="og:title" content="ElectronicST — Reviews">
+    <meta property="og:description" content="What our customers say on Google about ElectronicST in Hoover, AL.">
+    <meta property="og:image" content="https://electronicservicetechnology.com/assets/img/og-image.png">
+    <meta property="og:url" content="https://electronicservicetechnology.com/reviews">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ElectronicST — Reviews">
+    <meta name="twitter:description" content="What our customers say on Google about ElectronicST in Hoover, AL.">
+    <meta name="twitter:image" content="https://electronicservicetechnology.com/assets/img/og-image.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="assets/img/favicon.png">
+    <link rel="stylesheet" href="assets/site-v3.css">
+    <script src="assets/i18n.js"></script>
+</head>
+<body class="fondo-negro">
+    <nav class="nav">
+        <div class="container nav-inner">
+            <a href="/" class="brand">
+                <img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST" class="logo-desktop" data-en-alt="ElectronicST">
+                <img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST" class="logo-mobile" data-en-alt="ElectronicST">
+                <span data-en="ElectronicST">ElectronicST</span>
+            </a>
+            <button class="burger" aria-label="Abrir menú" aria-expanded="false" data-en-aria="Open menu">
+                <span></span><span></span><span></span>
+            </button>
+            <div class="nav-links">
+                <a href="/" data-en="Home">Inicio</a>
+                <a href="/products" data-en="Products">Productos</a>
+                <a href="/track" data-en="My order">Mi pedido</a>
+                <a href="/book-appointment" class="btn btn-blue btn-sm nav-cta" data-en="Book appointment">Reservar cita</a>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <!-- Todas las reseñas de Google. Las pinta assets/resenas.js desde la
+             lista de assets/resenas-datos.js (la misma de la franja del inicio). -->
+        <header class="page-hero container">
+            <span class="eyebrow" data-en="Google reviews">Reseñas en Google</span>
+            <h1 data-en="What our customers say.">Lo que dicen nuestros clientes.</h1>
+            <p data-en="Real reviews our customers left on Google after buying or repairing with us.">Reseñas reales que nuestros clientes dejaron en Google después de comprar o reparar con nosotros.</p>
+            <div class="res-resumen" id="resenasResumen"></div>
+        </header>
+
+        <section class="res-pagina">
+            <div class="res-grid" id="resenasLista"></div>
+            <div class="res-dejar">
+                <a href="#" class="btn btn-ghost" data-google-resenas hidden data-en="Leave us a review on Google">Déjanos tu reseña en Google</a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <a href="/" class="brand">
+                        <img draggable="false" src="assets/img/logo-cruise.png" alt="ElectronicST" data-en-alt="ElectronicST">
+                        <span data-en="ElectronicST">ElectronicST</span>
+                    </a>
+                    <p data-en="Your trusted store for MacBook, iPhone, and specialized tech service in Hoover, Alabama.">Tu tienda de confianza para MacBook, iPhone y servicio técnico especializado en Hoover, Alabama.</p>
+                </div>
+                <div class="footer-links">
+                    <a href="/products" data-en="Products">Productos</a>
+                    <a href="/book-appointment" data-en="Book appointment">Reservar cita</a>
+                    <a href="/terms" data-en="Terms and conditions">Términos y condiciones</a>
+                    <a href="/privacy" data-en="Privacy policy">Políticas de privacidad</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span data-en="© ElectronicST. All rights reserved.">© ElectronicST. Todos los derechos reservados.</span>
+                <span><a href="#" class="map-link" data-en="3659 Lorna Rd Suite 157, Hoover, AL 35216">3659 Lorna Rd Suite 157, Hoover, AL 35216</a> · <a href="tel:+12055737840" data-en="(205) 573-7840">(205) 573-7840</a></span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/resenas-datos.js"></script>
+    <script src="assets/resenas.js"></script>
+    <script src="assets/security.js" defer></script>
+    <script src="assets/transitions.js" defer></script>
+    <script src="assets/cart.js" defer></script>
+    <script src="assets/chat.js" defer></script>
+    <script src="assets/site.js" defer></script>
+</body>
+</html>

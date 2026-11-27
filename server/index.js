@@ -78,6 +78,7 @@ const htmlRoutes = {
   '/book-appointment': 'book-appointment.html',
   '/terms': 'terms.html',
   '/privacy': 'privacy.html',
+  '/reviews': 'reviews.html',
 };
 
 for (const [route, file] of Object.entries(htmlRoutes)) {
