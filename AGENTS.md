@@ -133,11 +133,14 @@ cambies estructura, flujos o convenciones.
   `prefers-reduced-motion` lo deja quieto. Sin dirección o si Mapbox falla →
   `body.sv-nomap` (la hoja sola). OJO: el mapa espera `style.load`, NO `load`
   (`load` espera todas las teselas y una colgada dejaba el mapa sin ruta).
-- **Portada (`index.html`):** el fondo del hero es un video,
-  `assets/video/hero-home.mp4` (H.264 sin audio, fondo negro, fundido a negro
-  en las puntas; ancho `max(100%, 112svh)` centrado, no `cover`), que **se
-  reproduce UNA sola vez** y se queda quieto en el último cuadro (la laptop
-  abierta y encendida; sin fundido a negro al final, sin capa oscura encima). Toda la portada va con **fondo negro puro** (`<body
+- **Portada (`index.html`):** el inicio va en este orden (dueño,
+  2026-11-27): **título ARRIBA de la laptop → video → descripción y botones
+  abajo**. El video `assets/video/hero-home.mp4` (H.264 sin audio, fondo
+  negro, fundido desde negro solo al inicio) va dentro de `.hero-content`, a
+  lo ancho (`--hero-video-w`, no `cover`), se **reproduce UNA sola vez** y se
+  queda en el último cuadro (sin capa oscura encima). **Primero se ve solo el
+  video y las letras entran cuando le faltan 0.7 s** (`.hero-espera` esconde
+  los `.h-in`; respaldo a 3.5 s si no arranca y tope de 6 s). Toda la portada va con **fondo negro puro** (`<body
   class="fondo-negro">`: sin la seda ni el resplandor gris de los capítulos;
   las demás páginas siguen con la seda). Detalle en `MEMORIA.md` §3.
 - **Visor interactivo del capítulo Laptops (2026-11-27):** la imagen

@@ -66,15 +66,29 @@ poster (entra desde negro): **se reproduce UNA sola vez** y se queda en el
 "cada 10 s" con espera en negro — ambas descartadas: "que no se quede oscuro").
 Por eso el MP4 (`?v=2` en el src) lleva fundido desde negro SOLO al inicio; el
 final no se funde. `play()` no hace nada si `v.ended`. `hero-home-still.jpg`
-(menos movimiento) es ese mismo último cuadro. NO va en `cover`: ancho
-`max(100%, 112svh)` centrado — el sobrante es negro sobre negro y en teléfono
-la laptop no queda diminuta; `.hero-media` lleva `background-color:#000`
-porque sin él asoma el fondo de `body::before`. El script junto al video lo
-quita con `prefers-reduced-motion` (queda `assets/img/hero-home-still.jpg`
-por CSS), lo arranca al primer toque si el teléfono bloquea el autoplay y lo
-pausa fuera de pantalla. `.hero h1/.sub` llevan `text-shadow` para leerse
-sobre los momentos claros. La foto anterior (`hero-macbook.jpg`) sigue en el
-repo pero ya no se usa.
+(menos movimiento) es ese mismo último cuadro.
+**Orden del inicio (2026-11-27, pedido del dueño):** el título ya NO va
+encima de la laptop (sobre la pantalla blanca del último cuadro no se leía):
+`.hero-content` lleva en fila h1 → `.hero-media` (el video) → `.sub` →
+`.hero-ctas`. El video es más ancho que el texto con
+`margin-left: calc(50% - var(--hero-video-w) / 2)`; `--hero-video-w` (en
+`.hero`) = `min(100vw, max(560px, (100svh - 470px) * 2.637))` para que título +
+video + descripción + botones quepan en la pantalla (2.637 = 1440/546), y
+`145vw` en teléfono (≤720px) para que la laptop ocupe casi todo el ancho;
+`aspect-ratio: 1440/546` le reserva el alto. La `.sub` sube un 10 % del alto
+del video sobre su orilla de abajo (teclado oscuro). Ya no hay parallax en el
+video (`data-parallax` quitado); el fundido al bajar de `site.js` mueve todo
+`.hero-content`, video incluido. **Secuencia:** un script al inicio de la
+sección pone `.hero-espera` (antes de pintar, sin parpadeo) y
+`.hero-espera .h-in { animation: none; opacity: 0 }`; el script del final la
+quita cuando al video le faltan 0.7 s (`timeupdate`), en `ended`/`error`, a
+los 3.5 s si no arrancó (bajo consumo, red lenta) y siempre a los 6 s; al
+quitarla corren las entradas `heroUp` escalonadas (título → descripción →
+botones). Con `prefers-reduced-motion` no se esconde nada y queda la imagen
+fija. `.hero-media` lleva `background-color:#000` porque sin él asoma el
+fondo de `body::before`; si el teléfono bloquea el autoplay arranca al primer
+toque y se pausa fuera de pantalla. La foto anterior (`hero-macbook.jpg`)
+sigue en el repo pero ya no se usa.
 **Fondo negro puro en la portada (2026-11-27):** `<body class="fondo-negro">`
 solo en `index.html` quita la seda (`body::before`) y el resplandor gris
 difuminado de los capítulos (`.chapter-figure .glow`). Las demás páginas

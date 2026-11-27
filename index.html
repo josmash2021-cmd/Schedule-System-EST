@@ -46,29 +46,66 @@
     <main>
         <!-- ================= HERO ================= -->
         <section class="hero">
-            <!-- Video de portada (assets/video/hero-home.mp4): H.264 sin audio,
-                 fondo negro puro y fundido desde negro al inicio. Se reproduce
-                 UNA sola vez y se queda quieto en el último cuadro (la laptop
-                 abierta y encendida) — decisión del dueño. Sin poster: entra
-                 desde negro. -->
-            <div class="hero-media" data-parallax="0.28">
-                <video class="hero-video" autoplay muted playsinline preload="auto" disablepictureinpicture disableremoteplayback aria-hidden="true" tabindex="-1">
-                    <source src="assets/video/hero-home.mp4?v=2" type="video/mp4">
-                </video>
+            <!-- Inicio (pedido del dueño, 2026-11-27): título ARRIBA de la
+                 laptop, el video en medio y la descripción con los botones
+                 abajo. Primero se ve solo el video; las letras entran cuando
+                 está por terminar. El video (assets/video/hero-home.mp4,
+                 H.264 sin audio, fondo negro) se reproduce UNA vez y se queda
+                 en el último cuadro. -->
+            <script>
+                /* Esconde las letras ya antes de que se pinten (sin parpadeo);
+                   con "menos movimiento" no se esconden. */
+                if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                    document.currentScript.parentNode.classList.add('hero-espera');
+                }
+            </script>
+            <div class="hero-content">
+                <h1 class="h-in h-in-2"><span data-en="Genuine Apple,">Apple original,</span><br><span data-en="without overpaying.">sin pagar de más.</span></h1>
+                <div class="hero-media">
+                    <video class="hero-video" autoplay muted playsinline preload="auto" disablepictureinpicture disableremoteplayback aria-hidden="true" tabindex="-1">
+                        <source src="assets/video/hero-home.mp4?v=2" type="video/mp4">
+                    </video>
+                </div>
+                <p class="sub h-in h-in-3" data-en="Cracked screen, a battery that won't last, or need a laptop for school or work? We'll help you in English or Spanish, with warranty and no hassle.">¿Pantalla rota, batería que ya no aguanta o necesitas una laptop para la escuela o el trabajo? Te ayudamos en español, con garantía y sin complicaciones.</p>
+                <div class="hero-ctas h-in h-in-4">
+                    <a href="/products" class="btn btn-blue" data-en="Explore products">Explorar productos</a>
+                    <a href="/book-appointment" class="btn btn-ghost" data-en="Book an appointment">Reservar una cita</a>
+                </div>
             </div>
             <script>
                 /* Video de portada: se reproduce una vez y se queda en el
-                   último cuadro; con "menos movimiento" se quita (el CSS deja
-                   esa misma imagen fija); si el teléfono bloquea el autoplay
-                   (modo de bajo consumo) arranca al primer toque; y se pausa
-                   si la portada sale de la pantalla antes de terminar. */
+                   último cuadro. Las letras (título, descripción y botones)
+                   entran cuando al video le faltan 0.7 s. Respaldo: si el video
+                   no arranca en 3.5 s (teléfono en bajo consumo, red lenta o
+                   error) las letras salen igual, y nunca después de 6 s. Con
+                   "menos movimiento" se quita el video (el CSS deja su último
+                   cuadro fijo) y las letras se ven desde el principio. Si el
+                   teléfono bloquea el autoplay arranca al primer toque, y se
+                   pausa si la portada sale de la pantalla antes de terminar. */
                 (function () {
+                    var hero = document.querySelector('.hero');
                     var v = document.querySelector('.hero-video');
-                    if (!v) return;
+                    if (!hero || !v) return;
+                    var listo = false;
+                    function mostrarLetras() {
+                        if (listo) return;
+                        listo = true;
+                        hero.classList.remove('hero-espera');
+                    }
                     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
                         v.parentNode.removeChild(v);
+                        mostrarLetras();
                         return;
                     }
+                    v.addEventListener('timeupdate', function () {
+                        if (v.duration && v.currentTime >= v.duration - 0.7) mostrarLetras();
+                    });
+                    v.addEventListener('ended', mostrarLetras);
+                    v.addEventListener('error', mostrarLetras, true);
+                    var respaldo = setTimeout(mostrarLetras, 3500);
+                    v.addEventListener('playing', function () { clearTimeout(respaldo); }, { once: true });
+                    setTimeout(mostrarLetras, 6000);
+
                     v.muted = true;
                     var visible = true;
                     function play() {
@@ -89,14 +126,6 @@
                     }
                 })();
             </script>
-            <div class="hero-content">
-                <h1 class="h-in h-in-2"><span data-en="Genuine Apple,">Apple original,</span><br><span data-en="without overpaying.">sin pagar de más.</span></h1>
-                <p class="sub h-in h-in-3" data-en="Cracked screen, a battery that won't last, or need a laptop for school or work? We'll help you in English or Spanish, with warranty and no hassle.">¿Pantalla rota, batería que ya no aguanta o necesitas una laptop para la escuela o el trabajo? Te ayudamos en español, con garantía y sin complicaciones.</p>
-                <div class="hero-ctas h-in h-in-4">
-                    <a href="/products" class="btn btn-blue" data-en="Explore products">Explorar productos</a>
-                    <a href="/book-appointment" class="btn btn-ghost" data-en="Book an appointment">Reservar una cita</a>
-                </div>
-            </div>
         </section>
 
         <!-- ================= MARQUEE ================= -->

@@ -211,49 +211,59 @@ a { -webkit-tap-highlight-color: transparent; }
     .nav-meta .nav-admin-link { color: #d4af37; letter-spacing: .05em; }
 }
 
-/* ---------------- Hero a pantalla completa ---------------- */
+/* ---------------- Hero a pantalla completa ----------------
+   Orden (pedido del dueño, 2026-11-27): título ARRIBA de la laptop, el video
+   en medio y la descripción con los botones abajo. Primero se ve solo el
+   video; las letras entran cuando está por terminar (.hero-espera, la quita
+   el script de index.html). */
 .hero {
     position: relative; min-height: calc(100svh - 70px);
     display: flex; align-items: center; justify-content: center;
     overflow: hidden; isolation: isolate;
+    /* Ancho del video: a todo lo ancho, pero sin pasarse del alto que queda
+       libre (la pantalla menos ~470px de título, descripción y botones).
+       2.637 = 1440 / 546, la proporción del video. */
+    --hero-video-w: min(100vw, max(560px, calc((100svh - 470px) * 2.637)));
 }
-.hero-media { position: absolute; inset: -12% 0 0; height: 112%; z-index: -2; will-change: transform; }
-.hero-media img { width: 100%; height: 100%; object-fit: cover; object-position: center center; opacity: 1; }
-/* Video de portada. Su fondo es negro puro, así que no se recorta a "cover":
-   va a todo lo ancho y centrado, y lo que sobra arriba y abajo es negro sobre
-   negro. En pantallas altas (teléfonos) se hace más ancho que la pantalla
-   para que la laptop no quede diminuta. */
-.hero-media { --hero-video-w: max(100%, 112svh); background-color: #000; }
-.hero-media video {
-    position: absolute; left: 50%; top: 50%;
-    width: var(--hero-video-w); max-width: none; height: auto;
-    transform: translate(-50%, -50%); pointer-events: none;
-}
-/* Sin el botón de "play" que pone iOS cuando bloquea el autoplay */
-.hero-media video::-webkit-media-controls-start-playback-button { display: none !important; }
-/* Con "menos movimiento" el script de index.html quita el video: queda una
-   imagen fija del mismo video, con el mismo tamaño y posición. */
-@media (prefers-reduced-motion: reduce) {
-    .hero-media { background: #000 url(img/hero-home-still.jpg?v=2) center / var(--hero-video-w) auto no-repeat; }
-}
-/* Sin capa oscura encima del video (petición del dueño, 2026-11-27): el
-   video ya tiene fondo negro y el texto se lee con su text-shadow. */
-.hero-content { position: relative; z-index: 1; text-align: center; padding: 110px 24px 90px; max-width: 920px; will-change: opacity; }
+.hero-content { position: relative; z-index: 1; width: 100%; max-width: 980px; text-align: center; padding: 32px 24px 56px; will-change: opacity; }
 .hero-eyebrow {
     display: inline-block; font-size: 13px; font-weight: 600; letter-spacing: .24em;
     text-transform: uppercase; color: #d4d4d8;
 }
 .hero h1 {
-    font-size: clamp(44px, 7.5vw, 92px); font-weight: 800;
-    letter-spacing: -.045em; line-height: 1.02; margin: 18px 0 20px;
+    font-size: clamp(40px, 5.6vw, 80px); font-weight: 800;
+    letter-spacing: -.045em; line-height: 1.02; margin: 0 0 14px;
     text-wrap: balance;
 }
-.hero .sub { color: #d4d4d8; font-size: clamp(16px, 1.7vw, 20px); max-width: 600px; margin: 0 auto 38px; }
-/* Sombra suave: el texto se sigue leyendo en los momentos claros del video */
-.hero h1, .hero .sub { text-shadow: 0 2px 22px rgba(0, 0, 0, .6); }
-/* El texto pequeño necesita una sombra más pegada (sin capa oscura encima del video) */
-.hero .sub { text-shadow: 0 1px 2px rgba(0, 0, 0, .85), 0 2px 16px rgba(0, 0, 0, .75); }
-.hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+/* Video de portada (fondo negro puro): a lo ancho de la pantalla aunque el
+   texto sea más angosto — lo que sobra a los lados es negro sobre negro.
+   aspect-ratio le reserva el alto antes de que cargue (no salta nada). */
+.hero-media {
+    position: relative; width: var(--hero-video-w); aspect-ratio: 1440 / 546;
+    margin-left: calc(50% - var(--hero-video-w) / 2);
+    background-color: #000;
+}
+.hero-media video {
+    position: absolute; inset: 0; display: block;
+    width: 100%; height: 100%; max-width: none; pointer-events: none;
+}
+/* Sin el botón de "play" que pone iOS cuando bloquea el autoplay */
+.hero-media video::-webkit-media-controls-start-playback-button { display: none !important; }
+/* Con "menos movimiento" el script quita el video: queda su último cuadro fijo */
+@media (prefers-reduced-motion: reduce) {
+    .hero-media { background: #000 url(img/hero-home-still.jpg?v=2) center / cover no-repeat; }
+}
+/* La descripción sube un poquito sobre la orilla de abajo del video (el
+   teclado, oscuro) para que todo quepa en la pantalla. Sin capa oscura encima
+   del video: la sombra pegada mantiene el texto legible. */
+.hero .sub {
+    position: relative; color: #d4d4d8; font-size: clamp(16px, 1.6vw, 20px);
+    max-width: 720px; margin: calc(var(--hero-video-w) / 2.637 * -.1) auto 30px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .85), 0 2px 16px rgba(0, 0, 0, .75);
+}
+.hero-ctas { position: relative; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+/* Mientras corre el video, las letras esperan escondidas */
+.hero-espera .h-in { animation: none; opacity: 0; }
 
 /* Entrada escalonada del hero */
 .h-in { opacity: 0; animation: heroUp 1s var(--ease) forwards; }
@@ -905,14 +915,11 @@ footer {
     .operate-map { aspect-ratio: 4 / 5; }
     .card-foot { flex-direction: column; align-items: flex-start; }
     .card-foot .btn { width: 100%; }
-    .hero-content { padding: 90px 20px 80px; }
+    .hero-content { padding: 24px 20px 44px; }
 
-    /* Hero: en móvil la imagen apaisada se recorta mucho con object-fit:cover,
-       así que reducimos la altura, centramos el punto de interés y aclaramos
-       el degradado superior para que la laptop sea visible. */
-    .hero { min-height: calc(92svh - 70px); }
-    .hero-media { inset: 0; height: 100%; }
-    .hero-media img { object-position: 50% 45%; }
+    /* Teléfono: el video más ancho que la pantalla (solo se recorta el negro
+       de los lados) para que la laptop abierta ocupe casi todo el ancho */
+    .hero { min-height: calc(92svh - 70px); --hero-video-w: 145vw; }
 }
 
 /* Accesibilidad: menos movimiento */
