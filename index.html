@@ -20,6 +20,7 @@
     <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
     <link rel="stylesheet" href="assets/site-v3.css">
+    <link rel="stylesheet" href="assets/product-viewer.css">
     <script src="assets/i18n.js"></script>
 </head>
 <body class="fondo-negro">
@@ -129,21 +130,127 @@
                     </a>
                 </div>
             </div>
-            <div class="chapter-figure reveal-scale">
-                <div class="glow" style="--glow:#8e8e93"></div>
+            <div class="chapter-figure chapter-figure-feature reveal-scale">
                 <div class="figure-media">
-                    <img draggable="false" src="assets/img/macbook-pro.jpg" alt="Laptop con el logo iluminado en tonos morados" data-en-alt="Laptop with the logo glowing in purple tones">
-                    <div class="figure-badge figure-badge-top">
-                        <span class="badge-eyebrow" data-en="Professional performance">Potencia profesional</span>
-                        <span class="badge-title" data-en="M3 Pro chip">Chip M3 Pro</span>
-                    </div>
-                    <div class="figure-badge figure-badge-bottom">
-                        <span class="badge-eyebrow" data-en="All day, every day">Todo el día, todos los días</span>
-                        <span class="badge-title" data-en="Up to 22 hours of battery life">Hasta 22h de batería</span>
-                    </div>
-                </div>
-            </div>
-        </section>
+                    <section class="viewer" id="featureViewer" data-active="display" data-color="space-black" data-playback="paused" tabindex="0" role="region" aria-label="MacBook Pro product feature viewer">
+                        <div class="media-layer">
+                            <figure class="viewer-media" data-media="sizes" aria-hidden="true">
+                                <picture>
+                                    <source media="(max-width: 734px)" srcset="assets/img/product-viewer/sizes-small.avif">
+                                    <img src="assets/img/product-viewer/sizes.avif" alt="16-inch MacBook Pro next to the 14-inch model, showing relative size">
+                                </picture>
+                            </figure>
+                            <figure class="viewer-media" data-media="colors" aria-hidden="true">
+                                <div class="color-image color-space-black">
+                                    <picture>
+                                        <source media="(max-width: 734px)" srcset="assets/img/product-viewer/colors-space-black-small.avif">
+                                        <img src="assets/img/product-viewer/colors-space-black.avif" alt="MacBook Pro in Space Black, closed lid with rounded corners">
+                                    </picture>
+                                </div>
+                                <div class="color-image color-silver">
+                                    <picture>
+                                        <source media="(max-width: 734px)" srcset="assets/img/product-viewer/colors-silver-small.avif">
+                                        <img src="assets/img/product-viewer/colors-silver.avif" alt="MacBook Pro in Silver, closed lid with rounded corners">
+                                    </picture>
+                                </div>
+                            </figure>
+                            <figure class="viewer-media is-active" data-media="display" aria-hidden="false">
+                                <picture class="video-static" aria-hidden="true">
+                                    <source media="(max-width: 734px)" srcset="assets/img/product-viewer/hero-small.avif">
+                                    <img src="assets/img/product-viewer/hero.avif" alt="">
+                                </picture>
+                                <video class="feature-video" data-video="display" muted playsinline preload="auto" poster="assets/img/product-viewer/hero.avif" aria-label="Lights shine through a hollow space before the image zooms out to reveal the PROLED XDR display with vivid colors">
+                                    <source media="(max-width: 734px)" src="assets/video/product-viewer/display-small.mp4" type="video/mp4">
+                                    <source src="assets/video/product-viewer/display.mp4" type="video/mp4">
+                                </video>
+                            </figure>
+                            <figure class="viewer-media" data-media="touch" aria-hidden="true">
+                                <picture class="video-static" aria-hidden="true">
+                                    <source media="(max-width: 734px)" srcset="assets/img/product-viewer/touch-poster-small.avif">
+                                    <img src="assets/img/product-viewer/touch-poster.avif" alt="">
+                                </picture>
+                                <video class="feature-video" data-video="touch" muted playsinline preload="auto" poster="assets/img/product-viewer/touch-poster.avif" aria-label="A hand reaches over the MacBook Pro keyboard to flip an image element using Touch">
+                                    <source media="(max-width: 734px)" src="assets/video/product-viewer/touch-small.mp4" type="video/mp4">
+                                    <source src="assets/video/product-viewer/touch.mp4" type="video/mp4">
+                                </video>
+                            </figure>
+                            <figure class="viewer-media" data-media="speakers" aria-hidden="true">
+                                <picture>
+                                    <source media="(max-width: 734px)" srcset="assets/img/product-viewer/speakers-small.avif">
+                                    <img src="assets/img/product-viewer/speakers.avif" alt="MacBook Pro with its keyboard lit by the display and circles depicting sonic waves">
+                                </picture>
+                            </figure>
+                            <figure class="viewer-media" data-media="camera" aria-hidden="true">
+                                <picture>
+                                    <source media="(max-width: 734px)" srcset="assets/img/product-viewer/camera-small.avif">
+                                    <img src="assets/img/product-viewer/camera.avif" alt="MacBook Pro showing a FaceTime video call on its display">
+                                </picture>
+                            </figure>
+                            <figure class="viewer-media" data-media="connectivity" aria-hidden="true">
+                                <picture>
+                                    <source media="(max-width: 734px)" srcset="assets/img/product-viewer/connectivity-small.avif">
+                                    <img src="assets/img/product-viewer/connectivity.avif" alt="Two MacBook Pro laptops showing MagSafe, Thunderbolt 5, HDMI, SDXC and headphone connections">
+                                </picture>
+                            </figure>
+                        </div>
+                        <button class="round-control close-viewer" type="button" aria-label="Close product feature viewer">
+                            <svg viewBox="0 0 36 36" aria-hidden="true"><path d="M10.2 10.2 25.8 25.8M25.8 10.2 10.2 25.8" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>
+                        </button>
+                        <div class="feature-controls">
+                            <ul class="feature-list" aria-label="Product features">
+                                <li class="feature-item" data-feature="sizes">
+                                    <button class="feature-trigger" type="button" aria-expanded="false" aria-controls="detail-sizes"><span class="plus-icon" aria-hidden="true"></span><span>Sizes and weights</span></button>
+                                    <div class="feature-detail" id="detail-sizes" aria-hidden="true"><p><strong>Sizes and weights.</strong> The 14-inch model weighs just 3.0 pounds and the 16-inch model weighs just 4.0 pounds.</p></div>
+                                </li>
+                                <li class="feature-item" data-feature="colors">
+                                    <button class="feature-trigger" type="button" aria-expanded="false" aria-controls="detail-colors"><span class="mini-swatch space-black" aria-hidden="true"></span><span>Colors</span></button>
+                                    <div class="feature-detail" id="detail-colors" aria-hidden="true">
+                                        <p><strong>Colors.</strong> Available in two stunning finishes. Shown in <span class="shown-color">Space Black</span>.</p>
+                                        <fieldset class="color-picker">
+                                            <legend>Choose a finish</legend>
+                                            <span class="color-option"><input type="radio" name="finish" id="finish-space-black" value="space-black" checked><label for="finish-space-black" aria-label="Space Black"><span class="color-choice space-black"></span></label></span>
+                                            <span class="color-option"><input type="radio" name="finish" id="finish-silver" value="silver"><label for="finish-silver" aria-label="Silver"><span class="color-choice silver"></span></label></span>
+                                        </fieldset>
+                                    </div>
+                                </li>
+                                <li class="feature-item is-active" data-feature="display">
+                                    <button class="feature-trigger" type="button" aria-expanded="true" aria-controls="detail-display"><span class="plus-icon" aria-hidden="true"></span><span>Display</span></button>
+                                    <div class="feature-detail" id="detail-display" aria-hidden="false"><p><strong>Display.</strong> The spectacular PROLED XDR display features an industry-leading tandem OLED panel that provides up to 2000 nits peak HDR and SDR brightness, a 10,000,000:1 contrast ratio, and a wider color gamut covering both P3 and Adobe RGB.</p></div>
+                                </li>
+                                <li class="feature-item" data-feature="touch">
+                                    <button class="feature-trigger" type="button" aria-expanded="false" aria-controls="detail-touch"><span class="plus-icon" aria-hidden="true"></span><span>Touch</span></button>
+                                    <div class="feature-detail" id="detail-touch" aria-hidden="true"><p><strong>Touch.</strong> Get hands-on with Multi-Touch gestures. Scroll, pinch, rotate, draw, and more — right onscreen.</p></div>
+                                </li>
+                                <li class="feature-item" data-feature="speakers">
+                                    <button class="feature-trigger" type="button" aria-expanded="false" aria-controls="detail-speakers"><span class="plus-icon" aria-hidden="true"></span><span>Speakers and mics</span></button>
+                                    <div class="feature-detail" id="detail-speakers" aria-hidden="true"><p><strong>Speakers and mics.</strong> The best audio system in a laptop. A redesigned six-speaker sound system delivers improved clarity and 50 percent deeper bass. And a studio-quality three-mic array makes sure you come through loud and clear.</p></div>
+                                </li>
+                                <li class="feature-item" data-feature="camera">
+                                    <button class="feature-trigger" type="button" aria-expanded="false" aria-controls="detail-camera"><span class="plus-icon" aria-hidden="true"></span><span>Camera</span></button>
+                                    <div class="feature-detail" id="detail-camera" aria-hidden="true"><p><strong>Camera.</strong> The 12MP Center Stage camera keeps you in frame as you move around. Desk View lets you share your workspace. And advanced video stabilization lets you touch the screen without causing your camera feed to shake.</p></div>
+                                </li>
+                                <li class="feature-item" data-feature="connectivity">
+                                    <button class="feature-trigger" type="button" aria-expanded="false" aria-controls="detail-connectivity"><span class="plus-icon" aria-hidden="true"></span><span>Connectivity</span></button>
+                                    <div class="feature-detail" id="detail-connectivity" aria-hidden="true"><p><strong>Connectivity.</strong> Three Thunderbolt 5 ports, an HDMI port, a MagSafe 3 port, an SDXC card slot, a headphone jack, Wi-Fi 7, and Bluetooth 6. Connect high-speed peripherals, transfer photos, work with multiple external displays, and power up instantly.</p></div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="feature-nav" aria-label="Feature navigation">
+                            <button class="round-control previous-feature" type="button" aria-label="Previous product feature"><svg viewBox="0 0 36 36" aria-hidden="true"><path d="M25 20c0 .4-.15.77-.44 1.06l-5.5 5.5a1.5 1.5 0 0 1-2.12 0 1.5 1.5 0 0 1 0-2.12l4.44-4.44-4.44-4.44a1.5 1.5 0 0 1 2.12-2.12l5.5 5.5c.29.29.44.67.44 1.06Z" transform="rotate(-90 18 18)"/></svg></button>
+                            <button class="round-control next-feature" type="button" aria-label="Next product feature"><svg viewBox="0 0 36 36" aria-hidden="true"><path d="M25 20c0 .4-.15.77-.44 1.06l-5.5 5.5a1.5 1.5 0 0 1-2.12 0 1.5 1.5 0 0 1 0-2.12l4.44-4.44-4.44-4.44a1.5 1.5 0 0 1 2.12-2.12l5.5 5.5c.29.29.44.67.44 1.06Z" transform="rotate(90 18 18)"/></svg></button>
+                        </div>
+                        <button class="round-control media-playback" type="button" aria-label="Play video">
+                            <svg class="pause-symbol" viewBox="0 0 24 24" aria-hidden="true" style="display:none"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg>
+                            <svg class="play-symbol" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z"/></svg>
+                        </button>
+                        <div class="closed-state" aria-hidden="true">
+                            <picture>
+                                <source media="(max-width: 734px)" srcset="assets/img/product-viewer/hero-small.avif">
+                                <img src="assets/img/product-viewer/hero.avif" alt="MacBook Pro with a colorful PROLED XDR display">
+                            </picture>
+                            <button class="open-viewer" type="button"><span class="plus-icon" aria-hidden="true"></span>Explore MacBook Pro</button>
+                        </div>
+                    </section>
 
         <!-- ================= RESEÑAS ================= -->
         <section class="testimonials">
@@ -769,6 +876,7 @@
             }
         })();
     </script>
+    <script src="assets/product-viewer.js" defer></script>
     <script src="assets/security.js" defer></script>
     <script src="assets/transitions.js" defer></script>
     <script src="assets/cart.js" defer></script>

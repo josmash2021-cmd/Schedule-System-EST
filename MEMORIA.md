@@ -77,6 +77,22 @@ solo en `index.html` quita la seda (`body::before`) y el resplandor gris
 difuminado de los capítulos (`.chapter-figure .glow`). Las demás páginas
 siguen con la seda; para ponerlo en todo el sitio basta agregar la clase al
 `<body>` de cada página.
+**Visor interactivo del capítulo Laptops (2026-11-27):** el bloque
+`.chapter-figure-feature` reemplaza la foto `macbook-pro.jpg` y los badges de
+M3 Pro/batería por `#featureViewer` (7 opciones, imágenes, selector Space
+Black/Silver, flechas, cierre/reapertura y gestos móviles). CSS/JS compartidos:
+`assets/product-viewer.css` y `assets/product-viewer.js`; medios en
+`assets/img/product-viewer/` y `assets/video/product-viewer/` (versiones large
+y small). Display comienza pausado y visible con la foto CLARA `hero.avif` /
+`hero-small.avif` (la foto 2 que eligió el dueño; NO usar el oscuro
+`display-poster`). El botón Play o tocar el video lo reproduce UNA sola vez;
+al terminar vuelve a `currentTime = 0` y reaparece esa foto clara pausada. Al
+volver a abrir Display se reproduce una vez, igual que Touch, que termina con
+`touch-poster.avif`. Con `prefers-reduced-motion` no hay reproducción
+automática, pero el usuario puede iniciarla manualmente. La capa
+`.closed-state picture/img` lleva `pointer-events:none` para que no intercepte
+el botón de reapertura. `preview/macbook-pro/` es una preview local que usa los
+mismos CSS/JS/assets y no se copia a `server/public/`.
 Gradiente superior reforzado (`assets/site-v3.css:194`) para oscurecer también
 la zona justo debajo del menú (`rgba(0,0,0,.85)` → `.25` → `.55` → `#000`),
 marquee infinito, 2 "capítulos" (MacBook desde

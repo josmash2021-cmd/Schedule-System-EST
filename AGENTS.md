@@ -140,6 +140,15 @@ cambies estructura, flujos o convenciones.
   junto al video). Toda la portada va con **fondo negro puro** (`<body
   class="fondo-negro">`: sin la seda ni el resplandor gris de los capítulos;
   las demás páginas siguen con la seda). Detalle en `MEMORIA.md` §3.
+- **Visor interactivo del capítulo Laptops (2026-11-27):** la imagen
+  `macbook-pro.jpg` y sus badges se sustituyeron por `#featureViewer`, con CSS/JS
+  en `assets/product-viewer.css|js` y medios en
+  `assets/img|video/product-viewer/`. Tiene 7 opciones, selector de color,
+  cierre/reapertura y videos Display/Touch. Display empieza PAUSADO con la foto
+  clara `hero.avif` (la foto 2 del dueño, no el poster oscuro de Display); Play
+  o un toque lo reproduce UNA vez y vuelve a esa foto pausada. Touch se
+  reproduce una vez al abrirlo y vuelve a `touch-poster.avif`. La preview local
+  `preview/macbook-pro/` comparte esos mismos assets y no se copia al deploy.
 - JS/CSS compartido: `assets/` (`site.js`, `cart.js`, `site-v3.css`,
   `transitions.js`, `i18n.js`, `security.js`).
 - **Tras editar cualquier página/asset del sitio:** `node server/scripts/copy-frontend.js`
