@@ -143,25 +143,20 @@ cambies estructura, flujos o convenciones.
   los `.h-in`; respaldo a 3.5 s si no arranca y tope de 6 s). Toda la portada va con **fondo negro puro** (`<body
   class="fondo-negro">`: sin la seda ni el resplandor gris de los capítulos;
   las demás páginas siguen con la seda). Detalle en `MEMORIA.md` §3.
-- **Reseñas de Google (2026-11-27, opción 3 del dueño):** una sola lista en
+- **Reseñas (2026-11-27, diseño opción 3 del dueño):** una sola lista en
   `assets/resenas-datos.js` (`googleUrl`, `productos` del catálogo y `lista` de
   {producto, foto, nombre, estrellas 1–5, fecha AAAA-MM-DD, texto, texto_en
-  opcional}) que pinta `assets/resenas.js`
-  (sin defer, al final del body) en dos lados: la franja `#resenasFranja` del
-  inicio (lista duplicada + `padding-right` = gap para girar sin salto; la
-  duración sale de `--n`) con el botón "Ver todas las reseñas" → **`/reviews`**
-  (`reviews.html`: cuadrícula de todas, promedio calculado de la lista y botón
-  "Déjanos tu reseña en Google" que solo aparece con `googleUrl`). Estrellas en
-  el dorado del logo; cada reseña con **lo que compró** (foto del catálogo +
-  nombre, enlaza a su página) y la **foto de perfil** del cliente copiada de
-  Google (`assets/img/resenas/`, redonda; sin foto, iniciales doradas SOLO
-  texto, sin círculo) y "Google" a la derecha; sin Trustpilot. Nunca caras
-  inventadas ni de internet. **Publicado el 2026-11-27 sin la parte de Google**
-  (las 15 reseñas que había no vienen de Google: van con `fuente: ""`, sin
-  foto, con títulos "Reseñas" y con producto solo en las 3 que nombran el
-  equipo en su texto: "MacBook Air"); al llegar las reales: `fuente:
-  "google"`, `googleUrl`, producto, foto y títulos "Reseñas en Google". **Nunca rotular como Google reseñas que no salgan
-  del perfil real del negocio.**
+  opcional}) que pinta `assets/resenas.js` en `#resenasFranja` (duplicada para
+  el marquee) y en `/reviews`. Cada reseña tiene un producto del catálogo
+  (foto, nombre y enlace) y un **retrato fotográfico real de stock** (Unsplash)
+  en `assets/img/resenas/`, redondo a 40 px, identificado como ilustrativo y no
+  cliente en `alt`/`title`; sin foto, iniciales doradas SOLO texto. El dueño
+  pidió fotos reales y autorizó asignar productos a las 15 reseñas antiguas:
+  **no son fotos de los clientes ni compras verificadas**; se conservan
+  `fuente: ""`, títulos "Reseñas" y no se muestra Google. Al llegar reseñas
+  reales: reemplazar textos, fotos y productos por datos comprobados;
+  `fuente: "google"` solo si vienen del perfil real. **Nunca rotular como
+  Google reseñas que no salgan de ahí.**
 - **Visor interactivo del capítulo Laptops (2026-11-27):** la imagen
   `macbook-pro.jpg` y sus badges se sustituyeron por `#featureViewer`, con CSS/JS
   en `assets/product-viewer.css|js` y medios en

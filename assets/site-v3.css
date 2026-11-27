@@ -856,15 +856,15 @@ a { -webkit-tap-highlight-color: transparent; }
     color: var(--text); font-size: 13px; font-weight: 600;
     white-space: nowrap; flex-shrink: 0;
 }
-/* Reseñas de Google (opción 3 que eligió el dueño, 2026-11-27): estrellas en
-   el dorado del logo, iniciales en dorado SOLO texto (sin círculo) y "Google"
-   a la derecha. */
+/* Reseñas: estrellas en el dorado del logo, iniciales en dorado SOLO texto
+   (sin círculo) y fuente opcional a la derecha. Los retratos son fotos de
+   stock, no de clientes; alt y title lo aclaran. */
 .res-estrella svg { display: block; width: 16px; height: 16px; fill: #c8a24b; }
 .res-estrella.res-apagada svg { fill: rgba(255, 255, 255, .18); }
 .res-quien { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .res-iniciales { flex: none; color: #c8a24b; font-size: 12.5px; font-weight: 700; letter-spacing: .06em; }
-/* Foto de perfil del cliente (de su reseña de Google); sin foto, sus iniciales */
-.res-foto { flex: none; width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+/* Retrato fotográfico de stock (Unsplash), no es el cliente; sin foto, iniciales */
+.res-foto { flex: none; width: 40px; height: 40px; border: 1px solid rgba(200, 162, 75, .4); border-radius: 50%; object-fit: cover; background: #151515; }
 /* Lo que compró: foto del catálogo + nombre; enlaza a la página del equipo */
 .res-producto { display: flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; min-width: 0; }
 .res-producto img { flex: none; width: 46px; height: 46px; border-radius: 10px; object-fit: cover; background: #fff; }

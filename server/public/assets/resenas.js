@@ -49,9 +49,9 @@
         }
         var texto = (en && r.texto_en) ? r.texto_en : r.texto;
         var fecha = fechaCorta(r.fecha);
-        // Foto de perfil del cliente (la de su reseña en Google); sin foto, sus iniciales
+        // Retratos fotográficos de stock; no son imágenes de los clientes.
         var cara = r.foto
-            ? '<img class="res-foto" src="' + esc(r.foto) + '" alt="" width="34" height="34" loading="lazy">'
+            ? '<img class="res-foto" src="' + esc(r.foto) + '" alt="' + esc((en ? 'Illustrative stock photo for the review by ' : 'Foto ilustrativa para la reseña de ') + r.nombre) + '" title="' + (en ? 'Stock photo, not the customer' : 'Foto de stock; no es el cliente') + '" width="40" height="40" loading="lazy" decoding="async" draggable="false">'
             : '<span class="res-iniciales" aria-hidden="true">' + esc(iniciales(r.nombre)) + '</span>';
         // Lo que compró: foto del catálogo + nombre, enlaza a su página
         var p = r.producto && datos.productos && datos.productos[r.producto];

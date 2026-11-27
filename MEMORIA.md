@@ -114,23 +114,19 @@ Google", que se esconde sin `googleUrl` (site-v3 no trae `[hidden]`, por eso
 dueño). La franja ya no salta: antes eran 15 tarjetas animadas a -50 % sin
 duplicar. Al cargar reseñas reales: texto tal cual, nombre como en Google y sus
 estrellas reales (4 se ve con una apagada y cuenta en el promedio).
-Cada reseña lleva además (pedido del dueño) **la foto de perfil** del cliente
-—la de su reseña en Google, guardada en `assets/img/resenas/`; sin foto quedan
-sus iniciales; NUNCA caras inventadas ni sacadas de internet— y **lo que
-compró**: clave de `productos` en `resenas-datos.js` (foto + nombre del
-catálogo, enlaza a la página del equipo; en la franja con `tabindex="-1"`
-porque la franja es `aria-hidden`).
-**Publicado (2026-11-27) sin lo de Google:** el dueño pidió publicar antes de
-tener las reseñas reales. Sale el diseño nuevo, `/reviews`, el botón y la
-franja sin salto, pero las 15 reseñas que ya había (sin origen comprobado) van
-con `fuente: ""` → sin la palabra "Google" en la tarjeta, títulos "Reseñas" (no
-"Reseñas en Google"), resumen "Promedio de N reseñas" y producto SOLO en las 3
-que nombran el equipo en su propio texto (Carlos R., Sofía H., Andrea B. →
-MacBook Air 13"); los demás de la vista previa eran de ejemplo y el dueño los
-pidió ("se supone que era así"), pero no se ponen sin saber qué compró cada
-uno. La etiqueta "Google" solo se pone en reseñas
-copiadas del perfil real (`fuente: "google"`); el resumen dice "en Google" solo
-si todas lo son.
+Cada reseña lleva **un retrato fotográfico real de stock** de Unsplash,
+guardado como JPG de 256×256 en `assets/img/resenas/` (40 px redondo; `alt` y
+`title` dicen que es una foto ilustrativa y no el cliente; sin foto quedan
+iniciales) y **un producto del catálogo** (foto + nombre, enlaza a su página;
+en la franja con `tabindex="-1"` porque es `aria-hidden`). El dueño pidió
+fotos reales y autorizó asignar los productos de la misma página a las 15
+reseñas antiguas. **No son fotos de los clientes ni compras verificadas**.
+Las 15 reseñas conservan `fuente: ""` → sin la palabra "Google" en la tarjeta,
+títulos "Reseñas" (no "Reseñas en Google") y resumen "Promedio de N reseñas".
+Al llegar reseñas reales hay que sustituir textos, retratos y productos por los
+datos comprobados. La etiqueta "Google" solo se pone en reseñas copiadas del
+perfil real (`fuente: "google"`); el resumen dice "en Google" solo si todas lo
+son.
 **Visor interactivo del capítulo Laptops (2026-11-27):** el bloque
 `.chapter-figure-feature` reemplaza la foto `macbook-pro.jpg` y los badges de
 M3 Pro/batería por `#featureViewer` (7 opciones, imágenes, selector Space
