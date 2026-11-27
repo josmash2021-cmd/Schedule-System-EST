@@ -863,6 +863,15 @@ a { -webkit-tap-highlight-color: transparent; }
 .res-estrella.res-apagada svg { fill: rgba(255, 255, 255, .18); }
 .res-quien { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .res-iniciales { flex: none; color: #c8a24b; font-size: 12.5px; font-weight: 700; letter-spacing: .06em; }
+/* Foto de perfil del cliente (de su reseña de Google); sin foto, sus iniciales */
+.res-foto { flex: none; width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+/* Lo que compró: foto del catálogo + nombre; enlaza a la página del equipo */
+.res-producto { display: flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; min-width: 0; }
+.res-producto img { flex: none; width: 46px; height: 46px; border-radius: 10px; object-fit: cover; background: #fff; }
+.res-producto span { min-width: 0; display: grid; line-height: 1.3; }
+.res-producto small { color: var(--muted); font-size: 11.5px; }
+.res-producto b { color: var(--text); font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.res-producto:hover b, .res-producto:focus-visible b { text-decoration: underline; text-underline-offset: 3px; }
 .res-fuente { color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .02em; white-space: nowrap; }
 .res-cta { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
 

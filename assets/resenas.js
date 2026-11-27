@@ -39,7 +39,9 @@
         return d.toLocaleDateString(en ? 'en-US' : 'es-US', { month: 'short', year: 'numeric' });
     }
 
-    function tarjeta(r) {
+    // enFranja: la franja del inicio está escondida para lectores de pantalla
+    // (aria-hidden), así que su enlace no debe recibir el foco con Tab.
+    function tarjeta(r, enFranja) {
         var n = estrellasDe(r);
         var estrellas = '';
         for (var i = 0; i < 5; i++) {
@@ -47,14 +49,27 @@
         }
         var texto = (en && r.texto_en) ? r.texto_en : r.texto;
         var fecha = fechaCorta(r.fecha);
+        // Foto de perfil del cliente (de Google); sin foto, sus iniciales
+        var cara = r.foto
+            ? '<img class="res-foto" src="' + esc(r.foto) + '" alt="" width="34" height="34" loading="lazy">'
+            : '<span class="res-iniciales" aria-hidden="true">' + esc(iniciales(r.nombre)) + '</span>';
+        // Lo que compró: foto del catálogo + nombre, enlaza a su página
+        var p = r.producto && datos.productos && datos.productos[r.producto];
+        var producto = p
+            ? '<a class="res-producto" href="' + esc(p.url) + '"' + (enFranja ? ' tabindex="-1"' : '') + '>' +
+                '<img src="' + esc(p.img) + '" alt="" width="46" height="46" loading="lazy">' +
+                '<span><small>' + (en ? 'Bought' : 'Compró') + '</small><b>' + esc(p.nombre) + '</b></span>' +
+              '</a>'
+            : '';
         return '<article class="testimonial-card">' +
             '<div class="testimonial-rating">' +
                 '<div class="testimonial-stars" role="img" aria-label="' + n + (en ? ' out of 5 stars' : ' de 5 estrellas') + '">' + estrellas + '</div>' +
                 '<span class="testimonial-score">' + n.toFixed(1) + '</span>' +
             '</div>' +
             '<p class="testimonial-text">' + esc(texto) + '</p>' +
+            producto +
             '<div class="testimonial-footer">' +
-                '<span class="res-quien"><span class="res-iniciales" aria-hidden="true">' + esc(iniciales(r.nombre)) + '</span>' +
+                '<span class="res-quien">' + cara +
                 '<span class="testimonial-author">— ' + esc(r.nombre) + '</span></span>' +
                 '<span class="res-fuente">Google' + (fecha ? ' · ' + esc(fecha) : '') + '</span>' +
             '</div>' +
@@ -64,7 +79,7 @@
     // Franja del inicio
     var franja = document.getElementById('resenasFranja');
     if (franja) {
-        var html = datos.lista.map(tarjeta).join('');
+        var html = datos.lista.map(function (r) { return tarjeta(r, true); }).join('');
         franja.innerHTML = html + html;
         franja.style.setProperty('--n', datos.lista.length);
     }
@@ -75,7 +90,7 @@
         var orden = datos.lista.slice().sort(function (a, b) {
             return String(b.fecha || '').localeCompare(String(a.fecha || ''));
         });
-        lista.innerHTML = orden.map(tarjeta).join('');
+        lista.innerHTML = orden.map(function (r) { return tarjeta(r, false); }).join('');
         var resumen = document.getElementById('resenasResumen');
         if (resumen) {
             var suma = datos.lista.reduce(function (t, r) { return t + estrellasDe(r); }, 0);

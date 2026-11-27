@@ -114,6 +114,13 @@ Google", que se esconde sin `googleUrl` (site-v3 no trae `[hidden]`, por eso
 dueño). La franja ya no salta: antes eran 15 tarjetas animadas a -50 % sin
 duplicar. Al cargar reseñas reales: texto tal cual, nombre como en Google y sus
 estrellas reales (4 se ve con una apagada y cuenta en el promedio).
+Cada reseña lleva además (pedido del dueño) **la foto de perfil** del cliente
+—la de su reseña en Google, guardada en `assets/img/resenas/`; sin foto quedan
+sus iniciales; NUNCA caras inventadas ni sacadas de internet— y **lo que
+compró**: clave de `productos` en `resenas-datos.js` (foto + nombre del
+catálogo, enlaza a la página del equipo; en la franja con `tabindex="-1"`
+porque la franja es `aria-hidden`). Los productos de las 15 de prueba son de
+ejemplo.
 **Visor interactivo del capítulo Laptops (2026-11-27):** el bloque
 `.chapter-figure-feature` reemplaza la foto `macbook-pro.jpg` y los badges de
 M3 Pro/batería por `#featureViewer` (7 opciones, imágenes, selector Space
