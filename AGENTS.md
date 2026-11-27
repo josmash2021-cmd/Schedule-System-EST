@@ -133,10 +133,13 @@ cambies estructura, flujos o convenciones.
   `prefers-reduced-motion` lo deja quieto. Sin dirección o si Mapbox falla →
   `body.sv-nomap` (la hoja sola). OJO: el mapa espera `style.load`, NO `load`
   (`load` espera todas las teselas y una colgada dejaba el mapa sin ruta).
-- **Portada (`index.html`):** el fondo del hero es un video en loop,
+- **Portada (`index.html`):** el fondo del hero es un video,
   `assets/video/hero-home.mp4` (H.264 sin audio, fondo negro, fundido a negro
-  en las puntas; ancho `max(100%, 112svh)` centrado, no `cover`). Detalle y
-  cómo reconvertir otro video en `MEMORIA.md` §3.
+  en las puntas; ancho `max(100%, 112svh)` centrado, no `cover`), que **se
+  repite cada 10 s** (dura 5 s y espera 5 s en negro; `CICLO` en el script
+  junto al video). Toda la portada va con **fondo negro puro** (`<body
+  class="fondo-negro">`: sin la seda ni el resplandor gris de los capítulos;
+  las demás páginas siguen con la seda). Detalle en `MEMORIA.md` §3.
 - JS/CSS compartido: `assets/` (`site.js`, `cart.js`, `site-v3.css`,
   `transitions.js`, `i18n.js`, `security.js`).
 - **Tras editar cualquier página/asset del sitio:** `node server/scripts/copy-frontend.js`

@@ -37,6 +37,12 @@ body::after {
 @media (max-width: 720px) {
     body::before { background-position: 85% 20%; }
 }
+/* Portada (index.html, <body class="fondo-negro">): todo el fondo negro puro
+   — petición del dueño (2026-11-27). Se quita la seda y el resplandor gris
+   difuminado de detrás de las fotos de los capítulos, que teñía los lados de
+   gris. Las demás páginas siguen con la seda. */
+body.fondo-negro::before { content: none; }
+body.fondo-negro .chapter-figure .glow { display: none; }
 img {
     max-width: 100%; display: block;
     -webkit-user-select: none; user-select: none;

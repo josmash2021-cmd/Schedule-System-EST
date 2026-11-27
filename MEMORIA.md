@@ -60,8 +60,10 @@ escalonada (`.h-in-1..4`), sin indicador de scroll (`.scroll-cue` eliminado).
 video que dio el dueño — 5 s, 1440×546, fondo negro puro; venía en AV1, que
 muchos iPhone no reproducen, así que se convirtió a H.264 sin audio con
 `ffmpeg-static` de `server/node_modules`, con fundido a negro de 0.4 s al
-inicio y al final para que el loop no salte). `<video autoplay muted loop
-playsinline>` sin poster (entra desde negro). NO va en `cover`: ancho
+inicio y al final). `<video autoplay muted playsinline>` SIN `loop` y sin
+poster (entra desde negro): **se repite cada 10 s** (petición del dueño) —
+al terminar (`ended`) el script espera en negro lo que falta (`CICLO =
+10000` ms menos la duración) y vuelve a empezar desde 0. NO va en `cover`: ancho
 `max(100%, 112svh)` centrado — el sobrante es negro sobre negro y en teléfono
 la laptop no queda diminuta; `.hero-media` lleva `background-color:#000`
 porque sin él asoma el fondo de `body::before`. El script junto al video lo
@@ -70,6 +72,11 @@ por CSS), lo arranca al primer toque si el teléfono bloquea el autoplay y lo
 pausa fuera de pantalla. `.hero h1/.sub` llevan `text-shadow` para leerse
 sobre los momentos claros. La foto anterior (`hero-macbook.jpg`) sigue en el
 repo pero ya no se usa.
+**Fondo negro puro en la portada (2026-11-27):** `<body class="fondo-negro">`
+solo en `index.html` quita la seda (`body::before`) y el resplandor gris
+difuminado de los capítulos (`.chapter-figure .glow`). Las demás páginas
+siguen con la seda; para ponerlo en todo el sitio basta agregar la clase al
+`<body>` de cada página.
 Gradiente superior reforzado (`assets/site-v3.css:194`) para oscurecer también
 la zona justo debajo del menú (`rgba(0,0,0,.85)` → `.25` → `.55` → `#000`),
 marquee infinito, 2 "capítulos" (MacBook desde
