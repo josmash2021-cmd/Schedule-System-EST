@@ -119,8 +119,15 @@ Cada reseña lleva además (pedido del dueño) **la foto de perfil** del cliente
 sus iniciales; NUNCA caras inventadas ni sacadas de internet— y **lo que
 compró**: clave de `productos` en `resenas-datos.js` (foto + nombre del
 catálogo, enlaza a la página del equipo; en la franja con `tabindex="-1"`
-porque la franja es `aria-hidden`). Los productos de las 15 de prueba son de
-ejemplo.
+porque la franja es `aria-hidden`).
+**Publicado (2026-11-27) sin lo de Google:** el dueño pidió publicar antes de
+tener las reseñas reales. Sale el diseño nuevo, `/reviews`, el botón y la
+franja sin salto, pero las 15 reseñas que ya había (sin origen comprobado) van
+con `fuente: ""` → sin la palabra "Google" en la tarjeta, títulos "Reseñas" (no
+"Reseñas en Google"), resumen "Promedio de N reseñas" y sin producto (los de la
+vista previa eran de ejemplo). La etiqueta "Google" solo se pone en reseñas
+copiadas del perfil real (`fuente: "google"`); el resumen dice "en Google" solo
+si todas lo son.
 **Visor interactivo del capítulo Laptops (2026-11-27):** el bloque
 `.chapter-figure-feature` reemplaza la foto `macbook-pro.jpg` y los badges de
 M3 Pro/batería por `#featureViewer` (7 opciones, imágenes, selector Space

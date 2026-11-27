@@ -49,7 +49,7 @@
         }
         var texto = (en && r.texto_en) ? r.texto_en : r.texto;
         var fecha = fechaCorta(r.fecha);
-        // Foto de perfil del cliente (de Google); sin foto, sus iniciales
+        // Foto de perfil del cliente (la de su reseña en Google); sin foto, sus iniciales
         var cara = r.foto
             ? '<img class="res-foto" src="' + esc(r.foto) + '" alt="" width="34" height="34" loading="lazy">'
             : '<span class="res-iniciales" aria-hidden="true">' + esc(iniciales(r.nombre)) + '</span>';
@@ -71,7 +71,9 @@
             '<div class="testimonial-footer">' +
                 '<span class="res-quien">' + cara +
                 '<span class="testimonial-author">— ' + esc(r.nombre) + '</span></span>' +
-                '<span class="res-fuente">Google' + (fecha ? ' · ' + esc(fecha) : '') + '</span>' +
+                (r.fuente === 'google' || fecha
+                    ? '<span class="res-fuente">' + [r.fuente === 'google' ? 'Google' : '', esc(fecha)].filter(Boolean).join(' · ') + '</span>'
+                    : '') +
             '</div>' +
         '</article>';
     }
@@ -95,9 +97,12 @@
         if (resumen) {
             var suma = datos.lista.reduce(function (t, r) { return t + estrellasDe(r); }, 0);
             var total = datos.lista.length;
+            var todasGoogle = datos.lista.every(function (r) { return r.fuente === 'google'; });
             resumen.innerHTML = '<b>' + (suma / total).toFixed(1) + '</b>' +
                 '<span class="res-resumen-estrellas" aria-hidden="true">' + ESTRELLA + ESTRELLA + ESTRELLA + ESTRELLA + ESTRELLA + '</span>' +
-                '<span>' + (en ? 'Average of ' + total + ' Google reviews' : 'Promedio de ' + total + ' reseñas en Google') + '</span>';
+                '<span>' + (en
+                    ? 'Average of ' + total + (todasGoogle ? ' Google reviews' : ' reviews')
+                    : 'Promedio de ' + total + (todasGoogle ? ' reseñas en Google' : ' reseñas')) + '</span>';
         }
     }
 

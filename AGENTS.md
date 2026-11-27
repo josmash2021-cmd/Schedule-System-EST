@@ -156,7 +156,10 @@ cambies estructura, flujos o convenciones.
   nombre, enlaza a su página) y la **foto de perfil** del cliente copiada de
   Google (`assets/img/resenas/`, redonda; sin foto, iniciales doradas SOLO
   texto, sin círculo) y "Google" a la derecha; sin Trustpilot. Nunca caras
-  inventadas ni de internet. **Nunca rotular como Google reseñas que no salgan
+  inventadas ni de internet. **Publicado el 2026-11-27 sin la parte de Google**
+  (las 15 reseñas que había no vienen de Google: van con `fuente: ""`, sin
+  producto ni foto y con títulos "Reseñas"); al llegar las reales: `fuente:
+  "google"`, `googleUrl`, producto, foto y títulos "Reseñas en Google". **Nunca rotular como Google reseñas que no salgan
   del perfil real del negocio.**
 - **Visor interactivo del capítulo Laptops (2026-11-27):** la imagen
   `macbook-pro.jpg` y sus badges se sustituyeron por `#featureViewer`, con CSS/JS
