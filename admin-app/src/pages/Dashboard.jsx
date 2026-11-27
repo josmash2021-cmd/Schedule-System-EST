@@ -55,13 +55,13 @@ function hace(date) {
 
 const iniciales = (s) => String(s || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 
-// Íconos propios estilo "duotono": trazo fino redondeado + una forma de
-// relleno suave (.duo, dorado por defecto) y puntos sólidos (.dot). Sin cuadro
-// de fondo. Dibujados a mano: el panel no usa librerías de íconos.
+// Íconos propios de línea limpia: un solo color (el del texto), sin relleno
+// ni cuadro de fondo; los puntos (.dot) van sólidos. Dibujados a mano: el
+// panel no usa librerías de íconos.
 function Ico({ children }) {
   return (
     <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       {children}
     </svg>
   );
@@ -70,27 +70,23 @@ function Ico({ children }) {
 const ICONS = {
   // Moneda con signo de dólar.
   dinero: <>
-    <circle className="duo" cx="12" cy="12" r="9" />
     <circle cx="12" cy="12" r="9" />
     <path d="M14.8 9.4c-.5-.9-1.5-1.4-2.8-1.4-1.6 0-2.8.8-2.8 2s1.1 1.7 2.8 2 2.8.9 2.8 2.1-1.2 2-2.8 2c-1.3 0-2.4-.6-2.9-1.5" />
     <path d="M12 6.5V8M12 16v1.5" />
   </>,
   // Calendario con el día marcado.
   mes: <>
-    <path className="duo" d="M3.5 9.5h17V7.5a2.5 2.5 0 0 0-2.5-2.5H6a2.5 2.5 0 0 0-2.5 2.5z" />
     <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
     <path d="M8 3v4M16 3v4M3.5 9.5h17" />
     <circle className="dot" cx="15.5" cy="15" r="1.6" />
   </>,
   // Línea que sube con su área.
   ganancia: <>
-    <path className="duo" d="M3 17l5.5-6 4 3.5L21 6v14H3z" />
     <path d="M3 17l5.5-6 4 3.5L21 6" />
     <path d="M15.5 6H21v5.5" />
   </>,
   // Cartera.
   cobrar: <>
-    <rect className="duo" x="3" y="6.5" width="18" height="13" rx="3" />
     <path d="M17 6.5V5.2a1.8 1.8 0 0 0-2.3-1.7L5.3 6A3 3 0 0 0 3 8.9" />
     <rect x="3" y="6.5" width="18" height="13" rx="3" />
     <path d="M21 11h-3.5a2 2 0 0 0 0 4H21" />
@@ -98,7 +94,6 @@ const ICONS = {
   </>,
   // Camión de reparto.
   envio: <>
-    <rect className="duo" x="2.5" y="6" width="11" height="10" rx="1.5" />
     <path d="M2.5 16.5v-9A1.5 1.5 0 0 1 4 6h8a1.5 1.5 0 0 1 1.5 1.5v10" />
     <path d="M13.5 10h3.4a2 2 0 0 1 1.7 1l1.9 3.2a2 2 0 0 1 .3 1v1.3a1 1 0 0 1-1 1h-.8" />
     <path d="M2.5 16.5a1 1 0 0 0 1 1h1.5M9 17.5h6" />
@@ -107,34 +102,24 @@ const ICONS = {
   </>,
   // Caja (la pieza que llegó).
   pieza: <>
-    <path className="duo" d="M12 3l8 4.5L12 12 4 7.5z" />
     <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" />
     <path d="M4 7.5L12 12l8-4.5M12 12v9M8 5.3l8 4.5" />
   </>,
   // Círculo con palomita.
   entregar: <>
-    <circle className="duo" cx="12" cy="12" r="9" />
     <circle cx="12" cy="12" r="9" />
     <path d="M8 12.3l2.8 2.7L16 9.5" />
   </>,
   // Etiqueta de precio.
   agotado: <>
-    <path className="duo" d="M3 4.6v6.1a2 2 0 0 0 .6 1.4l8.3 8.3a2 2 0 0 0 2.8 0l5.8-5.8a2 2 0 0 0 0-2.8l-8.3-8.3a2 2 0 0 0-1.4-.6H4.6A1.6 1.6 0 0 0 3 4.6z" />
     <path d="M3 4.6v6.1a2 2 0 0 0 .6 1.4l8.3 8.3a2 2 0 0 0 2.8 0l5.8-5.8a2 2 0 0 0 0-2.8l-8.3-8.3a2 2 0 0 0-1.4-.6H4.6A1.6 1.6 0 0 0 3 4.6z" />
     <circle className="dot" cx="7.6" cy="7.6" r="1.4" />
   </>,
   // Triángulo de aviso.
   bajo: <>
-    <path className="duo" d="M10.3 4.2L2.6 17.5a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0z" />
     <path d="M10.3 4.2L2.6 17.5a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0z" />
     <path d="M12 9.5v4" />
     <circle className="dot" cx="12" cy="16.8" r="1" />
-  </>,
-  // Reloj (en camino).
-  camino: <>
-    <circle className="duo" cx="12" cy="12" r="9" />
-    <circle cx="12" cy="12" r="9" />
-    <path d="M12 7.5V12l3 2" />
   </>,
 };
 
@@ -463,7 +448,7 @@ export default function Dashboard() {
           <h3><Link to="/ordenes" className="chart-link">Órdenes →</Link></h3>
           {ordCount == null ? spin : (
             <div className="ord-grid">
-              {[['envio', ordCount.enviar, 'Por enviar', ordCount.enviar > 0], ['camino', ordCount.camino, 'En camino', false], ['entregar', ordCount.entregados, 'Entregados (mes)', false]].map(([ic, n, label, warn]) => (
+              {[['pieza', ordCount.enviar, 'Por enviar', ordCount.enviar > 0], ['envio', ordCount.camino, 'En camino', false], ['entregar', ordCount.entregados, 'Entregados (mes)', false]].map(([ic, n, label, warn]) => (
                 <Link key={label} to="/ordenes" className={'ord-cell' + (warn ? ' ord-warn' : '')}>
                   <span className="ord-ico"><Ico>{ICONS[ic]}</Ico></span>
                   <span className="ord-num">{n}</span>

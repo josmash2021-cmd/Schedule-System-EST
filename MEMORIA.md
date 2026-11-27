@@ -1066,3 +1066,25 @@ los mensajes de "ocupado" coinciden), pero solo Express tiene `/api/auth/login`.
 - Arnés: pruebas nuevas de "Siguiente paso" (Reparaciones), agenda con
   botones (Citas), casilla (Tareas), pestaña Agotados (Inventario), pestaña
   "Por mes" (Ventas) y detalle al tocar (Órdenes, Ventas, Facturas).
+
+## 21. Íconos de línea limpia y un solo menú en el teléfono — 2026-11-26
+
+- **Íconos:** el dueño dijo que los duotono (relleno dorado al 32 %, que en
+  blanco se ve beige) "se ven feos, como antiguos, y el color no me gusta".
+  Se quitó el relleno `.duo` de TODOS los íconos (Dashboard y menú): ahora
+  línea limpia de un color (trazo 1.75). En Órdenes el reloj de "En camino"
+  se cambió: caja = por enviar, camión = en camino, palomita = entregados.
+- **Teléfono:** había dos botones que abrían el mismo menú lateral (☰ arriba
+  y "Más" abajo) y al abrirlo se veían los dos menús a la vez. Se le
+  mostraron 3 opciones dibujadas (barra + hoja, barra con + dorado al centro,
+  solo menú lateral) y eligió la 1 con los botones de "Crear nuevo" en
+  BLANCO (no dorados). En ≤820px el menú lateral ya no se muestra
+  (`display: none`), sin ☰; "Más" sube `.mas-sheet`. En la computadora no
+  cambió.
+- Gotcha de la hoja: se queda montada y se esconde con `transform` +
+  `visibility` (con retraso al cerrar para que se vea la animación) e
+  `inert` cuando está cerrada, para que el teclado no entre en sus botones.
+- Arnés: pruebas nuevas en tableta (sin ☰ ni menú lateral) y teléfono (abre
+  la hoja, 4 botones blancos + 9 páginas, Citas navega y la cierra, Crear
+  nuevo → Venta, cierra con Escape y tocando el fondo). Ojo: el texto de un
+  ítem con numerito incluye el número ("2Citas").

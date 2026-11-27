@@ -249,7 +249,7 @@ select option { background: #fff; color: #111; }
 .nuevo-opt .ico { width: 17px; height: 17px; flex: none; color: #fff; }
 .nuevo-opt:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(200, 162, 75, 0.5); }
 /* Barra fija de abajo: solo en teléfono/tableta (ver media 820px). */
-.bottom-bar { display: none; }
+.bottom-bar, .mas-backdrop, .mas-sheet { display: none; } /* solo teléfono/tableta (≤820px) */
 .nav-item .soon { margin-left: auto; font-size: 9.5px; background: rgba(255, 255, 255, 0.08); color: var(--muted-2); padding: 2px 7px; border-radius: 999px; font-weight: 700; letter-spacing: .04em; border: 1px solid var(--line-2); }
 .nav-sep { height: 1px; background: var(--line-2); margin: 10px 8px; }
 
@@ -393,9 +393,8 @@ select option { background: #fff; color: #111; }
 .dash-kpis .stat-card:nth-child(3) { animation-delay: 0.14s; }
 .dash-kpis .stat-card:nth-child(4) { animation-delay: 0.21s; }
 .dashboard .dash-kpis .stat-card .v { font-size: 36px; }
-/* Íconos duotono sin cuadro: trazo + relleno suave (--duo) + puntos sólidos. */
+/* Íconos de línea limpia: un solo color (currentColor), sin relleno ni cuadro. */
 .ico { display: block; width: 100%; height: 100%; overflow: visible; }
-.ico .duo { fill: var(--duo, var(--oro)); fill-opacity: 0.32; stroke: none; }
 .ico .dot { fill: currentColor; stroke: none; }
 .dash-ico { width: 28px; height: 28px; flex: none; color: #111; transition: transform 0.25s var(--ease); }
 .stat-card:hover .dash-ico { transform: translateY(-2px) rotate(-4deg); }
@@ -433,15 +432,15 @@ select option { background: #fff; color: #111; }
 }
 .att-row + .att-row { border-top: 1px solid rgba(0, 0, 0, 0.06); }
 .att-row:hover { background: #f4f4f6; transform: translateX(2px); }
-.att-ico { width: 26px; height: 26px; flex: none; margin: 0 4px 0 2px; color: #8a8a92; --duo: #b9b9c2; }
-.att-ico-on { color: #111; --duo: var(--oro); }
+.att-ico { width: 26px; height: 26px; flex: none; margin: 0 4px 0 2px; color: #8a8a92; }
+.att-ico-on { color: #111; }
 .att-txt { flex: 1; min-width: 0; }
 .att-txt small { display: block; color: #8a8a92; font-size: 12.5px; margin-top: 2px; }
 .att-pill { flex: none; font-size: 12px; color: #7a5d1c; }
 .att-go { color: #9a9aa2; flex: none; }
 .att-more { font-size: 12.5px; padding: 8px 0 0; }
 .att-ok { display: flex; align-items: center; gap: 12px; color: #55555c; font-size: 14.5px; padding: 18px 0; }
-.att-ok-ico { width: 32px; height: 32px; flex: none; color: #1f7a3d; --duo: #34c759; }
+.att-ok-ico { width: 32px; height: 32px; flex: none; color: #1f7a3d; }
 
 /* Camino de las reparaciones: 4 paradas unidas por una línea. */
 .pipe { display: grid; grid-template-columns: repeat(4, 1fr); position: relative; padding: 6px 0 4px; text-decoration: none; color: #111; }
@@ -799,16 +798,54 @@ table.data tbody tr:hover td { background: #f5f5f6; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 820px) {
+  /* Un solo menú: el lateral se esconde y manda la barra de abajo + su hoja. */
   .shell { grid-template-columns: 1fr; }
-  .sidebar {
-    position: fixed; z-index: 40; left: 0; top: 0; height: 100vh; width: 256px;
-    transform: translateX(-100%); transition: transform 0.32s var(--ease);
-  }
-  .sidebar.open { transform: none; box-shadow: var(--shadow); }
-  .sidebar-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(3px); z-index: 39; animation: fadeIn 0.25s var(--ease); }
-  .burger { display: inline-flex !important; }
+  .sidebar { display: none; }
   .content { padding: 10px 18px calc(96px + env(safe-area-inset-bottom, 0px)); }
-  .sidebar { padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+
+  /* Hoja de "Más": sube desde abajo por detrás de la barra (que queda encima). */
+  .mas-backdrop {
+    display: block; position: fixed; inset: 0; z-index: 43; background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: opacity 0.28s var(--ease);
+  }
+  .mas-backdrop.open { opacity: 1; pointer-events: auto; }
+  .mas-sheet {
+    display: block; position: fixed; z-index: 44; left: 0; right: 0; bottom: 0; margin: 0 auto; max-width: 560px;
+    max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain;
+    background: #131318; color: var(--text); border-radius: 24px 24px 0 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.09); box-shadow: 0 -20px 40px rgba(0, 0, 0, 0.35);
+    padding: 0 18px calc(84px + env(safe-area-inset-bottom, 0px));
+    transform: translateY(105%); visibility: hidden;
+    transition: transform 0.32s var(--ease), visibility 0s linear 0.32s;
+  }
+  .mas-sheet.open { transform: none; visibility: visible; transition: transform 0.32s var(--ease), visibility 0s; }
+  .mas-sheet.dragging { transition: none; }
+  .mas-grab { padding: 10px 0 16px; touch-action: none; cursor: grab; }
+  .mas-handle { width: 40px; height: 5px; border-radius: 99px; background: rgba(255, 255, 255, 0.22); margin: 0 auto; }
+  .mas-lbl { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #8a8a94; font-weight: 700; margin: 0 2px 10px; }
+  .mas-new { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 22px; }
+  .mas-new-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 13px 4px 11px; min-width: 0;
+    border: 0; border-radius: 16px; background: #fff; color: #0b0b0e;
+    font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    transition: transform 0.15s var(--ease), background 0.15s var(--ease);
+  }
+  .mas-new-btn:active { transform: scale(0.96); background: #e9e9ec; }
+  .mas-new-btn .ico { width: 22px; height: 22px; }
+  .mas-new-btn span, .mas-item > span:last-child { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mas-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 4px; }
+  .mas-item {
+    display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px 4px; min-width: 0;
+    border: 0; background: none; border-radius: 14px; color: #d4d4d8; text-decoration: none;
+    font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s var(--ease);
+  }
+  .mas-item:active { background: rgba(255, 255, 255, 0.06); }
+  .mas-item.active { color: #fff; }
+  .mas-item.active .mas-ico { color: var(--oro); }
+  .mas-ico { position: relative; width: 26px; height: 26px; color: #fff; }
+  .mas-ico .ico { width: 26px; height: 26px; }
+  .mas-ico .nav-count { position: absolute; top: -6px; right: -12px; min-width: 18px; height: 18px; font-size: 10px; box-shadow: 0 0 0 2px #131318; }
+
   .bottom-bar {
     display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; z-index: 45;
     left: 0; right: 0; bottom: 0; padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
@@ -827,8 +864,6 @@ table.data tbody tr:hover td { background: #f5f5f6; }
   .bb-item.active::before { content: ""; position: absolute; top: -6px; left: 30%; right: 30%; height: 3px; border-radius: 0 0 3px 3px; background: var(--oro); }
   .topbar { padding: 14px 18px 10px; }
 }
-.burger { display: none; background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line); border-radius: 999px; width: 38px; height: 38px; align-items: center; justify-content: center; color: var(--text); cursor: pointer; transition: background 0.18s, border-color 0.18s; }
-.burger:hover { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.25); }
 
 /* ---------- Teléfonos (≤560px): todo más compacto ---------- */
 @media (max-width: 560px) {
@@ -1077,7 +1112,7 @@ button.nav-item { background: none; border: none; width: 100%; font-family: inhe
 @media print {
   body::before { display: none; }
   body { background: #fff; }
-  .sidebar, .topbar, .invoice-toolbar, .sidebar-backdrop, .inv-editor-form { display: none !important; }
+  .sidebar, .topbar, .invoice-toolbar, .bottom-bar, .mas-backdrop, .mas-sheet, .inv-editor-form { display: none !important; }
   .shell { display: block; }
   .content { padding: 0; max-width: none; }
   .content > * { animation: none; }

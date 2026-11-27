@@ -4,35 +4,38 @@ import { useAuth } from '../auth.jsx';
 import { api, apiRoot } from '../api.js';
 
 /* Shell del panel: menú lateral agrupado por el día de trabajo (Taller,
-   Tienda, Equipo) con numeritos de pendientes, botón "+ Nuevo" para crear
-   lo más común en un clic, y en teléfono una barra fija abajo. */
+   Tienda, Equipo) con numeritos de pendientes y botón "+ Nuevo" para crear
+   lo más común en un clic. En teléfono/tableta (≤820px) el menú lateral se
+   esconde y queda UN solo menú: la barra fija de abajo, cuyo botón "Más"
+   sube una hoja con "Crear nuevo" y el resto de páginas. */
 
-// Íconos duotono (trazo + relleno suave dorado .duo), sin cuadro de fondo:
+// Íconos de línea limpia, un solo color y sin cuadro de fondo:
 // los mismos del Dashboard. Dibujados a mano (sin librerías).
 function Ico({ children }) {
   return (
     <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       {children}
     </svg>
   );
 }
 
 const I = {
-  dashboard: <><rect className="duo" x="3.5" y="3.5" width="7" height="9" rx="2" /><rect x="3.5" y="3.5" width="7" height="9" rx="2" /><rect x="13.5" y="3.5" width="7" height="5" rx="2" /><rect x="13.5" y="11.5" width="7" height="9" rx="2" /><rect x="3.5" y="15.5" width="7" height="5" rx="2" /></>,
-  reparaciones: <><path className="duo" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3-3a6 6 0 0 1-7.9 7.9l-6.4 6.4a2.1 2.1 0 0 1-3-3l6.4-6.4a6 6 0 0 1 7.9-7.9z" /><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3-3a6 6 0 0 1-7.9 7.9l-6.4 6.4a2.1 2.1 0 0 1-3-3l6.4-6.4a6 6 0 0 1 7.9-7.9z" /></>,
-  citas: <><path className="duo" d="M3.5 9.5h17V7.5a2.5 2.5 0 0 0-2.5-2.5H6a2.5 2.5 0 0 0-2.5 2.5z" /><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" /><path d="M8 3v4M16 3v4M3.5 9.5h17" /><circle className="dot" cx="15.5" cy="15" r="1.6" /></>,
-  ventas: <><circle className="duo" cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="9" /><path d="M14.8 9.4c-.5-.9-1.5-1.4-2.8-1.4-1.6 0-2.8.8-2.8 2s1.1 1.7 2.8 2 2.8.9 2.8 2.1-1.2 2-2.8 2c-1.3 0-2.4-.6-2.9-1.5" /><path d="M12 6.5V8M12 16v1.5" /></>,
-  ordenes: <><path className="duo" d="M5.2 8h13.6l1.2 11.2a1.6 1.6 0 0 1-1.6 1.8H5.6A1.6 1.6 0 0 1 4 19.2z" /><path d="M5.2 8h13.6l1.2 11.2a1.6 1.6 0 0 1-1.6 1.8H5.6A1.6 1.6 0 0 1 4 19.2z" /><path d="M8.5 10.5V7a3.5 3.5 0 0 1 7 0v3.5" /></>,
-  inventario: <><path className="duo" d="M12 3l8 4.5L12 12 4 7.5z" /><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" /><path d="M4 7.5L12 12l8-4.5M12 12v9M8 5.3l8 4.5" /></>,
-  facturas: <><path className="duo" d="M6 3h8l5 5v11.5A1.5 1.5 0 0 1 17.5 21h-11A1.5 1.5 0 0 1 5 19.5v-15A1.5 1.5 0 0 1 6.5 3z" /><path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z" /><path d="M14 3v5h5M8.5 13h7M8.5 16.5h4.5" /></>,
-  clientes: <><circle className="duo" cx="9" cy="8" r="3.5" /><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20v-1a5.5 5.5 0 0 1 11 0v1" /><path d="M16 4.7a3.5 3.5 0 0 1 0 6.6M17.5 13.8a5.5 5.5 0 0 1 4 5.2v1" /></>,
-  tareas: <><rect className="duo" x="3.5" y="3.5" width="17" height="17" rx="4" /><rect x="3.5" y="3.5" width="17" height="17" rx="4" /><path d="M8 12.2l2.7 2.6L16 9.5" /></>,
-  asistencia: <><circle className="duo" cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="9" /><path d="M12 7.5V12l3 2" /></>,
-  trabajadores: <><circle className="duo" cx="12" cy="8" r="4" /><circle cx="12" cy="8" r="4" /><path d="M4.5 20.5v-1A6.5 6.5 0 0 1 11 13h2a6.5 6.5 0 0 1 6.5 6.5v1" /></>,
-  ajustes: <><circle className="duo" cx="12" cy="12" r="3.2" /><circle cx="12" cy="12" r="3.2" /><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z" /></>,
-  mas: <><circle className="duo" cx="12" cy="12" r="9" /><circle cx="6.5" cy="12" r="1.2" className="dot" /><circle cx="12" cy="12" r="1.2" className="dot" /><circle cx="17.5" cy="12" r="1.2" className="dot" /></>,
+  dashboard: <><rect x="3.5" y="3.5" width="7" height="9" rx="2" /><rect x="13.5" y="3.5" width="7" height="5" rx="2" /><rect x="13.5" y="11.5" width="7" height="9" rx="2" /><rect x="3.5" y="15.5" width="7" height="5" rx="2" /></>,
+  reparaciones: <><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3-3a6 6 0 0 1-7.9 7.9l-6.4 6.4a2.1 2.1 0 0 1-3-3l6.4-6.4a6 6 0 0 1 7.9-7.9z" /></>,
+  citas: <><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" /><path d="M8 3v4M16 3v4M3.5 9.5h17" /><circle className="dot" cx="15.5" cy="15" r="1.6" /></>,
+  ventas: <><circle cx="12" cy="12" r="9" /><path d="M14.8 9.4c-.5-.9-1.5-1.4-2.8-1.4-1.6 0-2.8.8-2.8 2s1.1 1.7 2.8 2 2.8.9 2.8 2.1-1.2 2-2.8 2c-1.3 0-2.4-.6-2.9-1.5" /><path d="M12 6.5V8M12 16v1.5" /></>,
+  ordenes: <><path d="M5.2 8h13.6l1.2 11.2a1.6 1.6 0 0 1-1.6 1.8H5.6A1.6 1.6 0 0 1 4 19.2z" /><path d="M8.5 10.5V7a3.5 3.5 0 0 1 7 0v3.5" /></>,
+  inventario: <><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" /><path d="M4 7.5L12 12l8-4.5M12 12v9M8 5.3l8 4.5" /></>,
+  facturas: <><path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z" /><path d="M14 3v5h5M8.5 13h7M8.5 16.5h4.5" /></>,
+  clientes: <><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20v-1a5.5 5.5 0 0 1 11 0v1" /><path d="M16 4.7a3.5 3.5 0 0 1 0 6.6M17.5 13.8a5.5 5.5 0 0 1 4 5.2v1" /></>,
+  tareas: <><rect x="3.5" y="3.5" width="17" height="17" rx="4" /><path d="M8 12.2l2.7 2.6L16 9.5" /></>,
+  asistencia: <><circle cx="12" cy="12" r="9" /><path d="M12 7.5V12l3 2" /></>,
+  trabajadores: <><circle cx="12" cy="8" r="4" /><path d="M4.5 20.5v-1A6.5 6.5 0 0 1 11 13h2a6.5 6.5 0 0 1 6.5 6.5v1" /></>,
+  ajustes: <><circle cx="12" cy="12" r="3.2" /><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z" /></>,
+  mas: <><circle cx="6.5" cy="12" r="1.2" className="dot" /><circle cx="12" cy="12" r="1.2" className="dot" /><circle cx="17.5" cy="12" r="1.2" className="dot" /></>,
   plus: <><path d="M12 5v14M5 12h14" /></>,
+  salir: <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5M21 12H9" /></>,
 };
 
 // count: clave del contador de pendientes que lleva el ítem (ver useCounts).
@@ -64,12 +67,19 @@ const NUEVO = [
   { to: '/citas?nueva=1', label: 'Cita', icon: I.citas },
 ];
 
-// Barra de abajo en teléfono: lo más usado + "Más" (abre el menú completo).
+// Barra de abajo en teléfono: lo más usado + "Más" (sube la hoja con el resto).
 const BOTTOM = [
   { to: '/', label: 'Inicio', end: true, icon: I.dashboard },
   { to: '/reparaciones', label: 'Reparar', icon: I.reparaciones, count: 'reparaciones' },
   { to: '/ventas', label: 'Ventas', icon: I.ventas },
   { to: '/ordenes', label: 'Órdenes', icon: I.ordenes, count: 'ordenes' },
+];
+
+// Hoja de "Más": todas las páginas que no están en la barra, + Ajustes.
+const EN_BARRA = new Set(BOTTOM.map((b) => b.to));
+const MAS_PAGINAS = [
+  ...GRUPOS.flatMap((g) => g.items).filter((n) => !EN_BARRA.has(n.to)),
+  { to: '/ajustes', label: 'Ajustes', icon: I.ajustes },
 ];
 
 const TITLES = { '/': 'Dashboard', '/trabajadores': 'Trabajadores', '/tareas': 'Tareas', '/equipo': 'Asistencia', '/reparaciones': 'Reparaciones', '/ventas': 'Ventas', '/facturas': 'Facturas', '/clientes': 'Clientes', '/ordenes': 'Órdenes', '/inventario': 'Inventario', '/citas': 'Citas', '/ajustes': 'Ajustes' };
@@ -120,16 +130,50 @@ function Badge({ n, k }) {
 
 export default function Layout({ children }) {
   const { logout } = useAuth();
-  const [open, setOpen] = useState(false);
+  const [mas, setMas] = useState(false); // hoja de "Más" (solo teléfono)
   const [nuevo, setNuevo] = useState(false);
   const loc = useLocation();
   const navigate = useNavigate();
   const title = TITLES[loc.pathname] || 'Panel';
   const counts = useCounts(loc.pathname);
+  const sheetRef = useRef(null);
+  const drag = useRef(null);
+  // "Más" queda marcado en la barra si la página actual vive dentro de la hoja.
+  const enMas = MAS_PAGINAS.some((n) => n.to === loc.pathname);
 
-  const ir = (to) => { setNuevo(false); setOpen(false); navigate(to); };
+  // La hoja se cierra al cambiar de página y con Escape; mientras está
+  // abierta, la página de atrás no se desplaza.
+  useEffect(() => { setMas(false); }, [loc.pathname, loc.search]);
+  useEffect(() => {
+    if (!mas) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') setMas(false); };
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
+  }, [mas]);
+
+  // Deslizar la agarradera hacia abajo cierra la hoja (como en iPhone).
+  const grabDown = (e) => { drag.current = { y: e.clientY, dy: 0 }; e.currentTarget.setPointerCapture?.(e.pointerId); };
+  const grabMove = (e) => {
+    const d = drag.current; const el = sheetRef.current;
+    if (!d || !el) return;
+    d.dy = Math.max(0, e.clientY - d.y);
+    el.classList.add('dragging');
+    el.style.transform = `translateY(${d.dy}px)`;
+  };
+  const grabUp = () => {
+    const d = drag.current; const el = sheetRef.current;
+    drag.current = null;
+    if (!d || !el) return;
+    el.classList.remove('dragging');
+    el.style.transform = '';
+    if (d.dy > 70) setMas(false);
+  };
+
+  const ir = (to) => { setNuevo(false); setMas(false); navigate(to); };
   const item = (n) => (
-    <NavLink key={n.to} to={n.to} end={n.end} onClick={() => setOpen(false)}
+    <NavLink key={n.to} to={n.to} end={n.end}
       className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}>
       <Ico>{n.icon}</Ico><span className="nav-txt">{n.label}</span>
       {n.count && <Badge n={counts[n.count]} k={n.count} />}
@@ -138,8 +182,7 @@ export default function Layout({ children }) {
 
   return (
     <div className="shell">
-      {open && <div className="sidebar-backdrop" onClick={() => setOpen(false)} />}
-      <aside className={'sidebar' + (open ? ' open' : '')}>
+      <aside className="sidebar">
         <div className="brand">
           <img className="brand-logo" src="/x/static/img/logo-cruise.png" alt="ElectronicST" />
           <div><strong>ElectronicST</strong><span>Panel de gestión</span></div>
@@ -175,9 +218,6 @@ export default function Layout({ children }) {
 
       <div className="main">
         <div className="topbar">
-          <button className="burger" onClick={() => setOpen((v) => !v)} aria-label="Menú">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
-          </button>
           <h2>{title}</h2>
           <div className="spacer" />
           <div className="userchip">
@@ -193,16 +233,48 @@ export default function Layout({ children }) {
         <div className="content">{children}</div>
       </div>
 
-      {/* Teléfono: barra fija abajo con lo más usado. */}
+      {/* Teléfono: "Más" sube esta hoja (Crear nuevo + resto de páginas). */}
+      <div className={'mas-backdrop' + (mas ? ' open' : '')} onClick={() => setMas(false)} aria-hidden="true" />
+      <div ref={sheetRef} className={'mas-sheet' + (mas ? ' open' : '')} role="dialog" aria-modal="true"
+        aria-label="Más opciones" inert={mas ? undefined : ''}>
+        <div className="mas-grab" onPointerDown={grabDown} onPointerMove={grabMove}
+          onPointerUp={grabUp} onPointerCancel={grabUp}>
+          <div className="mas-handle" />
+        </div>
+        <div className="mas-lbl">Crear nuevo</div>
+        <div className="mas-new">
+          {NUEVO.map((n) => (
+            <button key={n.to} type="button" className="mas-new-btn" onClick={() => ir(n.to)}>
+              <Ico>{n.icon}</Ico><span>{n.label}</span>
+            </button>
+          ))}
+        </div>
+        <div className="mas-lbl">Más páginas</div>
+        <nav className="mas-grid" aria-label="Más páginas">
+          {MAS_PAGINAS.map((n) => (
+            <NavLink key={n.to} to={n.to} onClick={() => setMas(false)}
+              className={({ isActive }) => 'mas-item' + (isActive ? ' active' : '')}>
+              <span className="mas-ico"><Ico>{n.icon}</Ico>{n.count && <Badge n={counts[n.count]} k={n.count} />}</span>
+              <span>{n.label}</span>
+            </NavLink>
+          ))}
+          <button type="button" className="mas-item" onClick={() => { setMas(false); logout(); }}>
+            <span className="mas-ico"><Ico>{I.salir}</Ico></span><span>Salir</span>
+          </button>
+        </nav>
+      </div>
+
+      {/* Teléfono: barra fija abajo con lo más usado; es el único menú ahí. */}
       <nav className="bottom-bar" aria-label="Accesos rápidos">
         {BOTTOM.map((n) => (
-          <NavLink key={n.to} to={n.to} end={n.end} onClick={() => setOpen(false)}
-            className={({ isActive }) => 'bb-item' + (isActive && !open ? ' active' : '')}>
+          <NavLink key={n.to} to={n.to} end={n.end} onClick={() => setMas(false)}
+            className={({ isActive }) => 'bb-item' + (isActive && !mas ? ' active' : '')}>
             <span className="bb-ico"><Ico>{n.icon}</Ico>{n.count && <Badge n={counts[n.count]} k={n.count} />}</span>
             {n.label}
           </NavLink>
         ))}
-        <button type="button" className={'bb-item' + (open ? ' active' : '')} onClick={() => setOpen((v) => !v)}>
+        <button type="button" className={'bb-item' + (mas || enMas ? ' active' : '')}
+          onClick={() => setMas((v) => !v)} aria-expanded={mas}>
           <span className="bb-ico"><Ico>{I.mas}</Ico></span>Más
         </button>
       </nav>

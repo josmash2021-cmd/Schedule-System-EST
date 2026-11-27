@@ -373,8 +373,10 @@ ventas usan la MISMA definición que `Sales.jsx` (3 fuentes). De arriba abajo:
   calendario → `/citas?fecha=`).
 - **¿De dónde vino el dinero?** (barra apilada por tipo del mes) y **Últimas
   ventas** (5, con iniciales).
-- Íconos propios **duotono sin cuadro** (`Ico` + `.duo` dorado + `.dot`),
-  dorado de marca `--oro: #c8a24b` en `:root`. Todo el dashboard sin
+- Íconos propios de **línea limpia, un solo color, sin relleno ni cuadro**
+  (`Ico` + `.dot` sólidos; trazo 1.75; el relleno beige `.duo` se quitó el
+  2026-11-26 porque "se veía antiguo" — no reintroducirlo). Órdenes: caja =
+  por enviar, camión = en camino, palomita = entregados. Dorado de marca `--oro: #c8a24b` en `:root`. Todo el dashboard sin
   negrillas (`.dashboard * { font-weight: 400 !important }`, petición del
   dueño). El único color fuera de negro/blanco/dorado es la flecha verde/roja.
 
@@ -391,8 +393,14 @@ ventas usan la MISMA definición que `Sales.jsx` (3 fuentes). De arriba abajo:
   `?nueva=1`; Sales, Invoices, Repairs y Appointments abren su formulario con
   ese parámetro (efecto sobre `searchParams`, funciona aunque ya estés en la
   página) y lo limpian.
-- ≤820px: **barra fija abajo** (`.bottom-bar`: Inicio, Reparar, Ventas,
-  Órdenes, Más = abre el menú lateral); `.content` deja espacio abajo.
+- ≤820px (teléfono/tableta): **UN solo menú** — el lateral se oculta y no
+  hay ☰. Barra fija abajo (`.bottom-bar`: Inicio, Reparar, Ventas, Órdenes,
+  Más). "Más" sube una **hoja desde abajo** (`.mas-sheet`, máx. 560px
+  centrada): "Crear nuevo" con 4 botones BLANCOS (decisión del dueño) →
+  `?nueva=1`, y "Más páginas" (`MAS_PAGINAS` = todo lo que no está en la
+  barra + Ajustes + Salir) con numeritos. Se cierra deslizando la agarradera,
+  tocando el fondo, con Escape, con "Más" o al navegar; "Más" queda marcado
+  si la página actual vive en la hoja. `.content` deja espacio abajo.
 - Las vistas previas de cambios visuales para el dueño van SIEMPRE en la
   misma página de muestra (artifact "Nuevo Dashboard ElectronicST").
 
