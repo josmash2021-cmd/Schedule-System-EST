@@ -111,9 +111,24 @@ pinta `assets/resenas.js` en la franja del inicio y en `/reviews`
 (decisión del dueño); el perfil solo se abre desde "Déjanos tu reseña en
 Google", que se esconde sin `googleUrl` (site-v3 no trae `[hidden]`, por eso
 `.res-dejar [hidden]`). Iniciales sin círculo, solo texto dorado (decisión del
-dueño). La franja ya no salta: antes eran 15 tarjetas animadas a -50 % sin
-duplicar. Al cargar reseñas reales: texto tal cual, nombre como en Google y sus
+dueño). Al cargar reseñas reales: texto tal cual, nombre como en Google y sus
 estrellas reales (4 se ve con una apagada y cuenta en el promedio).
+**Franja del inicio sin tira gigante (fix 2026-11-27):** la primera versión
+duplicaba la lista (30 tarjetas, una tira de ~10 000 px deslizándose) con fotos
+de producto de ~1200×1400 a 46 px, y el dueño la veía **en negro** en su
+teléfono (en Chrome y WebKit de escritorio sí salía: es la memoria de capas del
+iPhone, con el mapa 3D y el video en la misma página). Ahora cada tarjeta va en
+una `.res-pieza` de **ancho fijo** (340 / 300 px), todas en la misma celda de
+la grilla `.res-franja`, y cada una se mueve sola con `resGiro` desfasada `--i`
+piezas (keyframes escritas por `resenas.js` con la distancia exacta: `var()`
+dentro de `@keyframes` falla en Safari viejos). Sin ancho fijo Safari calcula
+mal el ancho de la pieza (780 px) y el giro deja huecos. Menos de 10 reseñas →
+se repite la lista. Con `prefers-reduced-motion` la franja pasa a fila que se
+desliza con el dedo (sin eso las piezas quedarían encimadas). Las fotos de
+producto de las reseñas son **miniaturas de 144 px** en
+`assets/img/resenas/productos/<clave>.jpg` (no la foto grande del catálogo) y
+en la franja cargan sin `lazy`. `.testimonials-track` normal sigue para la tira
+fija de `macbook-air-13.html`.
 Cada reseña lleva **un retrato fotográfico real de stock** de Unsplash,
 guardado como JPG de 256×256 en `assets/img/resenas/` (40 px redondo; `alt` y
 `title` dicen que es una foto ilustrativa y no el cliente; sin foto quedan

@@ -1,10 +1,12 @@
 /* ============================================================
    ElectronicST — Reseñas (franja del inicio + página /reviews)
    Lee window.EST_RESENAS (assets/resenas-datos.js) y pinta:
-   - #resenasFranja: la franja que gira en el inicio. La lista va dos
-     veces seguidas para que el giro no salte al volver a empezar; --n
-     (número de reseñas) fija la duración para que la velocidad sea la
-     misma con 5 o con 50 reseñas.
+   - #resenasFranja: la franja que gira en el inicio. Cada tarjeta va en
+     su propia .res-pieza y se mueve SOLA (misma animación, desfasada con
+     --i): así no hay una tira de 10 000 px que el iPhone no alcanza a
+     pintar (se quedaba en negro) y la lista no se duplica. --n (número
+     de piezas) fija la duración para que la velocidad sea la misma con
+     5 o con 50 reseñas.
    - #resenasLista + #resenasResumen: todas las reseñas en /reviews, de
      la más nueva a la más vieja, con el promedio calculado de la lista.
    - [data-google-resenas]: el botón al perfil de Google (oculto si no
@@ -40,8 +42,11 @@
     }
 
     // enFranja: la franja del inicio está escondida para lectores de pantalla
-    // (aria-hidden), así que su enlace no debe recibir el foco con Tab.
+    // (aria-hidden), así que su enlace no debe recibir el foco con Tab. Sus
+    // fotos cargan sin lazy: Safari no detecta bien cuándo una tarjeta que se
+    // mueve por animación entra a la pantalla (son miniaturas de pocos KB).
     function tarjeta(r, enFranja) {
+        var carga = enFranja ? '' : ' loading="lazy"';
         var n = estrellasDe(r);
         var estrellas = '';
         for (var i = 0; i < 5; i++) {
@@ -51,13 +56,13 @@
         var fecha = fechaCorta(r.fecha);
         // Retratos fotográficos de stock; no son imágenes de los clientes.
         var cara = r.foto
-            ? '<img class="res-foto" src="' + esc(r.foto) + '" alt="' + esc((en ? 'Illustrative stock photo for the review by ' : 'Foto ilustrativa para la reseña de ') + r.nombre) + '" title="' + (en ? 'Stock photo, not the customer' : 'Foto de stock; no es el cliente') + '" width="40" height="40" loading="lazy" decoding="async" draggable="false">'
+            ? '<img class="res-foto" src="' + esc(r.foto) + '" alt="' + esc((en ? 'Illustrative stock photo for the review by ' : 'Foto ilustrativa para la reseña de ') + r.nombre) + '" title="' + (en ? 'Stock photo, not the customer' : 'Foto de stock; no es el cliente') + '" width="40" height="40"' + carga + ' decoding="async" draggable="false">'
             : '<span class="res-iniciales" aria-hidden="true">' + esc(iniciales(r.nombre)) + '</span>';
         // Lo que compró: foto del catálogo + nombre, enlaza a su página
         var p = r.producto && datos.productos && datos.productos[r.producto];
         var producto = p
             ? '<a class="res-producto" href="' + esc(p.url) + '"' + (enFranja ? ' tabindex="-1"' : '') + '>' +
-                '<img src="' + esc(p.img) + '" alt="" width="46" height="46" loading="lazy">' +
+                '<img src="' + esc(p.img) + '" alt="" width="46" height="46"' + carga + ' decoding="async">' +
                 '<span><small>' + (en ? 'Bought' : 'Compró') + '</small><b>' + esc(p.nombre) + '</b></span>' +
               '</a>'
             : '';
@@ -81,9 +86,21 @@
     // Franja del inicio
     var franja = document.getElementById('resenasFranja');
     if (franja) {
-        var html = datos.lista.map(function (r) { return tarjeta(r, true); }).join('');
-        franja.innerHTML = html + html;
-        franja.style.setProperty('--n', datos.lista.length);
+        // Con pocas reseñas se repite la lista: el giro necesita al menos 10
+        // piezas para que nunca se vea un hueco a la derecha en pantallas anchas.
+        var piezas = datos.lista.slice();
+        while (piezas.length < 10) piezas = piezas.concat(datos.lista);
+        var n = piezas.length;
+        franja.innerHTML = piezas.map(function (r, i) {
+            return '<div class="res-pieza" style="--i:' + i + '">' + tarjeta(r, true) + '</div>';
+        }).join('');
+        franja.style.setProperty('--n', n);
+        // Cada pieza recorre n anchos de pieza (de la derecha, fuera de la
+        // pantalla, hasta salir por la izquierda). La distancia va escrita
+        // aquí porque var() dentro de @keyframes falla en Safari viejos.
+        var giro = document.createElement('style');
+        giro.textContent = '@keyframes resGiro{from{transform:translateX(' + ((n - 1) * 100) + '%)}to{transform:translateX(-100%)}}';
+        document.head.appendChild(giro);
     }
 
     // Página /reviews

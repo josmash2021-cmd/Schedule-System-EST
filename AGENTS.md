@@ -146,9 +146,12 @@ cambies estructura, flujos o convenciones.
 - **Reseñas (2026-11-27, diseño opción 3 del dueño):** una sola lista en
   `assets/resenas-datos.js` (`googleUrl`, `productos` del catálogo y `lista` de
   {producto, foto, nombre, estrellas 1–5, fecha AAAA-MM-DD, texto, texto_en
-  opcional}) que pinta `assets/resenas.js` en `#resenasFranja` (duplicada para
-  el marquee) y en `/reviews`. Cada reseña tiene un producto del catálogo
-  (foto, nombre y enlace) y un **retrato fotográfico real de stock** (Unsplash)
+  opcional}) que pinta `assets/resenas.js` en `#resenasFranja` y en `/reviews`.
+  **La franja NO duplica la lista ni desliza una tira larga** (así salía en
+  negro en el iPhone): cada tarjeta va en una `.res-pieza` de ancho fijo y se
+  mueve sola (`resGiro` + `--i`, ver MEMORIA.md §3). Cada reseña tiene un
+  producto del catálogo (foto = **miniatura de 144 px** en
+  `assets/img/resenas/productos/`, nombre y enlace) y un **retrato fotográfico real de stock** (Unsplash)
   en `assets/img/resenas/`, redondo a 40 px, identificado como ilustrativo y no
   cliente en `alt`/`title`; sin foto, iniciales doradas SOLO texto. El dueño
   pidió fotos reales y autorizó asignar productos a las 15 reseñas antiguas:

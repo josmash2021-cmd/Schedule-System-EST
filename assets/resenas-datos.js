@@ -22,18 +22,20 @@
    ============================================================ */
 window.EST_RESENAS = {
     googleUrl: "",
-    // Equipos del catálogo (server/catalog.js) que pueden salir en una reseña
+    // Equipos del catálogo (server/catalog.js) que pueden salir en una reseña.
+    // img = miniatura de 144 px (assets/img/resenas/productos/<clave>.jpg),
+    // NO la foto grande: el iPhone decodifica cada foto a tamaño completo.
     productos: {
-        "iphone-15-pro": { nombre: "iPhone 15 Pro", img: "assets/img/iphone-15-pro.jpg", url: "/iphone-15-pro" },
-        "macbook-air-13": { nombre: "MacBook Air 13\"", img: "assets/img/macbook-air-13.jpg", url: "/macbook-air-13" },
-        "macbook-pro-2020": { nombre: "MacBook Pro 2020", img: "assets/img/macbook-pro-2020.jpg", url: "/macbook-pro-2020" },
-        "macbook-pro-2019": { nombre: "MacBook Pro 2019 15\"", img: "assets/img/macbook-pro-2019.jpg", url: "/macbook-pro-2019" },
-        "macbook-neo-2026": { nombre: "MacBook Neo 2026", img: "assets/img/macbook-neo-green.jpg", url: "/macbook-neo-2026" },
-        "ipad-2025-a16": { nombre: "iPad 2025", img: "assets/img/ipad-2025-a16.jpg", url: "/ipad-2025-a16" },
-        "airpods-max-pink": { nombre: "AirPods Max", img: "assets/img/airpods-max-pink.jpg", url: "/airpods-max-pink" },
-        "hp-15-pentium": { nombre: "HP 15.6\" Pentium", img: "assets/img/hp-15-pentium.jpg", url: "/hp-15-pentium" },
-        "victus-gaming": { nombre: "HP Victus Gaming 15.6\"", img: "assets/img/victus-gaming.jpg", url: "/victus-gaming" },
-        "alienware-16-aurora": { nombre: "Alienware 16 Aurora", img: "assets/img/alienware-16-aurora.jpg", url: "/alienware-16-aurora" }
+        "iphone-15-pro": { nombre: "iPhone 15 Pro", img: "assets/img/resenas/productos/iphone-15-pro.jpg", url: "/iphone-15-pro" },
+        "macbook-air-13": { nombre: "MacBook Air 13\"", img: "assets/img/resenas/productos/macbook-air-13.jpg", url: "/macbook-air-13" },
+        "macbook-pro-2020": { nombre: "MacBook Pro 2020", img: "assets/img/resenas/productos/macbook-pro-2020.jpg", url: "/macbook-pro-2020" },
+        "macbook-pro-2019": { nombre: "MacBook Pro 2019 15\"", img: "assets/img/resenas/productos/macbook-pro-2019.jpg", url: "/macbook-pro-2019" },
+        "macbook-neo-2026": { nombre: "MacBook Neo 2026", img: "assets/img/resenas/productos/macbook-neo-2026.jpg", url: "/macbook-neo-2026" },
+        "ipad-2025-a16": { nombre: "iPad 2025", img: "assets/img/resenas/productos/ipad-2025-a16.jpg", url: "/ipad-2025-a16" },
+        "airpods-max-pink": { nombre: "AirPods Max", img: "assets/img/resenas/productos/airpods-max-pink.jpg", url: "/airpods-max-pink" },
+        "hp-15-pentium": { nombre: "HP 15.6\" Pentium", img: "assets/img/resenas/productos/hp-15-pentium.jpg", url: "/hp-15-pentium" },
+        "victus-gaming": { nombre: "HP Victus Gaming 15.6\"", img: "assets/img/resenas/productos/victus-gaming.jpg", url: "/victus-gaming" },
+        "alienware-16-aurora": { nombre: "Alienware 16 Aurora", img: "assets/img/resenas/productos/alienware-16-aurora.jpg", url: "/alienware-16-aurora" }
     },
     lista: [
         { producto: "macbook-pro-2020", foto: "assets/img/resenas/maria-g.jpg", fuente: "", nombre: "María G.", estrellas: 5, fecha: "", texto: "Excelente equipo, llegó en perfectas condiciones y la batería dura muchísimo. Muy recomendado.", texto_en: "Excellent device, it arrived in perfect condition and the battery lasts a really long time. Highly recommended." },
